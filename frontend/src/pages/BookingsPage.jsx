@@ -1004,6 +1004,7 @@ const BookingsPage = () => {
         drivers={drivers}
         onAssign={handleAssignDriver}
         onClose={() => setAssignBooking(null)}
+        onDriverAdded={fetchData}
       />
 
       <AlertDialog open={!!deleteBooking} onOpenChange={() => setDeleteBooking(null)}>

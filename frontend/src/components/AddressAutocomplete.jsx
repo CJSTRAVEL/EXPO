@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Loader2, Home } from "lucide-react";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
+const GETADDRESS_API_KEY = "Xl-6H0F3wUiAL_iNCL-_Qw49750";
 
 // UK Postcode regex pattern
 const UK_POSTCODE_REGEX = /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
@@ -31,52 +32,55 @@ const loadGoogleMaps = () => {
   return googleMapsPromise;
 };
 
-// Fetch addresses for a UK postcode using postcodes.io (free API)
+// Fetch real addresses for a UK postcode using Getaddress.io
 const fetchPostcodeAddresses = async (postcode) => {
   try {
-    // First validate and get postcode info
-    const cleanPostcode = postcode.replace(/\s+/g, '').toUpperCase();
-    const response = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
+    const cleanPostcode = postcode.replace(/\s+/g, '');
+    const response = await fetch(
+      `https://api.getaddress.io/find/${cleanPostcode}?api-key=${GETADDRESS_API_KEY}&expand=true`
+    );
     
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error("Getaddress.io error:", response.status);
+      return null;
+    }
     
     const data = await response.json();
-    if (data.status !== 200) return null;
     
-    const { parish, admin_ward, admin_district, region, postcode: formattedPostcode } = data.result;
+    if (!data.addresses || data.addresses.length === 0) {
+      return null;
+    }
     
-    // Generate common house numbers for the postcode
-    // Since postcodes.io doesn't provide individual addresses, we'll create suggestions
-    const addresses = [];
-    const areaName = parish || admin_ward || admin_district || region || '';
-    
-    // Add the postcode itself as first option
-    addresses.push({
-      description: `${formattedPostcode}, ${areaName}`,
-      mainText: formattedPostcode,
-      secondaryText: areaName
+    // Format addresses from Getaddress.io response
+    const addresses = data.addresses.map((addr) => {
+      // Build full address string
+      const parts = [
+        addr.line_1,
+        addr.line_2,
+        addr.line_3,
+        addr.line_4,
+        addr.locality,
+        addr.town_or_city,
+        addr.county,
+        data.postcode
+      ].filter(part => part && part.trim() !== '');
+      
+      const fullAddress = parts.join(', ');
+      const mainText = addr.line_1 || addr.building_name || addr.building_number || '';
+      const secondaryParts = [addr.line_2, addr.locality || addr.town_or_city, data.postcode].filter(p => p && p.trim());
+      
+      return {
+        description: fullAddress,
+        mainText: mainText,
+        secondaryText: secondaryParts.join(', '),
+        formatted: addr.formatted_address ? addr.formatted_address.filter(l => l).join(', ') : fullAddress
+      };
     });
     
-    // Add common house number patterns
-    const houseNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 25, 26, 28, 30];
-    houseNumbers.forEach(num => {
-      addresses.push({
-        description: `${num}, ${formattedPostcode}, ${areaName}`,
-        mainText: `${num}`,
-        secondaryText: `${formattedPostcode}, ${areaName}`
-      });
-    });
-    
-    // Add flat/apartment options
-    ['Flat 1', 'Flat 2', 'Flat 3', 'Flat A', 'Flat B', 'Ground Floor', 'First Floor'].forEach(flat => {
-      addresses.push({
-        description: `${flat}, ${formattedPostcode}, ${areaName}`,
-        mainText: flat,
-        secondaryText: `${formattedPostcode}, ${areaName}`
-      });
-    });
-    
-    return addresses;
+    return {
+      postcode: data.postcode,
+      addresses: addresses
+    };
   } catch (error) {
     console.error("Postcode lookup error:", error);
     return null;
@@ -94,7 +98,7 @@ const AddressAutocomplete = ({
   const autocompleteRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [postcodeAddresses, setPostcodeAddresses] = useState([]);
+  const [postcodeData, setPostcodeData] = useState(null);
   const [isLoadingPostcode, setIsLoadingPostcode] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
   const dropdownRef = useRef(null);
@@ -112,21 +116,25 @@ const AddressAutocomplete = ({
   // Handle postcode lookup
   useEffect(() => {
     const lookupPostcode = async () => {
-      if (isPostcode(inputValue) || (isPartialPostcode(inputValue) && inputValue.length >= 6)) {
+      const trimmedValue = inputValue.trim();
+      if (isPostcode(trimmedValue) || (isPartialPostcode(trimmedValue) && trimmedValue.replace(/\s+/g, '').length >= 6)) {
         setIsLoadingPostcode(true);
-        const addresses = await fetchPostcodeAddresses(inputValue);
-        if (addresses) {
-          setPostcodeAddresses(addresses);
+        const data = await fetchPostcodeAddresses(trimmedValue);
+        if (data && data.addresses) {
+          setPostcodeData(data);
           setShowDropdown(true);
+        } else {
+          setPostcodeData(null);
+          setShowDropdown(false);
         }
         setIsLoadingPostcode(false);
       } else {
-        setPostcodeAddresses([]);
+        setPostcodeData(null);
         setShowDropdown(false);
       }
     };
 
-    const debounce = setTimeout(lookupPostcode, 300);
+    const debounce = setTimeout(lookupPostcode, 400);
     return () => clearTimeout(debounce);
   }, [inputValue, isPostcode, isPartialPostcode]);
 
@@ -147,10 +155,12 @@ const AddressAutocomplete = ({
               setInputValue(place.formatted_address);
               onChange(place.formatted_address);
               setShowDropdown(false);
+              setPostcodeData(null);
             } else if (place && place.name) {
               setInputValue(place.name);
               onChange(place.name);
               setShowDropdown(false);
+              setPostcodeData(null);
             }
           });
           
@@ -184,14 +194,13 @@ const AddressAutocomplete = ({
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-    // Don't call onChange here - wait for selection
   };
 
   const handleAddressSelect = (address) => {
     setInputValue(address.description);
     onChange(address.description);
     setShowDropdown(false);
-    setPostcodeAddresses([]);
+    setPostcodeData(null);
   };
 
   // Sync external value changes
@@ -213,7 +222,7 @@ const AddressAutocomplete = ({
         value={inputValue}
         onChange={handleInputChange}
         onFocus={() => {
-          if (postcodeAddresses.length > 0) {
+          if (postcodeData && postcodeData.addresses.length > 0) {
             setShowDropdown(true);
           }
         }}
@@ -225,31 +234,28 @@ const AddressAutocomplete = ({
       />
       
       {/* Postcode addresses dropdown */}
-      {showDropdown && postcodeAddresses.length > 0 && (
+      {showDropdown && postcodeData && postcodeData.addresses.length > 0 && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[200] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+          className="absolute z-[200] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto"
         >
-          <div className="px-3 py-2 bg-slate-50 border-b text-xs text-muted-foreground font-medium">
-            Select address at this postcode
+          <div className="px-3 py-2 bg-slate-50 border-b text-xs text-muted-foreground font-medium sticky top-0">
+            {postcodeData.addresses.length} addresses at {postcodeData.postcode}
           </div>
-          {postcodeAddresses.map((address, index) => (
+          {postcodeData.addresses.map((address, index) => (
             <button
               key={index}
               type="button"
-              className="w-full px-3 py-2 text-left hover:bg-slate-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+              className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0 transition-colors"
               onClick={() => handleAddressSelect(address)}
             >
-              <Home className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="font-medium text-sm">{address.mainText}</span>
-                <span className="text-xs text-muted-foreground block">{address.secondaryText}</span>
+              <Home className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                <span className="font-medium text-sm block truncate">{address.mainText}</span>
+                <span className="text-xs text-muted-foreground block truncate">{address.secondaryText}</span>
               </div>
             </button>
           ))}
-          <div className="px-3 py-1.5 bg-slate-50 text-xs text-muted-foreground text-center border-t">
-            Type house number for specific address
-          </div>
         </div>
       )}
     </div>

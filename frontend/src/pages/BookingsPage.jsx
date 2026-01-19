@@ -782,8 +782,19 @@ const BookingsPage = () => {
                         {format(new Date(booking.booking_datetime), "MMM d, h:mm a")}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-sm">{getDriverName(booking.driver_id)}</span>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {booking.driver_id ? (
+                        <span className="text-sm">{getDriverName(booking.driver_id)}</span>
+                      ) : (
+                        <button
+                          onClick={() => setAssignBooking(booking)}
+                          className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                          data-testid={`quick-assign-${booking.id}`}
+                        >
+                          <Plus className="w-3 h-3" />
+                          Assign Driver
+                        </button>
+                      )}
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(booking.status)}

@@ -25,12 +25,14 @@ const Sidebar = () => {
     <aside className="sidebar" data-testid="sidebar">
       <div className="sidebar-header">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <Car className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png" 
+            alt="CJ's Executive Travel" 
+            className="w-12 h-12 object-contain"
+          />
           <div>
-            <h1 className="text-lg font-bold tracking-tight">HireFleet</h1>
-            <p className="text-xs text-muted-foreground">Dispatch Manager</p>
+            <h1 className="text-base font-bold tracking-tight leading-tight">CJ's Executive</h1>
+            <p className="text-xs text-muted-foreground">Travel Limited</p>
           </div>
         </div>
       </div>

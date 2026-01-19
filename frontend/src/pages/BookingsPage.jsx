@@ -594,6 +594,18 @@ const BookingsPage = () => {
                       </div>
                     </TableCell>
                     <TableCell>
+                      {booking.distance_miles ? (
+                        <div className="text-center">
+                          <p className="text-sm font-semibold text-blue-600">{booking.distance_miles}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {booking.duration_minutes ? `${Math.floor(booking.duration_minutes / 60)}h ${booking.duration_minutes % 60}m` : ''}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="w-4 h-4 text-muted-foreground" />
                         {format(new Date(booking.booking_datetime), "MMM d, h:mm a")}

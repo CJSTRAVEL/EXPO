@@ -316,6 +316,53 @@ const BookingDetails = () => {
                 <p className="font-medium">{booking.dropoff_location}</p>
               </div>
             </div>
+            
+            {/* Distance and Duration */}
+            {(booking.distance_miles || booking.duration_minutes) && (
+              <div className="flex items-center gap-6 pt-3 pb-1 border-t">
+                {booking.distance_miles && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-blue-900">{booking.distance_miles} miles</p>
+                      <p className="text-xs text-muted-foreground">Distance</p>
+                    </div>
+                  </div>
+                )}
+                {booking.duration_minutes && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-blue-900">
+                        {booking.duration_minutes >= 60 
+                          ? `${Math.floor(booking.duration_minutes / 60)}h ${booking.duration_minutes % 60}m`
+                          : `${booking.duration_minutes} mins`
+                        }
+                      </p>
+                      <p className="text-xs text-muted-foreground">Est. Duration</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Route Map */}
+            {booking.pickup_location && booking.dropoff_location && (
+              <div className="rounded-lg overflow-hidden border border-gray-200 mt-2">
+                <img
+                  alt="Route Map"
+                  className="w-full h-48 object-cover"
+                  src={`https://maps.googleapis.com/maps/api/staticmap?size=600x200&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(booking.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(booking.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(booking.pickup_location)}%7C${encodeURIComponent(booking.dropoff_location)}&key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs`}
+                />
+              </div>
+            )}
+            
             <div className="flex items-center gap-3 pt-2 border-t">
               <Clock className="w-5 h-5 text-muted-foreground" />
               <div>

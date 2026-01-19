@@ -1049,6 +1049,7 @@ const BookingsPage = () => {
           setAssignBooking(viewBooking);
           setViewBooking(null);
         }}
+        onRefresh={fetchData}
       />
 
       <BookingForm

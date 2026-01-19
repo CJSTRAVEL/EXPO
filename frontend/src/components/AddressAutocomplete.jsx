@@ -20,19 +20,12 @@ const fetchPostcodeAddresses = async (postcode) => {
     if (!data.addresses || data.addresses.length === 0) return null;
     
     const addresses = data.addresses.map((addr) => {
-      const parts = [
-        addr.line_1,
-        addr.line_2,
-        addr.line_3,
-        addr.town_or_city,
-        addr.county,
-        addr.postcode || data.postcode
-      ].filter(part => part && part.trim() !== '');
+      const fullAddress = addr.full_address || [addr.line_1, addr.line_2, addr.town_or_city, addr.county, addr.postcode].filter(p => p).join(', ');
       
       return {
-        description: parts.join(', '),
+        description: fullAddress,
         mainText: addr.line_1 || '',
-        secondaryText: [addr.line_2, addr.town_or_city, addr.postcode || data.postcode].filter(p => p && p.trim()).join(', ')
+        secondaryText: [addr.town_or_city, addr.postcode].filter(p => p).join(', ')
       };
     });
     

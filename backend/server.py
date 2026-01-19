@@ -107,6 +107,7 @@ class Booking(BookingBase):
     status: BookingStatus = BookingStatus.PENDING
     driver_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    sms_sent: Optional[bool] = False
 
 # Root endpoint
 @api_router.get("/")

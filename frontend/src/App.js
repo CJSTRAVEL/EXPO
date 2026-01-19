@@ -75,6 +75,7 @@ const Sidebar = () => {
     { path: "/bookings", icon: Calendar, label: "Bookings" },
     { path: "/passengers", icon: UserCircle, label: "Passengers" },
     { path: "/drivers", icon: Users, label: "Drivers" },
+    { path: "/passenger-portal", icon: KeyRound, label: "Passenger Portal" },
   ];
 
   return (

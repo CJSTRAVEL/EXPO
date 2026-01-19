@@ -203,7 +203,7 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
                     <span className="text-sm">Calculating route...</span>
                   </div>
                 ) : routeInfo && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-blue-800">Journey Details</span>
                       {routeInfo.summary && (
@@ -227,6 +227,18 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
                           <p className="text-xs text-blue-600">Est. Duration</p>
                         </div>
                       </div>
+                    </div>
+                    {/* Route Map */}
+                    <div className="rounded-lg overflow-hidden border border-blue-200 mt-2">
+                      <iframe
+                        title="Route Map"
+                        width="100%"
+                        height="200"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.google.com/maps/embed/v1/directions?key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs&origin=${encodeURIComponent(formData.pickup_location)}&destination=${encodeURIComponent(formData.dropoff_location)}&mode=driving`}
+                      />
                     </div>
                   </div>
                 )}

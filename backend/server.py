@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -18,6 +18,22 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# Vonage SMS Configuration
+VONAGE_API_KEY = os.environ.get('VONAGE_API_KEY')
+VONAGE_API_SECRET = os.environ.get('VONAGE_API_SECRET')
+VONAGE_FROM_NUMBER = os.environ.get('VONAGE_FROM_NUMBER', 'HireFleet')
+
+# Initialize Vonage client
+vonage_client = None
+if VONAGE_API_KEY and VONAGE_API_SECRET:
+    try:
+        from vonage import Auth, Vonage
+        auth = Auth(api_key=VONAGE_API_KEY, api_secret=VONAGE_API_SECRET)
+        vonage_client = Vonage(auth=auth)
+        logging.info("Vonage SMS client initialized successfully")
+    except Exception as e:
+        logging.error(f"Failed to initialize Vonage client: {e}")
 
 # Create the main app without a prefix
 app = FastAPI()

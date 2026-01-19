@@ -59,6 +59,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Quick Assign Driver Link** (Jan 19, 2026) - Driver column shows clickable "Assign Driver" link for unassigned bookings
 - ✅ **Quick Add Driver from Assign Modal** (Jan 19, 2026) - "+ Add New Driver" link in assign modal allows creating drivers without leaving bookings page
 - ✅ **Assign Driver from View Modal** (Jan 19, 2026) - "+ Assign Driver" link in view booking modal under "Assigned Driver" section
+- ✅ **Booking ID System** (Jan 19, 2026) - Auto-generated sequential booking IDs (CJ-001, CJ-002, etc.) displayed in table and view modal
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

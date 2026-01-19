@@ -489,7 +489,23 @@ const BookingsPage = () => {
                           <User className="w-4 h-4 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{booking.customer_name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{booking.customer_name}</p>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  {booking.sms_sent ? (
+                                    <MessageSquare className="w-3.5 h-3.5 text-green-600" data-testid={`sms-sent-${booking.id}`} />
+                                  ) : (
+                                    <MessageSquareX className="w-3.5 h-3.5 text-muted-foreground" data-testid={`sms-pending-${booking.id}`} />
+                                  )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {booking.sms_sent ? "SMS confirmation sent" : "SMS not sent"}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                           <p className="text-xs text-muted-foreground">{booking.customer_phone}</p>
                         </div>
                       </div>

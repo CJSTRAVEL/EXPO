@@ -555,6 +555,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def migrate_booking_ids():
+    """Migrate existing bookings to have booking_id if they don't have one"""
+    bookings_without_id = await db.bookings.find(
+        {"$or": [{"booking_id": {"$exists": False}}, {"booking_id": None}]}
+    ).to_list(1000)
+    
+    if bookings_without_id:
+        logger.info(f"Migrating {len(bookings_without_id)} bookings to add booking_id")
+        for booking in bookings_without_id:
+            new_booking_id = await generate_booking_id()
+            await db.bookings.update_one(
+                {"id": booking["id"]},
+                {"$set": {"booking_id": new_booking_id}}
+            )
+            logger.info(f"Assigned {new_booking_id} to booking {booking['id']}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()

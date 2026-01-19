@@ -1,0 +1,180 @@
+{
+  "design_system": {
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "IBM Plex Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl font-bold tracking-tight lg:text-5xl",
+        "h2": "text-3xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-tight",
+        "p": "text-base leading-7 text-muted-foreground",
+        "small": "text-sm font-medium leading-none"
+      }
+    },
+    "colors": {
+      "theme": "light",
+      "palette": {
+        "primary": {
+          "DEFAULT": "#0F172A",
+          "foreground": "#F8FAFC"
+        },
+        "secondary": {
+          "DEFAULT": "#F1F5F9",
+          "foreground": "#0F172A"
+        },
+        "accent": {
+          "DEFAULT": "#3B82F6",
+          "foreground": "#FFFFFF"
+        },
+        "destructive": {
+          "DEFAULT": "#EF4444",
+          "foreground": "#FFFFFF"
+        },
+        "success": {
+          "DEFAULT": "#10B981",
+          "foreground": "#FFFFFF"
+        },
+        "warning": {
+          "DEFAULT": "#F59E0B",
+          "foreground": "#FFFFFF"
+        },
+        "background": "#FFFFFF",
+        "surface": "#F8FAFC",
+        "border": "#E2E8F0"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "section_gap": "gap-8",
+      "element_gap": "gap-4"
+    },
+    "visual_enhancers": {
+      "radius": "rounded-lg",
+      "shadows": {
+        "card": "shadow-sm hover:shadow-md transition-shadow duration-200",
+        "dropdown": "shadow-lg border border-border/50"
+      },
+      "glassmorphism": "bg-white/80 backdrop-blur-md border border-white/20",
+      "tracing_beam": "relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-1000"
+    }
+  },
+  "layout_strategies": {
+    "dashboard": {
+      "type": "bento_grid_mode_b",
+      "grid_cols": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+      "gap": "gap-6",
+      "widgets": {
+        "summary": "col-span-1 bg-white border border-border p-6 rounded-xl shadow-sm",
+        "main_chart": "col-span-2 row-span-2 bg-white border border-border p-6 rounded-xl shadow-sm",
+        "feed": "col-span-1 row-span-2 bg-surface border border-border p-6 rounded-xl shadow-sm overflow-hidden"
+      }
+    },
+    "bookings_page": {
+      "type": "data_table",
+      "style": "clean_rows",
+      "interaction": "hover:bg-slate-50 cursor-pointer transition-colors"
+    },
+    "drivers_page": {
+      "type": "card_grid",
+      "grid_cols": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+      "card_style": "group relative overflow-hidden bg-white border border-border hover:border-primary/50 transition-all duration-300"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "ghost": "hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md font-medium transition-all"
+    },
+    "inputs": {
+      "default": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "cards": {
+      "default": "rounded-lg border bg-card text-card-foreground shadow-sm"
+    },
+    "badges": {
+      "status_pending": "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100",
+      "status_assigned": "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100",
+      "status_completed": "bg-green-100 text-green-800 border-green-200 hover:bg-green-100",
+      "status_cancelled": "bg-red-100 text-red-800 border-red-200 hover:bg-red-100"
+    }
+  },
+  "assets": {
+    "images": {
+      "drivers": [
+        {
+          "url": "https://images.unsplash.com/photo-1622169804256-0eb6873ff441?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBkcml2ZXIlMjBwb3J0cmFpdCUyMGhlYWRzaG90fGVufDB8fHx8MTc2ODg0MzM0OXww&ixlib=rb-4.1.0&q=85",
+          "alt": "Professional Driver 1",
+          "category": "driver_avatar"
+        },
+        {
+          "url": "https://images.pexels.com/photos/5835254/pexels-photo-5835254.jpeg",
+          "alt": "Professional Driver 2",
+          "category": "driver_avatar"
+        },
+        {
+          "url": "https://images.pexels.com/photos/5835456/pexels-photo-5835456.jpeg",
+          "alt": "Professional Driver 3",
+          "category": "driver_avatar"
+        }
+      ],
+      "vehicles": [
+        {
+          "url": "https://images.pexels.com/photos/28406847/pexels-photo-28406847.png",
+          "alt": "Luxury Sedan",
+          "category": "vehicle_type"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1677352278890-0eb11c657c00?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHxNZXJjZWRlcyUyMEJlbnolMjBTJTIwQ2xhc3MlMjBzaWRlJTIwdmlldyUyMHdoaXRlJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3Njg4NDMzNzB8MA&ixlib=rb-4.1.0&q=85",
+          "alt": "Premium SUV",
+          "category": "vehicle_type"
+        }
+      ],
+      "maps": [
+        {
+          "url": "https://images.unsplash.com/photo-1755076652245-3d7de4c886ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwY2l0eSUyMG1hcCUyMHRvcCUyMHZpZXd8ZW58MHx8fHwxNzY4ODQzMzU0fDA&ixlib=rb-4.1.0&q=85",
+          "alt": "City Map Background",
+          "category": "map_bg"
+        }
+      ]
+    },
+    "icons": {
+      "library": "lucide-react",
+      "preferred_icons": ["Car", "User", "Calendar", "MapPin", "Clock", "CheckCircle", "XCircle", "AlertTriangle", "LayoutDashboard", "Settings", "LogOut"]
+    }
+  },
+  "instructions_to_main_agent": {
+    "general": [
+      "Implement the 'Soft Utility' design style: Rounded Humanist Sans (Manrope) for headings, Clean Sans (IBM Plex Sans) for body.",
+      "Use the 'Bento Grid Mode B' for the Dashboard layout: High density, data correlation, scanability.",
+      "Ensure all interactive elements have 'data-testid' attributes.",
+      "Use 'sonner' for toast notifications.",
+      "Do NOT use 'Inter' font for headings.",
+      "Use 'lucide-react' for icons.",
+      "Follow the 'Swiss & High-Contrast' color archetype with 'Vibrant Play' accents for status."
+    ],
+    "pages": {
+      "dashboard": "Create a high-density grid with summary cards (Total Bookings, Active Drivers, Revenue) and a main chart (Bookings over time). Use a 'Feed' widget for recent activity.",
+      "bookings": "Implement a data table with sortable columns, status badges, and a 'Tracing Beam' hover effect on rows. Include a 'New Booking' modal.",
+      "drivers": "Create a grid of driver cards. Each card should show the driver's avatar, vehicle info, and current status (Available/Busy).",
+      "booking_details": "A detailed view/modal showing pickup/dropoff map (static image background), customer info, and assigned driver."
+    }
+  },
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms.",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN."
+  ]
+}

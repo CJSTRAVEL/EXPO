@@ -8,6 +8,53 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // UK Postcode regex pattern - matches full postcodes like "SR8 5AB" or "SW1A1AA"
 const UK_POSTCODE_REGEX = /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
 
+// Global flag to track if Google Maps script is loading/loaded
+let googleMapsLoading = false;
+let googleMapsLoaded = false;
+const loadCallbacks = [];
+
+const loadGoogleMapsScript = (callback) => {
+  // Already loaded
+  if (googleMapsLoaded && window.google?.maps?.places) {
+    callback();
+    return;
+  }
+  
+  // Add to callbacks queue
+  loadCallbacks.push(callback);
+  
+  // Already loading, wait for it
+  if (googleMapsLoading) {
+    return;
+  }
+  
+  // Check if already available
+  if (window.google?.maps?.places) {
+    googleMapsLoaded = true;
+    loadCallbacks.forEach(cb => cb());
+    loadCallbacks.length = 0;
+    return;
+  }
+  
+  // Start loading
+  googleMapsLoading = true;
+  
+  const script = document.createElement("script");
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+  script.async = true;
+  script.onload = () => {
+    googleMapsLoaded = true;
+    googleMapsLoading = false;
+    loadCallbacks.forEach(cb => cb());
+    loadCallbacks.length = 0;
+  };
+  script.onerror = () => {
+    googleMapsLoading = false;
+    console.error("Failed to load Google Maps script");
+  };
+  document.head.appendChild(script);
+};
+
 // Fetch real addresses for a UK postcode via backend API
 const fetchPostcodeAddresses = async (postcode) => {
   try {

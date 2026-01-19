@@ -181,13 +181,13 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str):
             else:
                 phone = '+44' + phone
         
-        # Generate tracking code from booking ID
-        tracking_code = booking_id.replace('-', '').upper()[:16]
-        tracking_url = f"https://track.cab9.app/?b={tracking_code}"
+        # Generate booking details link
+        app_url = os.environ.get('APP_URL', 'https://driverassign-1.preview.emergentagent.com')
+        booking_link = f"{app_url}/booking/{booking_id}"
         
         message_text = (
             f"Hello {customer_name}, Your booking is confirmed.\n\n"
-            f"{tracking_url}\n\n"
+            f"{booking_link}\n\n"
             f"Please open the link to check your details.\n\n"
             f"Thank You CJ's Executive Travel Limited."
         )

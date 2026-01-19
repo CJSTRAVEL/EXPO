@@ -8,6 +8,8 @@ import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";
 import BookingDetails from "@/pages/BookingDetails";
 import PassengersPage from "@/pages/PassengersPage";
+import PassengerLogin from "@/pages/PassengerLogin";
+import PassengerPortal from "@/pages/PassengerPortal";
 import "@/App.css";
 
 const API = process.env.REACT_APP_BACKEND_URL;

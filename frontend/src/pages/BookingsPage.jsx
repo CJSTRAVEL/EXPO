@@ -997,6 +997,10 @@ const BookingsPage = () => {
           setViewBooking(null);
           setShowForm(true);
         }}
+        onAssignDriver={() => {
+          setAssignBooking(viewBooking);
+          setViewBooking(null);
+        }}
       />
 
       <BookingForm

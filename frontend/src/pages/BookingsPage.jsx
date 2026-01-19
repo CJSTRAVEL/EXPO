@@ -230,14 +230,12 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
                     </div>
                     {/* Route Map */}
                     <div className="rounded-lg overflow-hidden border border-blue-200 mt-2">
-                      <iframe
-                        title="Route Map"
+                      <img
+                        alt="Route Map"
                         width="100%"
                         height="200"
-                        style={{ border: 0 }}
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        src={`https://www.google.com/maps/embed/v1/directions?key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs&origin=${encodeURIComponent(formData.pickup_location)}&destination=${encodeURIComponent(formData.dropoff_location)}&mode=driving`}
+                        style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?size=600x200&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(formData.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(formData.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(formData.pickup_location)}%7C${encodeURIComponent(formData.dropoff_location)}&key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs`}
                       />
                     </div>
                   </div>

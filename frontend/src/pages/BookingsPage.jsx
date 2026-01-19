@@ -371,8 +371,19 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
   );
 };
 
-const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
+const VEHICLE_TYPES = ["Sedan", "SUV", "MPV", "Executive", "Estate"];
+
+const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded }) => {
   const [selectedDriver, setSelectedDriver] = useState("");
+  const [showAddDriver, setShowAddDriver] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [newDriver, setNewDriver] = useState({
+    name: "",
+    phone: "",
+    vehicle_type: "Sedan",
+    vehicle_number: "",
+    status: "available",
+  });
 
   const availableDrivers = drivers.filter(d => d.status === 'available');
 
@@ -384,9 +395,35 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
     }
   };
 
+  const handleAddDriver = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const response = await axios.post(`${API}/drivers`, newDriver);
+      toast.success("Driver added successfully!");
+      setShowAddDriver(false);
+      setNewDriver({
+        name: "",
+        phone: "",
+        vehicle_type: "Sedan",
+        vehicle_number: "",
+        status: "available",
+      });
+      // Refresh drivers and auto-select the new driver
+      if (onDriverAdded) {
+        onDriverAdded();
+      }
+      setSelectedDriver(response.data.id);
+    } catch (error) {
+      toast.error("Failed to add driver");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Dialog open={!!booking} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] z-[100]" data-testid="assign-driver-modal">
+      <DialogContent className="sm:max-w-[450px] z-[100]" data-testid="assign-driver-modal">
         <DialogHeader>
           <DialogTitle>Assign Driver</DialogTitle>
         </DialogHeader>
@@ -394,39 +431,135 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
           <p className="text-sm text-muted-foreground mb-4">
             Assign a driver to booking for {booking?.customer_name}
           </p>
-          {availableDrivers.length === 0 ? (
-            <p className="text-sm text-destructive">No available drivers at the moment.</p>
+          
+          {!showAddDriver ? (
+            <>
+              {availableDrivers.length === 0 ? (
+                <p className="text-sm text-destructive mb-3">No available drivers at the moment.</p>
+              ) : (
+                <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+                  <SelectTrigger data-testid="assign-driver-select">
+                    <SelectValue placeholder="Select a driver" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[110]">
+                    {availableDrivers.map((driver) => (
+                      <SelectItem key={driver.id} value={driver.id}>
+                        <div className="flex items-center gap-2">
+                          <UserCheck className="w-4 h-4" />
+                          {driver.name} - {driver.vehicle_type} ({driver.vehicle_number})
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              <button
+                type="button"
+                onClick={() => setShowAddDriver(true)}
+                className="mt-4 text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                data-testid="add-new-driver-link"
+              >
+                <Plus className="w-4 h-4" />
+                Add New Driver
+              </button>
+            </>
           ) : (
-            <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-              <SelectTrigger data-testid="assign-driver-select">
-                <SelectValue placeholder="Select a driver" />
-              </SelectTrigger>
-              <SelectContent className="z-[110]">
-                {availableDrivers.map((driver) => (
-                  <SelectItem key={driver.id} value={driver.id}>
-                    <div className="flex items-center gap-2">
-                      <UserCheck className="w-4 h-4" />
-                      {driver.name} - {driver.vehicle_type} ({driver.vehicle_number})
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <form onSubmit={handleAddDriver} className="space-y-4">
+              <div className="bg-slate-50 rounded-lg p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-slate-700">New Driver Details</h4>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="driver-name" className="text-xs">Name</Label>
+                    <Input
+                      id="driver-name"
+                      value={newDriver.name}
+                      onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })}
+                      placeholder="John Smith"
+                      required
+                      className="h-9"
+                      data-testid="new-driver-name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="driver-phone" className="text-xs">Phone</Label>
+                    <Input
+                      id="driver-phone"
+                      value={newDriver.phone}
+                      onChange={(e) => setNewDriver({ ...newDriver, phone: e.target.value })}
+                      placeholder="+44 7700 900000"
+                      required
+                      className="h-9"
+                      data-testid="new-driver-phone"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="vehicle-type" className="text-xs">Vehicle Type</Label>
+                    <Select
+                      value={newDriver.vehicle_type}
+                      onValueChange={(value) => setNewDriver({ ...newDriver, vehicle_type: value })}
+                    >
+                      <SelectTrigger className="h-9" data-testid="new-driver-vehicle-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="z-[120]">
+                        {VEHICLE_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="vehicle-number" className="text-xs">Vehicle Reg</Label>
+                    <Input
+                      id="vehicle-number"
+                      value={newDriver.vehicle_number}
+                      onChange={(e) => setNewDriver({ ...newDriver, vehicle_number: e.target.value })}
+                      placeholder="AB12 CDE"
+                      required
+                      className="h-9"
+                      data-testid="new-driver-vehicle-number"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddDriver(false)}
+                >
+                  Back
+                </Button>
+                <Button type="submit" size="sm" disabled={saving} data-testid="save-new-driver-btn">
+                  {saving ? "Adding..." : "Add Driver"}
+                </Button>
+              </div>
+            </form>
           )}
         </div>
-        <DialogFooter className="relative z-[100]">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button 
-            type="button"
-            onClick={handleAssign}
-            disabled={!selectedDriver}
-            data-testid="confirm-assign-driver-btn"
-          >
-            Assign Driver
-          </Button>
-        </DialogFooter>
+        
+        {!showAddDriver && (
+          <DialogFooter className="relative z-[100]">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              type="button"
+              onClick={handleAssign}
+              disabled={!selectedDriver}
+              data-testid="confirm-assign-driver-btn"
+            >
+              Assign Driver
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

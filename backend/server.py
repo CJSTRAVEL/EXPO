@@ -526,7 +526,7 @@ async def resend_booking_sms(booking_id: str):
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
-    # Send SMS
+    # Send SMS with short booking ID
     success, message = send_booking_sms(
         customer_phone=booking['customer_phone'],
         customer_name=booking['customer_name'],
@@ -535,7 +535,8 @@ async def resend_booking_sms(booking_id: str):
         dropoff=booking.get('dropoff_location'),
         distance_miles=booking.get('distance_miles'),
         duration_minutes=booking.get('duration_minutes'),
-        booking_datetime=booking.get('booking_datetime')
+        booking_datetime=booking.get('booking_datetime'),
+        short_booking_id=booking.get('booking_id')  # Use short URL (CJ-001)
     )
     
     # Update sms_sent status

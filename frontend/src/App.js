@@ -1,17 +1,68 @@
-import { BrowserRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink, useLocation, useParams, Navigate } from "react-router-dom";
 import { LayoutDashboard, Users, Calendar, Car } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import Dashboard from "@/pages/Dashboard";
 import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";
 import BookingDetails from "@/pages/BookingDetails";
 import "@/App.css";
 
+const API = process.env.REACT_APP_BACKEND_URL;
+
+// Component to handle short URL redirects
+const ShortUrlBooking = () => {
+  const { shortId } = useParams();
+  const [bookingUuid, setBookingUuid] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      try {
+        const response = await axios.get(`${API}/api/b/${shortId}`);
+        setBookingUuid(response.data.id);
+      } catch (err) {
+        setError("Booking not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooking();
+  }, [shortId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading booking...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !bookingUuid) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Booking Not Found</h1>
+          <p className="text-muted-foreground">The booking link may be invalid or expired.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to the full booking page with UUID
+  return <Navigate to={`/booking/${bookingUuid}`} replace />;
+};
+
 const Sidebar = () => {
   const location = useLocation();
   
   // Hide sidebar on public booking details page
-  if (location.pathname.startsWith('/booking/')) {
+  if (location.pathname.startsWith('/booking/') || location.pathname.startsWith('/b/')) {
     return null;
   }
   

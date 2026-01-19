@@ -7,7 +7,6 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // UK Postcode regex pattern
 const UK_POSTCODE_REGEX = /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
-const PARTIAL_POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9]?[A-Z]{0,2}$/i;
 
 // Load Google Maps script
 let googleMapsPromise = null;
@@ -50,7 +49,6 @@ const fetchPostcodeAddresses = async (postcode) => {
     
     // Format addresses from Ideal Postcodes response
     const addresses = data.addresses.map((addr) => {
-      // Build full address string
       const parts = [
         addr.line_1,
         addr.line_2,
@@ -89,30 +87,33 @@ const AddressAutocomplete = ({
   "data-testid": dataTestId 
 }) => {
   const inputRef = useRef(null);
+  const googleInputRef = useRef(null);
   const autocompleteRef = useRef(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [postcodeData, setPostcodeData] = useState(null);
   const [isLoadingPostcode, setIsLoadingPostcode] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
+  const [isPostcodeMode, setIsPostcodeMode] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Check if input looks like a UK postcode
-  const isPostcode = useCallback((text) => {
+  // Check if input is a valid UK postcode
+  const isValidPostcode = useCallback((text) => {
     return UK_POSTCODE_REGEX.test(text.trim());
-  }, []);
-
-  const isPartialPostcode = useCallback((text) => {
-    const cleaned = text.trim().replace(/\s+/g, '');
-    return cleaned.length >= 5 && PARTIAL_POSTCODE_REGEX.test(text.trim());
   }, []);
 
   // Handle postcode lookup
   useEffect(() => {
     const lookupPostcode = async () => {
       const trimmedValue = inputValue.trim();
-      if (isPostcode(trimmedValue) || (isPartialPostcode(trimmedValue) && trimmedValue.replace(/\s+/g, '').length >= 6)) {
+      
+      if (isValidPostcode(trimmedValue)) {
+        setIsPostcodeMode(true);
         setIsLoadingPostcode(true);
+        
+        // Hide Google autocomplete
+        const pacContainers = document.querySelectorAll('.pac-container');
+        pacContainers.forEach(el => el.style.display = 'none');
+        
         const data = await fetchPostcodeAddresses(trimmedValue);
         if (data && data.addresses && data.addresses.length > 0) {
           setPostcodeData(data);
@@ -123,21 +124,22 @@ const AddressAutocomplete = ({
         }
         setIsLoadingPostcode(false);
       } else {
+        setIsPostcodeMode(false);
         setPostcodeData(null);
         setShowDropdown(false);
       }
     };
 
-    const debounce = setTimeout(lookupPostcode, 500);
+    const debounce = setTimeout(lookupPostcode, 400);
     return () => clearTimeout(debounce);
-  }, [inputValue, isPostcode, isPartialPostcode]);
+  }, [inputValue, isValidPostcode]);
 
-  // Initialize Google Maps autocomplete
+  // Initialize Google Maps autocomplete for non-postcode searches
   useEffect(() => {
     loadGoogleMaps()
       .then((maps) => {
-        if (inputRef.current && !autocompleteRef.current) {
-          autocompleteRef.current = new maps.places.Autocomplete(inputRef.current, {
+        if (googleInputRef.current && !autocompleteRef.current) {
+          autocompleteRef.current = new maps.places.Autocomplete(googleInputRef.current, {
             types: ["geocode", "establishment"],
             componentRestrictions: { country: "gb" },
             fields: ["formatted_address", "geometry", "name"],
@@ -157,8 +159,6 @@ const AddressAutocomplete = ({
               setPostcodeData(null);
             }
           });
-          
-          setIsLoaded(true);
         }
       })
       .catch((error) => {
@@ -195,6 +195,7 @@ const AddressAutocomplete = ({
     onChange(address.description);
     setShowDropdown(false);
     setPostcodeData(null);
+    setIsPostcodeMode(false);
   };
 
   // Sync external value changes
@@ -208,8 +209,10 @@ const AddressAutocomplete = ({
     <div className="relative">
       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
       {isLoadingPostcode && (
-        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 animate-spin z-10" />
       )}
+      
+      {/* Main visible input */}
       <Input
         ref={inputRef}
         type="text"
@@ -225,18 +228,34 @@ const AddressAutocomplete = ({
         id={id}
         data-testid={dataTestId}
         autoComplete="off"
+        style={{ display: isPostcodeMode ? 'block' : 'none' }}
       />
       
-      {/* Postcode addresses dropdown - appears above Google autocomplete */}
+      {/* Google autocomplete input (shown when not in postcode mode) */}
+      <Input
+        ref={googleInputRef}
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={() => {
+          if (postcodeData && postcodeData.addresses.length > 0) {
+            setShowDropdown(true);
+          }
+        }}
+        placeholder={placeholder}
+        className="pl-10"
+        autoComplete="off"
+        style={{ display: isPostcodeMode ? 'none' : 'block' }}
+      />
+      
+      {/* Postcode addresses dropdown */}
       {showDropdown && postcodeData && postcodeData.addresses.length > 0 && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-72 overflow-y-auto"
-          style={{ top: '100%' }}
+          className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto"
         >
-          <div className="px-3 py-2 bg-blue-50 border-b text-xs text-blue-700 font-medium sticky top-0 flex items-center justify-between">
-            <span>{postcodeData.addresses.length} addresses at {postcodeData.postcode}</span>
-            <span className="text-blue-500">Select an address</span>
+          <div className="px-3 py-2 bg-blue-50 border-b text-xs text-blue-700 font-semibold sticky top-0 flex items-center justify-between">
+            <span>📍 {postcodeData.addresses.length} addresses at {postcodeData.postcode}</span>
           </div>
           {postcodeData.addresses.map((address, index) => (
             <button

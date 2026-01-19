@@ -387,7 +387,7 @@ const BookingsPage = () => {
         toast.success("Booking updated successfully");
       } else {
         await axios.post(`${API}/bookings`, formData);
-        toast.success("Booking created successfully");
+        toast.success("Booking created! SMS confirmation will be sent to customer.");
       }
       fetchData();
       setShowForm(false);

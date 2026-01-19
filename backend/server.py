@@ -313,7 +313,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                      pickup: str = None, dropoff: str = None, 
                      distance_miles: float = None, duration_minutes: int = None,
                      booking_datetime: str = None):
-    """Send SMS confirmation for new booking with journey details"""
+    """Send SMS confirmation for new booking"""
     if not vonage_client:
         logging.warning("Vonage client not initialized, skipping SMS")
         return False, "SMS service not configured"
@@ -334,24 +334,8 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
         app_url = os.environ.get('APP_URL', 'https://driverassign-1.preview.emergentagent.com')
         booking_link = f"{app_url}/booking/{booking_id}"
         
-        # Build journey details section
-        journey_details = ""
-        if pickup and dropoff:
-            journey_details = f"\nFrom: {pickup}\nTo: {dropoff}\n"
-        
-        if distance_miles and duration_minutes:
-            # Format duration
-            if duration_minutes >= 60:
-                hours = duration_minutes // 60
-                mins = duration_minutes % 60
-                duration_text = f"{hours}h {mins}m" if mins > 0 else f"{hours}h"
-            else:
-                duration_text = f"{duration_minutes} mins"
-            journey_details += f"\nDistance: {distance_miles} miles\nEst. Time: {duration_text}\n"
-        
         message_text = (
-            f"Hello {customer_name}, Your booking is confirmed.\n"
-            f"{journey_details}\n"
+            f"Hello {customer_name}, Your booking is confirmed.\n\n"
             f"{booking_link}\n\n"
             f"Please open the link to check your details.\n\n"
             f"Thank You CJ's Executive Travel Limited."

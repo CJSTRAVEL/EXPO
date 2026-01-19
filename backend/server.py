@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,12 +9,18 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 import httpx
+import hashlib
+import jwt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# JWT Secret Key
+JWT_SECRET = os.environ.get('JWT_SECRET', 'cjs-executive-travel-secret-key-2026')
+JWT_ALGORITHM = "HS256"
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -38,6 +45,38 @@ if VONAGE_API_KEY and VONAGE_API_SECRET:
         logging.info("Vonage SMS client initialized successfully")
     except Exception as e:
         logging.error(f"Failed to initialize Vonage client: {e}")
+
+# Security
+security = HTTPBearer(auto_error=False)
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def create_token(passenger_id: str, phone: str) -> str:
+    payload = {
+        "sub": passenger_id,
+        "phone": phone,
+        "exp": datetime.now(timezone.utc) + timedelta(days=30)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_passenger(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    payload = verify_token(credentials.credentials)
+    passenger = await db.passengers.find_one({"id": payload["sub"]}, {"_id": 0})
+    if not passenger:
+        raise HTTPException(status_code=401, detail="Passenger not found")
+    return passenger
 
 # Create the main app without a prefix
 app = FastAPI()

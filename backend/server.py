@@ -158,6 +158,30 @@ class Booking(BookingBase):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
 
+# Passenger Authentication Models
+class PassengerRegister(BaseModel):
+    name: str
+    phone: str
+    password: str
+
+class PassengerLogin(BaseModel):
+    phone: str
+    password: str
+
+class Passenger(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone: str
+    password_hash: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PassengerResponse(BaseModel):
+    id: str
+    name: str
+    phone: str
+    token: str
+
 async def generate_booking_id():
     """Generate a sequential booking ID like CJ-001, CJ-002, etc."""
     # Find the highest booking number

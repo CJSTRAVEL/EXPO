@@ -161,15 +161,83 @@ async def delete_driver(driver_id: str):
         raise HTTPException(status_code=404, detail="Driver not found")
     return {"message": "Driver deleted successfully"}
 
+# ========== SMS HELPER FUNCTION ==========
+def send_booking_sms(customer_phone: str, customer_name: str, pickup: str, dropoff: str, booking_time: str):
+    """Send SMS confirmation for new booking"""
+    if not vonage_client:
+        logging.warning("Vonage client not initialized, skipping SMS")
+        return False, "SMS service not configured"
+    
+    try:
+        from vonage_sms import SmsMessage
+        
+        # Format phone number (ensure it has country code)
+        phone = customer_phone.strip()
+        if not phone.startswith('+'):
+            # Assume UK number if no country code
+            if phone.startswith('0'):
+                phone = '+44' + phone[1:]
+            else:
+                phone = '+44' + phone
+        
+        message_text = (
+            f"Hi {customer_name}, your HireFleet booking is confirmed!\n"
+            f"Pickup: {pickup}\n"
+            f"Dropoff: {dropoff}\n"
+            f"Time: {booking_time}\n"
+            f"Thank you for choosing HireFleet!"
+        )
+        
+        response = vonage_client.sms.send(
+            SmsMessage(
+                to=phone,
+                from_=VONAGE_FROM_NUMBER,
+                text=message_text
+            )
+        )
+        
+        if response.messages[0].status == "0":
+            logging.info(f"SMS sent successfully to {phone}")
+            return True, "SMS sent"
+        else:
+            logging.error(f"SMS failed: {response.messages[0].error_text}")
+            return False, response.messages[0].error_text
+            
+    except Exception as e:
+        logging.error(f"SMS error: {str(e)}")
+        return False, str(e)
+
 # ========== BOOKING ENDPOINTS ==========
 @api_router.post("/bookings", response_model=Booking)
-async def create_booking(booking: BookingCreate):
+async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):
     booking_obj = Booking(**booking.model_dump())
     doc = booking_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['booking_datetime'] = doc['booking_datetime'].isoformat()
+    doc['sms_sent'] = False
     await db.bookings.insert_one(doc)
+    
+    # Send SMS in background
+    booking_time = booking.booking_datetime.strftime("%d %b %Y at %H:%M")
+    background_tasks.add_task(
+        send_sms_and_update_booking,
+        booking_obj.id,
+        booking.customer_phone,
+        booking.customer_name,
+        booking.pickup_location,
+        booking.dropoff_location,
+        booking_time
+    )
+    
     return booking_obj
+
+async def send_sms_and_update_booking(booking_id: str, phone: str, name: str, pickup: str, dropoff: str, time: str):
+    """Background task to send SMS and update booking record"""
+    success, message = send_booking_sms(phone, name, pickup, dropoff, time)
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {"sms_sent": success, "sms_message": message}}
+    )
 
 @api_router.get("/bookings", response_model=List[Booking])
 async def get_bookings():

@@ -572,9 +572,16 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver })
     <Dialog open={!!booking} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px]" data-testid="booking-view-modal">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            Booking Details
+          <DialogTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Booking Details
+            </span>
+            {booking.booking_id && (
+              <span className="text-sm font-mono font-semibold text-primary bg-primary/10 px-2 py-1 rounded" data-testid="view-booking-id">
+                {booking.booking_id}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">

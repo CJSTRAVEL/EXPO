@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Calendar, Users, Car, DollarSign, Clock, CheckCircle, XCircle, AlertTriangle, MapPin } from "lucide-react";
+import { Calendar, Users, Car, DollarSign, Clock, CheckCircle, XCircle, AlertTriangle, MapPin, Navigation } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -34,38 +34,15 @@ const StatCard = ({ title, value, icon: Icon, subtitle, color = "primary" }) => 
   </Card>
 );
 
-const getStatusBadge = (status) => {
-  const styles = {
-    pending: "status-pending",
-    assigned: "status-assigned",
-    in_progress: "status-in_progress",
-    completed: "status-completed",
-    cancelled: "status-cancelled",
-  };
-  return (
-    <Badge variant="outline" className={`${styles[status]} text-xs font-medium`}>
-      {status.replace('_', ' ')}
-    </Badge>
-  );
-};
-
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
-  const [recentBookings, setRecentBookings] = useState([]);
-  const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, bookingsRes, driversRes] = await Promise.all([
-          axios.get(`${API}/stats`),
-          axios.get(`${API}/bookings`),
-          axios.get(`${API}/drivers`),
-        ]);
+        const statsRes = await axios.get(`${API}/stats`);
         setStats(statsRes.data);
-        setRecentBookings(bookingsRes.data.slice(-5).reverse());
-        setDrivers(driversRes.data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -74,11 +51,6 @@ const Dashboard = () => {
     };
     fetchData();
   }, []);
-
-  const getDriverName = (driverId) => {
-    const driver = drivers.find(d => d.id === driverId);
-    return driver ? driver.name : "Unassigned";
-  };
 
   if (loading) {
     return (
@@ -129,52 +101,25 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Bookings */}
-          <Card className="lg:col-span-2" data-testid="recent-bookings">
+          {/* GPS Live Tracking */}
+          <Card className="lg:col-span-2" data-testid="gps-tracking">
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Clock className="w-5 h-5 text-muted-foreground" />
-                Recent Bookings
+                <Navigation className="w-5 h-5 text-muted-foreground" />
+                Live GPS Tracking
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {recentBookings.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No bookings yet</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentBookings.map((booking) => (
-                    <div 
-                      key={booking.id} 
-                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                      data-testid={`booking-item-${booking.id}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{booking.customer_name}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                            {booking.pickup_location} → {booking.dropoff_location}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {format(new Date(booking.booking_datetime), "MMM d, h:mm a")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {getStatusBadge(booking.status)}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {booking.driver_id ? getDriverName(booking.driver_id) : "No driver"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <CardContent className="p-0">
+              <div className="relative w-full" style={{ height: "450px" }}>
+                <iframe
+                  src="https://gpslive.co.uk/public-link/be37c779-68fd-4916-b950-26741285ba23"
+                  className="absolute inset-0 w-full h-full rounded-b-lg"
+                  style={{ border: "none" }}
+                  title="GPS Live Tracking"
+                  allowFullScreen
+                  data-testid="gps-iframe"
+                />
+              </div>
             </CardContent>
           </Card>
 

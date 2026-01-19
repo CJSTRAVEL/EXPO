@@ -56,6 +56,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Company Rebranding** - CJ's Executive Travel logo and name
 - ✅ **Edit Booking Bug Fix** (Jan 19, 2026) - Fixed Select.Item empty value crash
 - ✅ **View Booking Feature** (Jan 19, 2026) - Click row to view booking details with map, fare, status, driver info
+- ✅ **Quick Assign Driver Link** (Jan 19, 2026) - Driver column shows clickable "Assign Driver" link for unassigned bookings
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

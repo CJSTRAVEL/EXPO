@@ -4,10 +4,16 @@ import { Toaster } from "@/components/ui/sonner";
 import Dashboard from "@/pages/Dashboard";
 import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";
+import BookingDetails from "@/pages/BookingDetails";
 import "@/App.css";
 
 const Sidebar = () => {
   const location = useLocation();
+  
+  // Hide sidebar on public booking details page
+  if (location.pathname.startsWith('/booking/')) {
+    return null;
+  }
   
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -46,20 +52,39 @@ const Sidebar = () => {
   );
 };
 
+const AppLayout = ({ children, showSidebar }) => {
+  return (
+    <div className={showSidebar ? "app-container" : ""}>
+      {showSidebar && <Sidebar />}
+      <main className={showSidebar ? "main-content" : ""}>
+        {children}
+      </main>
+    </div>
+  );
+};
+
 function App() {
   return (
     <BrowserRouter>
-      <div className="app-container">
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/bookings" element={<BookingsPage />} />
-            <Route path="/drivers" element={<DriversPage />} />
-          </Routes>
-        </main>
-        <Toaster position="top-right" richColors />
-      </div>
+      <Routes>
+        {/* Public booking details page (no sidebar) */}
+        <Route path="/booking/:bookingId" element={<BookingDetails />} />
+        
+        {/* Admin pages with sidebar */}
+        <Route path="/*" element={
+          <div className="app-container">
+            <Sidebar />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/bookings" element={<BookingsPage />} />
+                <Route path="/drivers" element={<DriversPage />} />
+              </Routes>
+            </main>
+            <Toaster position="top-right" richColors />
+          </div>
+        } />
+      </Routes>
     </BrowserRouter>
   );
 }

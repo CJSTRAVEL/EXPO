@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

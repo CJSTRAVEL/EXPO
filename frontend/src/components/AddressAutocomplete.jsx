@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Loader2, Home } from "lucide-react";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
-const GETADDRESS_API_KEY = "Xl-6H0F3wUiAL_iNCL-_Qw49750";
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // UK Postcode regex pattern
 const UK_POSTCODE_REGEX = /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
@@ -32,16 +32,13 @@ const loadGoogleMaps = () => {
   return googleMapsPromise;
 };
 
-// Fetch real addresses for a UK postcode using Getaddress.io
+// Fetch real addresses for a UK postcode via backend API
 const fetchPostcodeAddresses = async (postcode) => {
   try {
-    const cleanPostcode = postcode.replace(/\s+/g, '');
-    const response = await fetch(
-      `https://api.getaddress.io/find/${cleanPostcode}?api-key=${GETADDRESS_API_KEY}&expand=true`
-    );
+    const response = await fetch(`${API_URL}/api/postcode/${encodeURIComponent(postcode)}`);
     
     if (!response.ok) {
-      console.error("Getaddress.io error:", response.status);
+      console.error("Postcode API error:", response.status);
       return null;
     }
     
@@ -72,8 +69,7 @@ const fetchPostcodeAddresses = async (postcode) => {
       return {
         description: fullAddress,
         mainText: mainText,
-        secondaryText: secondaryParts.join(', '),
-        formatted: addr.formatted_address ? addr.formatted_address.filter(l => l).join(', ') : fullAddress
+        secondaryText: secondaryParts.join(', ')
       };
     });
     
@@ -120,7 +116,7 @@ const AddressAutocomplete = ({
       if (isPostcode(trimmedValue) || (isPartialPostcode(trimmedValue) && trimmedValue.replace(/\s+/g, '').length >= 6)) {
         setIsLoadingPostcode(true);
         const data = await fetchPostcodeAddresses(trimmedValue);
-        if (data && data.addresses) {
+        if (data && data.addresses && data.addresses.length > 0) {
           setPostcodeData(data);
           setShowDropdown(true);
         } else {
@@ -134,7 +130,7 @@ const AddressAutocomplete = ({
       }
     };
 
-    const debounce = setTimeout(lookupPostcode, 400);
+    const debounce = setTimeout(lookupPostcode, 500);
     return () => clearTimeout(debounce);
   }, [inputValue, isPostcode, isPartialPostcode]);
 

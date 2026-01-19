@@ -136,24 +136,22 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
 
             <div className="space-y-2">
               <Label htmlFor="pickup_location">Pickup Location</Label>
-              <Input
+              <AddressAutocomplete
                 id="pickup_location"
                 value={formData.pickup_location}
-                onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
-                placeholder="123 Main St, London"
-                required
+                onChange={(value) => setFormData({ ...formData, pickup_location: value })}
+                placeholder="Start typing address..."
                 data-testid="booking-pickup-input"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="dropoff_location">Dropoff Location</Label>
-              <Input
+              <AddressAutocomplete
                 id="dropoff_location"
                 value={formData.dropoff_location}
-                onChange={(e) => setFormData({ ...formData, dropoff_location: e.target.value })}
-                placeholder="456 High St, London"
-                required
+                onChange={(value) => setFormData({ ...formData, dropoff_location: value })}
+                placeholder="Start typing address..."
                 data-testid="booking-dropoff-input"
               />
             </div>

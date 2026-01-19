@@ -565,7 +565,7 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
   );
 };
 
-const BookingViewDialog = ({ booking, driver, onClose, onEdit }) => {
+const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver }) => {
   if (!booking) return null;
   
   return (

@@ -868,8 +868,45 @@ const BookingsPage = () => {
     setShowForm(true);
   };
 
+  // Filter bookings based on search criteria
+  const filteredBookings = bookings.filter(booking => {
+    // Text search (customer name, phone, booking ID)
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      const matchesName = booking.customer_name?.toLowerCase().includes(search);
+      const matchesPhone = booking.customer_phone?.toLowerCase().includes(search);
+      const matchesBookingId = booking.booking_id?.toLowerCase().includes(search);
+      const matchesPickup = booking.pickup_location?.toLowerCase().includes(search);
+      const matchesDropoff = booking.dropoff_location?.toLowerCase().includes(search);
+      
+      if (!matchesName && !matchesPhone && !matchesBookingId && !matchesPickup && !matchesDropoff) {
+        return false;
+      }
+    }
+    
+    // Date filter
+    if (filterDate) {
+      const bookingDate = format(new Date(booking.booking_datetime), "yyyy-MM-dd");
+      const selectedDate = format(filterDate, "yyyy-MM-dd");
+      if (bookingDate !== selectedDate) {
+        return false;
+      }
+    }
+    
+    // Driver filter
+    if (filterDriver && filterDriver !== "all") {
+      if (filterDriver === "unassigned") {
+        if (booking.driver_id) return false;
+      } else {
+        if (booking.driver_id !== filterDriver) return false;
+      }
+    }
+    
+    return true;
+  });
+
   // Group bookings by date
-  const groupedBookings = bookings.reduce((groups, booking) => {
+  const groupedBookings = filteredBookings.reduce((groups, booking) => {
     const date = format(new Date(booking.booking_datetime), "yyyy-MM-dd");
     if (!groups[date]) {
       groups[date] = [];
@@ -883,6 +920,15 @@ const BookingsPage = () => {
   sortedDates.forEach(date => {
     groupedBookings[date].sort((a, b) => new Date(a.booking_datetime) - new Date(b.booking_datetime));
   });
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchText("");
+    setFilterDate(null);
+    setFilterDriver("all");
+  };
+
+  const hasActiveFilters = searchText || filterDate || (filterDriver && filterDriver !== "all");
 
   // Get status color for the card border
   const getStatusColor = (status) => {
@@ -915,6 +961,89 @@ const BookingsPage = () => {
           New Booking
         </Button>
       </header>
+
+      {/* Search and Filter Bar */}
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by name, phone, booking ID, or address..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="pl-10 bg-white"
+              data-testid="search-input"
+            />
+          </div>
+          
+          {/* Date Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal bg-white", !filterDate && "text-muted-foreground")}>
+                <Calendar className="mr-2 h-4 w-4" />
+                {filterDate ? format(filterDate, "dd/MM/yyyy") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={filterDate}
+                onSelect={setFilterDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          
+          {/* Driver Filter */}
+          <Select value={filterDriver} onValueChange={setFilterDriver}>
+            <SelectTrigger className="w-[180px] bg-white" data-testid="filter-driver-select">
+              <SelectValue placeholder="Filter by driver" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Drivers</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {drivers.map((driver) => (
+                <SelectItem key={driver.id} value={driver.id}>
+                  {driver.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground" data-testid="clear-filters-btn">
+              <X className="w-4 h-4 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
+        
+        {/* Filter Summary */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Showing {filteredBookings.length} of {bookings.length} bookings</span>
+            {filterDate && (
+              <Badge variant="secondary" className="gap-1">
+                {format(filterDate, "dd/MM/yyyy")}
+                <button onClick={() => setFilterDate(null)} className="ml-1 hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterDriver && filterDriver !== "all" && (
+              <Badge variant="secondary" className="gap-1">
+                {filterDriver === "unassigned" ? "Unassigned" : getDriverName(filterDriver)}
+                <button onClick={() => setFilterDriver("all")} className="ml-1 hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="page-content">
         {bookings.length === 0 ? (

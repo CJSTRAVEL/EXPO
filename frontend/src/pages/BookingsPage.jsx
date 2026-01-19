@@ -857,6 +857,7 @@ const BookingsPage = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50/50">
+                  <TableHead className="font-semibold">Booking</TableHead>
                   <TableHead className="font-semibold">Customer</TableHead>
                   <TableHead className="font-semibold">Route</TableHead>
                   <TableHead className="font-semibold">Miles</TableHead>
@@ -875,6 +876,11 @@ const BookingsPage = () => {
                     data-testid={`booking-row-${booking.id}`}
                     onClick={() => setViewBooking(booking)}
                   >
+                    <TableCell>
+                      <span className="text-sm font-mono font-semibold text-primary" data-testid={`booking-id-${booking.id}`}>
+                        {booking.booking_id || '-'}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">

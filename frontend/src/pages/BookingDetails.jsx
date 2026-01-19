@@ -355,10 +355,15 @@ const BookingDetails = () => {
             {/* Route Map */}
             {booking.pickup_location && booking.dropoff_location && (
               <div className="rounded-lg overflow-hidden border border-gray-200 mt-2">
-                <img
-                  alt="Route Map"
-                  className="w-full h-48 object-cover"
-                  src={`https://maps.googleapis.com/maps/api/staticmap?size=600x200&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(booking.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(booking.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(booking.pickup_location)}%7C${encodeURIComponent(booking.dropoff_location)}&key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs`}
+                <iframe
+                  title="Route Map"
+                  width="100%"
+                  height="250"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://www.google.com/maps/embed/v1/directions?key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs&origin=${encodeURIComponent(booking.pickup_location)}&destination=${encodeURIComponent(booking.dropoff_location)}&mode=driving`}
                 />
               </div>
             )}

@@ -222,6 +222,44 @@ const BookingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Set Open Graph meta tags for better link previews
+  useEffect(() => {
+    // Update page title
+    document.title = "CJ's Executive Travel - Booking Details";
+    
+    // Helper to set meta tag
+    const setMetaTag = (property, content) => {
+      let meta = document.querySelector(`meta[property="${property}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('property', property);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+    
+    // Set Open Graph meta tags
+    setMetaTag('og:title', "CJ's Executive Travel - Your Booking");
+    setMetaTag('og:description', 'View your booking details and track your journey in real-time.');
+    setMetaTag('og:type', 'website');
+    setMetaTag('og:url', window.location.href);
+    setMetaTag('og:image', 'https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png');
+    setMetaTag('og:site_name', "CJ's Executive Travel");
+    
+    // Twitter Card meta tags
+    let twitterMeta = document.querySelector('meta[name="twitter:card"]');
+    if (!twitterMeta) {
+      twitterMeta = document.createElement('meta');
+      twitterMeta.setAttribute('name', 'twitter:card');
+      document.head.appendChild(twitterMeta);
+    }
+    twitterMeta.setAttribute('content', 'summary');
+    
+    return () => {
+      document.title = "Emergent | Fullstack App";
+    };
+  }, []);
+
   const fetchBooking = async () => {
     try {
       const response = await axios.get(`${API}/bookings/${bookingId}`);

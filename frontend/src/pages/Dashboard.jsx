@@ -112,7 +112,7 @@ const Dashboard = () => {
             <CardContent className="p-0">
               <div className="relative w-full" style={{ height: "450px" }}>
                 <iframe
-                  src="https://gpslive.co.uk/public-link/be37c779-68fd-4916-b950-26741285ba23"
+                  src="https://gpslive.co.uk/public-link/be37c779-68fd-4916-b950-26741285ba23?fit=true&zoom=12"
                   className="absolute inset-0 w-full h-full rounded-b-lg"
                   style={{ border: "none" }}
                   title="GPS Live Tracking"

@@ -58,6 +58,8 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
   });
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const [loadingRoute, setLoadingRoute] = useState(false);
 
   useEffect(() => {
     if (booking) {
@@ -79,8 +81,42 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
         status: "pending",
         driver_id: "",
       });
+      setRouteInfo(null);
     }
   }, [booking]);
+
+  // Calculate route when both pickup and dropoff are set
+  useEffect(() => {
+    const calculateRoute = async () => {
+      if (formData.pickup_location && formData.dropoff_location && 
+          formData.pickup_location.length > 5 && formData.dropoff_location.length > 5) {
+        setLoadingRoute(true);
+        try {
+          const response = await axios.get(`${API}/directions`, {
+            params: {
+              origin: formData.pickup_location,
+              destination: formData.dropoff_location
+            }
+          });
+          if (response.data.success) {
+            setRouteInfo(response.data);
+          } else {
+            setRouteInfo(null);
+          }
+        } catch (error) {
+          console.error("Error calculating route:", error);
+          setRouteInfo(null);
+        } finally {
+          setLoadingRoute(false);
+        }
+      } else {
+        setRouteInfo(null);
+      }
+    };
+
+    const debounce = setTimeout(calculateRoute, 800);
+    return () => clearTimeout(debounce);
+  }, [formData.pickup_location, formData.dropoff_location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,6 +126,8 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
         ...formData,
         booking_datetime: formData.booking_datetime.toISOString(),
         fare: formData.fare ? parseFloat(formData.fare) : null,
+        distance_miles: routeInfo?.distance?.miles || null,
+        duration_minutes: routeInfo?.duration?.minutes || null,
       };
       if (!payload.driver_id) delete payload.driver_id;
       await onSave(payload);

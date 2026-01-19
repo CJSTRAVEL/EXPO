@@ -8,6 +8,7 @@ Build a private hire application where you can add bookings and assign them to d
 - **Booking Details**: Full (customer name, phone, pickup/dropoff, date/time, status, notes, fare)
 - **User Role**: Admin only (simple internal dispatch tool)
 - **Authentication**: None required
+- **SMS Notifications**: Vonage integration for booking confirmations
 
 ## User Personas
 - **Dispatcher/Admin**: Fleet manager who creates bookings, manages drivers, and assigns trips
@@ -18,11 +19,13 @@ Build a private hire application where you can add bookings and assign them to d
 3. Driver Assignment to Bookings
 4. Status Tracking (pending, assigned, in_progress, completed, cancelled)
 5. Dashboard with stats overview
+6. SMS Confirmations to customers
 
 ## Technical Architecture
-- **Backend**: FastAPI + MongoDB
+- **Backend**: FastAPI + MongoDB + Vonage SMS
 - **Frontend**: React + Tailwind CSS + shadcn/ui
 - **Database**: MongoDB (drivers, bookings collections)
+- **SMS Provider**: Vonage (API Key: b38caae3)
 
 ## What's Been Implemented (January 2026)
 - ✅ Dashboard with stats (Total Bookings, Active Drivers, In Progress, Revenue)
@@ -37,11 +40,13 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ Calendar/date picker for booking datetime
 - ✅ Toast notifications for user feedback
 - ✅ Responsive sidebar navigation
+- ✅ **SMS Confirmations** - Auto-send SMS when booking created (via Vonage)
+- ✅ SMS status indicator in bookings table
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers
 - `GET/PUT/DELETE /api/drivers/{id}` - Get/Update/Delete driver
-- `GET/POST /api/bookings` - List/Create bookings
+- `GET/POST /api/bookings` - List/Create bookings (POST triggers SMS)
 - `GET/PUT/DELETE /api/bookings/{id}` - Get/Update/Delete booking
 - `POST /api/bookings/{booking_id}/assign/{driver_id}` - Assign driver
 - `GET /api/stats` - Dashboard statistics
@@ -52,6 +57,7 @@ Build a private hire application where you can add bookings and assign them to d
 - [x] Basic CRUD for drivers and bookings
 - [x] Driver assignment
 - [x] Dashboard overview
+- [x] SMS confirmation on new booking
 
 ### P1 (High Priority) - Future
 - [ ] Search/filter bookings by status, date, driver
@@ -60,7 +66,7 @@ Build a private hire application where you can add bookings and assign them to d
 
 ### P2 (Medium Priority) - Future
 - [ ] Export bookings to CSV
-- [ ] SMS/Email notifications
+- [ ] SMS notifications for driver assignment
 - [ ] Customer self-booking portal
 
 ## Next Tasks

@@ -97,50 +97,42 @@ const AddressAutocomplete = ({
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
   const dropdownRef = useRef(null);
-  const mapsLoaded = useRef(false);
+  const initedRef = useRef(false);
 
   const isValidPostcode = useCallback((text) => UK_POSTCODE_REGEX.test(text.trim()), []);
 
-  // Load Google Maps once
+  // Load Google Maps and initialize autocomplete
   useEffect(() => {
-    if (mapsLoaded.current) return;
+    if (initedRef.current) return;
     
-    const loadScript = () => {
-      if (window.google?.maps?.places) {
-        initAutocomplete();
-        return;
-      }
-      
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.onload = initAutocomplete;
-      document.head.appendChild(script);
-    };
-
     const initAutocomplete = () => {
-      if (!inputRef.current || autocompleteRef.current) return;
+      if (!inputRef.current || !window.google?.maps?.places) return;
+      if (autocompleteRef.current) return; // Already initialized
       
-      mapsLoaded.current = true;
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-        types: ["geocode", "establishment"],
-        componentRestrictions: { country: "gb" },
-        fields: ["formatted_address", "name"],
-      });
+      try {
+        initedRef.current = true;
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+          types: ["geocode", "establishment"],
+          componentRestrictions: { country: "gb" },
+          fields: ["formatted_address", "name"],
+        });
 
-      autocompleteRef.current.addListener("place_changed", () => {
-        const place = autocompleteRef.current.getPlace();
-        const address = place?.formatted_address || place?.name || "";
-        if (address) {
-          setInputValue(address);
-          onChange(address);
-          setShowDropdown(false);
-          setPostcodeData(null);
-        }
-      });
+        autocompleteRef.current.addListener("place_changed", () => {
+          const place = autocompleteRef.current.getPlace();
+          const address = place?.formatted_address || place?.name || "";
+          if (address) {
+            setInputValue(address);
+            onChange(address);
+            setShowDropdown(false);
+            setPostcodeData(null);
+          }
+        });
+      } catch (error) {
+        console.error("Error initializing Google Maps Autocomplete:", error);
+      }
     };
 
-    loadScript();
+    loadGoogleMapsScript(initAutocomplete);
   }, [onChange]);
 
   // Postcode lookup

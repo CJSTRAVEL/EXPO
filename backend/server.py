@@ -448,6 +448,22 @@ async def get_booking(booking_id: str):
         booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
     return booking
 
+@api_router.get("/b/{short_id}", response_model=Booking)
+async def get_booking_by_short_id(short_id: str):
+    """Get booking by short ID (e.g., CJ-001) for short URL support"""
+    # Try to find by booking_id field (CJ-001 format)
+    booking = await db.bookings.find_one({"booking_id": short_id.upper()}, {"_id": 0})
+    if not booking:
+        # Also try lowercase
+        booking = await db.bookings.find_one({"booking_id": short_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if isinstance(booking.get('created_at'), str):
+        booking['created_at'] = datetime.fromisoformat(booking['created_at'])
+    if isinstance(booking.get('booking_datetime'), str):
+        booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
+    return booking
+
 @api_router.put("/bookings/{booking_id}", response_model=Booking)
 async def update_booking(booking_id: str, booking_update: BookingUpdate):
     existing = await db.bookings.find_one({"id": booking_id}, {"_id": 0})

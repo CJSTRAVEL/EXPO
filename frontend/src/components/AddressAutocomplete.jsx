@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { MapPin } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM0UoWBzqtUVfMIs";
+const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
 
 // Load Google Maps script
 let googleMapsPromise = null;

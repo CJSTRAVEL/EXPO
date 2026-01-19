@@ -118,6 +118,39 @@ class Booking(BookingBase):
 async def root():
     return {"message": "Private Hire Booking API"}
 
+# ========== POSTCODE LOOKUP ENDPOINT ==========
+@api_router.get("/postcode/{postcode}")
+async def lookup_postcode(postcode: str):
+    """Lookup addresses for a UK postcode using Getaddress.io"""
+    clean_postcode = postcode.replace(" ", "").upper()
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.getaddress.io/find/{clean_postcode}",
+                params={"api-key": GETADDRESS_API_KEY, "expand": "true"},
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "postcode": data.get("postcode", postcode),
+                    "latitude": data.get("latitude"),
+                    "longitude": data.get("longitude"),
+                    "addresses": data.get("addresses", [])
+                }
+            elif response.status_code == 404:
+                # Postcode not found - return empty
+                return {"postcode": postcode, "addresses": [], "error": "Postcode not found"}
+            else:
+                logging.error(f"Getaddress.io error: {response.status_code} - {response.text}")
+                return {"postcode": postcode, "addresses": [], "error": "Lookup failed"}
+                
+    except Exception as e:
+        logging.error(f"Postcode lookup error: {e}")
+        return {"postcode": postcode, "addresses": [], "error": str(e)}
+
 # ========== DRIVER ENDPOINTS ==========
 @api_router.post("/drivers", response_model=Driver)
 async def create_driver(driver: DriverCreate):

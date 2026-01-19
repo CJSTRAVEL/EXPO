@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { User, Phone, Calendar, Key, Search, X, Eye, EyeOff, Trash2, MoreHorizontal, Loader2 } from "lucide-react";
+import { User, Phone, Calendar, Key, Search, X, Eye, EyeOff, Trash2, MoreHorizontal, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,9 +20,11 @@ const PassengerPortalAdmin = () => {
   const [selectedPassenger, setSelectedPassenger] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [newUser, setNewUser] = useState({ name: "", phone: "", password: "" });
 
   useEffect(() => {
     fetchPassengers();
@@ -37,6 +39,30 @@ const PassengerPortalAdmin = () => {
       toast.error("Failed to load passenger accounts");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.name || !newUser.phone || !newUser.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    if (newUser.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await axios.post(`${API}/admin/passengers`, newUser);
+      toast.success("Passenger account created successfully");
+      setShowCreateModal(false);
+      setNewUser({ name: "", phone: "", password: "" });
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to create account");
+    } finally {
+      setSaving(false);
     }
   };
 

@@ -188,18 +188,20 @@ const AddressAutocomplete = ({
     setPostcodeData(null);
   };
 
-  // Update parent whenever inputValue changes
-  useEffect(() => {
-    if (inputValue && inputValue !== value) {
-      onChange(inputValue);
-    }
-  }, [inputValue]);
+  // Handle input change - update local state and notify parent
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    onChange(newValue);
+  };
 
-  // Sync value prop from parent
+  // Only sync from parent when value prop changes externally (e.g., form reset)
   useEffect(() => {
-    if (value !== undefined && value !== inputValue) {
-      setInputValue(value);
+    // Only update if the value is being set from outside (like form reset/edit)
+    if (value !== inputValue && value !== undefined) {
+      setInputValue(value || "");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return (
@@ -213,7 +215,7 @@ const AddressAutocomplete = ({
         ref={inputRef}
         type="text"
         value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
+        onChange={handleInputChange}
         onFocus={() => postcodeData?.addresses?.length && setShowDropdown(true)}
         placeholder={placeholder}
         className="pl-10"

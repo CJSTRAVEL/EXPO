@@ -385,19 +385,32 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     doc['sms_sent'] = False
     await db.bookings.insert_one(doc)
     
-    # Send SMS in background
+    # Send SMS in background with journey details
     background_tasks.add_task(
         send_sms_and_update_booking,
         booking_obj.id,
         booking.customer_phone,
-        booking.customer_name
+        booking.customer_name,
+        booking.pickup_location,
+        booking.dropoff_location,
+        doc.get('distance_miles'),
+        doc.get('duration_minutes'),
+        doc['booking_datetime']
     )
     
     return booking_obj
 
-async def send_sms_and_update_booking(booking_id: str, phone: str, name: str):
+async def send_sms_and_update_booking(booking_id: str, phone: str, name: str,
+                                       pickup: str = None, dropoff: str = None,
+                                       distance_miles: float = None, duration_minutes: int = None,
+                                       booking_datetime: str = None):
     """Background task to send SMS and update booking record"""
-    success, message = send_booking_sms(phone, name, booking_id)
+    success, message = send_booking_sms(
+        phone, name, booking_id, 
+        pickup, dropoff, 
+        distance_miles, duration_minutes, 
+        booking_datetime
+    )
     await db.bookings.update_one(
         {"id": booking_id},
         {"$set": {"sms_sent": success, "sms_message": message}}

@@ -72,6 +72,9 @@ function App() {
         {/* Public booking details page (no sidebar) */}
         <Route path="/booking/:bookingId" element={<BookingDetails />} />
         
+        {/* Short URL for booking details - uses booking_id like CJ-001 */}
+        <Route path="/b/:shortId" element={<ShortUrlBooking />} />
+        
         {/* Admin pages with sidebar */}
         <Route path="/*" element={
           <div className="app-container">

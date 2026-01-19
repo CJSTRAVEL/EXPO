@@ -48,23 +48,21 @@ const fetchPostcodeAddresses = async (postcode) => {
       return null;
     }
     
-    // Format addresses from Getaddress.io response
+    // Format addresses from Ideal Postcodes response
     const addresses = data.addresses.map((addr) => {
       // Build full address string
       const parts = [
         addr.line_1,
         addr.line_2,
         addr.line_3,
-        addr.line_4,
-        addr.locality,
         addr.town_or_city,
         addr.county,
-        data.postcode
+        addr.postcode || data.postcode
       ].filter(part => part && part.trim() !== '');
       
       const fullAddress = parts.join(', ');
-      const mainText = addr.line_1 || addr.building_name || addr.building_number || '';
-      const secondaryParts = [addr.line_2, addr.locality || addr.town_or_city, data.postcode].filter(p => p && p.trim());
+      const mainText = addr.line_1 || '';
+      const secondaryParts = [addr.line_2, addr.town_or_city, addr.postcode || data.postcode].filter(p => p && p.trim());
       
       return {
         description: fullAddress,

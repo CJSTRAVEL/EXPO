@@ -194,6 +194,45 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
               />
             </div>
 
+            {/* Route Information Display */}
+            {(loadingRoute || routeInfo) && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg" data-testid="route-info">
+                {loadingRoute ? (
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm">Calculating route...</span>
+                  </div>
+                ) : routeInfo && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-800">Journey Details</span>
+                      {routeInfo.summary && (
+                        <span className="text-xs text-blue-600">via {routeInfo.summary}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <div>
+                          <p className="text-lg font-bold text-blue-900">{routeInfo.distance?.miles} miles</p>
+                          <p className="text-xs text-blue-600">Distance</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <p className="text-lg font-bold text-blue-900">{routeInfo.duration?.text}</p>
+                          <p className="text-xs text-blue-600">Est. Duration</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date & Time</Label>

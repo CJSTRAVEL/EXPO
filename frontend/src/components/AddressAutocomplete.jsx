@@ -149,7 +149,14 @@ const AddressAutocomplete = ({
     setPostcodeData(null);
   };
 
-  // Sync value prop
+  // Update parent whenever inputValue changes
+  useEffect(() => {
+    if (inputValue && inputValue !== value) {
+      onChange(inputValue);
+    }
+  }, [inputValue]);
+
+  // Sync value prop from parent
   useEffect(() => {
     if (value !== undefined && value !== inputValue) {
       setInputValue(value);

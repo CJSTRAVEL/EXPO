@@ -1,17 +1,20 @@
-# HireFleet - Private Hire Booking Application PRD
+# CJ's Executive Travel - Private Hire Booking Application PRD
 
 ## Original Problem Statement
-Build a private hire application where you can add bookings and assign them to drivers.
+Build a private hire application where you can add bookings and assign them to drivers. Key features include SMS confirmations, public booking tracking links, Google Maps address autocomplete with UK postcode support, and route calculation.
 
 ## User Choices/Defaults
 - **Driver Info**: Basic (name, phone, vehicle type, vehicle number)
-- **Booking Details**: Full (customer name, phone, pickup/dropoff, date/time, status, notes, fare)
+- **Booking Details**: Full (customer name, phone, pickup/dropoff, date/time, status, notes, fare, distance, duration)
 - **User Role**: Admin only (simple internal dispatch tool)
 - **Authentication**: None required
-- **SMS Notifications**: Vonage integration for booking confirmations
+- **SMS Notifications**: Vonage integration with "CJs Travel" sender ID
+- **Address Lookup**: Google Maps + Getaddress.io for UK postcodes
+- **Route Calculation**: Google Maps Directions API
 
 ## User Personas
 - **Dispatcher/Admin**: Fleet manager who creates bookings, manages drivers, and assigns trips
+- **Customer**: Receives SMS with tracking link to view booking status
 
 ## Core Requirements
 1. Driver Management (CRUD operations)
@@ -19,13 +22,18 @@ Build a private hire application where you can add bookings and assign them to d
 3. Driver Assignment to Bookings
 4. Status Tracking (pending, assigned, in_progress, completed, cancelled)
 5. Dashboard with stats overview
-6. SMS Confirmations to customers
+6. SMS Confirmations to customers with tracking links
+7. Public booking tracking page with live map
+8. Address autocomplete with UK postcode support
+9. Route mileage and duration calculation
 
 ## Technical Architecture
-- **Backend**: FastAPI + MongoDB + Vonage SMS
+- **Backend**: FastAPI + MongoDB + Vonage SMS + Google Maps API + Getaddress.io
 - **Frontend**: React + Tailwind CSS + shadcn/ui
 - **Database**: MongoDB (drivers, bookings collections)
-- **SMS Provider**: Vonage (API Key: b38caae3)
+- **SMS Provider**: Vonage (sender ID: "CJs Travel")
+- **Mapping**: Google Maps (Places, Directions, Static Maps, Embed API)
+- **Address Lookup**: Getaddress.io for UK postcodes
 
 ## What's Been Implemented (January 2026)
 - ✅ Dashboard with stats (Total Bookings, Active Drivers, In Progress, Revenue)
@@ -42,6 +50,11 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ Responsive sidebar navigation
 - ✅ **SMS Confirmations** - Auto-send SMS when booking created (via Vonage)
 - ✅ SMS status indicator in bookings table
+- ✅ **Public Booking Page** - Customer-facing tracking with live map
+- ✅ **Address Autocomplete** - Google Maps + Getaddress.io for UK postcodes
+- ✅ **Route Calculation** - Mileage and duration display in booking form
+- ✅ **Company Rebranding** - CJ's Executive Travel logo and name
+- ✅ **Edit Booking Bug Fix** (Jan 19, 2026) - Fixed Select.Item empty value crash
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

@@ -727,8 +727,9 @@ const BookingsPage = () => {
                 {bookings.map((booking) => (
                   <TableRow 
                     key={booking.id} 
-                    className="table-row-hover"
+                    className="table-row-hover cursor-pointer"
                     data-testid={`booking-row-${booking.id}`}
+                    onClick={() => setViewBooking(booking)}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">

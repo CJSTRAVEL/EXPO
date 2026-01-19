@@ -1,34 +1,186 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+/* Main layout */
+.app-container {
+    display: flex;
     min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: hsl(var(--card));
+    border-right: 1px solid hsl(var(--border));
     display: flex;
     flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 40;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.nav-item {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: hsl(var(--muted-foreground));
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: background-color 0.15s, color 0.15s;
 }
 
-.App-link {
-    color: #61dafb;
+.nav-item:hover {
+    background: hsl(var(--secondary));
+    color: hsl(var(--foreground));
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
+.nav-item.active {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    background: hsl(var(--surface));
+    min-height: 100vh;
+}
+
+.page-header {
+    padding: 1.5rem 2rem;
+    background: hsl(var(--card));
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.page-content {
+    padding: 2rem;
+}
+
+/* Bento grid for dashboard */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    to {
-        transform: rotate(360deg);
+}
+
+@media (max-width: 640px) {
+    .bento-grid {
+        grid-template-columns: 1fr;
     }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* Stat card */
+.stat-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Data table row hover */
+.table-row-hover:hover {
+    background: hsl(var(--secondary) / 0.5);
+}
+
+/* Card grid for drivers */
+.driver-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Driver card */
+.driver-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.driver-card:hover {
+    border-color: hsl(var(--accent) / 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Recent activity feed */
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+/* Form styles */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Modal overlay animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button hover animation */
+.btn-animate {
+    transition: transform 0.1s;
+}
+
+.btn-animate:active {
+    transform: scale(0.95);
 }

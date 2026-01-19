@@ -498,6 +498,36 @@ async def assign_driver_to_booking(booking_id: str, driver_id: str):
         updated['booking_datetime'] = datetime.fromisoformat(updated['booking_datetime'])
     return updated
 
+@api_router.post("/bookings/{booking_id}/resend-sms")
+async def resend_booking_sms(booking_id: str):
+    """Resend SMS confirmation for a booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Send SMS
+    success, message = send_booking_sms(
+        customer_phone=booking['customer_phone'],
+        customer_name=booking['customer_name'],
+        booking_id=booking_id,
+        pickup=booking.get('pickup_location'),
+        dropoff=booking.get('dropoff_location'),
+        distance_miles=booking.get('distance_miles'),
+        duration_minutes=booking.get('duration_minutes'),
+        booking_datetime=booking.get('booking_datetime')
+    )
+    
+    # Update sms_sent status
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {"sms_sent": success}}
+    )
+    
+    if success:
+        return {"success": True, "message": "SMS confirmation sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail=f"Failed to send SMS: {message}")
+
 # ========== STATS ENDPOINT ==========
 @api_router.get("/stats")
 async def get_stats():

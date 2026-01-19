@@ -289,9 +289,17 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
 
   const availableDrivers = drivers.filter(d => d.status === 'available');
 
+  const handleAssign = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (selectedDriver && booking) {
+      onAssign(booking.id, selectedDriver);
+    }
+  };
+
   return (
     <Dialog open={!!booking} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px]" data-testid="assign-driver-modal">
+      <DialogContent className="sm:max-w-[400px] z-[100]" data-testid="assign-driver-modal">
         <DialogHeader>
           <DialogTitle>Assign Driver</DialogTitle>
         </DialogHeader>
@@ -306,7 +314,7 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
               <SelectTrigger data-testid="assign-driver-select">
                 <SelectValue placeholder="Select a driver" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[110]">
                 {availableDrivers.map((driver) => (
                   <SelectItem key={driver.id} value={driver.id}>
                     <div className="flex items-center gap-2">
@@ -319,12 +327,13 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
             </Select>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="relative z-[100]">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button 
-            onClick={() => onAssign(booking.id, selectedDriver)} 
+            type="button"
+            onClick={handleAssign}
             disabled={!selectedDriver}
             data-testid="confirm-assign-driver-btn"
           >

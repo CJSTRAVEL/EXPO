@@ -121,30 +121,49 @@ async def root():
 # ========== POSTCODE LOOKUP ENDPOINT ==========
 @api_router.get("/postcode/{postcode}")
 async def lookup_postcode(postcode: str):
-    """Lookup addresses for a UK postcode using Getaddress.io"""
+    """Lookup addresses for a UK postcode using Ideal Postcodes API"""
     clean_postcode = postcode.replace(" ", "").upper()
     
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"https://api.getaddress.io/find/{clean_postcode}",
-                params={"api-key": GETADDRESS_API_KEY, "expand": "true"},
+        async with httpx.AsyncClient() as http_client:
+            # Use Ideal Postcodes API (free test key works for all postcodes)
+            response = await http_client.get(
+                f"https://api.ideal-postcodes.co.uk/v1/postcodes/{clean_postcode}",
+                params={"api_key": "ak_test"},
                 timeout=10.0
             )
             
             if response.status_code == 200:
                 data = response.json()
+                results = data.get("result", [])
+                
+                if not results:
+                    return {"postcode": postcode, "addresses": []}
+                
+                # Format addresses
+                addresses = []
+                for addr in results:
+                    addresses.append({
+                        "line_1": addr.get("line_1", ""),
+                        "line_2": addr.get("line_2", ""),
+                        "line_3": addr.get("line_3", ""),
+                        "town_or_city": addr.get("post_town", ""),
+                        "county": addr.get("county", ""),
+                        "postcode": addr.get("postcode", ""),
+                        "building_name": addr.get("building_name", ""),
+                        "building_number": addr.get("building_number", ""),
+                        "thoroughfare": addr.get("thoroughfare", ""),
+                        "locality": addr.get("dependant_locality", "")
+                    })
+                
                 return {
-                    "postcode": data.get("postcode", postcode),
-                    "latitude": data.get("latitude"),
-                    "longitude": data.get("longitude"),
-                    "addresses": data.get("addresses", [])
+                    "postcode": results[0].get("postcode", postcode) if results else postcode,
+                    "addresses": addresses
                 }
             elif response.status_code == 404:
-                # Postcode not found - return empty
                 return {"postcode": postcode, "addresses": [], "error": "Postcode not found"}
             else:
-                logging.error(f"Getaddress.io error: {response.status_code} - {response.text}")
+                logging.error(f"Ideal Postcodes error: {response.status_code} - {response.text}")
                 return {"postcode": postcode, "addresses": [], "error": "Lookup failed"}
                 
     except Exception as e:

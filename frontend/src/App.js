@@ -130,6 +130,10 @@ function App() {
         {/* Short URL for booking details - uses booking_id like CJ-001 */}
         <Route path="/b/:shortId" element={<ShortUrlBooking />} />
         
+        {/* Passenger Login and Portal */}
+        <Route path="/login" element={<PassengerLogin />} />
+        <Route path="/portal" element={<PassengerPortal />} />
+        
         {/* Admin pages with sidebar */}
         <Route path="/*" element={
           <div className="app-container">

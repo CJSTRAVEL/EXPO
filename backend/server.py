@@ -384,7 +384,12 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
 # ========== BOOKING ENDPOINTS ==========
 @api_router.post("/bookings", response_model=Booking)
 async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):
+    # Generate readable booking ID
+    readable_booking_id = await generate_booking_id()
+    
     booking_obj = Booking(**booking.model_dump())
+    booking_obj.booking_id = readable_booking_id
+    
     doc = booking_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['booking_datetime'] = doc['booking_datetime'].isoformat()

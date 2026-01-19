@@ -63,6 +63,8 @@ Build a private hire application where you can add bookings and assign them to d
 - `GET/PUT/DELETE /api/bookings/{id}` - Get/Update/Delete booking
 - `POST /api/bookings/{booking_id}/assign/{driver_id}` - Assign driver
 - `GET /api/stats` - Dashboard statistics
+- `GET /api/postcode/{postcode}` - UK postcode lookup (proxy to Getaddress.io)
+- `GET /api/directions` - Route calculation (proxy to Google Maps)
 
 ## Prioritized Backlog
 
@@ -71,6 +73,7 @@ Build a private hire application where you can add bookings and assign them to d
 - [x] Driver assignment
 - [x] Dashboard overview
 - [x] SMS confirmation on new booking
+- [x] Edit booking functionality (bug fixed Jan 19, 2026)
 
 ### P1 (High Priority) - Future
 - [ ] Search/filter bookings by status, date, driver
@@ -81,6 +84,10 @@ Build a private hire application where you can add bookings and assign them to d
 - [ ] Export bookings to CSV
 - [ ] SMS notifications for driver assignment
 - [ ] Customer self-booking portal
+
+## Refactoring Notes
+- `BookingsPage.jsx` is large (~710 lines) - consider decomposing into smaller components
+- `AddressAutocomplete.jsx` has complex dual-service logic - could be simplified
 
 ## Next Tasks
 1. Add search/filter functionality to bookings table

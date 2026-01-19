@@ -92,7 +92,8 @@ class BookingBase(BaseModel):
     fare: Optional[float] = None
 
 class BookingCreate(BookingBase):
-    pass
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
 
 class BookingUpdate(BaseModel):
     customer_name: Optional[str] = None

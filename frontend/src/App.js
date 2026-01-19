@@ -146,6 +146,7 @@ function App() {
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/passengers" element={<PassengersPage />} />
                 <Route path="/drivers" element={<DriversPage />} />
+                <Route path="/passenger-portal" element={<PassengerPortalAdmin />} />
               </Routes>
             </main>
             <Toaster position="top-right" richColors />

@@ -104,6 +104,8 @@ class BookingUpdate(BaseModel):
     fare: Optional[float] = None
     status: Optional[BookingStatus] = None
     driver_id: Optional[str] = None
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")
@@ -112,6 +114,8 @@ class Booking(BookingBase):
     driver_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     sms_sent: Optional[bool] = False
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
 
 # Root endpoint
 @api_router.get("/")

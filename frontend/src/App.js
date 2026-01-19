@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, NavLink, useLocation, useParams, Navigate } from "react-router-dom";
-import { LayoutDashboard, Users, Calendar, Car } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Car, UserCircle } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";
 import BookingDetails from "@/pages/BookingDetails";
+import PassengersPage from "@/pages/PassengersPage";
 import "@/App.css";
 
 const API = process.env.REACT_APP_BACKEND_URL;

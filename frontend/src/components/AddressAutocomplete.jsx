@@ -43,7 +43,7 @@ const AddressAutocomplete = ({
       .then((maps) => {
         if (inputRef.current && !autocompleteRef.current) {
           autocompleteRef.current = new maps.places.Autocomplete(inputRef.current, {
-            types: ["address"],
+            types: ["geocode", "establishment"],
             componentRestrictions: { country: "gb" }, // Restrict to UK
             fields: ["formatted_address", "geometry", "name"],
           });

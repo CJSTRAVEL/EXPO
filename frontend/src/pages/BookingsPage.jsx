@@ -565,8 +565,23 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
   );
 };
 
-const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver }) => {
+const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, onRefresh }) => {
+  const [sendingSms, setSendingSms] = useState(false);
+  
   if (!booking) return null;
+
+  const handleResendSms = async () => {
+    setSendingSms(true);
+    try {
+      await axios.post(`${API}/bookings/${booking.id}/resend-sms`);
+      toast.success("SMS confirmation sent successfully!");
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send SMS");
+    } finally {
+      setSendingSms(false);
+    }
+  };
   
   return (
     <Dialog open={!!booking} onOpenChange={onClose}>

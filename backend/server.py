@@ -333,7 +333,7 @@ async def delete_driver(driver_id: str):
 def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str, 
                      pickup: str = None, dropoff: str = None, 
                      distance_miles: float = None, duration_minutes: int = None,
-                     booking_datetime: str = None):
+                     booking_datetime: str = None, short_booking_id: str = None):
     """Send SMS confirmation for new booking"""
     if not vonage_client:
         logging.warning("Vonage client not initialized, skipping SMS")
@@ -351,9 +351,12 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
             else:
                 phone = '+44' + phone
         
-        # Generate booking details link
+        # Generate booking details link - use short URL if available
         app_url = os.environ.get('APP_URL', 'https://cabmanage-1.preview.emergentagent.com')
-        booking_link = f"{app_url}/booking/{booking_id}"
+        if short_booking_id:
+            booking_link = f"{app_url}/b/{short_booking_id}"
+        else:
+            booking_link = f"{app_url}/booking/{booking_id}"
         
         message_text = (
             f"Hello {customer_name}, Your booking is confirmed.\n\n"

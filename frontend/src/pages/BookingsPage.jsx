@@ -326,14 +326,14 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
                 <div className="space-y-2">
                   <Label>Assign Driver</Label>
                   <Select
-                    value={formData.driver_id}
-                    onValueChange={(value) => setFormData({ ...formData, driver_id: value })}
+                    value={formData.driver_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, driver_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger data-testid="booking-driver-select">
                       <SelectValue placeholder="Select driver" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No driver</SelectItem>
+                      <SelectItem value="none">No driver</SelectItem>
                       {drivers.filter(d => d.status === 'available' || d.id === formData.driver_id).map((driver) => (
                         <SelectItem key={driver.id} value={driver.id}>
                           {driver.name} ({driver.vehicle_type})

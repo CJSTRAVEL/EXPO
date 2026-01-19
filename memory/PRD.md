@@ -55,6 +55,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Route Calculation** - Mileage and duration display in booking form
 - ✅ **Company Rebranding** - CJ's Executive Travel logo and name
 - ✅ **Edit Booking Bug Fix** (Jan 19, 2026) - Fixed Select.Item empty value crash
+- ✅ **View Booking Feature** (Jan 19, 2026) - Click row to view booking details with map, fare, status, driver info
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

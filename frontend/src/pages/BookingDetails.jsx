@@ -279,15 +279,11 @@ const BookingDetails = () => {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-            booking.status === 'cancelled' ? 'bg-red-100' : 'bg-green-100'
-          }`}>
-            {booking.status === 'cancelled' ? (
-              <AlertCircle className="w-8 h-8 text-red-600" />
-            ) : (
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            )}
-          </div>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png" 
+            alt="CJ's Executive Travel" 
+            className="w-20 h-20 object-contain mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold tracking-tight mb-2">
             {booking.status === 'cancelled' ? 'Booking Cancelled' : 'Booking Confirmed'}
           </h1>

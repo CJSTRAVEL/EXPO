@@ -70,6 +70,7 @@ const Sidebar = () => {
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/bookings", icon: Calendar, label: "Bookings" },
+    { path: "/passengers", icon: UserCircle, label: "Passengers" },
     { path: "/drivers", icon: Users, label: "Drivers" },
   ];
 

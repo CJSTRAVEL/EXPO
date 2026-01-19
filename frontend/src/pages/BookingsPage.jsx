@@ -432,6 +432,165 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose }) => {
   );
 };
 
+const BookingViewDialog = ({ booking, driver, onClose, onEdit }) => {
+  if (!booking) return null;
+  
+  return (
+    <Dialog open={!!booking} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[550px]" data-testid="booking-view-modal">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-primary" />
+            Booking Details
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
+          {/* Customer Info */}
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-slate-600 mb-3">Customer Information</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Name</p>
+                <p className="font-medium">{booking.customer_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Phone</p>
+                <p className="font-medium">{booking.customer_phone}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Journey Info */}
+          <div className="bg-blue-50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-blue-700 mb-3">Journey Details</h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-xs font-bold">A</span>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Pickup</p>
+                  <p className="text-sm font-medium">{booking.pickup_location}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-xs font-bold">B</span>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Dropoff</p>
+                  <p className="text-sm font-medium">{booking.dropoff_location}</p>
+                </div>
+              </div>
+              {(booking.distance_miles || booking.duration_minutes) && (
+                <div className="flex items-center gap-6 pt-2 border-t border-blue-200">
+                  {booking.distance_miles && (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                      <span className="text-sm font-semibold text-blue-800">{booking.distance_miles} miles</span>
+                    </div>
+                  )}
+                  {booking.duration_minutes && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-800">
+                        {booking.duration_minutes >= 60 
+                          ? `${Math.floor(booking.duration_minutes / 60)}h ${booking.duration_minutes % 60}m`
+                          : `${booking.duration_minutes} mins`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Route Map */}
+            <div className="rounded-lg overflow-hidden border border-blue-200 mt-3">
+              <img
+                alt="Route Map"
+                width="100%"
+                height="150"
+                style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+                src={`https://maps.googleapis.com/maps/api/staticmap?size=600x150&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(booking.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(booking.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(booking.pickup_location)}%7C${encodeURIComponent(booking.dropoff_location)}&key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs`}
+              />
+            </div>
+          </div>
+
+          {/* Booking Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-xs text-muted-foreground">Date & Time</p>
+              <p className="font-medium flex items-center gap-2 mt-1">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                {format(new Date(booking.booking_datetime), "PPP 'at' p")}
+              </p>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-xs text-muted-foreground">Fare</p>
+              <p className="font-semibold text-lg text-green-600 mt-1">
+                {booking.fare ? `£${booking.fare.toFixed(2)}` : 'Not set'}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-xs text-muted-foreground">Status</p>
+              <div className="mt-1">
+                {getStatusBadge(booking.status)}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-xs text-muted-foreground">Assigned Driver</p>
+              <p className="font-medium flex items-center gap-2 mt-1">
+                <UserCheck className="w-4 h-4 text-muted-foreground" />
+                {driver ? driver.name : 'Unassigned'}
+              </p>
+              {driver && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {driver.vehicle_type} • {driver.vehicle_number}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {booking.notes && (
+            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+              <p className="text-xs text-amber-700 font-medium">Notes</p>
+              <p className="text-sm mt-1">{booking.notes}</p>
+            </div>
+          )}
+
+          {/* SMS Status */}
+          <div className="flex items-center gap-2 text-sm">
+            {booking.sms_sent ? (
+              <>
+                <MessageSquare className="w-4 h-4 text-green-600" />
+                <span className="text-green-600">SMS confirmation sent to customer</span>
+              </>
+            ) : (
+              <>
+                <MessageSquareX className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">SMS not sent</span>
+              </>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Close
+          </Button>
+          <Button type="button" onClick={onEdit} data-testid="edit-from-view-btn">
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Booking
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -440,6 +599,7 @@ const BookingsPage = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [deleteBooking, setDeleteBooking] = useState(null);
   const [assignBooking, setAssignBooking] = useState(null);
+  const [viewBooking, setViewBooking] = useState(null);
 
   const fetchData = async () => {
     try {

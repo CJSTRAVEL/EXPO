@@ -545,6 +545,52 @@ async def get_passenger_bookings(passenger: dict = Depends(get_current_passenger
     
     return bookings
 
+# ========== ADMIN PASSENGER MANAGEMENT ENDPOINTS ==========
+@api_router.get("/admin/passengers")
+async def get_all_passengers():
+    """Get all registered passenger accounts (admin only)"""
+    passengers = await db.passengers.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    
+    # Add booking count for each passenger
+    for passenger in passengers:
+        phone = passenger['phone']
+        phone_variations = [phone]
+        if phone.startswith("+44"):
+            phone_variations.append("0" + phone[3:])
+            phone_variations.append(phone[3:])
+        
+        count = await db.bookings.count_documents({"customer_phone": {"$in": phone_variations}})
+        passenger['booking_count'] = count
+    
+    return passengers
+
+@api_router.put("/admin/passengers/{passenger_id}/password")
+async def update_passenger_password(passenger_id: str, data: dict):
+    """Update a passenger's password (admin only)"""
+    passenger = await db.passengers.find_one({"id": passenger_id})
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    new_password = data.get('password')
+    if not new_password or len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    await db.passengers.update_one(
+        {"id": passenger_id},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    
+    return {"message": "Password updated successfully"}
+
+@api_router.delete("/admin/passengers/{passenger_id}")
+async def delete_passenger(passenger_id: str):
+    """Delete a passenger account (admin only)"""
+    result = await db.passengers.delete_one({"id": passenger_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    return {"message": "Passenger account deleted successfully"}
+
 # ========== BOOKING ENDPOINTS ==========
 @api_router.post("/bookings", response_model=Booking)
 async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):

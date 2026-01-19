@@ -118,6 +118,87 @@ class Booking(BookingBase):
 async def root():
     return {"message": "Private Hire Booking API"}
 
+# Google Maps API Key
+GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+
+# ========== DIRECTIONS/DISTANCE ENDPOINT ==========
+@api_router.get("/directions")
+async def get_directions(origin: str, destination: str):
+    """Get directions and distance between two locations using Google Maps Directions API"""
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(
+                "https://maps.googleapis.com/maps/api/directions/json",
+                params={
+                    "origin": origin,
+                    "destination": destination,
+                    "key": GOOGLE_MAPS_API_KEY,
+                    "units": "imperial",  # For miles
+                    "region": "uk"
+                },
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("status") != "OK":
+                    return {
+                        "success": False,
+                        "error": data.get("status", "Unknown error"),
+                        "message": data.get("error_message", "Could not calculate route")
+                    }
+                
+                route = data.get("routes", [{}])[0]
+                leg = route.get("legs", [{}])[0]
+                
+                # Get distance in miles
+                distance_meters = leg.get("distance", {}).get("value", 0)
+                distance_miles = round(distance_meters / 1609.34, 1)
+                
+                # Get duration
+                duration_seconds = leg.get("duration", {}).get("value", 0)
+                duration_minutes = round(duration_seconds / 60)
+                
+                # Format duration
+                if duration_minutes >= 60:
+                    hours = duration_minutes // 60
+                    mins = duration_minutes % 60
+                    duration_text = f"{hours}h {mins}m" if mins > 0 else f"{hours}h"
+                else:
+                    duration_text = f"{duration_minutes} mins"
+                
+                return {
+                    "success": True,
+                    "distance": {
+                        "miles": distance_miles,
+                        "text": f"{distance_miles} miles",
+                        "meters": distance_meters
+                    },
+                    "duration": {
+                        "minutes": duration_minutes,
+                        "text": duration_text,
+                        "seconds": duration_seconds
+                    },
+                    "start_address": leg.get("start_address", origin),
+                    "end_address": leg.get("end_address", destination),
+                    "summary": route.get("summary", "")
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "API request failed",
+                    "message": f"Status code: {response.status_code}"
+                }
+                
+    except Exception as e:
+        logging.error(f"Directions API error: {e}")
+        return {
+            "success": False,
+            "error": "Exception",
+            "message": str(e)
+        }
+
 # ========== POSTCODE LOOKUP ENDPOINT ==========
 @api_router.get("/postcode/{postcode}")
 async def lookup_postcode(postcode: str):

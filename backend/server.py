@@ -163,7 +163,7 @@ async def delete_driver(driver_id: str):
     return {"message": "Driver deleted successfully"}
 
 # ========== SMS HELPER FUNCTION ==========
-def send_booking_sms(customer_phone: str, customer_name: str, pickup: str, dropoff: str, booking_time: str):
+def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str):
     """Send SMS confirmation for new booking"""
     if not vonage_client:
         logging.warning("Vonage client not initialized, skipping SMS")
@@ -181,12 +181,15 @@ def send_booking_sms(customer_phone: str, customer_name: str, pickup: str, dropo
             else:
                 phone = '+44' + phone
         
+        # Generate tracking code from booking ID
+        tracking_code = booking_id.replace('-', '').upper()[:16]
+        tracking_url = f"https://track.cab9.app/?b={tracking_code}"
+        
         message_text = (
-            f"Hi {customer_name}, your HireFleet booking is confirmed!\n"
-            f"Pickup: {pickup}\n"
-            f"Dropoff: {dropoff}\n"
-            f"Time: {booking_time}\n"
-            f"Thank you for choosing HireFleet!"
+            f"Hello {customer_name}, Your booking is confirmed.\n\n"
+            f"{tracking_url}\n\n"
+            f"Please open the link to check your details.\n\n"
+            f"Thank You CJ's Executive Travel Limited."
         )
         
         response = vonage_client.sms.send(

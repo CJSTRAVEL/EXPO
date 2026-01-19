@@ -331,7 +331,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 phone = '+44' + phone
         
         # Generate booking details link
-        app_url = os.environ.get('APP_URL', 'https://driverassign-1.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://cabmanage-1.preview.emergentagent.com')
         booking_link = f"{app_url}/booking/{booking_id}"
         
         message_text = (

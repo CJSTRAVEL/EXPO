@@ -729,18 +729,38 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
           )}
 
           {/* SMS Status */}
-          <div className="flex items-center gap-2 text-sm">
-            {booking.sms_sent ? (
-              <>
-                <MessageSquare className="w-4 h-4 text-green-600" />
-                <span className="text-green-600">SMS confirmation sent to customer</span>
-              </>
-            ) : (
-              <>
-                <MessageSquareX className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">SMS not sent</span>
-              </>
-            )}
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              {booking.sms_sent ? (
+                <>
+                  <MessageSquare className="w-4 h-4 text-green-600" />
+                  <span className="text-green-600">SMS confirmation sent</span>
+                </>
+              ) : (
+                <>
+                  <MessageSquareX className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">SMS not sent</span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={handleResendSms}
+              disabled={sendingSms}
+              className="text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1 disabled:opacity-50"
+              data-testid="resend-sms-link"
+            >
+              {sendingSms ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-3 h-3" />
+                  {booking.sms_sent ? "Resend SMS" : "Send SMS"}
+                </>
+              )}
+            </button>
           </div>
         </div>
         <DialogFooter>

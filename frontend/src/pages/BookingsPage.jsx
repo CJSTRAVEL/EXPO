@@ -1056,6 +1056,16 @@ const BookingsPage = () => {
               New Booking
             </Button>
           </div>
+        ) : filteredBookings.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No bookings found</h3>
+            <p className="text-muted-foreground mb-4">Try adjusting your search or filters</p>
+            <Button variant="outline" onClick={clearFilters} data-testid="clear-search-btn">
+              <X className="w-4 h-4 mr-2" />
+              Clear Filters
+            </Button>
+          </div>
         ) : (
           <div className="space-y-6">
             {sortedDates.map((date) => (

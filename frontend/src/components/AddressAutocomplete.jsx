@@ -204,6 +204,21 @@ const AddressAutocomplete = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  // Calculate dropdown position
+  const [dropdownStyle, setDropdownStyle] = useState({});
+  
+  useEffect(() => {
+    if (showDropdown && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [showDropdown]);
+
   return (
     <div className="relative">
       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
@@ -227,7 +242,8 @@ const AddressAutocomplete = ({
       {showDropdown && postcodeData?.addresses?.length > 0 && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-2xl max-h-80 overflow-y-auto"
+          style={dropdownStyle}
+          className="z-[99999] bg-white border border-gray-300 rounded-lg shadow-2xl max-h-80 overflow-y-auto"
         >
           <div className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold sticky top-0">
             📍 {postcodeData.addresses.length} addresses at {postcodeData.postcode}

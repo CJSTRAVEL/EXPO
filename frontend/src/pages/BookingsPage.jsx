@@ -791,7 +791,7 @@ const BookingsPage = () => {
                     <TableCell className="text-right font-medium">
                       {booking.fare ? `£${booking.fare.toFixed(2)}` : '-'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`booking-actions-${booking.id}`}>
@@ -799,6 +799,10 @@ const BookingsPage = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setViewBooking(booking)} data-testid={`view-booking-${booking.id}`}>
+                            <MapPin className="w-4 h-4 mr-2" />
+                            View
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(booking)} data-testid={`edit-booking-${booking.id}`}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
@@ -828,6 +832,17 @@ const BookingsPage = () => {
           </div>
         )}
       </div>
+
+      <BookingViewDialog
+        booking={viewBooking}
+        driver={viewBooking ? drivers.find(d => d.id === viewBooking.driver_id) : null}
+        onClose={() => setViewBooking(null)}
+        onEdit={() => {
+          setSelectedBooking(viewBooking);
+          setViewBooking(null);
+          setShowForm(true);
+        }}
+      />
 
       <BookingForm
         booking={selectedBooking}

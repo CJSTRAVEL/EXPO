@@ -261,7 +261,7 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
+                    <CalendarComponent
                       mode="single"
                       selected={formData.booking_datetime}
                       onSelect={(date) => {

@@ -227,14 +227,16 @@ const AddressAutocomplete = ({
         autoComplete="off"
       />
       
-      {/* Postcode addresses dropdown */}
+      {/* Postcode addresses dropdown - appears above Google autocomplete */}
       {showDropdown && postcodeData && postcodeData.addresses.length > 0 && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[200] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto"
+          className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-72 overflow-y-auto"
+          style={{ top: '100%' }}
         >
-          <div className="px-3 py-2 bg-slate-50 border-b text-xs text-muted-foreground font-medium sticky top-0">
-            {postcodeData.addresses.length} addresses at {postcodeData.postcode}
+          <div className="px-3 py-2 bg-blue-50 border-b text-xs text-blue-700 font-medium sticky top-0 flex items-center justify-between">
+            <span>{postcodeData.addresses.length} addresses at {postcodeData.postcode}</span>
+            <span className="text-blue-500">Select an address</span>
           </div>
           {postcodeData.addresses.map((address, index) => (
             <button
@@ -242,6 +244,7 @@ const AddressAutocomplete = ({
               type="button"
               className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0 transition-colors"
               onClick={() => handleAddressSelect(address)}
+              onMouseDown={(e) => e.preventDefault()}
             >
               <Home className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">

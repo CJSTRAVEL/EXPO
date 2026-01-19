@@ -676,14 +676,25 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver })
             </div>
             <div className="bg-slate-50 rounded-lg p-4">
               <p className="text-xs text-muted-foreground">Assigned Driver</p>
-              <p className="font-medium flex items-center gap-2 mt-1">
-                <UserCheck className="w-4 h-4 text-muted-foreground" />
-                {driver ? driver.name : 'Unassigned'}
-              </p>
-              {driver && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {driver.vehicle_type} • {driver.vehicle_number}
-                </p>
+              {driver ? (
+                <>
+                  <p className="font-medium flex items-center gap-2 mt-1">
+                    <UserCheck className="w-4 h-4 text-muted-foreground" />
+                    {driver.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {driver.vehicle_type} • {driver.vehicle_number}
+                  </p>
+                </>
+              ) : (
+                <button
+                  onClick={onAssignDriver}
+                  className="mt-1 text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                  data-testid="view-assign-driver-link"
+                >
+                  <Plus className="w-4 h-4" />
+                  Assign Driver
+                </button>
               )}
             </div>
           </div>

@@ -111,12 +111,33 @@ class BookingUpdate(BaseModel):
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    booking_id: Optional[str] = None  # Readable booking ID like CJ-001
     status: BookingStatus = BookingStatus.PENDING
     driver_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     sms_sent: Optional[bool] = False
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
+
+async def generate_booking_id():
+    """Generate a sequential booking ID like CJ-001, CJ-002, etc."""
+    # Find the highest booking number
+    latest = await db.bookings.find_one(
+        {"booking_id": {"$exists": True, "$ne": None}},
+        sort=[("booking_id", -1)]
+    )
+    
+    if latest and latest.get("booking_id"):
+        try:
+            # Extract number from CJ-XXX format
+            current_num = int(latest["booking_id"].split("-")[1])
+            next_num = current_num + 1
+        except (ValueError, IndexError):
+            next_num = 1
+    else:
+        next_num = 1
+    
+    return f"CJ-{next_num:03d}"
 
 # Root endpoint
 @api_router.get("/")

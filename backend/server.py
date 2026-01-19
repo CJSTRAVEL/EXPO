@@ -447,6 +447,104 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
         logging.error(f"SMS error: {str(e)}")
         return False, str(e)
 
+# ========== PASSENGER AUTHENTICATION ENDPOINTS ==========
+@api_router.post("/passenger/register", response_model=PassengerResponse)
+async def register_passenger(data: PassengerRegister):
+    """Register a new passenger account"""
+    # Normalize phone number
+    phone = data.phone.strip().replace(" ", "")
+    if phone.startswith("0"):
+        phone = "+44" + phone[1:]
+    elif not phone.startswith("+"):
+        phone = "+44" + phone
+    
+    # Check if phone already registered
+    existing = await db.passengers.find_one({"phone": phone})
+    if existing:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+    
+    # Create passenger
+    passenger = Passenger(
+        name=data.name,
+        phone=phone,
+        password_hash=hash_password(data.password)
+    )
+    
+    doc = passenger.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.passengers.insert_one(doc)
+    
+    token = create_token(passenger.id, phone)
+    
+    return PassengerResponse(
+        id=passenger.id,
+        name=passenger.name,
+        phone=phone,
+        token=token
+    )
+
+@api_router.post("/passenger/login", response_model=PassengerResponse)
+async def login_passenger(data: PassengerLogin):
+    """Login a passenger"""
+    # Normalize phone number
+    phone = data.phone.strip().replace(" ", "")
+    if phone.startswith("0"):
+        phone = "+44" + phone[1:]
+    elif not phone.startswith("+"):
+        phone = "+44" + phone
+    
+    # Find passenger
+    passenger = await db.passengers.find_one({"phone": phone}, {"_id": 0})
+    if not passenger:
+        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+    
+    # Verify password
+    if passenger['password_hash'] != hash_password(data.password):
+        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+    
+    token = create_token(passenger['id'], phone)
+    
+    return PassengerResponse(
+        id=passenger['id'],
+        name=passenger['name'],
+        phone=phone,
+        token=token
+    )
+
+@api_router.get("/passenger/me")
+async def get_passenger_profile(passenger: dict = Depends(get_current_passenger)):
+    """Get current passenger profile"""
+    return {
+        "id": passenger['id'],
+        "name": passenger['name'],
+        "phone": passenger['phone']
+    }
+
+@api_router.get("/passenger/bookings")
+async def get_passenger_bookings(passenger: dict = Depends(get_current_passenger)):
+    """Get all bookings for the logged-in passenger"""
+    phone = passenger['phone']
+    
+    # Also check for phone variations (with/without +44, with 0)
+    phone_variations = [phone]
+    if phone.startswith("+44"):
+        phone_variations.append("0" + phone[3:])
+        phone_variations.append(phone[3:])
+    
+    bookings = await db.bookings.find(
+        {"customer_phone": {"$in": phone_variations}},
+        {"_id": 0}
+    ).sort("booking_datetime", -1).to_list(100)
+    
+    # Convert datetime strings back to datetime objects
+    for booking in bookings:
+        if isinstance(booking.get('created_at'), str):
+            booking['created_at'] = datetime.fromisoformat(booking['created_at'])
+        if isinstance(booking.get('booking_datetime'), str):
+            booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
+    
+    return bookings
+
 # ========== BOOKING ENDPOINTS ==========
 @api_router.post("/bookings", response_model=Booking)
 async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):

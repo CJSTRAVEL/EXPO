@@ -786,6 +786,12 @@ const BookingsPage = () => {
   const [deleteBooking, setDeleteBooking] = useState(null);
   const [assignBooking, setAssignBooking] = useState(null);
   const [viewBooking, setViewBooking] = useState(null);
+  
+  // Search and filter states
+  const [searchText, setSearchText] = useState("");
+  const [filterDate, setFilterDate] = useState(null);
+  const [filterDriver, setFilterDriver] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchData = async () => {
     try {

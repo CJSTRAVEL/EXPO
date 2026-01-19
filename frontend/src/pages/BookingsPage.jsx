@@ -545,6 +545,7 @@ const BookingsPage = () => {
                 <TableRow className="bg-slate-50/50">
                   <TableHead className="font-semibold">Customer</TableHead>
                   <TableHead className="font-semibold">Route</TableHead>
+                  <TableHead className="font-semibold">Miles</TableHead>
                   <TableHead className="font-semibold">Date & Time</TableHead>
                   <TableHead className="font-semibold">Driver</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>

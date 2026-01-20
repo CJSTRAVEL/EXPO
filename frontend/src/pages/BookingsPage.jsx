@@ -1551,7 +1551,6 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
-  const [bookingRequests, setBookingRequests] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1569,18 +1568,16 @@ const BookingsPage = () => {
 
   const fetchData = async () => {
     try {
-      const [bookingsRes, driversRes, clientsRes, requestsRes] = await Promise.all([
+      const [bookingsRes, driversRes, clientsRes] = await Promise.all([
         axios.get(`${API}/bookings`),
         axios.get(`${API}/drivers`),
         axios.get(`${API}/clients`),
-        axios.get(`${API}/admin/booking-requests`).catch(() => ({ data: [] })),
       ]);
       // Filter out contract work bookings (those linked to clients)
       const regularBookings = bookingsRes.data.filter(b => !b.client_id);
       setBookings(regularBookings);
       setDrivers(driversRes.data);
       setClients(clientsRes.data);
-      setBookingRequests(requestsRes.data?.filter(r => r.status === 'pending') || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
@@ -1716,28 +1713,6 @@ const BookingsPage = () => {
   };
 
   const hasActiveFilters = searchText || filterDate || (filterDriver && filterDriver !== "all");
-
-  // Handle booking request approval
-  const handleApproveRequest = async (requestId) => {
-    try {
-      await axios.put(`${API}/admin/booking-requests/${requestId}/approve`);
-      toast.success("Booking request approved!");
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to approve request");
-    }
-  };
-
-  // Handle booking request rejection
-  const handleRejectRequest = async (requestId) => {
-    try {
-      await axios.put(`${API}/admin/booking-requests/${requestId}/reject`);
-      toast.success("Booking request rejected");
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to reject request");
-    }
-  };
 
   // Get status color for the card border
   const getStatusColor = (status) => {

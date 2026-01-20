@@ -187,7 +187,10 @@ const ClientsPage = () => {
   };
 
   const handleGenerateInvoice = async () => {
-    if (!selectedClient) return;
+    if (!selectedClient || invoiceBookings.length === 0) {
+      toast.error("No bookings to include in invoice");
+      return;
+    }
     
     setGeneratingInvoice(true);
     try {
@@ -195,8 +198,15 @@ const ClientsPage = () => {
       if (invoiceDateRange.start) params.append('start_date', invoiceDateRange.start);
       if (invoiceDateRange.end) params.append('end_date', invoiceDateRange.end);
       
-      const response = await axios.get(
+      // Send custom prices along with the request
+      const customPrices = {};
+      invoiceBookings.forEach(b => {
+        customPrices[b.id] = b.fare;
+      });
+      
+      const response = await axios.post(
         `${API}/clients/${selectedClient.id}/invoice?${params.toString()}`,
+        { custom_prices: customPrices },
         { responseType: 'blob' }
       );
       
@@ -220,28 +230,59 @@ const ClientsPage = () => {
     }
   };
 
+  const fetchInvoicePreview = async () => {
+    if (!selectedClient) return;
+    
+    setLoadingInvoicePreview(true);
+    try {
+      const params = new URLSearchParams();
+      if (invoiceDateRange.start) params.append('start_date', invoiceDateRange.start);
+      if (invoiceDateRange.end) params.append('end_date', invoiceDateRange.end);
+      
+      const response = await axios.get(
+        `${API}/clients/${selectedClient.id}/invoice/preview?${params.toString()}`
+      );
+      setInvoiceBookings(response.data);
+    } catch (error) {
+      console.error("Error fetching invoice preview:", error);
+      setInvoiceBookings([]);
+    } finally {
+      setLoadingInvoicePreview(false);
+    }
+  };
+
+  const updateBookingPrice = (bookingId, newPrice) => {
+    setInvoiceBookings(prev => 
+      prev.map(b => b.id === bookingId ? { ...b, fare: parseFloat(newPrice) || 0 } : b)
+    );
+  };
+
+  const invoiceTotal = invoiceBookings.reduce((sum, b) => sum + (b.fare || 0), 0);
+
   const setQuickDateRange = (range) => {
     const now = new Date();
+    let newRange = {};
     switch (range) {
       case 'this_month':
-        setInvoiceDateRange({
+        newRange = {
           start: format(startOfMonth(now), "yyyy-MM-dd"),
           end: format(endOfMonth(now), "yyyy-MM-dd"),
-        });
+        };
         break;
       case 'last_month':
         const lastMonth = subMonths(now, 1);
-        setInvoiceDateRange({
+        newRange = {
           start: format(startOfMonth(lastMonth), "yyyy-MM-dd"),
           end: format(endOfMonth(lastMonth), "yyyy-MM-dd"),
-        });
+        };
         break;
       case 'all_time':
-        setInvoiceDateRange({ start: '', end: '' });
+        newRange = { start: '', end: '' };
         break;
       default:
-        break;
+        return;
     }
+    setInvoiceDateRange(newRange);
   };
 
   // Filter clients based on search

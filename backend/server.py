@@ -1177,24 +1177,17 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     if create_return and return_datetime:
         return_readable_id = await generate_booking_id()
         
-        # Swap pickup and dropoff for return journey
-        # If there are additional stops, reverse them
-        additional_stops = booking.additional_stops or []
-        if additional_stops:
-            # Reverse: last stop becomes first pickup after original destination
-            reversed_stops = [booking.dropoff_location] + list(reversed(additional_stops[:-1])) if len(additional_stops) > 1 else []
-            return_pickup = additional_stops[-1] if additional_stops else booking.dropoff_location
-        else:
-            reversed_stops = []
-            return_pickup = booking.dropoff_location
+        # Use custom return locations if provided, otherwise swap pickup/dropoff
+        return_pickup = booking.return_pickup_location or booking.dropoff_location
+        return_dropoff = booking.return_dropoff_location or booking.pickup_location
         
         return_booking = Booking(
             first_name=booking.first_name,
             last_name=booking.last_name,
             customer_phone=booking.customer_phone,
             pickup_location=return_pickup,
-            dropoff_location=booking.pickup_location,
-            additional_stops=reversed_stops if reversed_stops else None,
+            dropoff_location=return_dropoff,
+            additional_stops=None,  # Return journey has no intermediate stops
             booking_datetime=return_datetime,
             notes=f"Return journey - {booking.notes}" if booking.notes else "Return journey",
             fare=booking.fare,

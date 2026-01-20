@@ -694,7 +694,7 @@ async def send_sms_and_update_booking(booking_id: str, phone: str, name: str,
         {"$set": {"sms_sent": success, "sms_message": message}}
     )
 
-@api_router.get("/bookings", response_model=List[Booking])
+@api_router.get("/bookings", response_model=List[BookingResponse])
 async def get_bookings():
     bookings = await db.bookings.find({}, {"_id": 0}).to_list(1000)
     for booking in bookings:
@@ -704,7 +704,7 @@ async def get_bookings():
             booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
     return bookings
 
-@api_router.get("/bookings/{booking_id}", response_model=Booking)
+@api_router.get("/bookings/{booking_id}", response_model=BookingResponse)
 async def get_booking(booking_id: str):
     booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if not booking:
@@ -715,7 +715,7 @@ async def get_booking(booking_id: str):
         booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
     return booking
 
-@api_router.get("/b/{short_id}", response_model=Booking)
+@api_router.get("/b/{short_id}", response_model=BookingResponse)
 async def get_booking_by_short_id(short_id: str):
     """Get booking by short ID (e.g., CJ-001) for short URL support"""
     # Try to find by booking_id field (CJ-001 format)

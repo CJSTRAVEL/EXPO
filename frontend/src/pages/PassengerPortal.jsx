@@ -270,20 +270,87 @@ const PassengerPortal = () => {
       <main className="max-w-2xl mx-auto px-4 py-6">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 text-white mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-              <User className="w-7 h-7" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                <User className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-white/80 text-sm">Welcome back,</p>
+                <h2 className="text-xl font-bold">{user?.name}</h2>
+                <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
+                  <Phone className="w-3 h-3" />
+                  {user?.phone}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-white/80 text-sm">Welcome back,</p>
-              <h2 className="text-xl font-bold">{user?.name}</h2>
-              <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
-                <Phone className="w-3 h-3" />
-                {user?.phone}
-              </p>
-            </div>
+            <Button 
+              onClick={() => setShowRequestForm(true)}
+              className="bg-white text-primary hover:bg-white/90"
+              data-testid="request-booking-btn"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Request Booking
+            </Button>
           </div>
         </div>
+
+        {/* Pending Booking Requests */}
+        {bookingRequests.filter(r => r.status === 'pending').length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">
+              Pending Requests
+            </h3>
+            <div className="space-y-3">
+              {bookingRequests.filter(r => r.status === 'pending').map((request) => (
+                <div
+                  key={request.id}
+                  className="bg-amber-50 rounded-lg border border-amber-200 p-4"
+                  data-testid={`request-card-${request.id}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                        AWAITING CONFIRMATION
+                      </Badge>
+                      <p className="font-medium text-slate-800 mt-2">
+                        {format(new Date(request.pickup_datetime), "EEE, dd MMM")}
+                      </p>
+                      <p className="text-lg font-bold">
+                        {format(new Date(request.pickup_datetime), "HH:mm")}
+                      </p>
+                    </div>
+                    {request.flight_number && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded">
+                        <Plane className="w-3 h-3" />
+                        {request.flight_number}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <div className="flex flex-col items-center mt-1">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <div className="w-0.5 h-6 bg-amber-300"></div>
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700 truncate">{request.pickup_location}</p>
+                      <div className="h-3"></div>
+                      <p className="text-sm text-slate-600 truncate">{request.dropoff_location}</p>
+                    </div>
+                  </div>
+                  
+                  {request.notes && (
+                    <p className="text-xs text-amber-700 mt-3 bg-amber-100 rounded p-2">
+                      Note: {request.notes}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">

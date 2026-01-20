@@ -447,11 +447,15 @@ const PassengerPortal = () => {
         )}
 
         {/* No Bookings */}
-        {bookings.length === 0 && (
+        {bookings.length === 0 && bookingRequests.length === 0 && (
           <div className="text-center py-12">
             <MapPin className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
-            <p className="text-muted-foreground">Your bookings will appear here once confirmed</p>
+            <p className="text-muted-foreground mb-4">Your bookings will appear here once confirmed</p>
+            <Button onClick={() => setShowRequestForm(true)} data-testid="request-first-booking-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Request Your First Booking
+            </Button>
           </div>
         )}
       </main>
@@ -461,6 +465,139 @@ const PassengerPortal = () => {
         booking={selectedBooking}
         onClose={() => setSelectedBooking(null)}
       />
+
+      {/* Booking Request Form Modal */}
+      <Dialog open={showRequestForm} onOpenChange={setShowRequestForm}>
+        <DialogContent className="max-w-md" data-testid="request-form-modal">
+          <DialogHeader>
+            <DialogTitle>Request a Booking</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Pickup Location */}
+            <div className="space-y-2">
+              <Label htmlFor="pickup">Pickup Location *</Label>
+              <Input
+                id="pickup"
+                value={requestForm.pickup_location}
+                onChange={(e) => setRequestForm({ ...requestForm, pickup_location: e.target.value })}
+                placeholder="Enter pickup address..."
+                data-testid="request-pickup-input"
+              />
+            </div>
+
+            {/* Dropoff Location */}
+            <div className="space-y-2">
+              <Label htmlFor="dropoff">Drop-off Location *</Label>
+              <Input
+                id="dropoff"
+                value={requestForm.dropoff_location}
+                onChange={(e) => setRequestForm({ ...requestForm, dropoff_location: e.target.value })}
+                placeholder="Enter drop-off address..."
+                data-testid="request-dropoff-input"
+              />
+            </div>
+
+            {/* Date & Time */}
+            <div className="space-y-2">
+              <Label>Pickup Date & Time *</Label>
+              <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !requestForm.pickup_datetime && "text-muted-foreground"
+                    )}
+                    data-testid="request-datetime-btn"
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {requestForm.pickup_datetime 
+                      ? format(requestForm.pickup_datetime, "PPP 'at' p") 
+                      : "Select date & time"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={requestForm.pickup_datetime}
+                    onSelect={(date) => {
+                      if (date) {
+                        const current = requestForm.pickup_datetime;
+                        date.setHours(current.getHours(), current.getMinutes());
+                        setRequestForm({ ...requestForm, pickup_datetime: date });
+                      }
+                    }}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                  />
+                  <div className="p-3 border-t">
+                    <Input
+                      type="time"
+                      value={format(requestForm.pickup_datetime, "HH:mm")}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value.split(':');
+                        const newDate = new Date(requestForm.pickup_datetime);
+                        newDate.setHours(parseInt(hours), parseInt(minutes));
+                        setRequestForm({ ...requestForm, pickup_datetime: newDate });
+                      }}
+                      data-testid="request-time-input"
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Flight Number (optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="flight" className="flex items-center gap-2">
+                <Plane className="w-4 h-4" />
+                Flight Number (optional)
+              </Label>
+              <Input
+                id="flight"
+                value={requestForm.flight_number}
+                onChange={(e) => setRequestForm({ ...requestForm, flight_number: e.target.value.toUpperCase() })}
+                placeholder="e.g., BA123"
+                data-testid="request-flight-input"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Additional Notes</Label>
+              <Textarea
+                id="notes"
+                value={requestForm.notes}
+                onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                placeholder="Any special requirements..."
+                rows={3}
+                data-testid="request-notes-input"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRequestForm(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitRequest} 
+              disabled={submitting}
+              data-testid="submit-request-btn"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Request"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

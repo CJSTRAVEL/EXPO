@@ -109,6 +109,7 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         last_name: lastName,
         booking_datetime: new Date(booking.booking_datetime),
         fare: booking.fare || "",
+        customer_email: booking.customer_email || "",
         passenger_count: booking.passenger_count || 1,
         luggage_count: booking.luggage_count || 0,
         driver_id: booking.driver_id || "",

@@ -634,14 +634,17 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     doc['created_at'] = doc['created_at'].isoformat()
     doc['booking_datetime'] = doc['booking_datetime'].isoformat()
     doc['sms_sent'] = False
+    # Store full customer_name for backward compatibility
+    doc['customer_name'] = f"{booking.first_name} {booking.last_name}"
     await db.bookings.insert_one(doc)
     
     # Send SMS in background with journey details and short booking ID
+    full_name = f"{booking.first_name} {booking.last_name}"
     background_tasks.add_task(
         send_sms_and_update_booking,
         booking_obj.id,
         booking.customer_phone,
-        booking.customer_name,
+        full_name,
         booking.pickup_location,
         booking.dropoff_location,
         doc.get('distance_miles'),

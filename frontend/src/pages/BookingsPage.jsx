@@ -256,6 +256,9 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         return_pickup_location: !booking && formData.create_return 
           ? formData.return_pickup_location 
           : null,
+        return_additional_stops: !booking && formData.create_return && formData.return_additional_stops?.length > 0
+          ? formData.return_additional_stops
+          : null,
         return_dropoff_location: !booking && formData.create_return 
           ? formData.return_dropoff_location 
           : null,

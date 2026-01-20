@@ -1631,12 +1631,13 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
         )
         doc['linked_booking_id'] = return_booking_id
     
-    # Send SMS in background with journey details and short booking ID
+    # Send SMS and Email in background with journey details and short booking ID
     full_name = f"{booking.first_name} {booking.last_name}"
     background_tasks.add_task(
-        send_sms_and_update_booking,
+        send_notifications_and_update_booking,
         booking_obj.id,
         booking.customer_phone,
+        getattr(booking, 'customer_email', None),
         full_name,
         booking.pickup_location,
         booking.dropoff_location,
@@ -1652,21 +1653,37 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     response_data['linked_booking_id'] = return_booking_id
     return response_data
 
-async def send_sms_and_update_booking(booking_id: str, phone: str, name: str,
+async def send_notifications_and_update_booking(booking_id: str, phone: str, email: str, name: str,
                                        pickup: str = None, dropoff: str = None,
                                        distance_miles: float = None, duration_minutes: int = None,
-                                       booking_datetime: str = None, short_booking_id: str = None):
-    """Background task to send SMS and update booking record"""
-    success, message = send_booking_sms(
+                                       booking_datetime: str = None, short_booking_id: str = None,
+                                       status: str = None, driver_name: str = None):
+    """Background task to send SMS and email, then update booking record"""
+    # Send SMS
+    sms_success, sms_message = send_booking_sms(
         phone, name, booking_id, 
         pickup, dropoff, 
         distance_miles, duration_minutes, 
         booking_datetime,
-        short_booking_id  # Use short URL
+        short_booking_id
     )
+    
+    # Send Email
+    email_success, email_message = send_booking_email(
+        email, name, booking_id,
+        pickup, dropoff,
+        booking_datetime, short_booking_id,
+        status, driver_name
+    )
+    
     await db.bookings.update_one(
         {"id": booking_id},
-        {"$set": {"sms_sent": success, "sms_message": message}}
+        {"$set": {
+            "sms_sent": sms_success, 
+            "sms_message": sms_message,
+            "email_sent": email_success,
+            "email_message": email_message
+        }}
     )
 
 @api_router.get("/bookings", response_model=List[BookingResponse])

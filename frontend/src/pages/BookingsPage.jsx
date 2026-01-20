@@ -109,6 +109,8 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         return_datetime: null,
       });
       setShowFlightInfo(!!flightInfo.flight_number);
+      setFlightData(null);
+      setFlightError(null);
     } else {
       setFormData({
         first_name: "",
@@ -134,6 +136,8 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
       });
       setRouteInfo(null);
       setShowFlightInfo(false);
+      setFlightData(null);
+      setFlightError(null);
     }
   }, [booking]);
 

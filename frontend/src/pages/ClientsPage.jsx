@@ -376,6 +376,11 @@ const ClientsPage = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowInvoiceModal(true)} data-testid="generate-invoice-btn">
+                    <Download className="w-4 h-4 mr-2" />
+                    Generate Invoice
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleOpenForm(selectedClient)} data-testid="edit-client-btn">
                     <Pencil className="w-4 h-4 mr-2" />
                     Edit Client

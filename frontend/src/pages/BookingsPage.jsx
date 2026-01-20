@@ -1322,6 +1322,12 @@ const BookingsPage = () => {
     groupedBookings[date].sort((a, b) => new Date(a.booking_datetime) - new Date(b.booking_datetime));
   });
 
+  // Helper to find the linked return booking for display
+  const getLinkedReturnBooking = (booking) => {
+    if (!booking.linked_booking_id || booking.is_return) return null;
+    return bookings.find(b => b.id === booking.linked_booking_id && b.is_return);
+  };
+
   // Clear all filters
   const clearFilters = () => {
     setSearchText("");

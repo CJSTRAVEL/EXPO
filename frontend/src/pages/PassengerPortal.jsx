@@ -263,6 +263,9 @@ const PassengerPortal = () => {
         // Return booking fields
         create_return: requestForm.create_return,
         return_pickup_location: requestForm.create_return ? requestForm.return_pickup_location : null,
+        return_additional_stops: requestForm.create_return && requestForm.return_additional_stops?.length > 0
+          ? requestForm.return_additional_stops
+          : null,
         return_dropoff_location: requestForm.create_return ? requestForm.return_dropoff_location : null,
         return_datetime: requestForm.create_return && requestForm.return_datetime 
           ? requestForm.return_datetime.toISOString() 

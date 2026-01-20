@@ -227,6 +227,7 @@ class BookingResponse(BaseModel):
     sms_sent: Optional[bool] = False
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
+    client_id: Optional[str] = None
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

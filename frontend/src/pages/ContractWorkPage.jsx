@@ -213,6 +213,12 @@ const ContractWorkPage = () => {
         flight_info: flight_info,
         // Return booking fields (only for new bookings)
         create_return: !editingBooking && formData.create_return,
+        return_pickup_location: !editingBooking && formData.create_return 
+          ? formData.return_pickup_location 
+          : null,
+        return_dropoff_location: !editingBooking && formData.create_return 
+          ? formData.return_dropoff_location 
+          : null,
         return_datetime: !editingBooking && formData.create_return && formData.return_datetime 
           ? formData.return_datetime.toISOString() 
           : null,

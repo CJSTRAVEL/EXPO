@@ -234,6 +234,8 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         first_name: formData.first_name,
         last_name: formData.last_name,
         customer_phone: formData.customer_phone,
+        passenger_count: parseInt(formData.passenger_count) || 1,
+        luggage_count: parseInt(formData.luggage_count) || 0,
         pickup_location: formData.pickup_location,
         dropoff_location: formData.dropoff_location,
         additional_stops: formData.additional_stops.length > 0 ? formData.additional_stops : null,

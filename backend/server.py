@@ -766,10 +766,13 @@ async def resend_booking_sms(booking_id: str):
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
+    # Get customer name (support both old and new format)
+    customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+    
     # Send SMS with short booking ID
     success, message = send_booking_sms(
         customer_phone=booking['customer_phone'],
-        customer_name=booking['customer_name'],
+        customer_name=customer_name,
         booking_id=booking_id,
         pickup=booking.get('pickup_location'),
         dropoff=booking.get('dropoff_location'),

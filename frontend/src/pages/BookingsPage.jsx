@@ -1905,6 +1905,13 @@ const BookingsPage = () => {
                                 <p className="text-xs font-mono text-primary font-semibold" data-testid={`booking-id-${booking.id}`}>
                                   {booking.booking_id || '-'}
                                 </p>
+                                {/* Flight Badge */}
+                                {booking.flight_info?.flight_number && (
+                                  <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded">
+                                    <Plane className="w-3 h-3" />
+                                    {booking.flight_info.flight_number}
+                                  </span>
+                                )}
                               </div>
 
                               {/* Pickup & Dropoff */}

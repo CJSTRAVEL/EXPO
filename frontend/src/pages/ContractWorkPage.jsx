@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Building2, Plus, Calendar, MapPin, User, Phone, Clock, Loader2, Search, X, FileText, CreditCard, MoreHorizontal, Edit, Trash2, CheckCircle } from "lucide-react";
+import { Building2, Plus, Calendar, MapPin, User, Clock, Loader2, Search, X, FileText, CreditCard, MoreHorizontal, Edit, Trash2, CheckCircle, UserCheck, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,22 +14,27 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const ContractWorkPage = () => {
   const [clients, setClients] = useState([]);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [clientBookings, setClientBookings] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingBookings, setLoadingBookings] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
+  const [viewBooking, setViewBooking] = useState(null);
   const [deleteBooking, setDeleteBooking] = useState(null);
   const [saving, setSaving] = useState(false);
+  
+  // Search and filter states
   const [searchText, setSearchText] = useState("");
+  const [filterClient, setFilterClient] = useState("all");
+  const [filterDate, setFilterDate] = useState(null);
+  const [filterDriver, setFilterDriver] = useState("all");
   const [dateOpen, setDateOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -42,55 +47,35 @@ const ContractWorkPage = () => {
     notes: "",
     fare: "",
     driver_id: "",
+    client_id: "",
   });
 
   useEffect(() => {
-    fetchInitialData();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    if (selectedClient) {
-      fetchClientBookings(selectedClient.id);
-    }
-  }, [selectedClient]);
-
-  const fetchInitialData = async () => {
+  const fetchData = async () => {
     try {
-      const [clientsRes, driversRes] = await Promise.all([
+      const [clientsRes, bookingsRes, driversRes] = await Promise.all([
         axios.get(`${API}/clients`),
+        axios.get(`${API}/bookings`),
         axios.get(`${API}/drivers`),
       ]);
+      
       // Only show active clients
       const activeClients = clientsRes.data.filter(c => c.status === "active");
       setClients(activeClients);
-      setDrivers(driversRes.data);
       
-      // Auto-select first client if available
-      if (activeClients.length > 0) {
-        setSelectedClient(activeClients[0]);
-      }
+      // Only show bookings linked to clients (contract work)
+      const contractBookings = bookingsRes.data.filter(b => b.client_id);
+      setBookings(contractBookings);
+      
+      setDrivers(driversRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchClientBookings = async (clientId) => {
-    setLoadingBookings(true);
-    try {
-      const response = await axios.get(`${API}/clients/${clientId}/bookings`);
-      // Sort by date descending
-      const sorted = response.data.sort((a, b) => 
-        new Date(b.booking_datetime) - new Date(a.booking_datetime)
-      );
-      setClientBookings(sorted);
-    } catch (error) {
-      console.error("Error fetching client bookings:", error);
-      setClientBookings([]);
-    } finally {
-      setLoadingBookings(false);
     }
   };
 
@@ -114,28 +99,47 @@ const ContractWorkPage = () => {
         notes: booking.notes || "",
         fare: booking.fare || "",
         driver_id: booking.driver_id || "",
+        client_id: booking.client_id || "",
       });
     } else {
       setEditingBooking(null);
+      // Pre-select client if filtered
+      const preselectedClient = filterClient !== "all" ? clients.find(c => c.id === filterClient) : null;
       setFormData({
         first_name: "",
         last_name: "",
-        customer_phone: selectedClient?.mobile || "",
-        pickup_location: selectedClient?.address ? 
-          `${selectedClient.address}, ${selectedClient.town_city || ''} ${selectedClient.post_code || ''}`.trim() : "",
+        customer_phone: preselectedClient?.mobile || "",
+        pickup_location: preselectedClient?.address ? 
+          `${preselectedClient.address}, ${preselectedClient.town_city || ''} ${preselectedClient.post_code || ''}`.trim() : "",
         dropoff_location: "",
         booking_datetime: new Date(),
         notes: "",
         fare: "",
         driver_id: "",
+        client_id: preselectedClient?.id || "",
       });
     }
     setShowBookingForm(true);
   };
 
+  const handleClientSelectInForm = (clientId) => {
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+      setFormData({
+        ...formData,
+        client_id: clientId,
+        customer_phone: formData.customer_phone || client.mobile || "",
+        pickup_location: formData.pickup_location || (client.address ? 
+          `${client.address}, ${client.town_city || ''} ${client.post_code || ''}`.trim() : ""),
+      });
+    } else {
+      setFormData({ ...formData, client_id: clientId });
+    }
+  };
+
   const handleSaveBooking = async () => {
-    if (!selectedClient) {
-      toast.error("Please select a client first");
+    if (!formData.client_id) {
+      toast.error("Please select a client");
       return;
     }
     if (!formData.first_name || !formData.last_name || !formData.customer_phone) {
@@ -153,7 +157,6 @@ const ContractWorkPage = () => {
         ...formData,
         fare: parseFloat(formData.fare) || 0,
         booking_datetime: formData.booking_datetime.toISOString(),
-        client_id: selectedClient.id, // Always link to client
         driver_id: formData.driver_id || null,
       };
 
@@ -166,13 +169,8 @@ const ContractWorkPage = () => {
       }
       
       setShowBookingForm(false);
-      fetchClientBookings(selectedClient.id);
-      // Refresh client data to update totals
-      const clientsRes = await axios.get(`${API}/clients`);
-      const activeClients = clientsRes.data.filter(c => c.status === "active");
-      setClients(activeClients);
-      const updatedClient = activeClients.find(c => c.id === selectedClient.id);
-      if (updatedClient) setSelectedClient(updatedClient);
+      setViewBooking(null);
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save booking");
     } finally {
@@ -188,7 +186,8 @@ const ContractWorkPage = () => {
       await axios.delete(`${API}/bookings/${deleteBooking.id}`);
       toast.success("Booking deleted successfully");
       setDeleteBooking(null);
-      fetchClientBookings(selectedClient.id);
+      setViewBooking(null);
+      fetchData();
     } catch (error) {
       toast.error("Failed to delete booking");
     } finally {
@@ -196,7 +195,39 @@ const ContractWorkPage = () => {
     }
   };
 
+  const clearFilters = () => {
+    setSearchText("");
+    setFilterClient("all");
+    setFilterDate(null);
+    setFilterDriver("all");
+  };
+
+  const getClientName = (clientId) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? client.name : "Unknown";
+  };
+
+  const getClientAccountNo = (clientId) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? client.account_no : "";
+  };
+
+  const getDriverName = (driverId) => {
+    const driver = drivers.find(d => d.id === driverId);
+    return driver ? driver.name : "Unassigned";
+  };
+
   const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'border-l-green-500 bg-green-50/30';
+      case 'in_progress': return 'border-l-purple-500 bg-purple-50/30';
+      case 'assigned': return 'border-l-blue-500 bg-blue-50/30';
+      case 'cancelled': return 'border-l-red-500 bg-red-50/30';
+      default: return 'border-l-yellow-500 bg-yellow-50/30';
+    }
+  };
+
+  const getStatusBadgeColor = (status) => {
     switch (status) {
       case "completed": return "bg-green-100 text-green-700";
       case "assigned": return "bg-blue-100 text-blue-700";
@@ -206,275 +237,452 @@ const ContractWorkPage = () => {
     }
   };
 
-  const getDriverName = (driverId) => {
-    const driver = drivers.find(d => d.id === driverId);
-    return driver ? driver.name : "Unassigned";
-  };
+  // Filter bookings
+  const filteredBookings = bookings.filter(booking => {
+    // Client filter
+    if (filterClient !== "all" && booking.client_id !== filterClient) {
+      return false;
+    }
+    
+    // Text search
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      const fullName = booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim();
+      const clientName = getClientName(booking.client_id);
+      const matchesName = fullName.toLowerCase().includes(search);
+      const matchesPhone = booking.customer_phone?.toLowerCase().includes(search);
+      const matchesBookingId = booking.booking_id?.toLowerCase().includes(search);
+      const matchesPickup = booking.pickup_location?.toLowerCase().includes(search);
+      const matchesDropoff = booking.dropoff_location?.toLowerCase().includes(search);
+      const matchesClient = clientName.toLowerCase().includes(search);
+      
+      if (!matchesName && !matchesPhone && !matchesBookingId && !matchesPickup && !matchesDropoff && !matchesClient) {
+        return false;
+      }
+    }
+    
+    // Date filter
+    if (filterDate) {
+      const bookingDate = format(new Date(booking.booking_datetime), "yyyy-MM-dd");
+      const selectedDate = format(filterDate, "yyyy-MM-dd");
+      if (bookingDate !== selectedDate) {
+        return false;
+      }
+    }
+    
+    // Driver filter
+    if (filterDriver !== "all") {
+      if (filterDriver === "unassigned" && booking.driver_id) {
+        return false;
+      }
+      if (filterDriver !== "unassigned" && booking.driver_id !== filterDriver) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
 
-  // Filter clients by search
-  const filteredClients = clients.filter(client => {
-    if (!searchText) return true;
-    const search = searchText.toLowerCase();
-    return (
-      client.name?.toLowerCase().includes(search) ||
-      client.account_no?.toLowerCase().includes(search)
+  // Group bookings by date
+  const groupedBookings = filteredBookings.reduce((groups, booking) => {
+    const date = format(new Date(booking.booking_datetime), "yyyy-MM-dd");
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(booking);
+    return groups;
+  }, {});
+
+  // Sort dates descending
+  const sortedDates = Object.keys(groupedBookings).sort((a, b) => new Date(b) - new Date(a));
+
+  // Sort bookings within each date by time
+  sortedDates.forEach(date => {
+    groupedBookings[date].sort((a, b) => 
+      new Date(a.booking_datetime) - new Date(b.booking_datetime)
     );
   });
+
+  const hasActiveFilters = searchText || filterClient !== "all" || filterDate || filterDriver !== "all";
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div data-testid="contract-work-page" className="flex h-[calc(100vh-2rem)]">
-      {/* Left Panel - Client Selection */}
-      <div className="w-[320px] border-r bg-white flex flex-col">
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <FileText className="w-5 h-5 text-primary" />
+    <div data-testid="contract-work-page">
+      <header className="page-header flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <FileText className="w-6 h-6 text-primary" />
             Contract Work
           </h1>
-          <p className="text-sm text-muted-foreground">Account-based bookings</p>
+          <p className="text-sm text-muted-foreground mt-1">Account-based bookings linked to clients</p>
         </div>
+        <Button onClick={() => handleOpenForm()} className="btn-animate" data-testid="new-contract-booking-btn">
+          <Plus className="w-4 h-4 mr-2" />
+          New Booking
+        </Button>
+      </header>
 
-        {/* Client Search */}
-        <div className="p-4 border-b">
-          <div className="relative">
+      {/* Search and Filter Bar */}
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search clients..."
+              placeholder="Search by name, phone, booking ID, client, or address..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="pl-10"
-              data-testid="client-search"
+              className="pl-10 bg-white"
+              data-testid="search-input"
             />
-            {searchText && (
-              <button
-                onClick={() => setSearchText("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
           </div>
-        </div>
-
-        {/* Client List */}
-        <div className="flex-1 overflow-y-auto">
-          {filteredClients.length === 0 ? (
-            <div className="text-center py-12 px-4">
-              <Building2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground text-sm">
-                {searchText ? "No clients found" : "No active clients"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Add clients in the Clients page first
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y">
-              {filteredClients.map((client) => (
-                <div
-                  key={client.id}
-                  onClick={() => setSelectedClient(client)}
-                  className={`p-4 cursor-pointer transition-colors hover:bg-slate-50 ${
-                    selectedClient?.id === client.id ? "bg-blue-50 border-l-4 border-l-primary" : ""
-                  }`}
-                  data-testid={`client-select-${client.id}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-800 truncate">{client.name}</p>
-                      <p className="text-xs text-muted-foreground">{client.account_no}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {client.booking_count || 0} bookings
-                    </span>
-                    <span className="font-medium text-primary">
-                      £{(client.total_invoice || 0).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+          
+          {/* Client Filter */}
+          <Select value={filterClient} onValueChange={setFilterClient}>
+            <SelectTrigger className="w-[200px] bg-white" data-testid="filter-client-select">
+              <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Filter by client" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Clients</SelectItem>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.account_no} - {client.name}
+                </SelectItem>
               ))}
-            </div>
+            </SelectContent>
+          </Select>
+          
+          {/* Date Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal bg-white", !filterDate && "text-muted-foreground")}>
+                <Calendar className="mr-2 h-4 w-4" />
+                {filterDate ? format(filterDate, "dd/MM/yyyy") : "Filter by date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={filterDate}
+                onSelect={setFilterDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          
+          {/* Driver Filter */}
+          <Select value={filterDriver} onValueChange={setFilterDriver}>
+            <SelectTrigger className="w-[180px] bg-white" data-testid="filter-driver-select">
+              <SelectValue placeholder="Filter by driver" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Drivers</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {drivers.map((driver) => (
+                <SelectItem key={driver.id} value={driver.id}>
+                  {driver.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground" data-testid="clear-filters-btn">
+              <X className="w-4 h-4 mr-1" />
+              Clear
+            </Button>
           )}
         </div>
+        
+        {/* Filter Summary */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Showing {filteredBookings.length} of {bookings.length} contract bookings</span>
+            {filterClient !== "all" && (
+              <Badge variant="secondary" className="gap-1">
+                <Building2 className="w-3 h-3" />
+                {getClientName(filterClient)}
+                <button onClick={() => setFilterClient("all")} className="ml-1 hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterDate && (
+              <Badge variant="secondary" className="gap-1">
+                {format(filterDate, "dd/MM/yyyy")}
+                <button onClick={() => setFilterDate(null)} className="ml-1 hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {filterDriver && filterDriver !== "all" && (
+              <Badge variant="secondary" className="gap-1">
+                {filterDriver === "unassigned" ? "Unassigned" : getDriverName(filterDriver)}
+                <button onClick={() => setFilterDriver("all")} className="ml-1 hover:text-foreground">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Right Panel - Client Bookings */}
-      <div className="flex-1 bg-slate-50 flex flex-col overflow-hidden">
-        {selectedClient ? (
-          <>
-            {/* Client Header */}
-            <div className="bg-white border-b p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Building2 className="w-7 h-7 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">{selectedClient.name}</h2>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span>{selectedClient.account_no}</span>
-                      <span>•</span>
-                      <span>{selectedClient.client_type}</span>
-                      <span>•</span>
-                      <Badge variant="outline" className="text-xs">
-                        <CreditCard className="w-3 h-3 mr-1" />
-                        {selectedClient.payment_method}
-                      </Badge>
-                    </div>
-                  </div>
+      <div className="page-content">
+        {bookings.length === 0 ? (
+          <div className="text-center py-16">
+            <FileText className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No contract bookings yet</h3>
+            <p className="text-muted-foreground mb-4">Create your first contract booking linked to a client</p>
+            <Button onClick={() => handleOpenForm()} data-testid="add-first-contract-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              New Contract Booking
+            </Button>
+          </div>
+        ) : filteredBookings.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No bookings found</h3>
+            <p className="text-muted-foreground mb-4">Try adjusting your search or filters</p>
+            <Button variant="outline" onClick={clearFilters} data-testid="clear-search-btn">
+              <X className="w-4 h-4 mr-2" />
+              Clear Filters
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {sortedDates.map((date) => (
+              <div key={date} className="space-y-3">
+                {/* Date Header */}
+                <div className="sticky top-0 z-10 bg-slate-100 rounded-lg px-4 py-2 shadow-sm">
+                  <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                    {format(new Date(date), "EEEE dd/MM/yyyy")}
+                  </h2>
                 </div>
-                <Button onClick={() => handleOpenForm()} data-testid="new-contract-booking-btn">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Booking
-                </Button>
-              </div>
-
-              {/* Client Stats */}
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Total Bookings</p>
-                  <p className="text-2xl font-bold">{selectedClient.booking_count || 0}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Account Balance</p>
-                  <p className="text-2xl font-bold text-primary">£{(selectedClient.total_invoice || 0).toFixed(2)}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Contact</p>
-                  <p className="text-sm font-medium truncate">{selectedClient.mobile}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Bookings List */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <h3 className="text-sm font-semibold text-slate-600 mb-3">
-                Contract Bookings ({clientBookings.length})
-              </h3>
-              
-              {loadingBookings ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : clientBookings.length === 0 ? (
-                <div className="bg-white rounded-xl border p-8 text-center">
-                  <Calendar className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground">No bookings for this client yet</p>
-                  <Button onClick={() => handleOpenForm()} className="mt-4" variant="outline">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create First Booking
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {clientBookings.map((booking) => {
-                    const customerName = booking.customer_name || 
-                      `${booking.first_name || ''} ${booking.last_name || ''}`.trim();
-                    const bookingDate = new Date(booking.booking_datetime);
+                
+                {/* Bookings for this date */}
+                <div className="space-y-2">
+                  {groupedBookings[date].map((booking) => {
+                    const customerName = booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim();
                     
                     return (
                       <div
                         key={booking.id}
-                        className="bg-white rounded-xl border p-4 hover:shadow-md transition-shadow"
+                        className={`bg-white rounded-lg border-l-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${getStatusColor(booking.status)}`}
                         data-testid={`contract-booking-${booking.id}`}
+                        onClick={() => setViewBooking(booking)}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3">
-                            <div className="text-center min-w-[50px]">
-                              <p className="text-2xl font-bold text-primary">
-                                {format(bookingDate, 'dd')}
+                        <div className="p-4">
+                          <div className="grid grid-cols-12 gap-4 items-center">
+                            {/* Time & Booking ID */}
+                            <div className="col-span-2 lg:col-span-1">
+                              <p className="text-lg font-bold text-slate-800">
+                                {format(new Date(booking.booking_datetime), "HH:mm")}
                               </p>
-                              <p className="text-xs text-muted-foreground uppercase">
-                                {format(bookingDate, 'MMM')}
+                              <p className="text-xs font-mono text-primary font-semibold">
+                                {booking.booking_id || '-'}
                               </p>
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-semibold">{booking.booking_id}</span>
-                                <Badge className={getStatusColor(booking.status)}>
-                                  {booking.status}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-slate-700 flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {customerName}
-                              </p>
-                              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                                <p className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-green-500" />
-                                  {booking.pickup_location?.substring(0, 40)}...
-                                </p>
-                                <p className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-red-500" />
-                                  {booking.dropoff_location?.substring(0, 40)}...
-                                </p>
+
+                            {/* Pickup & Dropoff */}
+                            <div className="col-span-4 lg:col-span-4">
+                              <div className="flex items-start gap-2">
+                                <div className="flex flex-col items-center">
+                                  <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow"></div>
+                                  <div className="w-0.5 h-8 bg-slate-300"></div>
+                                  <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow"></div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-slate-800 truncate">{booking.pickup_location}</p>
+                                  <div className="h-4"></div>
+                                  <p className="text-sm text-slate-600 truncate">{booking.dropoff_location}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-primary">
-                              £{(booking.fare || 0).toFixed(2)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(bookingDate, 'HH:mm')}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {getDriverName(booking.driver_id)}
-                            </p>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="mt-1">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleOpenForm(booking)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit Booking
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => setDeleteBooking(booking)}
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Booking
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+
+                            {/* Customer */}
+                            <div className="col-span-2 lg:col-span-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                  <User className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-slate-800 truncate">{customerName}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{booking.customer_phone}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Client Account */}
+                            <div className="col-span-2 lg:col-span-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="w-4 h-4 text-amber-600" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-slate-800 truncate">{getClientName(booking.client_id)}</p>
+                                  <p className="text-xs text-amber-600 font-mono">{getClientAccountNo(booking.client_id)}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Driver & Status */}
+                            <div className="col-span-2 lg:col-span-2">
+                              <div className="flex items-center gap-2">
+                                {booking.driver_id ? (
+                                  <>
+                                    <UserCheck className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm text-slate-700 truncate">{getDriverName(booking.driver_id)}</span>
+                                  </>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">Unassigned</span>
+                                )}
+                              </div>
+                              <Badge className={`mt-1 ${getStatusBadgeColor(booking.status)}`}>
+                                {booking.status}
+                              </Badge>
+                            </div>
+
+                            {/* Fare & Actions */}
+                            <div className="col-span-12 lg:col-span-1 flex items-center justify-between lg:justify-end gap-2">
+                              <p className="text-lg font-bold text-primary">
+                                £{(booking.fare || 0).toFixed(2)}
+                              </p>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleOpenForm(booking); }}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit Booking
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={(e) => { e.stopPropagation(); setDeleteBooking(booking); }}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Booking
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <Building2 className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">Select a Client</p>
-              <p className="text-sm text-muted-foreground">Choose a client from the list to manage their contract bookings</p>
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      {/* View Booking Modal */}
+      <Dialog open={!!viewBooking} onOpenChange={() => setViewBooking(null)}>
+        <DialogContent className="sm:max-w-[500px]" data-testid="view-contract-booking-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>Booking {viewBooking?.booking_id}</span>
+              <Badge className={getStatusBadgeColor(viewBooking?.status)}>{viewBooking?.status}</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {viewBooking && (
+            <div className="space-y-4">
+              {/* Client Info */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-amber-600" />
+                  <span className="font-medium">{getClientName(viewBooking.client_id)}</span>
+                  <Badge variant="outline" className="text-xs">{getClientAccountNo(viewBooking.client_id)}</Badge>
+                </div>
+                <p className="text-xs text-amber-700 mt-1">Payment on Account</p>
+              </div>
+
+              {/* Customer Info */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-slate-600 mb-3">Passenger</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Name</p>
+                    <p className="font-medium">{viewBooking.customer_name || `${viewBooking.first_name || ''} ${viewBooking.last_name || ''}`.trim()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="font-medium">{viewBooking.customer_phone}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Journey Details */}
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div className="w-0.5 h-8 bg-slate-300"></div>
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Pickup</p>
+                      <p className="text-sm">{viewBooking.pickup_location}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Drop-off</p>
+                      <p className="text-sm">{viewBooking.dropoff_location}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Date, Driver, Fare */}
+              <div className="grid grid-cols-3 gap-4 pt-2 border-t">
+                <div>
+                  <p className="text-xs text-muted-foreground">Date & Time</p>
+                  <p className="font-medium">{format(new Date(viewBooking.booking_datetime), "dd/MM/yyyy HH:mm")}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Driver</p>
+                  <p className="font-medium">{getDriverName(viewBooking.driver_id)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Fare</p>
+                  <p className="font-bold text-primary text-lg">£{(viewBooking.fare || 0).toFixed(2)}</p>
+                </div>
+              </div>
+
+              {viewBooking.notes && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">Notes</p>
+                  <p className="text-sm">{viewBooking.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewBooking(null)}>Close</Button>
+            <Button onClick={() => { handleOpenForm(viewBooking); }}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* New/Edit Booking Modal */}
       <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
@@ -483,16 +691,38 @@ const ContractWorkPage = () => {
             <DialogTitle>
               {editingBooking ? "Edit Contract Booking" : "New Contract Booking"}
             </DialogTitle>
-            {selectedClient && (
-              <div className="flex items-center gap-2 mt-2 p-2 bg-primary/5 rounded-lg">
-                <Building2 className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">{selectedClient.name}</span>
-                <Badge variant="outline" className="text-xs">{selectedClient.account_no}</Badge>
-              </div>
-            )}
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Client Selection */}
+            <div className="space-y-2">
+              <Label>Client Account *</Label>
+              <Select
+                value={formData.client_id || ""}
+                onValueChange={handleClientSelectInForm}
+              >
+                <SelectTrigger data-testid="form-client-select">
+                  <SelectValue placeholder="Select a client..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        {client.account_no} - {client.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {formData.client_id && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs text-amber-700">
+                  <CreditCard className="w-3 h-3 inline mr-1" />
+                  This booking will be added to the client's account for invoicing
+                </div>
+              )}
+            </div>
+
             {/* Passenger Details */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -532,7 +762,6 @@ const ContractWorkPage = () => {
                 value={formData.pickup_location}
                 onChange={(value) => setFormData({ ...formData, pickup_location: value })}
                 placeholder="Start typing address..."
-                data-testid="contract-pickup"
               />
             </div>
 
@@ -542,7 +771,6 @@ const ContractWorkPage = () => {
                 value={formData.dropoff_location}
                 onChange={(value) => setFormData({ ...formData, dropoff_location: value })}
                 placeholder="Start typing address..."
-                data-testid="contract-dropoff"
               />
             </div>
 
@@ -554,7 +782,7 @@ const ContractWorkPage = () => {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                       <Calendar className="w-4 h-4 mr-2" />
-                      {format(formData.booking_datetime, "PPP HH:mm")}
+                      {format(formData.booking_datetime, "dd/MM/yy HH:mm")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -630,17 +858,6 @@ const ContractWorkPage = () => {
                 rows={3}
                 data-testid="contract-notes"
               />
-            </div>
-
-            {/* Payment Info */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-amber-800">
-                <CreditCard className="w-4 h-4" />
-                <span className="text-sm font-medium">Payment on Account</span>
-              </div>
-              <p className="text-xs text-amber-700 mt-1">
-                This booking will be added to {selectedClient?.name}'s account for invoicing
-              </p>
             </div>
           </div>
 

@@ -87,6 +87,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Enhanced Portal Request Form** (Jan 20, 2026) - Passenger booking request form now matches admin booking form with address autocomplete, multi-stop, return journey, and full flight info with live lookup
 - ✅ **PAX and Cases Fields** (Jan 20, 2026) - Added passenger count (PAX) and luggage count (Cases) fields to all booking forms (Bookings, Contract Work, Passenger Portal)
 - ✅ **Return Journey Multi-Stop** (Jan 20, 2026) - Added multiple drop-off locations (additional stops) support to return journey section in all booking forms
+- ✅ **Email Confirmations** (Jan 20, 2026) - Added SMTP email notifications alongside SMS. Beautiful HTML emails sent for booking confirmations, driver assignments, status updates. Includes resend-email and resend-notifications endpoints.
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

@@ -97,6 +97,62 @@ class BookingStatus(str, Enum):
     COMPLETED = "completed"
     CANCELLED = "cancelled"
 
+class ClientStatus(str, Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+class ClientType(str, Enum):
+    BUSINESS = "Business"
+    CONTRACT = "Contract Account"
+    CORPORATE = "Corporate"
+    SCHOOL = "School"
+    HOSPITAL = "Hospital"
+    INDIVIDUAL = "Individual"
+
+class PaymentMethod(str, Enum):
+    CASH = "Cash"
+    INVOICE = "Invoice"
+    CARD = "Card"
+    ACCOUNT = "Account"
+
+# Client Models
+class ClientBase(BaseModel):
+    name: str
+    mobile: str
+    email: str
+    client_type: ClientType = ClientType.BUSINESS
+    payment_method: PaymentMethod = PaymentMethod.INVOICE
+    status: ClientStatus = ClientStatus.ACTIVE
+    start_date: Optional[str] = None
+    address: Optional[str] = None
+    town_city: Optional[str] = None
+    post_code: Optional[str] = None
+    country: Optional[str] = "United Kingdom"
+    notes: Optional[str] = None
+
+class ClientCreate(ClientBase):
+    pass
+
+class ClientUpdate(BaseModel):
+    name: Optional[str] = None
+    mobile: Optional[str] = None
+    email: Optional[str] = None
+    client_type: Optional[ClientType] = None
+    payment_method: Optional[PaymentMethod] = None
+    status: Optional[ClientStatus] = None
+    start_date: Optional[str] = None
+    address: Optional[str] = None
+    town_city: Optional[str] = None
+    post_code: Optional[str] = None
+    country: Optional[str] = None
+    notes: Optional[str] = None
+
+class Client(ClientBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    account_no: str = ""  # Auto-generated like E001, E002
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Driver Models
 class DriverBase(BaseModel):
     name: str

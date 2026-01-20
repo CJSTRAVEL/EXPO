@@ -915,10 +915,11 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
             else:
                 phone = '+44' + phone
         
-        # Generate booking details link - use short URL if available
+        # Generate booking details link - use SSR preview URL for proper link previews
         app_url = os.environ.get('APP_URL', 'https://booking-master-14.preview.emergentagent.com')
         if short_booking_id:
-            booking_link = f"{app_url}/b/{short_booking_id}"
+            # Use the SSR preview endpoint which has proper OG meta tags
+            booking_link = f"{app_url}/api/preview/{short_booking_id}"
         else:
             booking_link = f"{app_url}/booking/{booking_id}"
         

@@ -764,7 +764,7 @@ async def delete_booking(booking_id: str):
         raise HTTPException(status_code=404, detail="Booking not found")
     return {"message": "Booking deleted successfully"}
 
-@api_router.post("/bookings/{booking_id}/assign/{driver_id}", response_model=Booking)
+@api_router.post("/bookings/{booking_id}/assign/{driver_id}", response_model=BookingResponse)
 async def assign_driver_to_booking(booking_id: str, driver_id: str):
     booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if not booking:

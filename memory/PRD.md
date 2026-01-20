@@ -80,6 +80,10 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Multi-Stop Bookings** (Jan 20, 2026) - Support for multiple drop-off locations (additional stops) on bookings
 - ✅ **Return Journey Creation** (Jan 20, 2026) - Option to automatically create a return booking with pickup/dropoff swapped
 - ✅ **Flight Information** (Jan 20, 2026) - Track flight details (flight number, airline, type, terminal) for airport transfers
+- ✅ **Live Flight Tracking** (Jan 20, 2026) - AviationStack API integration for real-time flight data lookup with auto-fill
+- ✅ **Passenger Booking Requests** (Jan 20, 2026) - Passengers can request bookings from their portal
+- ✅ **Dedicated Requests Page** (Jan 20, 2026) - Separate admin page for managing passenger booking requests with approve/reject functionality
+- ✅ **Request Notification Badge** (Jan 20, 2026) - Sidebar shows pending request count badge with auto-refresh
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers
@@ -102,6 +106,11 @@ Build a private hire application where you can add bookings and assign them to d
 - `GET/POST /api/clients` - List/Create clients
 - `GET/PUT/DELETE /api/clients/{id}` - Get/Update/Delete client
 - `GET /api/clients/{id}/bookings` - Get client's bookings
+- `GET /api/flight-lookup` - Live flight data lookup (AviationStack API)
+- `GET /api/admin/booking-requests` - List all booking requests
+- `POST /api/passenger/booking-requests` - Create booking request (passenger portal)
+- `PUT /api/admin/booking-requests/{id}/approve` - Approve request and create booking
+- `PUT /api/admin/booking-requests/{id}/reject` - Reject booking request
 
 ## Prioritized Backlog
 
@@ -117,10 +126,11 @@ Build a private hire application where you can add bookings and assign them to d
 
 ### P1 (High Priority) - In Progress
 - [x] SMS link preview fix (completed Jan 20, 2026 - SSR endpoint with OG tags)
+- [x] Allow passengers to request new bookings from portal (completed Jan 20, 2026)
+- [x] Dedicated Requests page for admin (completed Jan 20, 2026)
 - [ ] Forgot password / SMS verification for passenger portal
 
 ### P2 (Medium Priority) - Future
-- [ ] Allow passengers to request new bookings from portal
 - [ ] Bulk status updates
 - [ ] Driver availability calendar
 - [ ] Export bookings to CSV
@@ -138,11 +148,13 @@ Build a private hire application where you can add bookings and assign them to d
 - **bookings**: `{id, booking_id, first_name, last_name, customer_name, customer_phone, pickup_address, dropoff_address, additional_stops[], client_id, flight_info{flight_number, airline, flight_type, terminal}, is_return, linked_booking_id, ...}`
 - **passengers**: `{id, phone, name, password_hash, created_at}` - Portal user accounts
 - **clients**: `{id, account_no, name, mobile, email, client_type, payment_method, status, start_date, address, town_city, post_code, country, notes}` - B2B client accounts
+- **booking_requests**: `{_id, passenger_id, passenger_name, passenger_phone, pickup_location, dropoff_location, pickup_datetime, flight_number, notes, status, admin_notes, created_at}` - Passenger booking requests
 
 ## Known Issues
 - None currently - SMS Link Preview has been fixed with SSR endpoint
 
 ## Next Tasks
-1. Implement forgot password with SMS verification
-2. Allow passengers to request bookings from portal
-3. Consider refactoring server.py into separate route files as it has grown significantly
+1. Implement forgot password with SMS verification for passenger portal
+2. Consider refactoring server.py into separate route files as it has grown significantly
+3. Add email invoice PDF directly to clients feature
+4. Implement driver availability calendar

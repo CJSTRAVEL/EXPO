@@ -742,6 +742,104 @@ const ClientsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Generate Invoice Modal */}
+      <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
+        <DialogContent className="sm:max-w-[450px]" data-testid="invoice-modal">
+          <DialogHeader>
+            <DialogTitle>Generate Invoice</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-sm font-medium">{selectedClient?.name}</p>
+              <p className="text-xs text-muted-foreground">Account: {selectedClient?.account_no}</p>
+            </div>
+
+            {/* Quick Date Range Buttons */}
+            <div className="space-y-2">
+              <Label>Quick Select</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuickDateRange('this_month')}
+                  className="flex-1"
+                >
+                  This Month
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuickDateRange('last_month')}
+                  className="flex-1"
+                >
+                  Last Month
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuickDateRange('all_time')}
+                  className="flex-1"
+                >
+                  All Time
+                </Button>
+              </div>
+            </div>
+
+            {/* Date Range Inputs */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoice_start_date">From Date</Label>
+                <Input
+                  id="invoice_start_date"
+                  type="date"
+                  value={invoiceDateRange.start}
+                  onChange={(e) => setInvoiceDateRange({ ...invoiceDateRange, start: e.target.value })}
+                  data-testid="invoice-start-date"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice_end_date">To Date</Label>
+                <Input
+                  id="invoice_end_date"
+                  type="date"
+                  value={invoiceDateRange.end}
+                  onChange={(e) => setInvoiceDateRange({ ...invoiceDateRange, end: e.target.value })}
+                  data-testid="invoice-end-date"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              {invoiceDateRange.start || invoiceDateRange.end 
+                ? `Invoice will include bookings from ${invoiceDateRange.start || 'the beginning'} to ${invoiceDateRange.end || 'now'}`
+                : 'Invoice will include all bookings for this client'
+              }
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInvoiceModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleGenerateInvoice} disabled={generatingInvoice} data-testid="download-invoice-btn">
+              {generatingInvoice ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Invoice
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1109,6 +1109,164 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
         logging.error(f"SMS error: {str(e)}")
         return False, str(e)
 
+
+def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
+                       pickup: str = None, dropoff: str = None,
+                       booking_datetime: str = None, short_booking_id: str = None,
+                       status: str = None, driver_name: str = None):
+    """Send email confirmation for booking"""
+    if not smtp_configured:
+        logging.warning("SMTP not configured, skipping email")
+        return False, "Email service not configured"
+    
+    if not customer_email:
+        logging.warning("No email address provided, skipping email")
+        return False, "No email address provided"
+    
+    try:
+        # Generate booking details link
+        app_url = os.environ.get('APP_URL', 'https://chauffeur-app-15.preview.emergentagent.com')
+        if short_booking_id:
+            booking_link = f"{app_url}/api/preview/{short_booking_id}"
+        else:
+            booking_link = f"{app_url}/booking/{booking_id}"
+        
+        # Format datetime for display
+        formatted_datetime = ""
+        if booking_datetime:
+            try:
+                dt = datetime.fromisoformat(booking_datetime.replace('Z', '+00:00'))
+                formatted_datetime = dt.strftime("%A, %d %B %Y at %H:%M")
+            except:
+                formatted_datetime = str(booking_datetime)
+        
+        # Determine email subject and content based on status
+        if status == "driver_assigned" and driver_name:
+            subject = f"Driver Assigned - CJ's Executive Travel Booking"
+            status_message = f"A driver has been assigned to your booking: <strong>{driver_name}</strong>"
+        elif status == "confirmed":
+            subject = f"Booking Confirmed - CJ's Executive Travel"
+            status_message = "Your booking has been confirmed."
+        elif status == "completed":
+            subject = f"Journey Completed - CJ's Executive Travel"
+            status_message = "Your journey has been completed. Thank you for travelling with us!"
+        elif status == "cancelled":
+            subject = f"Booking Cancelled - CJ's Executive Travel"
+            status_message = "Your booking has been cancelled."
+        else:
+            subject = f"Booking Confirmation - CJ's Executive Travel"
+            status_message = "Your booking is confirmed."
+        
+        # Create HTML email
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .header h1 {{ margin: 0; font-size: 24px; }}
+                .content {{ background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }}
+                .booking-details {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e3a5f; }}
+                .detail-row {{ display: flex; margin: 10px 0; }}
+                .detail-label {{ font-weight: bold; width: 120px; color: #666; }}
+                .detail-value {{ flex: 1; }}
+                .cta-button {{ display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+                .status-badge {{ display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; }}
+                .status-confirmed {{ background: #d4edda; color: #155724; }}
+                .status-assigned {{ background: #cce5ff; color: #004085; }}
+                .status-completed {{ background: #d4edda; color: #155724; }}
+                .status-cancelled {{ background: #f8d7da; color: #721c24; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>CJ's Executive Travel</h1>
+                    <p style="margin: 10px 0 0 0; opacity: 0.9;">Professional Chauffeur Services</p>
+                </div>
+                <div class="content">
+                    <p>Dear {customer_name},</p>
+                    <p>{status_message}</p>
+                    
+                    <div class="booking-details">
+                        <h3 style="margin-top: 0; color: #1e3a5f;">Booking Details</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">Booking Ref:</span>
+                            <span class="detail-value"><strong>{short_booking_id or booking_id[:8]}</strong></span>
+                        </div>
+                        {f'<div class="detail-row"><span class="detail-label">Date & Time:</span><span class="detail-value">{formatted_datetime}</span></div>' if formatted_datetime else ''}
+                        {f'<div class="detail-row"><span class="detail-label">Pickup:</span><span class="detail-value">{pickup}</span></div>' if pickup else ''}
+                        {f'<div class="detail-row"><span class="detail-label">Drop-off:</span><span class="detail-value">{dropoff}</span></div>' if dropoff else ''}
+                        {f'<div class="detail-row"><span class="detail-label">Driver:</span><span class="detail-value">{driver_name}</span></div>' if driver_name else ''}
+                    </div>
+                    
+                    <p style="text-align: center;">
+                        <a href="{booking_link}" class="cta-button">View Full Booking Details</a>
+                    </p>
+                    
+                    <p>If you have any questions, please don't hesitate to contact us.</p>
+                    <p>Thank you for choosing CJ's Executive Travel.</p>
+                </div>
+                <div class="footer">
+                    <p>CJ's Executive Travel Limited</p>
+                    <p>This is an automated message. Please do not reply directly to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text version
+        text_content = f"""
+Dear {customer_name},
+
+{status_message}
+
+BOOKING DETAILS
+---------------
+Booking Ref: {short_booking_id or booking_id[:8]}
+{"Date & Time: " + formatted_datetime if formatted_datetime else ""}
+{"Pickup: " + pickup if pickup else ""}
+{"Drop-off: " + dropoff if dropoff else ""}
+{"Driver: " + driver_name if driver_name else ""}
+
+View your booking: {booking_link}
+
+Thank you for choosing CJ's Executive Travel.
+
+CJ's Executive Travel Limited
+        """
+        
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"CJ's Executive Travel <{SMTP_FROM_EMAIL}>"
+        msg['To'] = customer_email
+        
+        # Attach both plain text and HTML versions
+        part1 = MIMEText(text_content, 'plain')
+        part2 = MIMEText(html_content, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, customer_email, msg.as_string())
+        
+        logging.info(f"Email sent successfully to {customer_email}")
+        return True, "Email sent"
+        
+    except Exception as e:
+        logging.error(f"Email error: {str(e)}")
+        return False, str(e)
+
+
 # ========== PASSENGER AUTHENTICATION ENDPOINTS ==========
 @api_router.post("/passenger/register", response_model=PassengerResponse)
 async def register_passenger(data: PassengerRegister):

@@ -787,6 +787,7 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
                         create_return: isChecked,
                         // Default return pickup to original dropoff, and vice versa
                         return_pickup_location: isChecked ? formData.dropoff_location : "",
+                        return_additional_stops: [],
                         return_dropoff_location: isChecked ? formData.pickup_location : "",
                         return_datetime: isChecked ? new Date(formData.booking_datetime.getTime() + 3600000 * 3) : null
                       });
@@ -814,9 +815,64 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
                       />
                     </div>
 
+                    {/* Return Additional Stops */}
+                    <div className="space-y-2 pl-4 border-l-2 border-amber-400">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-amber-700 text-sm">Return Stops (in order)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs border-amber-400 text-amber-700 hover:bg-amber-100"
+                          onClick={() => setFormData({ 
+                            ...formData, 
+                            return_additional_stops: [...(formData.return_additional_stops || []), ""] 
+                          })}
+                          data-testid="add-return-stop-btn"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Stop
+                        </Button>
+                      </div>
+                      {(!formData.return_additional_stops || formData.return_additional_stops.length === 0) ? (
+                        <p className="text-xs text-amber-600 italic">No intermediate stops - direct return</p>
+                      ) : (
+                        formData.return_additional_stops.map((stop, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <span className="text-xs font-semibold text-amber-600 w-5">{index + 1}.</span>
+                            <div className="flex-1">
+                              <AddressAutocomplete
+                                value={stop}
+                                onChange={(value) => {
+                                  const newStops = [...formData.return_additional_stops];
+                                  newStops[index] = value;
+                                  setFormData({ ...formData, return_additional_stops: newStops });
+                                }}
+                                placeholder={`Return stop ${index + 1}...`}
+                                data-testid={`return-stop-${index}-input`}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                const newStops = formData.return_additional_stops.filter((_, i) => i !== index);
+                                setFormData({ ...formData, return_additional_stops: newStops });
+                              }}
+                              data-testid={`remove-return-stop-${index}-btn`}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
                     {/* Return Dropoff Location */}
                     <div className="space-y-2">
-                      <Label className="text-amber-800">Return Dropoff Location</Label>
+                      <Label className="text-amber-800">Return Final Drop-off</Label>
                       <AddressAutocomplete
                         value={formData.return_dropoff_location}
                         onChange={(value) => setFormData({ ...formData, return_dropoff_location: value })}

@@ -138,8 +138,19 @@ const PassengerPortal = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [bookingRequests, setBookingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    pickup_location: "",
+    dropoff_location: "",
+    pickup_datetime: new Date(),
+    notes: "",
+    flight_number: "",
+  });
 
   useEffect(() => {
     // Check if logged in

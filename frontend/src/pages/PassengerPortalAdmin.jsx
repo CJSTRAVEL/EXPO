@@ -130,6 +130,13 @@ const PassengerPortalAdmin = () => {
             Manage passenger accounts • {passengers.length} registered
           </p>
         </div>
+        <Button onClick={() => setShowCreateModal(true)} className="btn-animate" data-testid="create-user-btn">
+          <Plus className="w-4 h-4 mr-2" />
+          Create User
+        </Button>
+      </header>
+          </p>
+        </div>
       </header>
 
       {/* Search Bar */}

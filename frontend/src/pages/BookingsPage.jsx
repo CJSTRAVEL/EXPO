@@ -1717,6 +1717,28 @@ const BookingsPage = () => {
 
   const hasActiveFilters = searchText || filterDate || (filterDriver && filterDriver !== "all");
 
+  // Handle booking request approval
+  const handleApproveRequest = async (requestId) => {
+    try {
+      await axios.put(`${API}/admin/booking-requests/${requestId}/approve`);
+      toast.success("Booking request approved!");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to approve request");
+    }
+  };
+
+  // Handle booking request rejection
+  const handleRejectRequest = async (requestId) => {
+    try {
+      await axios.put(`${API}/admin/booking-requests/${requestId}/reject`);
+      toast.success("Booking request rejected");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to reject request");
+    }
+  };
+
   // Get status color for the card border
   const getStatusColor = (status) => {
     switch (status) {

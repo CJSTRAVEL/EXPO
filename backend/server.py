@@ -303,6 +303,7 @@ class Booking(BookingBase):
 class PassengerRegister(BaseModel):
     name: str
     phone: str
+    email: Optional[str] = None
     password: str
 
 class PassengerLogin(BaseModel):
@@ -314,6 +315,7 @@ class Passenger(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     phone: str
+    email: Optional[str] = None
     password_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -321,6 +323,7 @@ class PassengerResponse(BaseModel):
     id: str
     name: str
     phone: str
+    email: Optional[str] = None
     token: str
 
 async def generate_booking_id():

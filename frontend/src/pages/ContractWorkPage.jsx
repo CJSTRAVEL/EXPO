@@ -1022,6 +1022,59 @@ const ContractWorkPage = () => {
               )}
             </div>
 
+            {/* Date/Time and Fare */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Date & Time *</Label>
+                <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {format(formData.booking_datetime, "dd/MM/yy HH:mm")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={formData.booking_datetime}
+                      onSelect={(date) => {
+                        if (date) {
+                          const newDate = new Date(date);
+                          newDate.setHours(formData.booking_datetime.getHours());
+                          newDate.setMinutes(formData.booking_datetime.getMinutes());
+                          setFormData({ ...formData, booking_datetime: newDate });
+                        }
+                      }}
+                    />
+                    <div className="p-3 border-t">
+                      <Input
+                        type="time"
+                        value={format(formData.booking_datetime, "HH:mm")}
+                        onChange={(e) => {
+                          const [hours, minutes] = e.target.value.split(":");
+                          const newDate = new Date(formData.booking_datetime);
+                          newDate.setHours(parseInt(hours), parseInt(minutes));
+                          setFormData({ ...formData, booking_datetime: newDate });
+                        }}
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Fare (£)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.fare}
+                  onChange={(e) => setFormData({ ...formData, fare: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="contract-fare"
+                />
+              </div>
+            </div>
+
             {/* Return Booking Option (only for new bookings) */}
             {!editingBooking && (
               <div className="space-y-3 border-2 border-amber-300 rounded-lg p-3 bg-amber-50/50">
@@ -1128,59 +1181,6 @@ const ContractWorkPage = () => {
                 )}
               </div>
             )}
-
-            {/* Date/Time and Fare */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Date & Time *</Label>
-                <Popover open={dateOpen} onOpenChange={setDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {format(formData.booking_datetime, "dd/MM/yy HH:mm")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={formData.booking_datetime}
-                      onSelect={(date) => {
-                        if (date) {
-                          const newDate = new Date(date);
-                          newDate.setHours(formData.booking_datetime.getHours());
-                          newDate.setMinutes(formData.booking_datetime.getMinutes());
-                          setFormData({ ...formData, booking_datetime: newDate });
-                        }
-                      }}
-                    />
-                    <div className="p-3 border-t">
-                      <Input
-                        type="time"
-                        value={format(formData.booking_datetime, "HH:mm")}
-                        onChange={(e) => {
-                          const [hours, minutes] = e.target.value.split(":");
-                          const newDate = new Date(formData.booking_datetime);
-                          newDate.setHours(parseInt(hours), parseInt(minutes));
-                          setFormData({ ...formData, booking_datetime: newDate });
-                        }}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Fare (£)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.fare}
-                  onChange={(e) => setFormData({ ...formData, fare: e.target.value })}
-                  placeholder="0.00"
-                  data-testid="contract-fare"
-                />
-              </div>
-            </div>
 
             {/* Driver Assignment */}
             <div className="space-y-2">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { User, Phone, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { User, Phone, Lock, Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ const PassengerLogin = () => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    email: "",
     password: "",
   });
 
@@ -28,7 +29,7 @@ const PassengerLogin = () => {
       const endpoint = isLogin ? "/passenger/login" : "/passenger/register";
       const payload = isLogin 
         ? { phone: formData.phone, password: formData.password }
-        : formData;
+        : { name: formData.name, phone: formData.phone, email: formData.email || null, password: formData.password };
 
       const response = await axios.post(`${API}${endpoint}`, payload);
       
@@ -38,6 +39,7 @@ const PassengerLogin = () => {
         id: response.data.id,
         name: response.data.name,
         phone: response.data.phone,
+        email: response.data.email,
       }));
 
       toast.success(isLogin ? "Welcome back!" : "Account created successfully!");

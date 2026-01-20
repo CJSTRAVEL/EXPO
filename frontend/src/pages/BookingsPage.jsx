@@ -46,7 +46,8 @@ const getStatusBadge = (status) => {
 
 const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
   const [formData, setFormData] = useState({
-    customer_name: "",
+    first_name: "",
+    last_name: "",
     customer_phone: "",
     pickup_location: "",
     dropoff_location: "",
@@ -63,15 +64,26 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
 
   useEffect(() => {
     if (booking) {
+      // Handle both old (customer_name) and new (first_name/last_name) format
+      let firstName = booking.first_name || "";
+      let lastName = booking.last_name || "";
+      if (!firstName && !lastName && booking.customer_name) {
+        const nameParts = booking.customer_name.split(" ");
+        firstName = nameParts[0] || "";
+        lastName = nameParts.slice(1).join(" ") || "";
+      }
       setFormData({
         ...booking,
+        first_name: firstName,
+        last_name: lastName,
         booking_datetime: new Date(booking.booking_datetime),
         fare: booking.fare || "",
         driver_id: booking.driver_id || "",
       });
     } else {
       setFormData({
-        customer_name: "",
+        first_name: "",
+        last_name: "",
         customer_phone: "",
         pickup_location: "",
         dropoff_location: "",

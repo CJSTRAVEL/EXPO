@@ -126,6 +126,7 @@ const ContractWorkPage = () => {
         terminal: flightInfo.terminal || "",
         create_return: false,
         return_pickup_location: "",
+        return_additional_stops: [],
         return_dropoff_location: "",
         return_datetime: null,
       });

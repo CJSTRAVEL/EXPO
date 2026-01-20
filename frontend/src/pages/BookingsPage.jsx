@@ -951,6 +951,22 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
                   <p className="text-sm font-medium">{booking.pickup_location}</p>
                 </div>
               </div>
+              
+              {/* Additional Stops */}
+              {booking.additional_stops && booking.additional_stops.length > 0 && (
+                booking.additional_stops.map((stop, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white text-xs font-bold">{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Stop {index + 1}</p>
+                      <p className="text-sm font-medium">{stop}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              
               <div className="flex items-start gap-2">
                 <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-white text-xs font-bold">B</span>
@@ -994,6 +1010,62 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
               />
             </div>
           </div>
+
+          {/* Flight Information */}
+          {booking.flight_info && (booking.flight_info.flight_number || booking.flight_info.airline) && (
+            <div className="bg-purple-50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-purple-700 mb-3 flex items-center gap-2">
+                <Plane className="w-4 h-4" />
+                Flight Information
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {booking.flight_info.flight_number && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Flight Number</p>
+                    <p className="font-medium">{booking.flight_info.flight_number}</p>
+                  </div>
+                )}
+                {booking.flight_info.airline && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Airline</p>
+                    <p className="font-medium">{booking.flight_info.airline}</p>
+                  </div>
+                )}
+                {booking.flight_info.flight_type && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Type</p>
+                    <p className="font-medium capitalize">{booking.flight_info.flight_type}</p>
+                  </div>
+                )}
+                {booking.flight_info.terminal && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Terminal</p>
+                    <p className="font-medium">{booking.flight_info.terminal}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Linked Booking (Return Journey) */}
+          {(booking.linked_booking_id || booking.is_return) && (
+            <div className="bg-amber-50 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                <ArrowLeftRight className="w-4 h-4" />
+                {booking.is_return ? "Return Journey" : "Linked Return Journey"}
+              </h3>
+              <p className="text-xs text-amber-600">
+                {booking.is_return 
+                  ? "This is a return journey. The original booking is linked."
+                  : "A return booking has been created for this journey."}
+              </p>
+              {booking.linked_booking_id && (
+                <p className="text-xs text-amber-700 mt-1">
+                  Linked Booking ID: <span className="font-mono font-semibold">{booking.linked_booking_id}</span>
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Booking Info */}
           <div className="grid grid-cols-2 gap-4">

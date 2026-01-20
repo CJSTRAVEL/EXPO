@@ -149,6 +149,27 @@ class BookingUpdate(BaseModel):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
 
+# Response model that supports both old (customer_name) and new (first_name/last_name) formats
+class BookingResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    booking_id: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    customer_name: Optional[str] = None  # For backward compatibility
+    customer_phone: str
+    pickup_location: str
+    dropoff_location: str
+    booking_datetime: datetime
+    notes: Optional[str] = None
+    fare: Optional[float] = None
+    status: BookingStatus = BookingStatus.PENDING
+    driver_id: Optional[str] = None
+    created_at: datetime
+    sms_sent: Optional[bool] = False
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
+
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

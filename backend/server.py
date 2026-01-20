@@ -1186,6 +1186,125 @@ async def get_passenger_bookings(passenger: dict = Depends(get_current_passenger
     
     return bookings
 
+# ========== BOOKING REQUESTS ENDPOINTS ==========
+class BookingRequestCreate(BaseModel):
+    pickup_location: str
+    dropoff_location: str
+    pickup_datetime: datetime
+    notes: Optional[str] = None
+    flight_number: Optional[str] = None
+
+class BookingRequest(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    passenger_id: str
+    passenger_name: str
+    passenger_phone: str
+    pickup_location: str
+    dropoff_location: str
+    pickup_datetime: datetime
+    notes: Optional[str] = None
+    flight_number: Optional[str] = None
+    status: str = "pending"  # pending, approved, rejected
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    admin_notes: Optional[str] = None
+
+@api_router.post("/passenger/booking-requests")
+async def create_booking_request(request: BookingRequestCreate, passenger: dict = Depends(get_current_passenger)):
+    """Submit a new booking request"""
+    booking_request = BookingRequest(
+        passenger_id=passenger['id'],
+        passenger_name=passenger['name'],
+        passenger_phone=passenger['phone'],
+        pickup_location=request.pickup_location,
+        dropoff_location=request.dropoff_location,
+        pickup_datetime=request.pickup_datetime,
+        notes=request.notes,
+        flight_number=request.flight_number.upper() if request.flight_number else None,
+    )
+    
+    doc = booking_request.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['pickup_datetime'] = doc['pickup_datetime'].isoformat()
+    
+    await db.booking_requests.insert_one(doc)
+    
+    logging.info(f"New booking request from {passenger['name']}: {request.pickup_location} -> {request.dropoff_location}")
+    
+    return {"message": "Booking request submitted", "id": booking_request.id}
+
+@api_router.get("/passenger/booking-requests")
+async def get_passenger_booking_requests(passenger: dict = Depends(get_current_passenger)):
+    """Get all booking requests for the logged-in passenger"""
+    requests = await db.booking_requests.find(
+        {"passenger_id": passenger['id']},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return requests
+
+@api_router.get("/admin/booking-requests")
+async def get_all_booking_requests():
+    """Get all booking requests (admin only)"""
+    requests = await db.booking_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return requests
+
+@api_router.put("/admin/booking-requests/{request_id}/approve")
+async def approve_booking_request(request_id: str):
+    """Approve a booking request and create the actual booking"""
+    request_doc = await db.booking_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request_doc:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    if request_doc['status'] != 'pending':
+        raise HTTPException(status_code=400, detail="Request already processed")
+    
+    # Generate booking ID
+    readable_id = await generate_booking_id()
+    
+    # Create the booking
+    booking = Booking(
+        first_name=request_doc['passenger_name'].split()[0] if request_doc['passenger_name'] else "",
+        last_name=" ".join(request_doc['passenger_name'].split()[1:]) if request_doc['passenger_name'] and len(request_doc['passenger_name'].split()) > 1 else "",
+        customer_phone=request_doc['passenger_phone'],
+        pickup_location=request_doc['pickup_location'],
+        dropoff_location=request_doc['dropoff_location'],
+        booking_datetime=datetime.fromisoformat(request_doc['pickup_datetime']) if isinstance(request_doc['pickup_datetime'], str) else request_doc['pickup_datetime'],
+        notes=request_doc.get('notes', ''),
+        flight_info=FlightInfo(flight_number=request_doc['flight_number']) if request_doc.get('flight_number') else None,
+    )
+    booking.booking_id = readable_id
+    
+    doc = booking.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['booking_datetime'] = doc['booking_datetime'].isoformat()
+    doc['sms_sent'] = False
+    doc['customer_name'] = request_doc['passenger_name']
+    
+    await db.bookings.insert_one(doc)
+    
+    # Update request status
+    await db.booking_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": "approved", "booking_id": readable_id}}
+    )
+    
+    logging.info(f"Booking request {request_id} approved, created booking {readable_id}")
+    
+    return {"message": "Booking created", "booking_id": readable_id}
+
+@api_router.put("/admin/booking-requests/{request_id}/reject")
+async def reject_booking_request(request_id: str, admin_notes: str = ""):
+    """Reject a booking request"""
+    result = await db.booking_requests.update_one(
+        {"id": request_id, "status": "pending"},
+        {"$set": {"status": "rejected", "admin_notes": admin_notes}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Request not found or already processed")
+    
+    return {"message": "Request rejected"}
+
 # ========== ADMIN PASSENGER MANAGEMENT ENDPOINTS ==========
 @api_router.get("/admin/passengers")
 async def get_all_passengers():

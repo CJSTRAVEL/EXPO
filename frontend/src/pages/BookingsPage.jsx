@@ -84,6 +84,7 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         firstName = nameParts[0] || "";
         lastName = nameParts.slice(1).join(" ") || "";
       }
+      const flightInfo = booking.flight_info || {};
       setFormData({
         ...booking,
         first_name: firstName,
@@ -92,7 +93,15 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         fare: booking.fare || "",
         driver_id: booking.driver_id || "",
         client_id: booking.client_id || "",
+        additional_stops: booking.additional_stops || [],
+        flight_number: flightInfo.flight_number || "",
+        airline: flightInfo.airline || "",
+        flight_type: flightInfo.flight_type || "",
+        terminal: flightInfo.terminal || "",
+        create_return: false,
+        return_datetime: null,
       });
+      setShowFlightInfo(!!flightInfo.flight_number);
     } else {
       setFormData({
         first_name: "",
@@ -100,14 +109,22 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         customer_phone: "",
         pickup_location: "",
         dropoff_location: "",
+        additional_stops: [],
         booking_datetime: new Date(),
         notes: "",
         fare: "",
         status: "pending",
         driver_id: "",
         client_id: "",
+        flight_number: "",
+        airline: "",
+        flight_type: "",
+        terminal: "",
+        create_return: false,
+        return_datetime: null,
       });
       setRouteInfo(null);
+      setShowFlightInfo(false);
     }
   }, [booking]);
 

@@ -458,7 +458,7 @@ const BookingDetails = () => {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
               <User className="w-4 h-4 text-muted-foreground" />
-              <span>{booking.customer_name}</span>
+              <span>{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</span>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-muted-foreground" />

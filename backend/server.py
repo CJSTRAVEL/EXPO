@@ -186,6 +186,7 @@ class BookingBase(BaseModel):
     booking_datetime: datetime
     notes: Optional[str] = None
     fare: Optional[float] = None
+    client_id: Optional[str] = None  # Link to client account for invoicing
 
 class BookingCreate(BookingBase):
     distance_miles: Optional[float] = None
@@ -204,6 +205,7 @@ class BookingUpdate(BaseModel):
     driver_id: Optional[str] = None
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
+    client_id: Optional[str] = None
 
 # Response model that supports both old (customer_name) and new (first_name/last_name) formats
 class BookingResponse(BaseModel):

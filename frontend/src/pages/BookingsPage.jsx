@@ -177,14 +177,41 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
     e.preventDefault();
     setSaving(true);
     try {
+      // Build flight_info object if any flight fields are filled
+      let flight_info = null;
+      if (formData.flight_number || formData.airline || formData.flight_type || formData.terminal) {
+        flight_info = {
+          flight_number: formData.flight_number || null,
+          airline: formData.airline || null,
+          flight_type: formData.flight_type || null,
+          terminal: formData.terminal || null,
+        };
+      }
+      
       const payload = {
-        ...formData,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        customer_phone: formData.customer_phone,
+        pickup_location: formData.pickup_location,
+        dropoff_location: formData.dropoff_location,
+        additional_stops: formData.additional_stops.length > 0 ? formData.additional_stops : null,
         booking_datetime: formData.booking_datetime.toISOString(),
+        notes: formData.notes,
         fare: formData.fare ? parseFloat(formData.fare) : null,
+        status: formData.status,
+        driver_id: formData.driver_id || null,
+        client_id: formData.client_id || null,
+        flight_info: flight_info,
         distance_miles: routeInfo?.distance?.miles || null,
         duration_minutes: routeInfo?.duration?.minutes || null,
+        // Return booking fields (only for new bookings)
+        create_return: !booking && formData.create_return,
+        return_datetime: !booking && formData.create_return && formData.return_datetime 
+          ? formData.return_datetime.toISOString() 
+          : null,
       };
       if (!payload.driver_id) delete payload.driver_id;
+      if (!payload.client_id) delete payload.client_id;
       await onSave(payload);
       onClose();
     } catch (error) {

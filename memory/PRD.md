@@ -71,6 +71,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Passenger Portal Admin** (Jan 20, 2026) - Admin page to manage passenger accounts (view, change password, delete)
 - ✅ **Create User Feature** (Jan 20, 2026) - Admins can manually create passenger accounts from the admin page
 - ✅ **GPS Live Dashboard** (Jan 19, 2026) - Embedded GPS tracking map from gpslive.co.uk
+- ✅ **Split Customer Name** (Jan 20, 2026) - New booking form now has separate First Name and Last Name fields (backward compatible with existing bookings)
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

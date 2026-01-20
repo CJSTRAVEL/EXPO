@@ -72,6 +72,8 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Create User Feature** (Jan 20, 2026) - Admins can manually create passenger accounts from the admin page
 - ✅ **GPS Live Dashboard** (Jan 19, 2026) - Embedded GPS tracking map from gpslive.co.uk
 - ✅ **Split Customer Name** (Jan 20, 2026) - New booking form now has separate First Name and Last Name fields (backward compatible with existing bookings)
+- ✅ **Clients Page** (Jan 20, 2026) - B2B client account management with auto-generated account numbers (E001, E002...), client types, payment methods, and invoice tracking
+- ✅ **Booking-Client Integration** (Jan 20, 2026) - Bookings can be linked to clients for invoicing purposes
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers
@@ -91,6 +93,9 @@ Build a private hire application where you can add bookings and assign them to d
 - `POST /api/admin/passengers` - Create passenger (admin)
 - `PUT /api/admin/passengers/{id}/password` - Change passenger password (admin)
 - `DELETE /api/admin/passengers/{id}` - Delete passenger (admin)
+- `GET/POST /api/clients` - List/Create clients
+- `GET/PUT/DELETE /api/clients/{id}` - Get/Update/Delete client
+- `GET /api/clients/{id}/bookings` - Get client's bookings
 
 ## Prioritized Backlog
 

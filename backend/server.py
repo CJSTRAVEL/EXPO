@@ -415,7 +415,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 phone = '+44' + phone
         
         # Generate booking details link - use short URL if available
-        app_url = os.environ.get('APP_URL', 'https://cabmanage-1.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://booking-master-14.preview.emergentagent.com')
         if short_booking_id:
             booking_link = f"{app_url}/b/{short_booking_id}"
         else:

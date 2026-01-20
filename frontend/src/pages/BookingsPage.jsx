@@ -1297,6 +1297,7 @@ const BookingsPage = () => {
       <BookingForm
         booking={selectedBooking}
         drivers={drivers}
+        clients={clients}
         isOpen={showForm}
         onSave={handleSave}
         onClose={() => {

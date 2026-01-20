@@ -897,7 +897,8 @@ const BookingsPage = () => {
     // Text search (customer name, phone, booking ID)
     if (searchText) {
       const search = searchText.toLowerCase();
-      const matchesName = booking.customer_name?.toLowerCase().includes(search);
+      const fullName = booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim();
+      const matchesName = fullName.toLowerCase().includes(search);
       const matchesPhone = booking.customer_phone?.toLowerCase().includes(search);
       const matchesBookingId = booking.booking_id?.toLowerCase().includes(search);
       const matchesPickup = booking.pickup_location?.toLowerCase().includes(search);

@@ -71,7 +71,13 @@ class TestReturnBookings:
     """Test return booking creation functionality"""
     
     def test_create_booking_with_return(self):
-        """Create a booking with return journey option"""
+        """Create a booking with return journey option
+        
+        Return journey logic:
+        - If there are additional stops, return pickup = last additional stop
+        - Return dropoff = original pickup
+        - Reversed stops include original dropoff + reversed remaining stops
+        """
         booking_datetime = datetime.now() + timedelta(days=3)
         return_datetime = booking_datetime + timedelta(hours=4)
         
@@ -110,14 +116,16 @@ class TestReturnBookings:
         assert return_booking.get("is_return") == True, "Return booking should have is_return=True"
         assert return_booking.get("linked_booking_id") == main_id, "Return should link back to main"
         
-        # Verify locations are swapped
-        assert return_booking.get("pickup_location") == "Sunderland Royal Hospital", "Return pickup should be original dropoff"
+        # Verify return journey logic:
+        # With stops: return pickup = last stop (Seaham Town Centre)
+        # Return dropoff = original pickup (Peterlee Bus Station)
+        assert return_booking.get("pickup_location") == "Seaham Town Centre", "Return pickup should be last additional stop"
         assert return_booking.get("dropoff_location") == "Peterlee Bus Station", "Return dropoff should be original pickup"
         
-        # Verify stops are reversed
-        if main_booking.get("additional_stops"):
-            expected_reversed_stops = list(reversed(main_booking["additional_stops"]))
-            assert return_booking.get("additional_stops") == expected_reversed_stops, "Return stops should be reversed"
+        # With 1 stop, reversed_stops should include original dropoff only
+        # reversed_stops = [dropoff] + reversed(stops[:-1]) = [Sunderland Royal Hospital] + [] = [Sunderland Royal Hospital]
+        expected_reversed_stops = ["Sunderland Royal Hospital"]
+        assert return_booking.get("additional_stops") == expected_reversed_stops, f"Return stops should be {expected_reversed_stops}"
         
         print(f"Return booking verified: {return_booking.get('booking_id')}")
         

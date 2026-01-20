@@ -135,9 +135,6 @@ const PassengerPortalAdmin = () => {
           Create User
         </Button>
       </header>
-          </p>
-        </div>
-      </header>
 
       {/* Search Bar */}
       <div className="mb-6">

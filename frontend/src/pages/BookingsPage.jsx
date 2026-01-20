@@ -174,6 +174,34 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
+            {/* Client Selection (for invoicing) */}
+            {clients && clients.length > 0 && (
+              <div className="space-y-2 pb-3 border-b">
+                <Label>Invoice to Client (Optional)</Label>
+                <Select
+                  value={formData.client_id || "none"}
+                  onValueChange={(value) => handleClientSelect(value === "none" ? "" : value)}
+                >
+                  <SelectTrigger data-testid="booking-client-select">
+                    <SelectValue placeholder="Select client for invoicing..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Client (Direct Payment)</SelectItem>
+                    {clients.filter(c => c.status === "active").map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.account_no} - {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.client_id && (
+                  <p className="text-xs text-muted-foreground">
+                    This booking will be added to the client's invoice
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="first_name">First Name</Label>

@@ -51,17 +51,28 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
     customer_phone: "",
     pickup_location: "",
     dropoff_location: "",
+    additional_stops: [],
     booking_datetime: new Date(),
     notes: "",
     fare: "",
     status: "pending",
     driver_id: "",
     client_id: "",
+    // Flight info
+    flight_number: "",
+    airline: "",
+    flight_type: "",
+    terminal: "",
+    // Return booking
+    create_return: false,
+    return_datetime: null,
   });
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [returnDateOpen, setReturnDateOpen] = useState(false);
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
+  const [showFlightInfo, setShowFlightInfo] = useState(false);
 
   useEffect(() => {
     if (booking) {

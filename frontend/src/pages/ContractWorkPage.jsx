@@ -826,6 +826,199 @@ const ContractWorkPage = () => {
               />
             </div>
 
+            {/* Additional Stops (Multi-drop) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Additional Stops</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ 
+                    ...formData, 
+                    additional_stops: [...formData.additional_stops, ""] 
+                  })}
+                  data-testid="contract-add-stop-btn"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Stop
+                </Button>
+              </div>
+              {formData.additional_stops.map((stop, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    <AddressAutocomplete
+                      value={stop}
+                      onChange={(value) => {
+                        const newStops = [...formData.additional_stops];
+                        newStops[index] = value;
+                        setFormData({ ...formData, additional_stops: newStops });
+                      }}
+                      placeholder={`Stop ${index + 1}`}
+                      data-testid={`contract-stop-${index}-input`}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 text-destructive hover:text-destructive"
+                    onClick={() => {
+                      const newStops = formData.additional_stops.filter((_, i) => i !== index);
+                      setFormData({ ...formData, additional_stops: newStops });
+                    }}
+                    data-testid={`contract-remove-stop-${index}-btn`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              {formData.additional_stops.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Route: Pickup → {formData.additional_stops.length} stop(s) → Final Dropoff
+                </p>
+              )}
+            </div>
+
+            {/* Flight Information Toggle */}
+            <div className="space-y-3 border rounded-lg p-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showFlightInfo}
+                  onChange={(e) => setShowFlightInfo(e.target.checked)}
+                  className="rounded"
+                  data-testid="contract-flight-info-toggle"
+                />
+                <span className="text-sm font-medium">Airport Transfer / Flight Info</span>
+              </label>
+              
+              {showFlightInfo && (
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Flight Number</Label>
+                      <Input
+                        value={formData.flight_number}
+                        onChange={(e) => setFormData({ ...formData, flight_number: e.target.value.toUpperCase() })}
+                        placeholder="BA123"
+                        data-testid="contract-flight-number"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Airline</Label>
+                      <Input
+                        value={formData.airline}
+                        onChange={(e) => setFormData({ ...formData, airline: e.target.value })}
+                        placeholder="British Airways"
+                        data-testid="contract-airline"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Flight Type</Label>
+                      <Select
+                        value={formData.flight_type || ""}
+                        onValueChange={(value) => setFormData({ ...formData, flight_type: value })}
+                      >
+                        <SelectTrigger data-testid="contract-flight-type">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="arrival">Arrival (Pickup)</SelectItem>
+                          <SelectItem value="departure">Departure (Drop-off)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Terminal</Label>
+                      <Input
+                        value={formData.terminal}
+                        onChange={(e) => setFormData({ ...formData, terminal: e.target.value })}
+                        placeholder="Terminal 5"
+                        data-testid="contract-terminal"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Return Booking Option (only for new bookings) */}
+            {!editingBooking && (
+              <div className="space-y-3 border rounded-lg p-3 bg-amber-50/50">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.create_return}
+                    onChange={(e) => {
+                      setFormData({ 
+                        ...formData, 
+                        create_return: e.target.checked,
+                        return_datetime: e.target.checked ? new Date(formData.booking_datetime.getTime() + 3600000 * 3) : null
+                      });
+                    }}
+                    className="rounded"
+                    data-testid="contract-create-return-toggle"
+                  />
+                  <span className="text-sm font-medium">Create Return Journey</span>
+                </label>
+                
+                {formData.create_return && (
+                  <div className="pt-2 border-t border-amber-200">
+                    <Label className="text-xs mb-2 block">Return Date & Time</Label>
+                    <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-white",
+                            !formData.return_datetime && "text-muted-foreground"
+                          )}
+                          data-testid="contract-return-datetime-btn"
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          {formData.return_datetime 
+                            ? format(formData.return_datetime, "dd/MM/yy HH:mm") 
+                            : "Pick return date & time"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={formData.return_datetime}
+                          onSelect={(date) => {
+                            if (date) {
+                              const current = formData.return_datetime || new Date();
+                              date.setHours(current.getHours(), current.getMinutes());
+                              setFormData({ ...formData, return_datetime: date });
+                            }
+                          }}
+                        />
+                        <div className="p-3 border-t">
+                          <Input
+                            type="time"
+                            value={formData.return_datetime ? format(formData.return_datetime, "HH:mm") : "12:00"}
+                            onChange={(e) => {
+                              const [hours, minutes] = e.target.value.split(':');
+                              const newDate = new Date(formData.return_datetime || new Date());
+                              newDate.setHours(parseInt(hours), parseInt(minutes));
+                              setFormData({ ...formData, return_datetime: newDate });
+                            }}
+                            data-testid="contract-return-time-input"
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-amber-700 mt-2">
+                      A separate return booking will be created with pickup/dropoff swapped
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Date/Time and Fare */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

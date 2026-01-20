@@ -480,14 +480,37 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
                             if (res.data.error) {
                               setFlightError(res.data.error);
                             } else {
-                              // Auto-fill flight data
+                              const flightInfo = res.data;
+                              
+                              // Build pickup location from arrival airport
+                              let pickupLocation = "";
+                              if (flightInfo.arrival_airport) {
+                                pickupLocation = flightInfo.arrival_airport;
+                                if (flightInfo.arrival_iata) {
+                                  pickupLocation += ` (${flightInfo.arrival_iata})`;
+                                }
+                                if (flightInfo.arrival_terminal) {
+                                  pickupLocation += ` Terminal ${flightInfo.arrival_terminal}`;
+                                }
+                              }
+                              
+                              // Parse arrival time for booking datetime
+                              let arrivalDateTime = formData.booking_datetime;
+                              const arrivalTime = flightInfo.arrival_estimated || flightInfo.arrival_scheduled;
+                              if (arrivalTime) {
+                                arrivalDateTime = new Date(arrivalTime);
+                              }
+                              
+                              // Auto-fill flight data including pickup location and time
                               setFormData(prev => ({
                                 ...prev,
-                                airline: res.data.airline || prev.airline,
-                                terminal: res.data.departure_terminal || res.data.arrival_terminal || prev.terminal,
-                                flight_type: res.data.departure_airport ? "departure" : "arrival"
+                                airline: flightInfo.airline || prev.airline,
+                                terminal: flightInfo.arrival_terminal || flightInfo.departure_terminal || prev.terminal,
+                                flight_type: "arrival", // Picking up = arrival
+                                pickup_location: pickupLocation || prev.pickup_location,
+                                booking_datetime: arrivalDateTime
                               }));
-                              setFlightData(res.data);
+                              setFlightData(flightInfo);
                             }
                           } catch (err) {
                             setFlightError("Failed to lookup flight");

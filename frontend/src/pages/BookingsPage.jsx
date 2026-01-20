@@ -612,66 +612,6 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Date & Time</Label>
-                <Popover open={dateOpen} onOpenChange={setDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.booking_datetime && "text-muted-foreground"
-                      )}
-                      data-testid="booking-datetime-btn"
-                    >
-                      <Clock className="mr-2 h-4 w-4" />
-                      {formData.booking_datetime ? format(formData.booking_datetime, "PPP p") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={formData.booking_datetime}
-                      onSelect={(date) => {
-                        if (date) {
-                          const current = formData.booking_datetime;
-                          date.setHours(current.getHours(), current.getMinutes());
-                          setFormData({ ...formData, booking_datetime: date });
-                        }
-                      }}
-                      initialFocus
-                    />
-                    <div className="p-3 border-t">
-                      <Input
-                        type="time"
-                        value={format(formData.booking_datetime, "HH:mm")}
-                        onChange={(e) => {
-                          const [hours, minutes] = e.target.value.split(':');
-                          const newDate = new Date(formData.booking_datetime);
-                          newDate.setHours(parseInt(hours), parseInt(minutes));
-                          setFormData({ ...formData, booking_datetime: newDate });
-                        }}
-                        data-testid="booking-time-input"
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fare">Fare (£)</Label>
-                <Input
-                  id="fare"
-                  type="number"
-                  step="0.01"
-                  value={formData.fare}
-                  onChange={(e) => setFormData({ ...formData, fare: e.target.value })}
-                  placeholder="25.00"
-                  data-testid="booking-fare-input"
-                />
-              </div>
-            </div>
-
             {booking && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

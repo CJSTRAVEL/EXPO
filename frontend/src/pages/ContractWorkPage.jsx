@@ -56,6 +56,8 @@ const ContractWorkPage = () => {
     terminal: "",
     // Return booking
     create_return: false,
+    return_pickup_location: "",
+    return_dropoff_location: "",
     return_datetime: null,
   });
   const [showFlightInfo, setShowFlightInfo] = useState(false);

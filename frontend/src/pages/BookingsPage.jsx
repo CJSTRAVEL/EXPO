@@ -1551,6 +1551,7 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
+  const [bookingRequests, setBookingRequests] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1568,16 +1569,18 @@ const BookingsPage = () => {
 
   const fetchData = async () => {
     try {
-      const [bookingsRes, driversRes, clientsRes] = await Promise.all([
+      const [bookingsRes, driversRes, clientsRes, requestsRes] = await Promise.all([
         axios.get(`${API}/bookings`),
         axios.get(`${API}/drivers`),
         axios.get(`${API}/clients`),
+        axios.get(`${API}/admin/booking-requests`).catch(() => ({ data: [] })),
       ]);
       // Filter out contract work bookings (those linked to clients)
       const regularBookings = bookingsRes.data.filter(b => !b.client_id);
       setBookings(regularBookings);
       setDrivers(driversRes.data);
       setClients(clientsRes.data);
+      setBookingRequests(requestsRes.data?.filter(r => r.status === 'pending') || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");

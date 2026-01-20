@@ -254,6 +254,8 @@ const PassengerPortal = () => {
         dropoff_location: requestForm.dropoff_location,
         additional_stops: requestForm.additional_stops.length > 0 ? requestForm.additional_stops : null,
         pickup_datetime: requestForm.pickup_datetime.toISOString(),
+        passenger_count: parseInt(requestForm.passenger_count) || 1,
+        luggage_count: parseInt(requestForm.luggage_count) || 0,
         notes: requestForm.notes,
         flight_number: requestForm.flight_number || null,
         flight_info: flight_info,

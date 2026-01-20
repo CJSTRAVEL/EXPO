@@ -1024,72 +1024,105 @@ const ContractWorkPage = () => {
 
             {/* Return Booking Option (only for new bookings) */}
             {!editingBooking && (
-              <div className="space-y-3 border rounded-lg p-3 bg-amber-50/50">
+              <div className="space-y-3 border-2 border-amber-300 rounded-lg p-3 bg-amber-50/50">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.create_return}
                     onChange={(e) => {
+                      const isChecked = e.target.checked;
                       setFormData({ 
                         ...formData, 
-                        create_return: e.target.checked,
-                        return_datetime: e.target.checked ? new Date(formData.booking_datetime.getTime() + 3600000 * 3) : null
+                        create_return: isChecked,
+                        return_pickup_location: isChecked ? formData.dropoff_location : "",
+                        return_dropoff_location: isChecked ? formData.pickup_location : "",
+                        return_datetime: isChecked ? new Date(formData.booking_datetime.getTime() + 3600000 * 3) : null
                       });
                     }}
                     className="rounded"
                     data-testid="contract-create-return-toggle"
                   />
-                  <span className="text-sm font-medium">Create Return Journey</span>
+                  <span className="text-sm font-semibold text-amber-800">Create Return Journey</span>
                 </label>
                 
                 {formData.create_return && (
-                  <div className="pt-2 border-t border-amber-200">
-                    <Label className="text-xs mb-2 block">Return Date & Time</Label>
-                    <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal bg-white",
-                            !formData.return_datetime && "text-muted-foreground"
-                          )}
-                          data-testid="contract-return-datetime-btn"
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          {formData.return_datetime 
-                            ? format(formData.return_datetime, "dd/MM/yy HH:mm") 
-                            : "Pick return date & time"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={formData.return_datetime}
-                          onSelect={(date) => {
-                            if (date) {
-                              const current = formData.return_datetime || new Date();
-                              date.setHours(current.getHours(), current.getMinutes());
-                              setFormData({ ...formData, return_datetime: date });
-                            }
-                          }}
-                        />
-                        <div className="p-3 border-t">
-                          <Input
-                            type="time"
-                            value={formData.return_datetime ? format(formData.return_datetime, "HH:mm") : "12:00"}
-                            onChange={(e) => {
-                              const [hours, minutes] = e.target.value.split(':');
-                              const newDate = new Date(formData.return_datetime || new Date());
-                              newDate.setHours(parseInt(hours), parseInt(minutes));
-                              setFormData({ ...formData, return_datetime: newDate });
+                  <div className="pt-3 border-t border-amber-300 space-y-4">
+                    <div className="bg-amber-100 rounded px-2 py-1">
+                      <p className="text-xs font-semibold text-amber-800">RETURN JOURNEY DETAILS</p>
+                    </div>
+                    
+                    {/* Return Pickup Location */}
+                    <div className="space-y-2">
+                      <Label className="text-amber-800">Return Pickup Location</Label>
+                      <AddressAutocomplete
+                        value={formData.return_pickup_location}
+                        onChange={(value) => setFormData({ ...formData, return_pickup_location: value })}
+                        placeholder="Where to pick up for return..."
+                        data-testid="contract-return-pickup-input"
+                      />
+                    </div>
+
+                    {/* Return Dropoff Location */}
+                    <div className="space-y-2">
+                      <Label className="text-amber-800">Return Dropoff Location</Label>
+                      <AddressAutocomplete
+                        value={formData.return_dropoff_location}
+                        onChange={(value) => setFormData({ ...formData, return_dropoff_location: value })}
+                        placeholder="Where to drop off on return..."
+                        data-testid="contract-return-dropoff-input"
+                      />
+                    </div>
+
+                    {/* Return Date & Time */}
+                    <div className="space-y-2">
+                      <Label className="text-amber-800">Return Date & Time</Label>
+                      <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal bg-white border-amber-300",
+                              !formData.return_datetime && "text-muted-foreground"
+                            )}
+                            data-testid="contract-return-datetime-btn"
+                          >
+                            <Clock className="mr-2 h-4 w-4 text-amber-600" />
+                            {formData.return_datetime 
+                              ? format(formData.return_datetime, "dd/MM/yy 'at' HH:mm") 
+                              : "Pick return date & time"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={formData.return_datetime}
+                            onSelect={(date) => {
+                              if (date) {
+                                const current = formData.return_datetime || new Date();
+                                date.setHours(current.getHours(), current.getMinutes());
+                                setFormData({ ...formData, return_datetime: date });
+                              }
                             }}
-                            data-testid="contract-return-time-input"
                           />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-amber-700 mt-2">
-                      A separate return booking will be created with pickup/dropoff swapped
+                          <div className="p-3 border-t">
+                            <Input
+                              type="time"
+                              value={formData.return_datetime ? format(formData.return_datetime, "HH:mm") : "12:00"}
+                              onChange={(e) => {
+                                const [hours, minutes] = e.target.value.split(':');
+                                const newDate = new Date(formData.return_datetime || new Date());
+                                newDate.setHours(parseInt(hours), parseInt(minutes));
+                                setFormData({ ...formData, return_datetime: newDate });
+                              }}
+                              data-testid="contract-return-time-input"
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <p className="text-xs text-amber-700 bg-amber-100 rounded p-2">
+                      ↩️ A separate return booking will be created for the same passenger
                     </p>
                   </div>
                 )}

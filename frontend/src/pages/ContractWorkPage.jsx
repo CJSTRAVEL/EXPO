@@ -141,6 +141,7 @@ const ContractWorkPage = () => {
         first_name: "",
         last_name: "",
         customer_phone: preselectedClient?.mobile || "",
+        customer_email: preselectedClient?.email || "",
         passenger_count: 1,
         luggage_count: 0,
         pickup_location: preselectedClient?.address ? 

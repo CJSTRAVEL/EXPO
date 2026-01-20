@@ -68,6 +68,7 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
     // Return booking
     create_return: false,
     return_pickup_location: "",
+    return_additional_stops: [],
     return_dropoff_location: "",
     return_datetime: null,
     // Return flight info

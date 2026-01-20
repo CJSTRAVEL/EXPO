@@ -160,6 +160,8 @@ const PassengerPortal = () => {
     dropoff_location: "",
     additional_stops: [],
     pickup_datetime: new Date(),
+    passenger_count: 1,
+    luggage_count: 0,
     notes: "",
     // Flight info
     flight_number: "",

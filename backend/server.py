@@ -1149,7 +1149,13 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     # Generate readable booking ID
     readable_booking_id = await generate_booking_id()
     
-    booking_obj = Booking(**booking.model_dump())
+    # Extract return booking info before creating main booking
+    create_return = booking.create_return
+    return_datetime = booking.return_datetime
+    
+    # Create the booking object (exclude return-specific fields)
+    booking_data = booking.model_dump(exclude={'create_return', 'return_datetime'})
+    booking_obj = Booking(**booking_data)
     booking_obj.booking_id = readable_booking_id
     
     doc = booking_obj.model_dump()
@@ -1158,7 +1164,59 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     doc['sms_sent'] = False
     # Store full customer_name for backward compatibility
     doc['customer_name'] = f"{booking.first_name} {booking.last_name}"
+    # Convert flight_info to dict if present
+    if doc.get('flight_info'):
+        doc['flight_info'] = doc['flight_info'] if isinstance(doc['flight_info'], dict) else doc['flight_info'].model_dump() if hasattr(doc['flight_info'], 'model_dump') else doc['flight_info']
+    
     await db.bookings.insert_one(doc)
+    
+    # If return booking requested, create it
+    return_booking_id = None
+    if create_return and return_datetime:
+        return_readable_id = await generate_booking_id()
+        
+        # Swap pickup and dropoff for return journey
+        # If there are additional stops, reverse them
+        additional_stops = booking.additional_stops or []
+        if additional_stops:
+            # Reverse: last stop becomes first pickup after original destination
+            reversed_stops = [booking.dropoff_location] + list(reversed(additional_stops[:-1])) if len(additional_stops) > 1 else []
+            return_pickup = additional_stops[-1] if additional_stops else booking.dropoff_location
+        else:
+            reversed_stops = []
+            return_pickup = booking.dropoff_location
+        
+        return_booking = Booking(
+            first_name=booking.first_name,
+            last_name=booking.last_name,
+            customer_phone=booking.customer_phone,
+            pickup_location=return_pickup,
+            dropoff_location=booking.pickup_location,
+            additional_stops=reversed_stops if reversed_stops else None,
+            booking_datetime=return_datetime,
+            notes=f"Return journey - {booking.notes}" if booking.notes else "Return journey",
+            fare=booking.fare,
+            client_id=booking.client_id,
+            is_return=True,
+            linked_booking_id=booking_obj.id,
+        )
+        return_booking.booking_id = return_readable_id
+        
+        return_doc = return_booking.model_dump()
+        return_doc['created_at'] = return_doc['created_at'].isoformat()
+        return_doc['booking_datetime'] = return_doc['booking_datetime'].isoformat()
+        return_doc['sms_sent'] = False
+        return_doc['customer_name'] = f"{booking.first_name} {booking.last_name}"
+        
+        await db.bookings.insert_one(return_doc)
+        return_booking_id = return_booking.id
+        
+        # Update original booking with link to return
+        await db.bookings.update_one(
+            {"id": booking_obj.id},
+            {"$set": {"linked_booking_id": return_booking_id}}
+        )
+        doc['linked_booking_id'] = return_booking_id
     
     # Send SMS in background with journey details and short booking ID
     full_name = f"{booking.first_name} {booking.last_name}"
@@ -1178,6 +1236,7 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     # Return response with customer_name included
     response_data = booking_obj.model_dump()
     response_data['customer_name'] = doc['customer_name']
+    response_data['linked_booking_id'] = return_booking_id
     return response_data
 
 async def send_sms_and_update_booking(booking_id: str, phone: str, name: str,

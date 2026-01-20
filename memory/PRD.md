@@ -86,6 +86,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Request Notification Badge** (Jan 20, 2026) - Sidebar shows pending request count badge with auto-refresh
 - ✅ **Enhanced Portal Request Form** (Jan 20, 2026) - Passenger booking request form now matches admin booking form with address autocomplete, multi-stop, return journey, and full flight info with live lookup
 - ✅ **PAX and Cases Fields** (Jan 20, 2026) - Added passenger count (PAX) and luggage count (Cases) fields to all booking forms (Bookings, Contract Work, Passenger Portal)
+- ✅ **Return Journey Multi-Stop** (Jan 20, 2026) - Added multiple drop-off locations (additional stops) support to return journey section in all booking forms
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

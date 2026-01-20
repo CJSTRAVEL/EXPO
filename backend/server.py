@@ -1334,6 +1334,7 @@ async def login_passenger(data: PassengerLogin):
         id=passenger['id'],
         name=passenger['name'],
         phone=phone,
+        email=passenger.get('email'),
         token=token
     )
 
@@ -1343,7 +1344,8 @@ async def get_passenger_profile(passenger: dict = Depends(get_current_passenger)
     return {
         "id": passenger['id'],
         "name": passenger['name'],
-        "phone": passenger['phone']
+        "phone": passenger['phone'],
+        "email": passenger.get('email')
     }
 
 @api_router.get("/passenger/bookings")

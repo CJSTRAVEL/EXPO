@@ -847,6 +847,7 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
 const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -862,12 +863,14 @@ const BookingsPage = () => {
 
   const fetchData = async () => {
     try {
-      const [bookingsRes, driversRes] = await Promise.all([
+      const [bookingsRes, driversRes, clientsRes] = await Promise.all([
         axios.get(`${API}/bookings`),
         axios.get(`${API}/drivers`),
+        axios.get(`${API}/clients`),
       ]);
       setBookings(bookingsRes.data);
       setDrivers(driversRes.data);
+      setClients(clientsRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");

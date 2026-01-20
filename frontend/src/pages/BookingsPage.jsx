@@ -630,7 +630,7 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground">Name</p>
-                <p className="font-medium">{booking.customer_name}</p>
+                <p className="font-medium">{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Phone</p>

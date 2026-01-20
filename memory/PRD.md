@@ -140,9 +140,9 @@ Build a private hire application where you can add bookings and assign them to d
 - **clients**: `{id, account_no, name, mobile, email, client_type, payment_method, status, start_date, address, town_city, post_code, country, notes}` - B2B client accounts
 
 ## Known Issues
-- **SMS Link Preview**: User reports "Preview Unavailable" on SMS booking links. OG tags have been added but issue persists. May need SSR for the public booking page.
+- None currently - SMS Link Preview has been fixed with SSR endpoint
 
 ## Next Tasks
-1. Investigate and fix SMS link preview issue (OG tag/SSR solution)
-2. Implement forgot password with SMS verification
-3. Allow passengers to request bookings from portal
+1. Implement forgot password with SMS verification
+2. Allow passengers to request bookings from portal
+3. Consider refactoring server.py into separate route files as it has grown significantly

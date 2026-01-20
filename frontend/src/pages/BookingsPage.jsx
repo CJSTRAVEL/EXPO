@@ -251,6 +251,15 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         return_datetime: !booking && formData.create_return && formData.return_datetime 
           ? formData.return_datetime.toISOString() 
           : null,
+        // Return flight info
+        return_flight_info: !booking && formData.create_return && (formData.return_flight_number || formData.return_airline)
+          ? {
+              flight_number: formData.return_flight_number || null,
+              airline: formData.return_airline || null,
+              flight_type: formData.return_flight_type || null,
+              terminal: formData.return_terminal || null,
+            }
+          : null,
       };
       if (!payload.driver_id) delete payload.driver_id;
       if (!payload.client_id) delete payload.client_id;

@@ -224,27 +224,176 @@ const PassengerPortal = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem("passengerToken");
+      
+      // Build flight_info object if any flight fields are filled
+      let flight_info = null;
+      if (requestForm.flight_number || requestForm.airline || requestForm.flight_type || requestForm.terminal) {
+        flight_info = {
+          flight_number: requestForm.flight_number || null,
+          airline: requestForm.airline || null,
+          flight_type: requestForm.flight_type || null,
+          terminal: requestForm.terminal || null,
+        };
+      }
+
+      // Build return flight_info object
+      let return_flight_info = null;
+      if (requestForm.create_return && (requestForm.return_flight_number || requestForm.return_airline)) {
+        return_flight_info = {
+          flight_number: requestForm.return_flight_number || null,
+          airline: requestForm.return_airline || null,
+          flight_type: requestForm.return_flight_type || null,
+          terminal: requestForm.return_terminal || null,
+        };
+      }
+
       await axios.post(`${API}/passenger/booking-requests`, {
-        ...requestForm,
+        pickup_location: requestForm.pickup_location,
+        dropoff_location: requestForm.dropoff_location,
+        additional_stops: requestForm.additional_stops.length > 0 ? requestForm.additional_stops : null,
         pickup_datetime: requestForm.pickup_datetime.toISOString(),
+        notes: requestForm.notes,
+        flight_number: requestForm.flight_number || null,
+        flight_info: flight_info,
+        // Return booking fields
+        create_return: requestForm.create_return,
+        return_pickup_location: requestForm.create_return ? requestForm.return_pickup_location : null,
+        return_dropoff_location: requestForm.create_return ? requestForm.return_dropoff_location : null,
+        return_datetime: requestForm.create_return && requestForm.return_datetime 
+          ? requestForm.return_datetime.toISOString() 
+          : null,
+        return_flight_info: return_flight_info,
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       toast.success("Booking request submitted! We'll confirm shortly.");
       setShowRequestForm(false);
-      setRequestForm({
-        pickup_location: "",
-        dropoff_location: "",
-        pickup_datetime: new Date(),
-        notes: "",
-        flight_number: "",
-      });
+      resetRequestForm();
       fetchBookings(token);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to submit request");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const resetRequestForm = () => {
+    setRequestForm({
+      pickup_location: "",
+      dropoff_location: "",
+      additional_stops: [],
+      pickup_datetime: new Date(),
+      notes: "",
+      flight_number: "",
+      airline: "",
+      flight_type: "",
+      terminal: "",
+      create_return: false,
+      return_pickup_location: "",
+      return_dropoff_location: "",
+      return_datetime: null,
+      return_flight_number: "",
+      return_airline: "",
+      return_flight_type: "",
+      return_terminal: "",
+    });
+    setShowFlightInfo(false);
+    setShowReturnFlightInfo(false);
+    setFlightData(null);
+    setReturnFlightData(null);
+    setFlightError(null);
+    setReturnFlightError(null);
+  };
+
+  const handleFlightLookup = async (isReturn = false) => {
+    const flightNumber = isReturn ? requestForm.return_flight_number : requestForm.flight_number;
+    if (!flightNumber) {
+      toast.error("Please enter a flight number");
+      return;
+    }
+
+    if (isReturn) {
+      setLoadingReturnFlight(true);
+      setReturnFlightError(null);
+    } else {
+      setLoadingFlight(true);
+      setFlightError(null);
+    }
+
+    try {
+      const response = await axios.get(`${API}/flight-lookup`, {
+        params: { flight_number: flightNumber }
+      });
+      
+      const flightInfo = response.data;
+      
+      if (isReturn) {
+        // For return (departure), set pickup 2 hours before flight
+        let departureDateTime = requestForm.return_datetime;
+        const departureTime = flightInfo.departure_scheduled;
+        if (departureTime) {
+          departureDateTime = new Date(new Date(departureTime).getTime() - 2 * 3600000);
+        }
+        
+        // Determine dropoff location based on departure airport
+        let dropoffLocation = requestForm.return_dropoff_location;
+        if (flightInfo.departure_airport) {
+          dropoffLocation = flightInfo.departure_airport;
+        }
+        
+        setRequestForm(prev => ({
+          ...prev,
+          return_airline: flightInfo.airline || prev.return_airline,
+          return_terminal: flightInfo.departure_terminal || prev.return_terminal,
+          return_flight_type: "departure",
+          return_dropoff_location: dropoffLocation || prev.return_dropoff_location,
+          return_datetime: departureDateTime
+        }));
+        setReturnFlightData(flightInfo);
+      } else {
+        // For arrival, set pickup 30 mins after landing
+        let arrivalDateTime = requestForm.pickup_datetime;
+        const arrivalTime = flightInfo.arrival_scheduled || flightInfo.arrival_estimated;
+        if (arrivalTime) {
+          arrivalDateTime = new Date(new Date(arrivalTime).getTime() + 30 * 60000);
+        }
+        
+        // Determine pickup location based on arrival airport
+        let pickupLocation = requestForm.pickup_location;
+        if (flightInfo.arrival_airport) {
+          pickupLocation = flightInfo.arrival_airport;
+          if (flightInfo.arrival_terminal) {
+            pickupLocation += ` Terminal ${flightInfo.arrival_terminal}`;
+          }
+        }
+        
+        setRequestForm(prev => ({
+          ...prev,
+          airline: flightInfo.airline || prev.airline,
+          terminal: flightInfo.arrival_terminal || prev.terminal,
+          flight_type: "arrival",
+          pickup_location: pickupLocation || prev.pickup_location,
+          pickup_datetime: arrivalDateTime
+        }));
+        setFlightData(flightInfo);
+      }
+      
+      toast.success("Flight data loaded!");
+    } catch (err) {
+      const errorMsg = "Flight not found or API error";
+      if (isReturn) {
+        setReturnFlightError(errorMsg);
+      } else {
+        setFlightError(errorMsg);
+      }
+      toast.error(errorMsg);
+    } finally {
+      if (isReturn) {
+        setLoadingReturnFlight(false);
+      } else {
+        setLoadingFlight(false);
+      }
     }
   };
 

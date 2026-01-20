@@ -45,6 +45,8 @@ const ClientsPage = () => {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [invoiceBookings, setInvoiceBookings] = useState([]);
+  const [loadingInvoicePreview, setLoadingInvoicePreview] = useState(false);
   
   // Invoice date range - default to current month
   const [invoiceDateRange, setInvoiceDateRange] = useState({

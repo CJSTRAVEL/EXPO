@@ -212,6 +212,8 @@ class BookingCreate(BookingBase):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
     create_return: Optional[bool] = False  # Create a return booking
+    return_pickup_location: Optional[str] = None  # Custom return pickup
+    return_dropoff_location: Optional[str] = None  # Custom return dropoff
     return_datetime: Optional[datetime] = None  # Return date/time
 
 class BookingUpdate(BaseModel):

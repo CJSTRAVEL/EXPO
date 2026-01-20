@@ -644,7 +644,7 @@ async def create_passenger_admin(data: PassengerRegister):
     return {"message": "Passenger account created successfully", "id": passenger.id}
 
 # ========== BOOKING ENDPOINTS ==========
-@api_router.post("/bookings", response_model=Booking)
+@api_router.post("/bookings", response_model=BookingResponse)
 async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):
     # Generate readable booking ID
     readable_booking_id = await generate_booking_id()
@@ -675,7 +675,10 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
         readable_booking_id  # Pass the short booking ID
     )
     
-    return booking_obj
+    # Return response with customer_name included
+    response_data = booking_obj.model_dump()
+    response_data['customer_name'] = doc['customer_name']
+    return response_data
 
 async def send_sms_and_update_booking(booking_id: str, phone: str, name: str,
                                        pickup: str = None, dropoff: str = None,

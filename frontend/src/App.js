@@ -146,6 +146,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/bookings" element={<BookingsPage />} />
+                <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/passengers" element={<PassengersPage />} />
                 <Route path="/drivers" element={<DriversPage />} />
                 <Route path="/passenger-portal" element={<PassengerPortalAdmin />} />

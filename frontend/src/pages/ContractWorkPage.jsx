@@ -181,11 +181,35 @@ const ContractWorkPage = () => {
 
     setSaving(true);
     try {
+      // Build flight_info object if any flight fields are filled
+      let flight_info = null;
+      if (formData.flight_number || formData.airline || formData.flight_type || formData.terminal) {
+        flight_info = {
+          flight_number: formData.flight_number || null,
+          airline: formData.airline || null,
+          flight_type: formData.flight_type || null,
+          terminal: formData.terminal || null,
+        };
+      }
+
       const payload = {
-        ...formData,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        customer_phone: formData.customer_phone,
+        pickup_location: formData.pickup_location,
+        dropoff_location: formData.dropoff_location,
+        additional_stops: formData.additional_stops.length > 0 ? formData.additional_stops : null,
         fare: parseFloat(formData.fare) || 0,
         booking_datetime: formData.booking_datetime.toISOString(),
+        notes: formData.notes,
         driver_id: formData.driver_id || null,
+        client_id: formData.client_id,
+        flight_info: flight_info,
+        // Return booking fields (only for new bookings)
+        create_return: !editingBooking && formData.create_return,
+        return_datetime: !editingBooking && formData.create_return && formData.return_datetime 
+          ? formData.return_datetime.toISOString() 
+          : null,
       };
 
       if (editingBooking) {

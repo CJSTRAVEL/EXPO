@@ -1,0 +1,678 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Building2, Phone, Mail, Calendar, CreditCard, Search, X, Plus, MoreHorizontal, Pencil, Trash2, MapPin, FileText, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { format } from "date-fns";
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+const CLIENT_TYPES = [
+  { value: "Business", label: "Business" },
+  { value: "Contract Account", label: "Contract Account" },
+  { value: "Corporate", label: "Corporate" },
+  { value: "School", label: "School" },
+  { value: "Hospital", label: "Hospital" },
+  { value: "Individual", label: "Individual" },
+];
+
+const PAYMENT_METHODS = [
+  { value: "Cash", label: "Cash" },
+  { value: "Invoice", label: "Invoice" },
+  { value: "Card", label: "Card" },
+  { value: "Account", label: "Account" },
+];
+
+const ClientsPage = () => {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [clientBookings, setClientBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    mobile: "",
+    email: "",
+    client_type: "Business",
+    payment_method: "Invoice",
+    status: "active",
+    start_date: format(new Date(), "yyyy-MM-dd"),
+    address: "",
+    town_city: "",
+    post_code: "",
+    country: "United Kingdom",
+    notes: "",
+  });
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  useEffect(() => {
+    if (selectedClient) {
+      fetchClientBookings(selectedClient.id);
+    }
+  }, [selectedClient]);
+
+  const fetchClients = async () => {
+    try {
+      const response = await axios.get(`${API}/clients`);
+      setClients(response.data);
+      // Auto-select first client if none selected
+      if (response.data.length > 0 && !selectedClient) {
+        setSelectedClient(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      toast.error("Failed to load clients");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClientBookings = async (clientId) => {
+    setLoadingBookings(true);
+    try {
+      const response = await axios.get(`${API}/clients/${clientId}/bookings`);
+      setClientBookings(response.data);
+    } catch (error) {
+      console.error("Error fetching client bookings:", error);
+      setClientBookings([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
+  const handleOpenForm = (client = null) => {
+    if (client) {
+      setEditingClient(client);
+      setFormData({
+        name: client.name || "",
+        mobile: client.mobile || "",
+        email: client.email || "",
+        client_type: client.client_type || "Business",
+        payment_method: client.payment_method || "Invoice",
+        status: client.status || "active",
+        start_date: client.start_date || format(new Date(), "yyyy-MM-dd"),
+        address: client.address || "",
+        town_city: client.town_city || "",
+        post_code: client.post_code || "",
+        country: client.country || "United Kingdom",
+        notes: client.notes || "",
+      });
+    } else {
+      setEditingClient(null);
+      setFormData({
+        name: "",
+        mobile: "",
+        email: "",
+        client_type: "Business",
+        payment_method: "Invoice",
+        status: "active",
+        start_date: format(new Date(), "yyyy-MM-dd"),
+        address: "",
+        town_city: "",
+        post_code: "",
+        country: "United Kingdom",
+        notes: "",
+      });
+    }
+    setShowFormModal(true);
+  };
+
+  const handleSaveClient = async () => {
+    if (!formData.name || !formData.mobile || !formData.email) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editingClient) {
+        await axios.put(`${API}/clients/${editingClient.id}`, formData);
+        toast.success("Client updated successfully");
+      } else {
+        await axios.post(`${API}/clients`, formData);
+        toast.success("Client created successfully");
+      }
+      setShowFormModal(false);
+      fetchClients();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save client");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return;
+    
+    setSaving(true);
+    try {
+      await axios.delete(`${API}/clients/${selectedClient.id}`);
+      toast.success("Client deleted successfully");
+      setShowDeleteModal(false);
+      setSelectedClient(null);
+      fetchClients();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete client");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Filter clients based on search
+  const filteredClients = clients.filter(client => {
+    if (!searchText) return true;
+    const search = searchText.toLowerCase();
+    return (
+      client.name?.toLowerCase().includes(search) ||
+      client.account_no?.toLowerCase().includes(search) ||
+      client.email?.toLowerCase().includes(search) ||
+      client.mobile?.includes(search)
+    );
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div data-testid="clients-page" className="flex h-[calc(100vh-2rem)]">
+      {/* Left Panel - Client List */}
+      <div className="w-[400px] border-r bg-white flex flex-col">
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl font-bold">Clients</h1>
+              <p className="text-sm text-muted-foreground">{clients.length} accounts</p>
+            </div>
+            <Button onClick={() => handleOpenForm()} size="sm" data-testid="add-client-btn">
+              <Plus className="w-4 h-4 mr-1" />
+              New Client
+            </Button>
+          </div>
+          
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search clients..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="pl-10"
+              data-testid="client-search-input"
+            />
+            {searchText && (
+              <button
+                onClick={() => setSearchText("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Client List */}
+        <div className="flex-1 overflow-y-auto">
+          {filteredClients.length === 0 ? (
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-muted-foreground">
+                {searchText ? "No clients found" : "No clients yet"}
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {filteredClients.map((client) => (
+                <div
+                  key={client.id}
+                  onClick={() => setSelectedClient(client)}
+                  className={`p-4 cursor-pointer transition-colors hover:bg-slate-50 ${
+                    selectedClient?.id === client.id ? "bg-blue-50 border-l-4 border-l-primary" : ""
+                  }`}
+                  data-testid={`client-row-${client.id}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">{client.name}</p>
+                        <p className="text-xs text-muted-foreground">{client.account_no}</p>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={client.status === "active" ? "default" : "secondary"}
+                      className={client.status === "active" ? "bg-green-100 text-green-700" : ""}
+                    >
+                      {client.status}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      {client.booking_count || 0} bookings
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <CreditCard className="w-3 h-3" />
+                      £{(client.total_invoice || 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right Panel - Client Details */}
+      <div className="flex-1 bg-slate-50 overflow-y-auto">
+        {selectedClient ? (
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Building2 className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
+                  <p className="text-muted-foreground">{selectedClient.account_no}</p>
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" data-testid="client-actions-btn">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleOpenForm(selectedClient)} data-testid="edit-client-btn">
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Client
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteModal(true)}
+                    className="text-destructive focus:text-destructive"
+                    data-testid="delete-client-btn"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Client
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Client Details Cards */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Contact Details */}
+              <div className="bg-white rounded-xl border p-5">
+                <h3 className="font-semibold mb-4 text-slate-700">Contact Details</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">{selectedClient.mobile || "-"}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">{selectedClient.email || "-"}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">Started: {selectedClient.start_date || "-"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Details */}
+              <div className="bg-white rounded-xl border p-5">
+                <h3 className="font-semibold mb-4 text-slate-700">Account Details</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Client Type</span>
+                    <Badge variant="outline">{selectedClient.client_type}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Payment Method</span>
+                    <Badge variant="outline">{selectedClient.payment_method}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    <Badge className={selectedClient.status === "active" ? "bg-green-100 text-green-700" : ""}>
+                      {selectedClient.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Details */}
+              <div className="bg-white rounded-xl border p-5">
+                <h3 className="font-semibold mb-4 text-slate-700">Location Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      {selectedClient.address && <p>{selectedClient.address}</p>}
+                      {selectedClient.town_city && <p>{selectedClient.town_city}</p>}
+                      {selectedClient.post_code && <p>{selectedClient.post_code}</p>}
+                      {selectedClient.country && <p>{selectedClient.country}</p>}
+                      {!selectedClient.address && !selectedClient.town_city && (
+                        <p className="text-muted-foreground">No address provided</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Summary */}
+              <div className="bg-white rounded-xl border p-5">
+                <h3 className="font-semibold mb-4 text-slate-700">Invoice Summary</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Bookings</span>
+                    <span className="font-semibold">{selectedClient.booking_count || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Amount</span>
+                    <span className="font-semibold text-lg">£{(selectedClient.total_invoice || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {selectedClient.notes && (
+              <div className="bg-white rounded-xl border p-5 mt-6">
+                <h3 className="font-semibold mb-3 text-slate-700">Notes</h3>
+                <p className="text-sm text-muted-foreground">{selectedClient.notes}</p>
+              </div>
+            )}
+
+            {/* Recent Bookings */}
+            <div className="bg-white rounded-xl border p-5 mt-6">
+              <h3 className="font-semibold mb-4 text-slate-700">Recent Bookings</h3>
+              {loadingBookings ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                </div>
+              ) : clientBookings.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-sm text-muted-foreground">No bookings for this client</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {clientBookings.slice(0, 5).map((booking) => (
+                    <div key={booking.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium">{booking.booking_id}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {booking.pickup_location?.substring(0, 30)}...
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">£{(booking.fare || 0).toFixed(2)}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {booking.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <Building2 className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground">Select a client to view details</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Add/Edit Client Modal */}
+      <Dialog open={showFormModal} onOpenChange={setShowFormModal}>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" data-testid="client-form-modal">
+          <DialogHeader>
+            <DialogTitle>{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Name <span className="text-destructive">*</span></Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter client name"
+                data-testid="client-name-input"
+              />
+            </div>
+
+            {/* Mobile & Email */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="mobile">Mobile <span className="text-destructive">*</span></Label>
+                <Input
+                  id="mobile"
+                  value={formData.mobile}
+                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  placeholder="07700 900000"
+                  data-testid="client-mobile-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="client@example.com"
+                  data-testid="client-email-input"
+                />
+              </div>
+            </div>
+
+            {/* Client Type & Payment Method */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Client Type</Label>
+                <Select
+                  value={formData.client_type}
+                  onValueChange={(value) => setFormData({ ...formData, client_type: value })}
+                >
+                  <SelectTrigger data-testid="client-type-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLIENT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Default Payment Method</Label>
+                <Select
+                  value={formData.payment_method}
+                  onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
+                >
+                  <SelectTrigger data-testid="client-payment-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Start Date */}
+            <div className="space-y-2">
+              <Label htmlFor="start_date">Start Date</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                data-testid="client-start-date-input"
+              />
+            </div>
+
+            {/* Status */}
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <Label>Client Status</Label>
+                <p className="text-sm text-muted-foreground">Is this client currently active?</p>
+              </div>
+              <Switch
+                checked={formData.status === "active"}
+                onCheckedChange={(checked) => 
+                  setFormData({ ...formData, status: checked ? "active" : "inactive" })
+                }
+                data-testid="client-status-switch"
+              />
+            </div>
+
+            {/* Address Fields */}
+            <div className="border-t pt-4">
+              <Label className="text-base font-semibold mb-3 block">Location Details</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Street address"
+                    data-testid="client-address-input"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="town_city">Town/City</Label>
+                    <Input
+                      id="town_city"
+                      value={formData.town_city}
+                      onChange={(e) => setFormData({ ...formData, town_city: e.target.value })}
+                      placeholder="Town or city"
+                      data-testid="client-city-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="post_code">Post Code</Label>
+                    <Input
+                      id="post_code"
+                      value={formData.post_code}
+                      onChange={(e) => setFormData({ ...formData, post_code: e.target.value })}
+                      placeholder="SR8 1AB"
+                      data-testid="client-postcode-input"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    placeholder="United Kingdom"
+                    data-testid="client-country-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Additional notes about this client..."
+                rows={3}
+                data-testid="client-notes-input"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFormModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveClient} disabled={saving} data-testid="save-client-btn">
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : editingClient ? (
+                "Update Client"
+              ) : (
+                "Create Client"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent data-testid="delete-client-modal">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Client</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{selectedClient?.name}</strong>? 
+              This will not delete their booking history but will remove the client account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClient}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="confirm-delete-client-btn"
+            >
+              {saving ? "Deleting..." : "Delete Client"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default ClientsPage;

@@ -686,6 +686,14 @@ const ContractWorkPage = () => {
                   <div className="flex flex-col items-center">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     <div className="w-0.5 h-8 bg-slate-300"></div>
+                    {viewBooking.additional_stops && viewBooking.additional_stops.length > 0 && (
+                      viewBooking.additional_stops.map((_, idx) => (
+                        <div key={idx} className="flex flex-col items-center">
+                          <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                          <div className="w-0.5 h-8 bg-slate-300"></div>
+                        </div>
+                      ))
+                    )}
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
                   </div>
                   <div className="flex-1 space-y-3">
@@ -693,6 +701,12 @@ const ContractWorkPage = () => {
                       <p className="text-xs text-muted-foreground">Pickup</p>
                       <p className="text-sm">{viewBooking.pickup_location}</p>
                     </div>
+                    {viewBooking.additional_stops && viewBooking.additional_stops.map((stop, idx) => (
+                      <div key={idx}>
+                        <p className="text-xs text-amber-600">Stop {idx + 1}</p>
+                        <p className="text-sm">{stop}</p>
+                      </div>
+                    ))}
                     <div>
                       <p className="text-xs text-muted-foreground">Drop-off</p>
                       <p className="text-sm">{viewBooking.dropoff_location}</p>
@@ -700,6 +714,57 @@ const ContractWorkPage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Flight Information */}
+              {viewBooking.flight_info && (viewBooking.flight_info.flight_number || viewBooking.flight_info.airline) && (
+                <div className="bg-purple-50 rounded-lg p-3">
+                  <h4 className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                    <Plane className="w-3 h-3" />
+                    Flight Info
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {viewBooking.flight_info.flight_number && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Flight</p>
+                        <p className="font-medium">{viewBooking.flight_info.flight_number}</p>
+                      </div>
+                    )}
+                    {viewBooking.flight_info.airline && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Airline</p>
+                        <p className="font-medium">{viewBooking.flight_info.airline}</p>
+                      </div>
+                    )}
+                    {viewBooking.flight_info.flight_type && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Type</p>
+                        <p className="font-medium capitalize">{viewBooking.flight_info.flight_type}</p>
+                      </div>
+                    )}
+                    {viewBooking.flight_info.terminal && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Terminal</p>
+                        <p className="font-medium">{viewBooking.flight_info.terminal}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Linked Booking (Return Journey) */}
+              {(viewBooking.linked_booking_id || viewBooking.is_return) && (
+                <div className="bg-slate-100 rounded-lg p-3">
+                  <h4 className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                    <ArrowLeftRight className="w-3 h-3" />
+                    {viewBooking.is_return ? "Return Journey" : "Linked Return"}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {viewBooking.is_return 
+                      ? "This is a return journey"
+                      : "A return booking exists for this journey"}
+                  </p>
+                </div>
+              )}
 
               {/* Date, Driver, Fare */}
               <div className="grid grid-cols-3 gap-4 pt-2 border-t">

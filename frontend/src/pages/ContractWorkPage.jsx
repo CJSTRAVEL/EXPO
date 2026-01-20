@@ -100,18 +100,27 @@ const ContractWorkPage = () => {
         firstName = nameParts[0] || "";
         lastName = nameParts.slice(1).join(" ") || "";
       }
+      const flightInfo = booking.flight_info || {};
       setFormData({
         first_name: firstName,
         last_name: lastName,
         customer_phone: booking.customer_phone || "",
         pickup_location: booking.pickup_location || "",
         dropoff_location: booking.dropoff_location || "",
+        additional_stops: booking.additional_stops || [],
         booking_datetime: new Date(booking.booking_datetime),
         notes: booking.notes || "",
         fare: booking.fare || "",
         driver_id: booking.driver_id || "",
         client_id: booking.client_id || "",
+        flight_number: flightInfo.flight_number || "",
+        airline: flightInfo.airline || "",
+        flight_type: flightInfo.flight_type || "",
+        terminal: flightInfo.terminal || "",
+        create_return: false,
+        return_datetime: null,
       });
+      setShowFlightInfo(!!flightInfo.flight_number);
     } else {
       setEditingBooking(null);
       // Pre-select client if filtered
@@ -123,12 +132,20 @@ const ContractWorkPage = () => {
         pickup_location: preselectedClient?.address ? 
           `${preselectedClient.address}, ${preselectedClient.town_city || ''} ${preselectedClient.post_code || ''}`.trim() : "",
         dropoff_location: "",
+        additional_stops: [],
         booking_datetime: new Date(),
         notes: "",
         fare: "",
         driver_id: "",
         client_id: preselectedClient?.id || "",
+        flight_number: "",
+        airline: "",
+        flight_type: "",
+        terminal: "",
+        create_return: false,
+        return_datetime: null,
       });
+      setShowFlightInfo(false);
     }
     setShowBookingForm(true);
   };

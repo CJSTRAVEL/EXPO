@@ -84,6 +84,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Passenger Booking Requests** (Jan 20, 2026) - Passengers can request bookings from their portal
 - ✅ **Dedicated Requests Page** (Jan 20, 2026) - Separate admin page for managing passenger booking requests with approve/reject functionality
 - ✅ **Request Notification Badge** (Jan 20, 2026) - Sidebar shows pending request count badge with auto-refresh
+- ✅ **Enhanced Portal Request Form** (Jan 20, 2026) - Passenger booking request form now matches admin booking form with address autocomplete, multi-stop, return journey, and full flight info with live lookup
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

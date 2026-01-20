@@ -159,6 +159,7 @@ class Booking(BookingBase):
     sms_sent: Optional[bool] = False
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
+    customer_name: Optional[str] = None  # Computed from first_name + last_name
 
 # Passenger Authentication Models
 class PassengerRegister(BaseModel):

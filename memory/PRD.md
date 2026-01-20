@@ -116,7 +116,7 @@ Build a private hire application where you can add bookings and assign them to d
 - [x] Admin page for passenger account management (Jan 20, 2026)
 
 ### P1 (High Priority) - In Progress
-- [ ] SMS link preview fix (recurring issue - preview shows "unavailable")
+- [x] SMS link preview fix (completed Jan 20, 2026 - SSR endpoint with OG tags)
 - [ ] Forgot password / SMS verification for passenger portal
 
 ### P2 (Medium Priority) - Future

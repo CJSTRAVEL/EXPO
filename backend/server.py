@@ -590,6 +590,164 @@ async def delete_client(client_id: str):
         raise HTTPException(status_code=404, detail="Client not found")
     return {"message": "Client deleted successfully"}
 
+@api_router.get("/clients/{client_id}/invoice")
+async def generate_client_invoice(client_id: str, start_date: str = None, end_date: str = None):
+    """Generate PDF invoice for a client's bookings within a date range"""
+    # Get client details
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Build query for bookings
+    query = {"client_id": client_id}
+    if start_date or end_date:
+        date_query = {}
+        if start_date:
+            date_query["$gte"] = start_date
+        if end_date:
+            date_query["$lte"] = end_date + "T23:59:59"
+        if date_query:
+            query["booking_datetime"] = date_query
+    
+    # Get bookings
+    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=24, alignment=TA_CENTER, spaceAfter=20, textColor=colors.HexColor('#1a365d'))
+    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=12, alignment=TA_CENTER, textColor=colors.grey, spaceAfter=30)
+    header_style = ParagraphStyle('Header', parent=styles['Heading2'], fontSize=14, spaceAfter=10, textColor=colors.HexColor('#2d3748'))
+    normal_style = ParagraphStyle('Normal', parent=styles['Normal'], fontSize=10, spaceAfter=6)
+    
+    elements = []
+    
+    # Company Header
+    elements.append(Paragraph("CJ's Executive Travel", title_style))
+    elements.append(Paragraph("Professional Private Hire Services", subtitle_style))
+    
+    # Invoice Title
+    invoice_number = f"INV-{client.get('account_no', 'N/A')}-{datetime.now().strftime('%Y%m%d%H%M')}"
+    elements.append(Paragraph(f"<b>INVOICE</b>", ParagraphStyle('InvoiceTitle', parent=styles['Heading1'], fontSize=20, alignment=TA_RIGHT)))
+    elements.append(Paragraph(f"Invoice #: {invoice_number}", ParagraphStyle('InvoiceNum', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT)))
+    elements.append(Paragraph(f"Date: {datetime.now().strftime('%d %B %Y')}", ParagraphStyle('InvoiceDate', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT)))
+    elements.append(Spacer(1, 20))
+    
+    # Client Details
+    elements.append(Paragraph("Bill To:", header_style))
+    elements.append(Paragraph(f"<b>{client.get('name', 'N/A')}</b>", normal_style))
+    elements.append(Paragraph(f"Account: {client.get('account_no', 'N/A')}", normal_style))
+    if client.get('address'):
+        elements.append(Paragraph(client.get('address', ''), normal_style))
+    if client.get('town_city') or client.get('post_code'):
+        elements.append(Paragraph(f"{client.get('town_city', '')} {client.get('post_code', '')}", normal_style))
+    elements.append(Paragraph(f"Email: {client.get('email', 'N/A')}", normal_style))
+    elements.append(Paragraph(f"Phone: {client.get('mobile', 'N/A')}", normal_style))
+    elements.append(Spacer(1, 20))
+    
+    # Date Range
+    if start_date or end_date:
+        date_range_text = f"Period: {start_date or 'Start'} to {end_date or 'Present'}"
+        elements.append(Paragraph(date_range_text, normal_style))
+        elements.append(Spacer(1, 10))
+    
+    # Bookings Table
+    if bookings:
+        table_data = [['Date', 'Booking ID', 'Passenger', 'Route', 'Fare']]
+        total = 0
+        
+        for booking in bookings:
+            # Format date
+            booking_dt = booking.get('booking_datetime', '')
+            if isinstance(booking_dt, str):
+                try:
+                    dt = datetime.fromisoformat(booking_dt.replace('Z', '+00:00'))
+                    booking_dt = dt.strftime('%d/%m/%Y %H:%M')
+                except:
+                    pass
+            
+            # Get customer name
+            customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+            
+            # Truncate route for display
+            pickup = (booking.get('pickup_location', '') or '')[:25]
+            dropoff = (booking.get('dropoff_location', '') or '')[:25]
+            route = f"{pickup}... → {dropoff}..."
+            
+            fare = booking.get('fare') or 0
+            total += fare
+            
+            table_data.append([
+                booking_dt,
+                booking.get('booking_id', 'N/A'),
+                customer_name[:20],
+                route,
+                f"£{fare:.2f}"
+            ])
+        
+        # Add subtotal and total rows
+        table_data.append(['', '', '', 'Subtotal:', f"£{total:.2f}"])
+        table_data.append(['', '', '', 'VAT (0%):', '£0.00'])
+        table_data.append(['', '', '', '<b>TOTAL:</b>', f"<b>£{total:.2f}</b>"])
+        
+        # Create table
+        col_widths = [80, 60, 90, 180, 60]
+        table = Table(table_data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2d3748')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -4), colors.HexColor('#f7fafc')),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -4), 0.5, colors.HexColor('#e2e8f0')),
+            ('LINEABOVE', (3, -3), (-1, -3), 1, colors.HexColor('#2d3748')),
+            ('FONTNAME', (3, -1), (-1, -1), 'Helvetica-Bold'),
+            ('BACKGROUND', (3, -1), (-1, -1), colors.HexColor('#edf2f7')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ]))
+        
+        elements.append(table)
+    else:
+        elements.append(Paragraph("No bookings found for the selected period.", normal_style))
+    
+    elements.append(Spacer(1, 30))
+    
+    # Payment Terms
+    elements.append(Paragraph("Payment Terms", header_style))
+    elements.append(Paragraph(f"Payment Method: {client.get('payment_method', 'Invoice')}", normal_style))
+    elements.append(Paragraph("Payment Due: Within 30 days of invoice date", normal_style))
+    elements.append(Paragraph("Bank: Please contact us for bank details", normal_style))
+    
+    elements.append(Spacer(1, 30))
+    
+    # Footer
+    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER, textColor=colors.grey)
+    elements.append(Paragraph("Thank you for choosing CJ's Executive Travel", footer_style))
+    elements.append(Paragraph("For any queries, please contact us at your convenience", footer_style))
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    # Return as downloadable PDF
+    filename = f"invoice_{client.get('account_no', 'client')}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 # ========== SMS HELPER FUNCTION ==========
 def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str, 
                      pickup: str = None, dropoff: str = None, 

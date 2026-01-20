@@ -161,27 +161,39 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="customer_name">Customer Name</Label>
+                <Label htmlFor="first_name">First Name</Label>
                 <Input
-                  id="customer_name"
-                  value={formData.customer_name}
-                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                  placeholder="John Doe"
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="John"
                   required
-                  data-testid="booking-customer-name-input"
+                  data-testid="booking-first-name-input"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customer_phone">Phone</Label>
+                <Label htmlFor="last_name">Last Name</Label>
                 <Input
-                  id="customer_phone"
-                  value={formData.customer_phone}
-                  onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-                  placeholder="+44 7700 900000"
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Smith"
                   required
-                  data-testid="booking-customer-phone-input"
+                  data-testid="booking-last-name-input"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="customer_phone">Phone</Label>
+              <Input
+                id="customer_phone"
+                value={formData.customer_phone}
+                onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
+                placeholder="+44 7700 900000"
+                required
+                data-testid="booking-customer-phone-input"
+              />
             </div>
 
             <div className="space-y-2">

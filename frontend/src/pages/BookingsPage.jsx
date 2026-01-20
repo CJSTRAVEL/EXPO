@@ -1146,7 +1146,7 @@ const BookingsPage = () => {
                                 <User className="w-4 h-4 text-primary" />
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-800 truncate">{booking.customer_name}</p>
+                                <p className="text-sm font-medium text-slate-800 truncate">{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</p>
                                 <p className="text-xs text-muted-foreground truncate">{booking.customer_phone}</p>
                               </div>
                             </div>

@@ -217,6 +217,7 @@ class BookingBase(BaseModel):
     first_name: str
     last_name: str
     customer_phone: str
+    customer_email: Optional[str] = None
     pickup_location: str
     dropoff_location: str
     additional_stops: Optional[List[str]] = None  # Multiple drop-off locations

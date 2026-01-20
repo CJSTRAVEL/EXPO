@@ -99,16 +99,22 @@ Build a private hire application where you can add bookings and assign them to d
 - [x] Dashboard overview
 - [x] SMS confirmation on new booking
 - [x] Edit booking functionality (bug fixed Jan 19, 2026)
+- [x] Search/filter bookings by status, date, driver (Jan 19, 2026)
+- [x] Passenger portal with auth system (Jan 19-20, 2026)
+- [x] Admin page for passenger account management (Jan 20, 2026)
 
-### P1 (High Priority) - Future
-- [ ] Search/filter bookings by status, date, driver
-- [ ] Bulk status updates
-- [ ] Driver availability calendar
+### P1 (High Priority) - In Progress
+- [ ] SMS link preview fix (recurring issue - preview shows "unavailable")
+- [ ] Forgot password / SMS verification for passenger portal
 
 ### P2 (Medium Priority) - Future
+- [ ] Allow passengers to request new bookings from portal
+- [ ] Bulk status updates
+- [ ] Driver availability calendar
 - [ ] Export bookings to CSV
 - [ ] SMS notifications for driver assignment
-- [ ] Customer self-booking portal
+- [ ] Driver mobile app for live location updates
+- [ ] Push notifications for booking status changes
 
 ## Refactoring Notes
 - `BookingsPage.jsx` is large (~710 lines) - consider decomposing into smaller components

@@ -120,6 +120,8 @@ const ContractWorkPage = () => {
         flight_type: flightInfo.flight_type || "",
         terminal: flightInfo.terminal || "",
         create_return: false,
+        return_pickup_location: "",
+        return_dropoff_location: "",
         return_datetime: null,
       });
       setShowFlightInfo(!!flightInfo.flight_number);
@@ -145,6 +147,8 @@ const ContractWorkPage = () => {
         flight_type: "",
         terminal: "",
         create_return: false,
+        return_pickup_location: "",
+        return_dropoff_location: "",
         return_datetime: null,
       });
       setShowFlightInfo(false);

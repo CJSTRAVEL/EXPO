@@ -353,6 +353,36 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
               />
             </div>
 
+            {/* PAX and Cases */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="passenger_count">PAX (Passengers)</Label>
+                <Input
+                  id="passenger_count"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={formData.passenger_count}
+                  onChange={(e) => setFormData({ ...formData, passenger_count: e.target.value })}
+                  placeholder="1"
+                  data-testid="booking-pax-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="luggage_count">Cases (Luggage)</Label>
+                <Input
+                  id="luggage_count"
+                  type="number"
+                  min="0"
+                  max="20"
+                  value={formData.luggage_count}
+                  onChange={(e) => setFormData({ ...formData, luggage_count: e.target.value })}
+                  placeholder="0"
+                  data-testid="booking-cases-input"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="pickup_location">Pickup Location</Label>
               <AddressAutocomplete

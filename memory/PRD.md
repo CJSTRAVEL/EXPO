@@ -75,6 +75,11 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Clients Page** (Jan 20, 2026) - B2B client account management with auto-generated account numbers (E001, E002...), client types, payment methods, and invoice tracking
 - ✅ **Booking-Client Integration** (Jan 20, 2026) - Bookings can be linked to clients for invoicing purposes
 - ✅ **Generate Invoice PDF** (Jan 20, 2026) - Download professional PDF invoices for clients with customizable date range, quick select options (This Month, Last Month, All Time), and full booking details
+- ✅ **Contract Work Page** (Jan 20, 2026) - Dedicated page for client-linked bookings, separate from main bookings page
+- ✅ **SMS Link Preview Fix** (Jan 20, 2026) - Server-side rendered preview page with Open Graph meta tags for proper link previews
+- ✅ **Multi-Stop Bookings** (Jan 20, 2026) - Support for multiple drop-off locations (additional stops) on bookings
+- ✅ **Return Journey Creation** (Jan 20, 2026) - Option to automatically create a return booking with pickup/dropoff swapped
+- ✅ **Flight Information** (Jan 20, 2026) - Track flight details (flight number, airline, type, terminal) for airport transfers
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

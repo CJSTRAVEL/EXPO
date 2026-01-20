@@ -76,6 +76,7 @@ const Sidebar = () => {
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/bookings", icon: Calendar, label: "Bookings" },
+    { path: "/requests", icon: Inbox, label: "Requests" },
     { path: "/contract-work", icon: FileText, label: "Contract Work" },
     { path: "/clients", icon: Building2, label: "Clients" },
     { path: "/passengers", icon: UserCircle, label: "Passengers" },

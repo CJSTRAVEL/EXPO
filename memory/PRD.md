@@ -61,6 +61,16 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Assign Driver from View Modal** (Jan 19, 2026) - "+ Assign Driver" link in view booking modal under "Assigned Driver" section
 - ✅ **Booking ID System** (Jan 19, 2026) - Auto-generated sequential booking IDs (CJ-001, CJ-002, etc.) displayed in table and view modal
 - ✅ **Date-Grouped Booking Layout** (Jan 19, 2026) - Bookings page redesigned with bookings grouped by date, card-based layout with time, route visualization, and status colors
+- ✅ **Search & Filter** (Jan 19, 2026) - Full search/filter functionality on bookings page (text, date, driver)
+- ✅ **Resend SMS** (Jan 19, 2026) - Resend SMS confirmation link in booking view
+- ✅ **Short URL System** (Jan 19, 2026) - Clean short URLs for SMS links (/b/CJ-001)
+- ✅ **Open Graph Meta Tags** (Jan 19, 2026) - Added OG tags to public booking page for link previews
+- ✅ **Passengers Page** (Jan 19, 2026) - Customer contact list with booking history
+- ✅ **Passenger Authentication** (Jan 19, 2026) - JWT-based login system for customers
+- ✅ **Passenger Portal** (Jan 19, 2026) - Customer-facing portal for viewing own bookings
+- ✅ **Passenger Portal Admin** (Jan 20, 2026) - Admin page to manage passenger accounts (view, change password, delete)
+- ✅ **Create User Feature** (Jan 20, 2026) - Admins can manually create passenger accounts from the admin page
+- ✅ **GPS Live Dashboard** (Jan 19, 2026) - Embedded GPS tracking map from gpslive.co.uk
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

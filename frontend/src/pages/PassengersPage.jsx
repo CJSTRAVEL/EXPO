@@ -184,9 +184,10 @@ const PassengersPage = () => {
   // Aggregate bookings by passenger (phone number)
   const passengers = bookings.reduce((acc, booking) => {
     const phone = booking.customer_phone;
+    const customerName = booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim();
     if (!acc[phone]) {
       acc[phone] = {
-        name: booking.customer_name,
+        name: customerName,
         phone: phone,
         totalBookings: 0,
         totalFare: 0,
@@ -202,7 +203,7 @@ const PassengersPage = () => {
     const bookingDate = new Date(booking.booking_datetime);
     if (!acc[phone].lastBooking || bookingDate > new Date(acc[phone].lastBooking)) {
       acc[phone].lastBooking = booking.booking_datetime;
-      acc[phone].name = booking.customer_name;
+      acc[phone].name = customerName;
     }
     
     return acc;

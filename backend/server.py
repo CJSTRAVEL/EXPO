@@ -1212,11 +1212,13 @@ async def get_booking_by_short_id(short_id: str):
     return booking
 
 # SSR endpoint for booking preview - serves HTML with Open Graph meta tags
-@app.get("/b/{short_id}", response_class=HTMLResponse)
+# This endpoint is accessed via /api/preview/{short_id} for link previews
+@api_router.get("/preview/{short_id}", response_class=HTMLResponse)
 async def booking_preview_page(short_id: str):
     """
     Server-Side Rendered booking preview page with Open Graph meta tags.
     This allows SMS apps and social media to show rich link previews.
+    Access via: /api/preview/CJ-001
     """
     # Get the booking
     booking = await db.bookings.find_one({"booking_id": short_id.upper()}, {"_id": 0})
@@ -1281,7 +1283,7 @@ async def booking_preview_page(short_id: str):
     <meta property="og:title" content="{title}">
     <meta property="og:description" content="{description}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{app_url}/b/{short_id}">
+    <meta property="og:url" content="{app_url}/api/preview/{short_id}">
     <meta property="og:site_name" content="CJ's Executive Travel">
     
     <!-- Twitter Card Meta Tags -->

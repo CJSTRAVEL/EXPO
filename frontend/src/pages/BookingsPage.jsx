@@ -136,6 +136,8 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
         first_name: "",
         last_name: "",
         customer_phone: "",
+        passenger_count: 1,
+        luggage_count: 0,
         pickup_location: "",
         dropoff_location: "",
         additional_stops: [],

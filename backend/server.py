@@ -255,6 +255,7 @@ class BookingUpdate(BaseModel):
     flight_info: Optional[FlightInfo] = None
     is_return: Optional[bool] = None
     linked_booking_id: Optional[str] = None
+    customer_email: Optional[str] = None
 
 # Response model that supports both old (customer_name) and new (first_name/last_name) formats
 class BookingResponse(BaseModel):
@@ -265,6 +266,7 @@ class BookingResponse(BaseModel):
     last_name: Optional[str] = None
     customer_name: Optional[str] = None  # For backward compatibility
     customer_phone: str
+    customer_email: Optional[str] = None
     pickup_location: str
     dropoff_location: str
     additional_stops: Optional[List[str]] = None
@@ -275,6 +277,7 @@ class BookingResponse(BaseModel):
     driver_id: Optional[str] = None
     created_at: datetime
     sms_sent: Optional[bool] = False
+    email_sent: Optional[bool] = False
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
     client_id: Optional[str] = None
@@ -290,6 +293,7 @@ class Booking(BookingBase):
     driver_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     sms_sent: Optional[bool] = False
+    email_sent: Optional[bool] = False
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
     customer_name: Optional[str] = None  # Computed from first_name + last_name

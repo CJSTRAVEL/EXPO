@@ -39,10 +39,18 @@ const ClientsPage = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [clientBookings, setClientBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  
+  // Invoice date range - default to current month
+  const [invoiceDateRange, setInvoiceDateRange] = useState({
+    start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    end: format(endOfMonth(new Date()), "yyyy-MM-dd"),
+  });
 
   const [formData, setFormData] = useState({
     name: "",

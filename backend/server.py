@@ -184,6 +184,14 @@ class Driver(DriverBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Flight Information Model
+class FlightInfo(BaseModel):
+    flight_number: Optional[str] = None
+    airline: Optional[str] = None
+    flight_type: Optional[str] = None  # "arrival" or "departure"
+    terminal: Optional[str] = None
+    scheduled_time: Optional[str] = None  # Flight scheduled time
+
 # Booking Models
 class BookingBase(BaseModel):
     first_name: str
@@ -191,14 +199,20 @@ class BookingBase(BaseModel):
     customer_phone: str
     pickup_location: str
     dropoff_location: str
+    additional_stops: Optional[List[str]] = None  # Multiple drop-off locations
     booking_datetime: datetime
     notes: Optional[str] = None
     fare: Optional[float] = None
     client_id: Optional[str] = None  # Link to client account for invoicing
+    flight_info: Optional[FlightInfo] = None  # Flight tracking info
+    is_return: Optional[bool] = False  # Is this a return leg
+    linked_booking_id: Optional[str] = None  # Link to original/return booking
 
 class BookingCreate(BookingBase):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
+    create_return: Optional[bool] = False  # Create a return booking
+    return_datetime: Optional[datetime] = None  # Return date/time
 
 class BookingUpdate(BaseModel):
     first_name: Optional[str] = None
@@ -206,6 +220,7 @@ class BookingUpdate(BaseModel):
     customer_phone: Optional[str] = None
     pickup_location: Optional[str] = None
     dropoff_location: Optional[str] = None
+    additional_stops: Optional[List[str]] = None
     booking_datetime: Optional[datetime] = None
     notes: Optional[str] = None
     fare: Optional[float] = None
@@ -214,6 +229,9 @@ class BookingUpdate(BaseModel):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
     client_id: Optional[str] = None
+    flight_info: Optional[FlightInfo] = None
+    is_return: Optional[bool] = None
+    linked_booking_id: Optional[str] = None
 
 # Response model that supports both old (customer_name) and new (first_name/last_name) formats
 class BookingResponse(BaseModel):
@@ -226,6 +244,7 @@ class BookingResponse(BaseModel):
     customer_phone: str
     pickup_location: str
     dropoff_location: str
+    additional_stops: Optional[List[str]] = None
     booking_datetime: datetime
     notes: Optional[str] = None
     fare: Optional[float] = None
@@ -236,6 +255,9 @@ class BookingResponse(BaseModel):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
     client_id: Optional[str] = None
+    flight_info: Optional[dict] = None
+    is_return: Optional[bool] = False
+    linked_booking_id: Optional[str] = None
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

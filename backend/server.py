@@ -1577,6 +1577,7 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     doc['created_at'] = doc['created_at'].isoformat()
     doc['booking_datetime'] = doc['booking_datetime'].isoformat()
     doc['sms_sent'] = False
+    doc['email_sent'] = False
     # Store full customer_name for backward compatibility
     doc['customer_name'] = f"{booking.first_name} {booking.last_name}"
     # Convert flight_info to dict if present

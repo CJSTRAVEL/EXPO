@@ -795,11 +795,11 @@ const ClientsPage = () => {
 
       {/* Generate Invoice Modal */}
       <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
-        <DialogContent className="sm:max-w-[450px]" data-testid="invoice-modal">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col" data-testid="invoice-modal">
           <DialogHeader>
             <DialogTitle>Generate Invoice</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1">
             <div className="bg-slate-50 rounded-lg p-4">
               <p className="text-sm font-medium">{selectedClient?.name}</p>
               <p className="text-xs text-muted-foreground">Account: {selectedClient?.account_no}</p>
@@ -807,7 +807,7 @@ const ClientsPage = () => {
 
             {/* Quick Date Range Buttons */}
             <div className="space-y-2">
-              <Label>Quick Select</Label>
+              <Label>Date Range</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -863,18 +863,84 @@ const ClientsPage = () => {
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              {invoiceDateRange.start || invoiceDateRange.end 
-                ? `Invoice will include bookings from ${invoiceDateRange.start || 'the beginning'} to ${invoiceDateRange.end || 'now'}`
-                : 'Invoice will include all bookings for this client'
-              }
-            </p>
+            {/* Bookings Preview */}
+            <div className="space-y-2">
+              <Label>Bookings Preview</Label>
+              <div className="border rounded-lg overflow-hidden">
+                {loadingInvoicePreview ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : invoiceBookings.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    No bookings found for the selected period
+                  </div>
+                ) : (
+                  <>
+                    {/* Table Header */}
+                    <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-slate-100 text-xs font-medium text-slate-600 border-b">
+                      <div className="col-span-2">Date</div>
+                      <div className="col-span-2">Booking</div>
+                      <div className="col-span-3">Passenger</div>
+                      <div className="col-span-3">Route</div>
+                      <div className="col-span-2 text-right">Fare (£)</div>
+                    </div>
+                    {/* Table Body */}
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {invoiceBookings.map((booking) => {
+                        const bookingDate = booking.booking_datetime 
+                          ? format(new Date(booking.booking_datetime), 'dd/MM/yy')
+                          : '-';
+                        const customerName = booking.customer_name || 
+                          `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || '-';
+                        const route = `${(booking.pickup_location || '').substring(0, 15)}...`;
+                        
+                        return (
+                          <div 
+                            key={booking.id} 
+                            className="grid grid-cols-12 gap-2 px-3 py-2 text-sm border-b last:border-b-0 hover:bg-slate-50 items-center"
+                          >
+                            <div className="col-span-2 text-xs text-muted-foreground">{bookingDate}</div>
+                            <div className="col-span-2 font-medium">{booking.booking_id}</div>
+                            <div className="col-span-3 truncate">{customerName}</div>
+                            <div className="col-span-3 text-xs text-muted-foreground truncate">{route}</div>
+                            <div className="col-span-2">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={booking.fare || 0}
+                                onChange={(e) => updateBookingPrice(booking.id, e.target.value)}
+                                className="h-7 text-right text-sm w-full"
+                                data-testid={`booking-fare-${booking.id}`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Total Row */}
+                    <div className="grid grid-cols-12 gap-2 px-3 py-3 bg-slate-50 border-t font-medium">
+                      <div className="col-span-10 text-right">Total:</div>
+                      <div className="col-span-2 text-right text-primary">£{invoiceTotal.toFixed(2)}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                You can edit the fares above before generating the invoice
+              </p>
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="border-t pt-4">
             <Button variant="outline" onClick={() => setShowInvoiceModal(false)}>
               Cancel
             </Button>
-            <Button onClick={handleGenerateInvoice} disabled={generatingInvoice} data-testid="download-invoice-btn">
+            <Button 
+              onClick={handleGenerateInvoice} 
+              disabled={generatingInvoice || invoiceBookings.length === 0} 
+              data-testid="download-invoice-btn"
+            >
               {generatingInvoice ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -883,7 +949,7 @@ const ClientsPage = () => {
               ) : (
                 <>
                   <Download className="w-4 h-4 mr-2" />
-                  Download Invoice
+                  Download Invoice (£{invoiceTotal.toFixed(2)})
                 </>
               )}
             </Button>

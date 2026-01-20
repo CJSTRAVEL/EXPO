@@ -117,10 +117,19 @@ Build a private hire application where you can add bookings and assign them to d
 - [ ] Push notifications for booking status changes
 
 ## Refactoring Notes
+- `server.py` is a monolith - should be split using FastAPI APIRouter (routes/bookings.py, routes/passengers.py, etc.)
 - `BookingsPage.jsx` is large (~710 lines) - consider decomposing into smaller components
 - `AddressAutocomplete.jsx` has complex dual-service logic - could be simplified
 
+## Database Schema
+- **drivers**: `{id, name, phone, vehicle_type, vehicle_number, status}`
+- **bookings**: `{id, booking_id, customer_name, customer_phone, pickup_address, dropoff_address, ...}`
+- **passengers**: `{id, phone, name, password_hash, created_at}` - Portal user accounts
+
+## Known Issues
+- **SMS Link Preview**: User reports "Preview Unavailable" on SMS booking links. OG tags have been added but issue persists. May need SSR for the public booking page.
+
 ## Next Tasks
-1. Add search/filter functionality to bookings table
-2. Implement bulk status update feature
-3. Add driver performance metrics to dashboard
+1. Investigate and fix SMS link preview issue (OG tag/SSR solution)
+2. Implement forgot password with SMS verification
+3. Allow passengers to request bookings from portal

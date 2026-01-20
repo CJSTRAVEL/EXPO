@@ -44,7 +44,7 @@ const getStatusBadge = (status) => {
   );
 };
 
-const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
+const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -56,6 +56,7 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
     fare: "",
     status: "pending",
     driver_id: "",
+    client_id: "",
   });
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
@@ -79,6 +80,7 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
         booking_datetime: new Date(booking.booking_datetime),
         fare: booking.fare || "",
         driver_id: booking.driver_id || "",
+        client_id: booking.client_id || "",
       });
     } else {
       setFormData({
@@ -92,10 +94,23 @@ const BookingForm = ({ booking, drivers, onSave, onClose, isOpen }) => {
         fare: "",
         status: "pending",
         driver_id: "",
+        client_id: "",
       });
       setRouteInfo(null);
     }
   }, [booking]);
+
+  // Handle client selection - auto-fill details
+  const handleClientSelect = (clientId) => {
+    setFormData({ ...formData, client_id: clientId });
+    if (clientId && clients) {
+      const client = clients.find(c => c.id === clientId);
+      if (client) {
+        // Optionally auto-fill some fields from client
+        // You can customize which fields to populate
+      }
+    }
+  };
 
   // Calculate route when both pickup and dropoff are set
   useEffect(() => {

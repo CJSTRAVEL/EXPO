@@ -1211,6 +1211,230 @@ async def get_booking_by_short_id(short_id: str):
         booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
     return booking
 
+# SSR endpoint for booking preview - serves HTML with Open Graph meta tags
+@app.get("/b/{short_id}", response_class=HTMLResponse)
+async def booking_preview_page(short_id: str):
+    """
+    Server-Side Rendered booking preview page with Open Graph meta tags.
+    This allows SMS apps and social media to show rich link previews.
+    """
+    # Get the booking
+    booking = await db.bookings.find_one({"booking_id": short_id.upper()}, {"_id": 0})
+    if not booking:
+        booking = await db.bookings.find_one({"booking_id": short_id}, {"_id": 0})
+    
+    if not booking:
+        # Return a simple 404 page
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Booking Not Found - CJ's Executive Travel</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>Booking Not Found</h1>
+            <p>Sorry, we couldn't find this booking.</p>
+        </body>
+        </html>
+        """, status_code=404)
+    
+    # Get app URL for redirect
+    app_url = os.environ.get('APP_URL', 'https://booking-master-14.onrender.com')
+    full_booking_url = f"{app_url}/booking/{booking['id']}"
+    
+    # Format booking details for preview
+    customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+    booking_id = booking.get('booking_id', short_id.upper())
+    pickup = booking.get('pickup_location', 'Pickup location')
+    dropoff = booking.get('dropoff_location', 'Destination')
+    
+    # Format date/time
+    booking_dt = booking.get('booking_datetime', '')
+    formatted_datetime = ''
+    if isinstance(booking_dt, str):
+        try:
+            dt = datetime.fromisoformat(booking_dt.replace('Z', '+00:00'))
+            formatted_datetime = dt.strftime('%d %B %Y at %H:%M')
+        except:
+            formatted_datetime = booking_dt
+    elif isinstance(booking_dt, datetime):
+        formatted_datetime = booking_dt.strftime('%d %B %Y at %H:%M')
+    
+    # Truncate for description
+    pickup_short = pickup[:50] + '...' if len(pickup) > 50 else pickup
+    dropoff_short = dropoff[:50] + '...' if len(dropoff) > 50 else dropoff
+    
+    # Build meta description
+    description = f"Booking {booking_id} for {customer_name}. {pickup_short} → {dropoff_short}. {formatted_datetime}"
+    title = f"CJ's Executive Travel - Booking {booking_id}"
+    
+    # Return HTML with OG tags and auto-redirect
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    
+    <!-- Open Graph Meta Tags for Link Previews -->
+    <meta property="og:title" content="{title}">
+    <meta property="og:description" content="{description}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{app_url}/b/{short_id}">
+    <meta property="og:site_name" content="CJ's Executive Travel">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{title}">
+    <meta name="twitter:description" content="{description}">
+    
+    <!-- Standard Meta Tags -->
+    <meta name="description" content="{description}">
+    
+    <!-- Auto-redirect to full booking page after brief delay -->
+    <meta http-equiv="refresh" content="0; url={full_booking_url}">
+    
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }}
+        .card {{
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }}
+        .logo {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 8px;
+        }}
+        .tagline {{
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }}
+        .booking-id {{
+            background: #edf2f7;
+            color: #1a365d;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 25px;
+        }}
+        .detail {{
+            text-align: left;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }}
+        .detail-label {{
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }}
+        .detail-value {{
+            color: #2d3748;
+            font-size: 15px;
+        }}
+        .loading {{
+            margin-top: 25px;
+            color: #718096;
+            font-size: 14px;
+        }}
+        .spinner {{
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #1a365d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }}
+        @keyframes spin {{
+            to {{ transform: rotate(360deg); }}
+        }}
+        .link {{
+            margin-top: 20px;
+        }}
+        .link a {{
+            color: #1a365d;
+            text-decoration: none;
+            font-weight: 500;
+        }}
+        .link a:hover {{
+            text-decoration: underline;
+        }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">CJ's Executive Travel</div>
+        <div class="tagline">Professional Private Hire Services</div>
+        
+        <div class="booking-id">Booking {booking_id}</div>
+        
+        <div class="detail">
+            <div class="detail-label">Passenger</div>
+            <div class="detail-value">{customer_name}</div>
+        </div>
+        
+        <div class="detail">
+            <div class="detail-label">Pickup</div>
+            <div class="detail-value">{pickup_short}</div>
+        </div>
+        
+        <div class="detail">
+            <div class="detail-label">Drop-off</div>
+            <div class="detail-value">{dropoff_short}</div>
+        </div>
+        
+        <div class="detail">
+            <div class="detail-label">Date & Time</div>
+            <div class="detail-value">{formatted_datetime}</div>
+        </div>
+        
+        <div class="loading">
+            <span class="spinner"></span>
+            Loading full booking details...
+        </div>
+        
+        <div class="link">
+            <a href="{full_booking_url}">Click here if not redirected</a>
+        </div>
+    </div>
+    
+    <script>
+        // JavaScript redirect as backup
+        window.location.href = "{full_booking_url}";
+    </script>
+</body>
+</html>"""
+    
+    return HTMLResponse(content=html_content)
+
 @api_router.put("/bookings/{booking_id}", response_model=BookingResponse)
 async def update_booking(booking_id: str, booking_update: BookingUpdate):
     existing = await db.bookings.find_one({"id": booking_id}, {"_id": 0})

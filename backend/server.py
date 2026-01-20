@@ -2039,6 +2039,110 @@ async def resend_booking_sms(booking_id: str):
     else:
         raise HTTPException(status_code=500, detail=f"Failed to send SMS: {message}")
 
+@api_router.post("/bookings/{booking_id}/resend-email")
+async def resend_booking_email(booking_id: str):
+    """Resend email confirmation for a booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    if not booking.get('customer_email'):
+        raise HTTPException(status_code=400, detail="No email address on file for this booking")
+    
+    # Get customer name (support both old and new format)
+    customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+    
+    # Get driver name if assigned
+    driver_name = None
+    if booking.get('driver_id'):
+        driver = await db.drivers.find_one({"id": booking['driver_id']})
+        if driver:
+            driver_name = driver.get('name')
+    
+    # Send email with short booking ID
+    success, message = send_booking_email(
+        customer_email=booking['customer_email'],
+        customer_name=customer_name,
+        booking_id=booking_id,
+        pickup=booking.get('pickup_location'),
+        dropoff=booking.get('dropoff_location'),
+        booking_datetime=booking.get('booking_datetime'),
+        short_booking_id=booking.get('booking_id'),
+        status=booking.get('status'),
+        driver_name=driver_name
+    )
+    
+    # Update email_sent status
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {"email_sent": success}}
+    )
+    
+    if success:
+        return {"success": True, "message": "Email confirmation sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {message}")
+
+@api_router.post("/bookings/{booking_id}/resend-notifications")
+async def resend_all_notifications(booking_id: str):
+    """Resend both SMS and email confirmations for a booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+    
+    # Get driver name if assigned
+    driver_name = None
+    if booking.get('driver_id'):
+        driver = await db.drivers.find_one({"id": booking['driver_id']})
+        if driver:
+            driver_name = driver.get('name')
+    
+    results = {"sms": None, "email": None}
+    
+    # Send SMS
+    sms_success, sms_message = send_booking_sms(
+        customer_phone=booking['customer_phone'],
+        customer_name=customer_name,
+        booking_id=booking_id,
+        pickup=booking.get('pickup_location'),
+        dropoff=booking.get('dropoff_location'),
+        distance_miles=booking.get('distance_miles'),
+        duration_minutes=booking.get('duration_minutes'),
+        booking_datetime=booking.get('booking_datetime'),
+        short_booking_id=booking.get('booking_id')
+    )
+    results['sms'] = {"success": sms_success, "message": sms_message}
+    
+    # Send Email if email exists
+    if booking.get('customer_email'):
+        email_success, email_message = send_booking_email(
+            customer_email=booking['customer_email'],
+            customer_name=customer_name,
+            booking_id=booking_id,
+            pickup=booking.get('pickup_location'),
+            dropoff=booking.get('dropoff_location'),
+            booking_datetime=booking.get('booking_datetime'),
+            short_booking_id=booking.get('booking_id'),
+            status=booking.get('status'),
+            driver_name=driver_name
+        )
+        results['email'] = {"success": email_success, "message": email_message}
+    else:
+        results['email'] = {"success": False, "message": "No email address on file"}
+    
+    # Update statuses
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {
+            "sms_sent": sms_success,
+            "email_sent": results['email']['success'] if results['email'] else False
+        }}
+    )
+    
+    return results
+
 # ========== STATS ENDPOINT ==========
 @api_router.get("/stats")
 async def get_stats():

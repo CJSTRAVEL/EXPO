@@ -305,21 +305,10 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dropoff_location">Dropoff Location</Label>
-              <AddressAutocomplete
-                id="dropoff_location"
-                value={formData.dropoff_location}
-                onChange={(value) => setFormData({ ...formData, dropoff_location: value })}
-                placeholder="Start typing address..."
-                data-testid="booking-dropoff-input"
-              />
-            </div>
-
-            {/* Additional Stops (Multi-drop) */}
-            <div className="space-y-2">
+            {/* Additional Stops (Multi-drop) - Between Pickup and Dropoff */}
+            <div className="space-y-2 pl-4 border-l-2 border-amber-300">
               <div className="flex items-center justify-between">
-                <Label>Additional Stops</Label>
+                <Label className="text-amber-700">Stops (in order)</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -334,40 +323,51 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
                   Add Stop
                 </Button>
               </div>
-              {formData.additional_stops.map((stop, index) => (
-                <div key={index} className="flex gap-2 items-center">
-                  <div className="flex-1">
-                    <AddressAutocomplete
-                      value={stop}
-                      onChange={(value) => {
-                        const newStops = [...formData.additional_stops];
-                        newStops[index] = value;
+              {formData.additional_stops.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No intermediate stops - direct journey</p>
+              ) : (
+                formData.additional_stops.map((stop, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <span className="text-xs font-semibold text-amber-600 w-6">{index + 1}.</span>
+                    <div className="flex-1">
+                      <AddressAutocomplete
+                        value={stop}
+                        onChange={(value) => {
+                          const newStops = [...formData.additional_stops];
+                          newStops[index] = value;
+                          setFormData({ ...formData, additional_stops: newStops });
+                        }}
+                        placeholder={`Stop ${index + 1} address...`}
+                        data-testid={`booking-stop-${index}-input`}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        const newStops = formData.additional_stops.filter((_, i) => i !== index);
                         setFormData({ ...formData, additional_stops: newStops });
                       }}
-                      placeholder={`Stop ${index + 1}`}
-                      data-testid={`booking-stop-${index}-input`}
-                    />
+                      data-testid={`remove-stop-${index}-btn`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 text-destructive hover:text-destructive"
-                    onClick={() => {
-                      const newStops = formData.additional_stops.filter((_, i) => i !== index);
-                      setFormData({ ...formData, additional_stops: newStops });
-                    }}
-                    data-testid={`remove-stop-${index}-btn`}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-              {formData.additional_stops.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Route: Pickup → {formData.additional_stops.length} stop(s) → Final Dropoff
-                </p>
+                ))
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dropoff_location">Final Dropoff Location</Label>
+              <AddressAutocomplete
+                id="dropoff_location"
+                value={formData.dropoff_location}
+                onChange={(value) => setFormData({ ...formData, dropoff_location: value })}
+                placeholder="Start typing address..."
+                data-testid="booking-dropoff-input"
+              />
             </div>
 
             {/* Route Information Display */}

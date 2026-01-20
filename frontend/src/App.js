@@ -67,16 +67,34 @@ const ShortUrlBooking = () => {
 
 const Sidebar = () => {
   const location = useLocation();
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   
   // Hide sidebar on public booking details page
   if (location.pathname.startsWith('/booking/') || location.pathname.startsWith('/b/')) {
     return null;
   }
+
+  // Fetch pending requests count
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      try {
+        const response = await axios.get(`${API}/api/admin/booking-requests`);
+        const pending = response.data?.filter(r => r.status === 'pending') || [];
+        setPendingRequestsCount(pending.length);
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+      }
+    };
+    fetchPendingRequests();
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingRequests, 30000);
+    return () => clearInterval(interval);
+  }, []);
   
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/bookings", icon: Calendar, label: "Bookings" },
-    { path: "/requests", icon: Inbox, label: "Requests" },
+    { path: "/requests", icon: Inbox, label: "Requests", badge: pendingRequestsCount },
     { path: "/contract-work", icon: FileText, label: "Contract Work" },
     { path: "/clients", icon: Building2, label: "Clients" },
     { path: "/passengers", icon: UserCircle, label: "Passengers" },
@@ -110,6 +128,11 @@ const Sidebar = () => {
           >
             <item.icon className="w-5 h-5" />
             {item.label}
+            {item.badge > 0 && (
+              <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-amber-500 text-white rounded-full animate-pulse">
+                {item.badge}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

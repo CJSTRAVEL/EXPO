@@ -958,6 +958,7 @@ const PassengerPortal = () => {
                       ...requestForm, 
                       create_return: isChecked,
                       return_pickup_location: isChecked ? requestForm.dropoff_location : "",
+                      return_additional_stops: [],
                       return_dropoff_location: isChecked ? requestForm.pickup_location : "",
                       return_datetime: isChecked ? new Date(requestForm.pickup_datetime.getTime() + 3600000 * 3) : null
                     });
@@ -988,9 +989,64 @@ const PassengerPortal = () => {
                     />
                   </div>
 
+                  {/* Return Additional Stops */}
+                  <div className="space-y-2 pl-4 border-l-2 border-amber-400">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-amber-700 text-sm">Return Stops (in order)</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs border-amber-400 text-amber-700 hover:bg-amber-100"
+                        onClick={() => setRequestForm({ 
+                          ...requestForm, 
+                          return_additional_stops: [...(requestForm.return_additional_stops || []), ""] 
+                        })}
+                        data-testid="request-add-return-stop-btn"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Stop
+                      </Button>
+                    </div>
+                    {(!requestForm.return_additional_stops || requestForm.return_additional_stops.length === 0) ? (
+                      <p className="text-xs text-amber-600 italic">No intermediate stops - direct return</p>
+                    ) : (
+                      requestForm.return_additional_stops.map((stop, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                          <span className="text-xs font-semibold text-amber-600 w-5">{index + 1}.</span>
+                          <div className="flex-1">
+                            <AddressAutocomplete
+                              value={stop}
+                              onChange={(value) => {
+                                const newStops = [...requestForm.return_additional_stops];
+                                newStops[index] = value;
+                                setRequestForm({ ...requestForm, return_additional_stops: newStops });
+                              }}
+                              placeholder={`Return stop ${index + 1}...`}
+                              data-testid={`request-return-stop-${index}-input`}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => {
+                              const newStops = requestForm.return_additional_stops.filter((_, i) => i !== index);
+                              setRequestForm({ ...requestForm, return_additional_stops: newStops });
+                            }}
+                            data-testid={`request-remove-return-stop-${index}-btn`}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
                   {/* Return Dropoff Location */}
                   <div className="space-y-2">
-                    <Label className="text-amber-800">Return Dropoff Location</Label>
+                    <Label className="text-amber-800">Return Final Drop-off</Label>
                     <AddressAutocomplete
                       value={requestForm.return_dropoff_location}
                       onChange={(value) => setRequestForm({ ...requestForm, return_dropoff_location: value })}

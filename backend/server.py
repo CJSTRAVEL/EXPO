@@ -625,7 +625,7 @@ class InvoiceRequest(BaseModel):
 
 @api_router.post("/clients/{client_id}/invoice")
 async def generate_client_invoice(client_id: str, request: InvoiceRequest = None, start_date: str = None, end_date: str = None):
-    """Generate PDF invoice for a client's bookings within a date range"""
+    """Generate PDF invoice for a client's bookings within a date range - styled like CJ's Executive Travel format"""
     # Get client details
     client = await db.clients.find_one({"id": client_id}, {"_id": 0})
     if not client:
@@ -652,136 +652,241 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
             if booking['id'] in custom_prices:
                 booking['fare'] = custom_prices[booking['id']]
     
+    # Calculate totals
+    subtotal = sum(b.get('fare', 0) or 0 for b in bookings)
+    vat_rate = 0.20  # 20% VAT
+    vat_amount = subtotal * vat_rate
+    total = subtotal + vat_amount
+    journey_count = len(bookings)
+    
+    # Generate invoice reference
+    invoice_count = await db.clients.count_documents({}) + 1
+    invoice_ref = f"INV{str(invoice_count).zfill(6)}"
+    tax_date = datetime.now().strftime('%b %d, %Y')
+    payment_due = (datetime.now() + timedelta(days=30)).strftime('%d/%m/%Y')
+    
     # Create PDF
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    
+    # Define colors
+    dark_blue = colors.HexColor('#1a365d')
+    light_gray = colors.HexColor('#f8f9fa')
+    border_gray = colors.HexColor('#dee2e6')
+    text_dark = colors.HexColor('#212529')
     
     # Styles
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=24, alignment=TA_CENTER, spaceAfter=20, textColor=colors.HexColor('#1a365d'))
-    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=12, alignment=TA_CENTER, textColor=colors.grey, spaceAfter=30)
-    header_style = ParagraphStyle('Header', parent=styles['Heading2'], fontSize=14, spaceAfter=10, textColor=colors.HexColor('#2d3748'))
-    normal_style = ParagraphStyle('Normal', parent=styles['Normal'], fontSize=10, spaceAfter=6)
+    company_name_style = ParagraphStyle('CompanyName', parent=styles['Heading1'], fontSize=18, textColor=dark_blue, spaceAfter=2)
+    company_info_style = ParagraphStyle('CompanyInfo', parent=styles['Normal'], fontSize=9, textColor=text_dark, leading=12)
+    section_header_style = ParagraphStyle('SectionHeader', parent=styles['Heading2'], fontSize=12, textColor=dark_blue, spaceBefore=15, spaceAfter=10)
+    normal_style = ParagraphStyle('NormalText', parent=styles['Normal'], fontSize=9, textColor=text_dark, leading=12)
+    bold_style = ParagraphStyle('BoldText', parent=styles['Normal'], fontSize=9, textColor=text_dark, leading=12, fontName='Helvetica-Bold')
+    small_style = ParagraphStyle('SmallText', parent=styles['Normal'], fontSize=8, textColor=colors.grey, leading=10)
     
     elements = []
     
-    # Company Header
-    elements.append(Paragraph("CJ's Executive Travel", title_style))
-    elements.append(Paragraph("Professional Private Hire Services", subtitle_style))
+    # ========== HEADER SECTION ==========
+    # Company info on left, invoice details on right
+    header_data = [
+        [
+            # Left side - Company info
+            Paragraph("<b>CJ's Executive Travel Limited</b>", company_name_style),
+            # Right side - Invoice box
+            ''
+        ],
+        [
+            Paragraph("Professional Private Hire Services<br/>County Durham, United Kingdom<br/>Phone: 07806 794824<br/>Email: info@cjsexecutivetravel.co.uk", company_info_style),
+            ''
+        ]
+    ]
     
-    # Invoice Title
-    invoice_number = f"INV-{client.get('account_no', 'N/A')}-{datetime.now().strftime('%Y%m%d%H%M')}"
-    elements.append(Paragraph(f"<b>INVOICE</b>", ParagraphStyle('InvoiceTitle', parent=styles['Heading1'], fontSize=20, alignment=TA_RIGHT)))
-    elements.append(Paragraph(f"Invoice #: {invoice_number}", ParagraphStyle('InvoiceNum', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT)))
-    elements.append(Paragraph(f"Date: {datetime.now().strftime('%d %B %Y')}", ParagraphStyle('InvoiceDate', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT)))
+    # Invoice details box
+    invoice_box_data = [
+        ['ACCOUNT NO:', client.get('account_no', 'N/A')],
+        ['REFERENCE:', invoice_ref],
+        ['TAX DATE:', tax_date],
+    ]
+    invoice_box = Table(invoice_box_data, colWidths=[70, 80])
+    invoice_box.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), light_gray),
+        ('BOX', (0, 0), (-1, -1), 1, border_gray),
+        ('GRID', (0, 0), (-1, -1), 0.5, border_gray),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('TEXTCOLOR', (0, 0), (-1, -1), text_dark),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    header_table = Table([
+        [Paragraph("<b>CJ's Executive Travel Limited</b>", company_name_style), invoice_box],
+        [Paragraph("Professional Private Hire Services<br/>County Durham, United Kingdom<br/>Phone: 07806 794824<br/>Email: info@cjsexecutivetravel.co.uk", company_info_style), ''],
+    ], colWidths=[350, 160])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    ]))
+    elements.append(header_table)
     elements.append(Spacer(1, 20))
     
-    # Client Details
-    elements.append(Paragraph("Bill To:", header_style))
-    elements.append(Paragraph(f"<b>{client.get('name', 'N/A')}</b>", normal_style))
-    elements.append(Paragraph(f"Account: {client.get('account_no', 'N/A')}", normal_style))
+    # ========== FOR THE ATTENTION OF ==========
+    elements.append(Paragraph("<b>For the attention of:</b>", bold_style))
+    client_address = f"{client.get('name', 'N/A')}"
     if client.get('address'):
-        elements.append(Paragraph(client.get('address', ''), normal_style))
+        client_address += f"<br/>{client.get('address')}"
     if client.get('town_city') or client.get('post_code'):
-        elements.append(Paragraph(f"{client.get('town_city', '')} {client.get('post_code', '')}", normal_style))
-    elements.append(Paragraph(f"Email: {client.get('email', 'N/A')}", normal_style))
-    elements.append(Paragraph(f"Phone: {client.get('mobile', 'N/A')}", normal_style))
+        client_address += f"<br/>{client.get('town_city', '')} {client.get('post_code', '')}"
+    elements.append(Paragraph(client_address, normal_style))
     elements.append(Spacer(1, 20))
     
-    # Date Range
-    if start_date or end_date:
-        date_range_text = f"Period: {start_date or 'Start'} to {end_date or 'Present'}"
-        elements.append(Paragraph(date_range_text, normal_style))
-        elements.append(Spacer(1, 10))
+    # ========== INVOICE SUMMARY ==========
+    elements.append(Paragraph("<b>INVOICE SUMMARY</b>", section_header_style))
     
-    # Bookings Table
+    summary_data = [
+        ['Journeys', f'{journey_count} Journeys'],
+        ['Subtotal', f'£{subtotal:,.2f}'],
+        ['VAT @ 20%', f'£{vat_amount:,.2f}'],
+        ['Total', f'£{total:,.2f}'],
+        ['Payment', '-£0.00'],
+    ]
+    summary_table = Table(summary_data, colWidths=[100, 100])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), light_gray),
+        ('BOX', (0, 0), (-1, -1), 1, border_gray),
+        ('GRID', (0, 0), (-1, -1), 0.5, border_gray),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),  # Total row bold
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (-1, -1), text_dark),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 15))
+    
+    # ========== TERMS AND BANK DETAILS ==========
+    elements.append(Paragraph(f"<b>Terms</b> 30 days. Payment due by {payment_due}.", normal_style))
+    elements.append(Spacer(1, 10))
+    
+    bank_details = """<b>Bank Details:</b><br/>
+    Bank Name: Starling Bank<br/>
+    Account No: 15222155<br/>
+    Sort Code: 60-83-71"""
+    elements.append(Paragraph(bank_details, small_style))
+    elements.append(Spacer(1, 25))
+    
+    # ========== JOURNEYS TABLE ==========
+    elements.append(Paragraph("<b>JOURNEYS</b>", section_header_style))
+    
     if bookings:
-        table_data = [['Date', 'Booking ID', 'Passenger', 'Route', 'Fare']]
-        total = 0
+        # Table header
+        journeys_header = ['Item', 'Date/Time', 'Booker/Passenger', 'Journey Details', 'Cost', 'Total']
+        journeys_data = [journeys_header]
         
-        for booking in bookings:
-            # Format date
+        for idx, booking in enumerate(bookings, 1):
+            # Format date and time
             booking_dt = booking.get('booking_datetime', '')
+            date_str = ''
+            time_str = ''
             if isinstance(booking_dt, str):
                 try:
                     dt = datetime.fromisoformat(booking_dt.replace('Z', '+00:00'))
-                    booking_dt = dt.strftime('%d/%m/%Y %H:%M')
+                    date_str = dt.strftime('%d/%m/%Y')
+                    time_str = dt.strftime('%H:%M')
                 except:
-                    pass
+                    date_str = booking_dt[:10] if len(booking_dt) >= 10 else ''
             
             # Get customer name
             customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+            booker_passenger = f"{client.get('account_no', '')}\n{customer_name}"
             
-            # Truncate route for display
-            pickup = (booking.get('pickup_location', '') or '')[:25]
-            dropoff = (booking.get('dropoff_location', '') or '')[:25]
-            route = f"{pickup}... → {dropoff}..."
+            # Journey details with P: and D: format
+            pickup = booking.get('pickup_location', '') or ''
+            dropoff = booking.get('dropoff_location', '') or ''
+            journey_details = f"P: {pickup[:50]}{'...' if len(pickup) > 50 else ''}\nD: {dropoff[:50]}{'...' if len(dropoff) > 50 else ''}"
             
             fare = booking.get('fare') or 0
-            total += fare
+            booking_id = booking.get('booking_id', f'#{idx}')
             
-            table_data.append([
-                booking_dt,
-                booking.get('booking_id', 'N/A'),
-                customer_name[:20],
-                route,
-                f"£{fare:.2f}"
+            journeys_data.append([
+                Paragraph(f"<b>{booking_id}</b>", ParagraphStyle('Item', fontSize=8, fontName='Helvetica-Bold')),
+                Paragraph(f"{date_str}<br/>{time_str}", ParagraphStyle('DateTime', fontSize=8, leading=10)),
+                Paragraph(booker_passenger.replace('\n', '<br/>'), ParagraphStyle('Booker', fontSize=8, leading=10)),
+                Paragraph(journey_details.replace('\n', '<br/>'), ParagraphStyle('Journey', fontSize=8, leading=10)),
+                Paragraph(f"£{fare:.2f}", ParagraphStyle('Cost', fontSize=8, alignment=TA_RIGHT)),
+                Paragraph(f"£{fare:.2f}", ParagraphStyle('Total', fontSize=8, alignment=TA_RIGHT, fontName='Helvetica-Bold')),
             ])
         
-        # Add subtotal and total rows
-        table_data.append(['', '', '', 'Subtotal:', f"£{total:.2f}"])
-        table_data.append(['', '', '', 'VAT (0%):', '£0.00'])
-        table_data.append(['', '', '', '<b>TOTAL:</b>', f"<b>£{total:.2f}</b>"])
+        # Add totals row
+        journeys_data.append([
+            '', '', '', 
+            Paragraph('<b>TOTAL</b>', ParagraphStyle('TotalLabel', fontSize=9, alignment=TA_RIGHT, fontName='Helvetica-Bold')),
+            '',
+            Paragraph(f'<b>£{subtotal:.2f}</b>', ParagraphStyle('TotalValue', fontSize=9, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
+        ])
         
-        # Create table
-        col_widths = [80, 60, 90, 180, 60]
-        table = Table(table_data, colWidths=col_widths)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2d3748')),
+        col_widths = [55, 55, 80, 180, 50, 55]
+        journeys_table = Table(journeys_data, colWidths=col_widths, repeatRows=1)
+        journeys_table.setStyle(TableStyle([
+            # Header styling
+            ('BACKGROUND', (0, 0), (-1, 0), dark_blue),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('TOPPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -4), colors.HexColor('#f7fafc')),
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('GRID', (0, 0), (-1, -4), 0.5, colors.HexColor('#e2e8f0')),
-            ('LINEABOVE', (3, -3), (-1, -3), 1, colors.HexColor('#2d3748')),
-            ('FONTNAME', (3, -1), (-1, -1), 'Helvetica-Bold'),
-            ('BACKGROUND', (3, -1), (-1, -1), colors.HexColor('#edf2f7')),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
-            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            
+            # Body styling
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('TEXTCOLOR', (0, 1), (-1, -1), text_dark),
+            ('VALIGN', (0, 1), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            
+            # Alternating row colors
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, light_gray]),
+            
+            # Grid
+            ('GRID', (0, 0), (-1, -2), 0.5, border_gray),
+            
+            # Total row
+            ('LINEABOVE', (0, -1), (-1, -1), 1, dark_blue),
+            ('BACKGROUND', (0, -1), (-1, -1), light_gray),
+            ('TOPPADDING', (0, -1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+            
+            # Align cost columns right
+            ('ALIGN', (4, 1), (5, -1), 'RIGHT'),
         ]))
         
-        elements.append(table)
+        elements.append(journeys_table)
     else:
-        elements.append(Paragraph("No bookings found for the selected period.", normal_style))
+        elements.append(Paragraph("No journeys found for the selected period.", normal_style))
     
     elements.append(Spacer(1, 30))
     
-    # Payment Terms
-    elements.append(Paragraph("Payment Terms", header_style))
-    elements.append(Paragraph(f"Payment Method: {client.get('payment_method', 'Invoice')}", normal_style))
-    elements.append(Paragraph("Payment Due: Within 30 days of invoice date", normal_style))
-    elements.append(Paragraph("Bank: Please contact us for bank details", normal_style))
-    
-    elements.append(Spacer(1, 30))
-    
-    # Footer
-    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER, textColor=colors.grey)
-    elements.append(Paragraph("Thank you for choosing CJ's Executive Travel", footer_style))
-    elements.append(Paragraph("For any queries, please contact us at your convenience", footer_style))
+    # ========== FOOTER ==========
+    footer_text = f"""<b>CJ's Executive Travel Limited</b><br/>
+    Thank you for your business. For queries contact info@cjsexecutivetravel.co.uk"""
+    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=colors.grey, leading=12)
+    elements.append(Paragraph(footer_text, footer_style))
     
     # Build PDF
     doc.build(elements)
     buffer.seek(0)
     
     # Return as downloadable PDF
-    filename = f"invoice_{client.get('account_no', 'client')}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    filename = f"{client.get('account_no', 'invoice')}_{datetime.now().strftime('%b_%Y')}.pdf"
     return StreamingResponse(
         buffer,
         media_type="application/pdf",

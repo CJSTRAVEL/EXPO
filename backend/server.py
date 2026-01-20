@@ -122,7 +122,8 @@ class Driver(DriverBase):
 
 # Booking Models
 class BookingBase(BaseModel):
-    customer_name: str
+    first_name: str
+    last_name: str
     customer_phone: str
     pickup_location: str
     dropoff_location: str
@@ -135,7 +136,8 @@ class BookingCreate(BookingBase):
     duration_minutes: Optional[int] = None
 
 class BookingUpdate(BaseModel):
-    customer_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     customer_phone: Optional[str] = None
     pickup_location: Optional[str] = None
     dropoff_location: Optional[str] = None

@@ -733,6 +733,34 @@ const PassengerPortal = () => {
               />
             </div>
 
+            {/* PAX and Cases */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>PAX (Passengers)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={requestForm.passenger_count}
+                  onChange={(e) => setRequestForm({ ...requestForm, passenger_count: e.target.value })}
+                  placeholder="1"
+                  data-testid="request-pax-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Cases (Luggage)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="20"
+                  value={requestForm.luggage_count}
+                  onChange={(e) => setRequestForm({ ...requestForm, luggage_count: e.target.value })}
+                  placeholder="0"
+                  data-testid="request-cases-input"
+                />
+              </div>
+            </div>
+
             {/* Date & Time */}
             <div className="space-y-2">
               <Label>Pickup Date & Time *</Label>

@@ -830,6 +830,171 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
                       </Popover>
                     </div>
 
+                    {/* Return Airport Transfer */}
+                    <div className="space-y-3 border border-amber-300 rounded-lg p-3 bg-white/50">
+                      <Label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={showReturnFlightInfo}
+                          onChange={(e) => setShowReturnFlightInfo(e.target.checked)}
+                          className="rounded"
+                          data-testid="return-flight-info-toggle"
+                        />
+                        <span className="text-sm font-semibold text-amber-800">
+                          <Plane className="w-4 h-4 inline mr-1" />
+                          Return Airport Transfer
+                        </span>
+                      </Label>
+                      
+                      {showReturnFlightInfo && (
+                        <div className="space-y-3 pt-2">
+                          {/* Return Flight Number with Live Lookup */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-amber-800">Return Flight Number</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                value={formData.return_flight_number}
+                                onChange={(e) => setFormData({ ...formData, return_flight_number: e.target.value.toUpperCase() })}
+                                placeholder="BA124"
+                                className="flex-1 bg-white"
+                                data-testid="return-flight-number-input"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={!formData.return_flight_number || formData.return_flight_number.length < 3 || loadingReturnFlight}
+                                onClick={async () => {
+                                  if (!formData.return_flight_number) return;
+                                  setLoadingReturnFlight(true);
+                                  setReturnFlightError(null);
+                                  try {
+                                    const res = await axios.get(`${API}/flight/${formData.return_flight_number}`);
+                                    if (res.data.error) {
+                                      setReturnFlightError(res.data.error);
+                                    } else {
+                                      const flightInfo = res.data;
+                                      
+                                      // Build dropoff location from departure airport (for return, passenger departs)
+                                      let dropoffLocation = "";
+                                      if (flightInfo.departure_airport) {
+                                        dropoffLocation = flightInfo.departure_airport;
+                                        if (flightInfo.departure_iata) {
+                                          dropoffLocation += ` (${flightInfo.departure_iata})`;
+                                        }
+                                        if (flightInfo.departure_terminal) {
+                                          dropoffLocation += ` Terminal ${flightInfo.departure_terminal}`;
+                                        }
+                                      }
+                                      
+                                      // Parse departure time - need to arrive before flight
+                                      let departureDateTime = formData.return_datetime;
+                                      const departureTime = flightInfo.departure_scheduled;
+                                      if (departureTime) {
+                                        // Set pickup 2 hours before flight
+                                        departureDateTime = new Date(new Date(departureTime).getTime() - 2 * 3600000);
+                                      }
+                                      
+                                      // Auto-fill return flight data
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        return_airline: flightInfo.airline || prev.return_airline,
+                                        return_terminal: flightInfo.departure_terminal || prev.return_terminal,
+                                        return_flight_type: "departure",
+                                        return_dropoff_location: dropoffLocation || prev.return_dropoff_location,
+                                        return_datetime: departureDateTime
+                                      }));
+                                      setReturnFlightData(flightInfo);
+                                    }
+                                  } catch (err) {
+                                    setReturnFlightError("Failed to lookup flight");
+                                  } finally {
+                                    setLoadingReturnFlight(false);
+                                  }
+                                }}
+                                data-testid="lookup-return-flight-btn"
+                              >
+                                {loadingReturnFlight ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Plane className="w-4 h-4 mr-1" />
+                                    Lookup
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            {returnFlightError && (
+                              <p className="text-xs text-red-500">{returnFlightError}</p>
+                            )}
+                          </div>
+
+                          {/* Live Return Flight Data Display */}
+                          {returnFlightData && !returnFlightError && (
+                            <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-blue-700">
+                                  ✈️ Return Flight Data {returnFlightData.is_cached && "(cached)"}
+                                </span>
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                                  returnFlightData.flight_status === 'landed' ? 'bg-green-100 text-green-700' :
+                                  returnFlightData.flight_status === 'active' ? 'bg-blue-100 text-blue-700' :
+                                  returnFlightData.flight_status === 'scheduled' ? 'bg-gray-100 text-gray-700' :
+                                  returnFlightData.flight_status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {returnFlightData.flight_status?.toUpperCase() || 'UNKNOWN'}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-muted-foreground">From:</span>
+                                  <p className="font-medium">{returnFlightData.departure_airport}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">To:</span>
+                                  <p className="font-medium">{returnFlightData.arrival_airport}</p>
+                                </div>
+                              </div>
+                              {returnFlightData.departure_scheduled && (
+                                <div className="text-xs pt-2 border-t border-blue-200">
+                                  <span className="text-muted-foreground">Departure:</span>
+                                  <p className="font-medium">
+                                    {new Date(returnFlightData.departure_scheduled).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    {returnFlightData.departure_terminal && ` - T${returnFlightData.departure_terminal}`}
+                                    {returnFlightData.departure_gate && ` Gate ${returnFlightData.departure_gate}`}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-amber-800">Airline</Label>
+                              <Input
+                                value={formData.return_airline}
+                                onChange={(e) => setFormData({ ...formData, return_airline: e.target.value })}
+                                placeholder="British Airways"
+                                className="bg-white"
+                                data-testid="return-airline-input"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-amber-800">Terminal</Label>
+                              <Input
+                                value={formData.return_terminal}
+                                onChange={(e) => setFormData({ ...formData, return_terminal: e.target.value })}
+                                placeholder="Terminal 5"
+                                className="bg-white"
+                                data-testid="return-terminal-input"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <p className="text-xs text-amber-700 bg-amber-100 rounded p-2">
                       ↩️ A separate return booking will be created for the same passenger
                     </p>

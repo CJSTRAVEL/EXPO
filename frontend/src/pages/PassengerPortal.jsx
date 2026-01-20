@@ -642,8 +642,8 @@ const PassengerPortal = () => {
       />
 
       {/* Booking Request Form Modal */}
-      <Dialog open={showRequestForm} onOpenChange={setShowRequestForm}>
-        <DialogContent className="max-w-md" data-testid="request-form-modal">
+      <Dialog open={showRequestForm} onOpenChange={(open) => { if (!open) resetRequestForm(); setShowRequestForm(open); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="request-form-modal">
           <DialogHeader>
             <DialogTitle>Request a Booking</DialogTitle>
           </DialogHeader>
@@ -652,23 +652,77 @@ const PassengerPortal = () => {
             {/* Pickup Location */}
             <div className="space-y-2">
               <Label htmlFor="pickup">Pickup Location *</Label>
-              <Input
+              <AddressAutocomplete
                 id="pickup"
                 value={requestForm.pickup_location}
-                onChange={(e) => setRequestForm({ ...requestForm, pickup_location: e.target.value })}
-                placeholder="Enter pickup address..."
+                onChange={(value) => setRequestForm({ ...requestForm, pickup_location: value })}
+                placeholder="Start typing address..."
                 data-testid="request-pickup-input"
               />
             </div>
 
+            {/* Additional Stops */}
+            <div className="space-y-2 pl-4 border-l-2 border-amber-300">
+              <div className="flex items-center justify-between">
+                <Label className="text-amber-700">Stops (in order)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRequestForm({ 
+                    ...requestForm, 
+                    additional_stops: [...requestForm.additional_stops, ""] 
+                  })}
+                  data-testid="request-add-stop-btn"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Stop
+                </Button>
+              </div>
+              {requestForm.additional_stops.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No intermediate stops - direct journey</p>
+              ) : (
+                requestForm.additional_stops.map((stop, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <span className="text-xs font-semibold text-amber-600 w-6">{index + 1}.</span>
+                    <div className="flex-1">
+                      <AddressAutocomplete
+                        value={stop}
+                        onChange={(value) => {
+                          const newStops = [...requestForm.additional_stops];
+                          newStops[index] = value;
+                          setRequestForm({ ...requestForm, additional_stops: newStops });
+                        }}
+                        placeholder={`Stop ${index + 1} address...`}
+                        data-testid={`request-stop-${index}-input`}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        const newStops = requestForm.additional_stops.filter((_, i) => i !== index);
+                        setRequestForm({ ...requestForm, additional_stops: newStops });
+                      }}
+                      data-testid={`request-remove-stop-${index}-btn`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+
             {/* Dropoff Location */}
             <div className="space-y-2">
-              <Label htmlFor="dropoff">Drop-off Location *</Label>
-              <Input
+              <Label htmlFor="dropoff">Final Drop-off Location *</Label>
+              <AddressAutocomplete
                 id="dropoff"
                 value={requestForm.dropoff_location}
-                onChange={(e) => setRequestForm({ ...requestForm, dropoff_location: e.target.value })}
-                placeholder="Enter drop-off address..."
+                onChange={(value) => setRequestForm({ ...requestForm, dropoff_location: value })}
+                placeholder="Start typing address..."
                 data-testid="request-dropoff-input"
               />
             </div>
@@ -688,7 +742,7 @@ const PassengerPortal = () => {
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     {requestForm.pickup_datetime 
-                      ? format(requestForm.pickup_datetime, "PPP 'at' p") 
+                      ? format(requestForm.pickup_datetime, "dd/MM/yy 'at' HH:mm") 
                       : "Select date & time"}
                   </Button>
                 </PopoverTrigger>
@@ -723,19 +777,350 @@ const PassengerPortal = () => {
               </Popover>
             </div>
 
-            {/* Flight Number (optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="flight" className="flex items-center gap-2">
-                <Plane className="w-4 h-4" />
-                Flight Number (optional)
-              </Label>
-              <Input
-                id="flight"
-                value={requestForm.flight_number}
-                onChange={(e) => setRequestForm({ ...requestForm, flight_number: e.target.value.toUpperCase() })}
-                placeholder="e.g., BA123"
-                data-testid="request-flight-input"
-              />
+            {/* Flight Information Toggle */}
+            <div className="space-y-3 border rounded-lg p-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showFlightInfo}
+                  onChange={(e) => setShowFlightInfo(e.target.checked)}
+                  className="rounded"
+                  data-testid="request-flight-info-toggle"
+                />
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <Plane className="w-4 h-4" />
+                  Airport Transfer / Flight Info
+                </span>
+              </label>
+              
+              {showFlightInfo && (
+                <div className="space-y-3 pt-2 border-t">
+                  {/* Flight Number with Lookup */}
+                  <div className="space-y-1">
+                    <Label className="text-xs">Flight Number</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={requestForm.flight_number}
+                        onChange={(e) => setRequestForm({ ...requestForm, flight_number: e.target.value.toUpperCase() })}
+                        placeholder="BA123"
+                        className="flex-1"
+                        data-testid="request-flight-number"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={loadingFlight || !requestForm.flight_number}
+                        onClick={() => handleFlightLookup(false)}
+                        data-testid="lookup-flight-btn"
+                      >
+                        {loadingFlight ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Plane className="w-4 h-4 mr-1" />
+                            Lookup
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    {flightError && (
+                      <p className="text-xs text-red-500">{flightError}</p>
+                    )}
+                  </div>
+
+                  {/* Live Flight Data Display */}
+                  {flightData && !flightError && (
+                    <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-blue-700">
+                          ✈️ Live Flight Data {flightData.is_cached && "(cached)"}
+                        </span>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                          flightData.flight_status === 'landed' ? 'bg-green-100 text-green-700' :
+                          flightData.flight_status === 'active' ? 'bg-blue-100 text-blue-700' :
+                          flightData.flight_status === 'scheduled' ? 'bg-gray-100 text-gray-700' :
+                          flightData.flight_status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {flightData.flight_status?.toUpperCase() || 'UNKNOWN'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">From:</span>
+                          <p className="font-medium">{flightData.departure_airport}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">To:</span>
+                          <p className="font-medium">{flightData.arrival_airport}</p>
+                        </div>
+                      </div>
+                      {flightData.arrival_scheduled && (
+                        <div className="text-xs pt-2 border-t border-blue-200">
+                          <span className="text-muted-foreground">Arrival:</span>
+                          <p className="font-medium">
+                            {new Date(flightData.arrival_scheduled).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            {flightData.arrival_terminal && ` - T${flightData.arrival_terminal}`}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Airline</Label>
+                      <Input
+                        value={requestForm.airline}
+                        onChange={(e) => setRequestForm({ ...requestForm, airline: e.target.value })}
+                        placeholder="British Airways"
+                        data-testid="request-airline"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Terminal</Label>
+                      <Input
+                        value={requestForm.terminal}
+                        onChange={(e) => setRequestForm({ ...requestForm, terminal: e.target.value })}
+                        placeholder="Terminal 5"
+                        data-testid="request-terminal"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Flight Type</Label>
+                    <Select
+                      value={requestForm.flight_type || ""}
+                      onValueChange={(value) => setRequestForm({ ...requestForm, flight_type: value })}
+                    >
+                      <SelectTrigger data-testid="request-flight-type">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="arrival">Arrival (Pickup from Airport)</SelectItem>
+                        <SelectItem value="departure">Departure (Drop-off at Airport)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Return Booking Option */}
+            <div className="space-y-3 border-2 border-amber-300 rounded-lg p-3 bg-amber-50/50">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={requestForm.create_return}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    setRequestForm({ 
+                      ...requestForm, 
+                      create_return: isChecked,
+                      return_pickup_location: isChecked ? requestForm.dropoff_location : "",
+                      return_dropoff_location: isChecked ? requestForm.pickup_location : "",
+                      return_datetime: isChecked ? new Date(requestForm.pickup_datetime.getTime() + 3600000 * 3) : null
+                    });
+                  }}
+                  className="rounded"
+                  data-testid="request-create-return-toggle"
+                />
+                <span className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                  <ArrowLeftRight className="w-4 h-4" />
+                  Create Return Journey
+                </span>
+              </label>
+              
+              {requestForm.create_return && (
+                <div className="pt-3 border-t border-amber-300 space-y-4">
+                  <div className="bg-amber-100 rounded px-2 py-1">
+                    <p className="text-xs font-semibold text-amber-800">RETURN JOURNEY DETAILS</p>
+                  </div>
+                  
+                  {/* Return Pickup Location */}
+                  <div className="space-y-2">
+                    <Label className="text-amber-800">Return Pickup Location</Label>
+                    <AddressAutocomplete
+                      value={requestForm.return_pickup_location}
+                      onChange={(value) => setRequestForm({ ...requestForm, return_pickup_location: value })}
+                      placeholder="Where to pick up for return..."
+                      data-testid="request-return-pickup-input"
+                    />
+                  </div>
+
+                  {/* Return Dropoff Location */}
+                  <div className="space-y-2">
+                    <Label className="text-amber-800">Return Dropoff Location</Label>
+                    <AddressAutocomplete
+                      value={requestForm.return_dropoff_location}
+                      onChange={(value) => setRequestForm({ ...requestForm, return_dropoff_location: value })}
+                      placeholder="Where to drop off on return..."
+                      data-testid="request-return-dropoff-input"
+                    />
+                  </div>
+
+                  {/* Return Date & Time */}
+                  <div className="space-y-2">
+                    <Label className="text-amber-800">Return Date & Time</Label>
+                    <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-white border-amber-300",
+                            !requestForm.return_datetime && "text-muted-foreground"
+                          )}
+                          data-testid="request-return-datetime-btn"
+                        >
+                          <Clock className="mr-2 h-4 w-4 text-amber-600" />
+                          {requestForm.return_datetime 
+                            ? format(requestForm.return_datetime, "dd/MM/yy 'at' HH:mm") 
+                            : "Pick return date & time"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={requestForm.return_datetime}
+                          onSelect={(date) => {
+                            if (date) {
+                              const current = requestForm.return_datetime || new Date();
+                              date.setHours(current.getHours(), current.getMinutes());
+                              setRequestForm({ ...requestForm, return_datetime: date });
+                            }
+                          }}
+                          disabled={(date) => date < new Date()}
+                        />
+                        <div className="p-3 border-t">
+                          <Input
+                            type="time"
+                            value={requestForm.return_datetime ? format(requestForm.return_datetime, "HH:mm") : "12:00"}
+                            onChange={(e) => {
+                              const [hours, minutes] = e.target.value.split(':');
+                              const newDate = new Date(requestForm.return_datetime || new Date());
+                              newDate.setHours(parseInt(hours), parseInt(minutes));
+                              setRequestForm({ ...requestForm, return_datetime: newDate });
+                            }}
+                            data-testid="request-return-time-input"
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Return Flight Info Toggle */}
+                  <div className="space-y-3 border rounded-lg p-3 bg-white">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showReturnFlightInfo}
+                        onChange={(e) => setShowReturnFlightInfo(e.target.checked)}
+                        className="rounded"
+                        data-testid="request-return-flight-info-toggle"
+                      />
+                      <span className="text-xs font-medium flex items-center gap-2">
+                        <Plane className="w-3 h-3" />
+                        Return Flight Info
+                      </span>
+                    </label>
+                    
+                    {showReturnFlightInfo && (
+                      <div className="space-y-3 pt-2 border-t">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-amber-800">Return Flight Number</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={requestForm.return_flight_number}
+                              onChange={(e) => setRequestForm({ ...requestForm, return_flight_number: e.target.value.toUpperCase() })}
+                              placeholder="BA456"
+                              className="flex-1 bg-white"
+                              data-testid="request-return-flight-number"
+                            />
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              disabled={loadingReturnFlight || !requestForm.return_flight_number}
+                              onClick={() => handleFlightLookup(true)}
+                              data-testid="lookup-return-flight-btn"
+                            >
+                              {loadingReturnFlight ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Plane className="w-4 h-4 mr-1" />
+                                  Lookup
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          {returnFlightError && (
+                            <p className="text-xs text-red-500">{returnFlightError}</p>
+                          )}
+                        </div>
+
+                        {/* Live Return Flight Data Display */}
+                        {returnFlightData && !returnFlightError && (
+                          <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-blue-700">
+                                ✈️ Return Flight Data {returnFlightData.is_cached && "(cached)"}
+                              </span>
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                                returnFlightData.flight_status === 'landed' ? 'bg-green-100 text-green-700' :
+                                returnFlightData.flight_status === 'active' ? 'bg-blue-100 text-blue-700' :
+                                returnFlightData.flight_status === 'scheduled' ? 'bg-gray-100 text-gray-700' :
+                                returnFlightData.flight_status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {returnFlightData.flight_status?.toUpperCase() || 'UNKNOWN'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">From:</span>
+                                <p className="font-medium">{returnFlightData.departure_airport}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">To:</span>
+                                <p className="font-medium">{returnFlightData.arrival_airport}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-amber-800">Airline</Label>
+                            <Input
+                              value={requestForm.return_airline}
+                              onChange={(e) => setRequestForm({ ...requestForm, return_airline: e.target.value })}
+                              placeholder="British Airways"
+                              className="bg-white"
+                              data-testid="request-return-airline"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-amber-800">Terminal</Label>
+                            <Input
+                              value={requestForm.return_terminal}
+                              onChange={(e) => setRequestForm({ ...requestForm, return_terminal: e.target.value })}
+                              placeholder="Terminal 5"
+                              className="bg-white"
+                              data-testid="request-return-terminal"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-amber-700 bg-amber-100 rounded p-2">
+                    ↩️ A separate return booking request will be submitted
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Notes */}
@@ -745,7 +1130,7 @@ const PassengerPortal = () => {
                 id="notes"
                 value={requestForm.notes}
                 onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
-                placeholder="Any special requirements..."
+                placeholder="Any special requirements (luggage, child seats, etc.)..."
                 rows={3}
                 data-testid="request-notes-input"
               />
@@ -753,7 +1138,7 @@ const PassengerPortal = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRequestForm(false)}>
+            <Button variant="outline" onClick={() => { resetRequestForm(); setShowRequestForm(false); }}>
               Cancel
             </Button>
             <Button 

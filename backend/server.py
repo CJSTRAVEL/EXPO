@@ -218,6 +218,7 @@ class BookingCreate(BookingBase):
     return_pickup_location: Optional[str] = None  # Custom return pickup
     return_dropoff_location: Optional[str] = None  # Custom return dropoff
     return_datetime: Optional[datetime] = None  # Return date/time
+    return_flight_info: Optional[FlightInfo] = None  # Flight info for return journey
 
 class BookingUpdate(BaseModel):
     first_name: Optional[str] = None

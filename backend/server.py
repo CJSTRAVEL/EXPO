@@ -475,6 +475,113 @@ async def delete_driver(driver_id: str):
         raise HTTPException(status_code=404, detail="Driver not found")
     return {"message": "Driver deleted successfully"}
 
+# ========== CLIENT ENDPOINTS ==========
+async def generate_client_account_no():
+    """Generate sequential client account number like E001, E002, etc."""
+    # Find the highest existing account number
+    clients = await db.clients.find({}, {"account_no": 1}).to_list(1000)
+    max_num = 0
+    for client in clients:
+        account_no = client.get('account_no', '')
+        if account_no and account_no.startswith('E'):
+            try:
+                num = int(account_no[1:])
+                if num > max_num:
+                    max_num = num
+            except ValueError:
+                pass
+    return f"E{str(max_num + 1).zfill(3)}"
+
+@api_router.get("/clients")
+async def get_clients():
+    """Get all clients with their booking counts"""
+    clients = await db.clients.find({}, {"_id": 0}).to_list(1000)
+    for client in clients:
+        if isinstance(client.get('created_at'), str):
+            client['created_at'] = datetime.fromisoformat(client['created_at'])
+        # Count bookings for this client
+        booking_count = await db.bookings.count_documents({"client_id": client['id']})
+        client['booking_count'] = booking_count
+        # Calculate total invoice amount
+        pipeline = [
+            {"$match": {"client_id": client['id']}},
+            {"$group": {"_id": None, "total": {"$sum": "$fare"}}}
+        ]
+        result = await db.bookings.aggregate(pipeline).to_list(1)
+        client['total_invoice'] = result[0]['total'] if result else 0
+    return clients
+
+@api_router.get("/clients/{client_id}")
+async def get_client(client_id: str):
+    """Get a specific client by ID"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    if isinstance(client.get('created_at'), str):
+        client['created_at'] = datetime.fromisoformat(client['created_at'])
+    # Get booking count and total
+    client['booking_count'] = await db.bookings.count_documents({"client_id": client_id})
+    pipeline = [
+        {"$match": {"client_id": client_id}},
+        {"$group": {"_id": None, "total": {"$sum": "$fare"}}}
+    ]
+    result = await db.bookings.aggregate(pipeline).to_list(1)
+    client['total_invoice'] = result[0]['total'] if result else 0
+    return client
+
+@api_router.get("/clients/{client_id}/bookings")
+async def get_client_bookings(client_id: str):
+    """Get all bookings for a specific client"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    bookings = await db.bookings.find({"client_id": client_id}, {"_id": 0}).to_list(1000)
+    for booking in bookings:
+        if isinstance(booking.get('created_at'), str):
+            booking['created_at'] = datetime.fromisoformat(booking['created_at'])
+        if isinstance(booking.get('booking_datetime'), str):
+            booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
+    return bookings
+
+@api_router.post("/clients")
+async def create_client(client: ClientCreate):
+    """Create a new client"""
+    # Generate account number
+    account_no = await generate_client_account_no()
+    
+    client_obj = Client(**client.model_dump())
+    client_obj.account_no = account_no
+    
+    doc = client_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.clients.insert_one(doc)
+    
+    return client_obj
+
+@api_router.put("/clients/{client_id}")
+async def update_client(client_id: str, client_update: ClientUpdate):
+    """Update a client"""
+    existing = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    update_data = {k: v for k, v in client_update.model_dump().items() if v is not None}
+    if update_data:
+        await db.clients.update_one({"id": client_id}, {"$set": update_data})
+    
+    updated = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    return updated
+
+@api_router.delete("/clients/{client_id}")
+async def delete_client(client_id: str):
+    """Delete a client"""
+    result = await db.clients.delete_one({"id": client_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return {"message": "Client deleted successfully"}
+
 # ========== SMS HELPER FUNCTION ==========
 def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str, 
                      pickup: str = None, dropoff: str = None, 

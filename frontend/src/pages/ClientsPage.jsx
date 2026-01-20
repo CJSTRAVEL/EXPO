@@ -79,6 +79,13 @@ const ClientsPage = () => {
     }
   }, [selectedClient]);
 
+  // Fetch invoice preview when modal opens or date range changes
+  useEffect(() => {
+    if (showInvoiceModal && selectedClient) {
+      fetchInvoicePreview();
+    }
+  }, [showInvoiceModal, invoiceDateRange, selectedClient]);
+
   const fetchClients = async () => {
     try {
       const response = await axios.get(`${API}/clients`);

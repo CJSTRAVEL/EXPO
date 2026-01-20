@@ -590,8 +590,41 @@ async def delete_client(client_id: str):
         raise HTTPException(status_code=404, detail="Client not found")
     return {"message": "Client deleted successfully"}
 
-@api_router.get("/clients/{client_id}/invoice")
-async def generate_client_invoice(client_id: str, start_date: str = None, end_date: str = None):
+@api_router.get("/clients/{client_id}/invoice/preview")
+async def get_invoice_preview(client_id: str, start_date: str = None, end_date: str = None):
+    """Get bookings preview for invoice generation"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Build query for bookings
+    query = {"client_id": client_id}
+    if start_date or end_date:
+        date_query = {}
+        if start_date:
+            date_query["$gte"] = start_date
+        if end_date:
+            date_query["$lte"] = end_date + "T23:59:59"
+        if date_query:
+            query["booking_datetime"] = date_query
+    
+    # Get bookings
+    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    
+    # Convert datetime strings for JSON serialization
+    for booking in bookings:
+        if isinstance(booking.get('created_at'), str):
+            booking['created_at'] = booking['created_at']
+        if isinstance(booking.get('booking_datetime'), str):
+            booking['booking_datetime'] = booking['booking_datetime']
+    
+    return bookings
+
+class InvoiceRequest(BaseModel):
+    custom_prices: Optional[dict] = None
+
+@api_router.post("/clients/{client_id}/invoice")
+async def generate_client_invoice(client_id: str, request: InvoiceRequest = None, start_date: str = None, end_date: str = None):
     """Generate PDF invoice for a client's bookings within a date range"""
     # Get client details
     client = await db.clients.find_one({"id": client_id}, {"_id": 0})
@@ -611,6 +644,13 @@ async def generate_client_invoice(client_id: str, start_date: str = None, end_da
     
     # Get bookings
     bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    
+    # Apply custom prices if provided
+    custom_prices = request.custom_prices if request else None
+    if custom_prices:
+        for booking in bookings:
+            if booking['id'] in custom_prices:
+                booking['fare'] = custom_prices[booking['id']]
     
     # Create PDF
     buffer = io.BytesIO()

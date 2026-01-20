@@ -453,7 +453,7 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-muted-foreground mb-4">
-            Assign a driver to booking for {booking?.customer_name}
+            Assign a driver to booking for {booking?.customer_name || `${booking?.first_name || ''} ${booking?.last_name || ''}`.trim()}
           </p>
           
           {!showAddDriver ? (

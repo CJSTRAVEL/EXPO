@@ -1272,7 +1272,7 @@ const BookingsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Booking</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this booking for {deleteBooking?.customer_name}? This action cannot be undone.
+              Are you sure you want to delete this booking for {deleteBooking?.customer_name || `${deleteBooking?.first_name || ''} ${deleteBooking?.last_name || ''}`.trim()}? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

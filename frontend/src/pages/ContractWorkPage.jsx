@@ -835,7 +835,7 @@ const ContractWorkPage = () => {
               {formData.client_id && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs text-amber-700">
                   <CreditCard className="w-3 h-3 inline mr-1" />
-                  This booking will be added to the client's account for invoicing
+                  This booking will be added to the client&apos;s account for invoicing
                 </div>
               )}
             </div>
@@ -1201,7 +1201,7 @@ const ContractWorkPage = () => {
             <AlertDialogTitle>Delete Booking</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete booking {deleteBooking?.booking_id}? 
-              This will remove it from the client's account.
+              This will remove it from the client&apos;s account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

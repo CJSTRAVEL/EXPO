@@ -251,7 +251,7 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
                 </Select>
                 {formData.client_id && (
                   <p className="text-xs text-muted-foreground">
-                    This booking will be added to the client's invoice
+                    This booking will be added to the client&apos;s invoice
                   </p>
                 )}
               </div>

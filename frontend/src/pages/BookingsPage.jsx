@@ -316,6 +316,60 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
               />
             </div>
 
+            {/* Additional Stops (Multi-drop) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Additional Stops</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ 
+                    ...formData, 
+                    additional_stops: [...formData.additional_stops, ""] 
+                  })}
+                  data-testid="add-stop-btn"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Stop
+                </Button>
+              </div>
+              {formData.additional_stops.map((stop, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    <AddressAutocomplete
+                      value={stop}
+                      onChange={(value) => {
+                        const newStops = [...formData.additional_stops];
+                        newStops[index] = value;
+                        setFormData({ ...formData, additional_stops: newStops });
+                      }}
+                      placeholder={`Stop ${index + 1}`}
+                      data-testid={`booking-stop-${index}-input`}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 text-destructive hover:text-destructive"
+                    onClick={() => {
+                      const newStops = formData.additional_stops.filter((_, i) => i !== index);
+                      setFormData({ ...formData, additional_stops: newStops });
+                    }}
+                    data-testid={`remove-stop-${index}-btn`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              {formData.additional_stops.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Route: Pickup → {formData.additional_stops.length} stop(s) → Final Dropoff
+                </p>
+              )}
+            </div>
+
             {/* Route Information Display */}
             {(loadingRoute || routeInfo) && (
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg" data-testid="route-info">

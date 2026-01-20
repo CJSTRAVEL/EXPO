@@ -137,6 +137,8 @@ const ContractWorkPage = () => {
         first_name: "",
         last_name: "",
         customer_phone: preselectedClient?.mobile || "",
+        passenger_count: 1,
+        luggage_count: 0,
         pickup_location: preselectedClient?.address ? 
           `${preselectedClient.address}, ${preselectedClient.town_city || ''} ${preselectedClient.post_code || ''}`.trim() : "",
         dropoff_location: "",

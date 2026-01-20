@@ -7,6 +7,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 import io
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
@@ -43,6 +46,13 @@ VONAGE_API_KEY = os.environ.get('VONAGE_API_KEY')
 VONAGE_API_SECRET = os.environ.get('VONAGE_API_SECRET')
 VONAGE_FROM_NUMBER = os.environ.get('VONAGE_FROM_NUMBER', 'HireFleet')
 
+# SMTP Email Configuration
+SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp-mail.outlook.com')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
+SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
+SMTP_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL')
+
 # Initialize Vonage client
 vonage_client = None
 if VONAGE_API_KEY and VONAGE_API_SECRET:
@@ -53,6 +63,13 @@ if VONAGE_API_KEY and VONAGE_API_SECRET:
         logging.info("Vonage SMS client initialized successfully")
     except Exception as e:
         logging.error(f"Failed to initialize Vonage client: {e}")
+
+# Check SMTP configuration
+smtp_configured = bool(SMTP_USERNAME and SMTP_PASSWORD and SMTP_FROM_EMAIL)
+if smtp_configured:
+    logging.info("SMTP email configured successfully")
+else:
+    logging.warning("SMTP email not configured - email notifications disabled")
 
 # AviationStack API Key for flight tracking
 AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')

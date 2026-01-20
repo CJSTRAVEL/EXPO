@@ -363,6 +363,18 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="customer_email">Email (for confirmation)</Label>
+              <Input
+                id="customer_email"
+                type="email"
+                value={formData.customer_email}
+                onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
+                placeholder="customer@example.com"
+                data-testid="booking-customer-email-input"
+              />
+            </div>
+
             {/* PAX and Cases */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

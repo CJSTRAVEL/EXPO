@@ -731,7 +731,7 @@ async def get_booking_by_short_id(short_id: str):
         booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
     return booking
 
-@api_router.put("/bookings/{booking_id}", response_model=Booking)
+@api_router.put("/bookings/{booking_id}", response_model=BookingResponse)
 async def update_booking(booking_id: str, booking_update: BookingUpdate):
     existing = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if not existing:
@@ -740,6 +740,12 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
     update_data = {k: v for k, v in booking_update.model_dump().items() if v is not None}
     if 'booking_datetime' in update_data and isinstance(update_data['booking_datetime'], datetime):
         update_data['booking_datetime'] = update_data['booking_datetime'].isoformat()
+    
+    # Update customer_name if first_name or last_name changed
+    if 'first_name' in update_data or 'last_name' in update_data:
+        first = update_data.get('first_name') or existing.get('first_name') or ''
+        last = update_data.get('last_name') or existing.get('last_name') or ''
+        update_data['customer_name'] = f"{first} {last}".strip()
     
     if update_data:
         await db.bookings.update_one({"id": booking_id}, {"$set": update_data})

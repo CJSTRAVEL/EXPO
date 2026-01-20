@@ -69,13 +69,12 @@ const Sidebar = () => {
   const location = useLocation();
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   
-  // Hide sidebar on public booking details page
-  if (location.pathname.startsWith('/booking/') || location.pathname.startsWith('/b/')) {
-    return null;
-  }
+  const isPublicPage = location.pathname.startsWith('/booking/') || location.pathname.startsWith('/b/');
 
   // Fetch pending requests count
   useEffect(() => {
+    if (isPublicPage) return;
+    
     const fetchPendingRequests = async () => {
       try {
         const response = await axios.get(`${API}/api/admin/booking-requests`);
@@ -89,7 +88,12 @@ const Sidebar = () => {
     // Refresh count every 30 seconds
     const interval = setInterval(fetchPendingRequests, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isPublicPage]);
+
+  // Hide sidebar on public booking details page
+  if (isPublicPage) {
+    return null;
+  }
   
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -108,11 +112,11 @@ const Sidebar = () => {
         <div className="flex items-center gap-3">
           <img 
             src="https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png" 
-            alt="CJ's Executive Travel" 
+            alt="CJ&apos;s Executive Travel" 
             className="w-12 h-12 object-contain"
           />
           <div>
-            <h1 className="text-base font-bold tracking-tight leading-tight">CJ's Executive</h1>
+            <h1 className="text-base font-bold tracking-tight leading-tight">CJ&apos;s Executive</h1>
             <p className="text-xs text-muted-foreground">Travel Limited</p>
           </div>
         </div>

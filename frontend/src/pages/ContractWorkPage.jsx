@@ -902,6 +902,17 @@ const ContractWorkPage = () => {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Email (for confirmation)</Label>
+              <Input
+                type="email"
+                value={formData.customer_email}
+                onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
+                placeholder="customer@example.com"
+                data-testid="contract-email"
+              />
+            </div>
+
             {/* PAX and Cases */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

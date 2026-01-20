@@ -109,6 +109,8 @@ const ContractWorkPage = () => {
         first_name: firstName,
         last_name: lastName,
         customer_phone: booking.customer_phone || "",
+        passenger_count: booking.passenger_count || 1,
+        luggage_count: booking.luggage_count || 0,
         pickup_location: booking.pickup_location || "",
         dropoff_location: booking.dropoff_location || "",
         additional_stops: booking.additional_stops || [],

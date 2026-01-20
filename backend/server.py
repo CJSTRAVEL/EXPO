@@ -591,6 +591,34 @@ async def delete_passenger(passenger_id: str):
     
     return {"message": "Passenger account deleted successfully"}
 
+@api_router.post("/admin/passengers")
+async def create_passenger_admin(data: PassengerRegister):
+    """Create a new passenger account (admin only)"""
+    # Normalize phone number
+    phone = data.phone.strip().replace(" ", "")
+    if phone.startswith("0"):
+        phone = "+44" + phone[1:]
+    elif not phone.startswith("+"):
+        phone = "+44" + phone
+    
+    # Check if phone already registered
+    existing = await db.passengers.find_one({"phone": phone})
+    if existing:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+    
+    # Create passenger
+    passenger = Passenger(
+        name=data.name,
+        phone=phone,
+        password_hash=hash_password(data.password)
+    )
+    
+    doc = passenger.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.passengers.insert_one(doc)
+    
+    return {"message": "Passenger account created successfully", "id": passenger.id}
+
 # ========== BOOKING ENDPOINTS ==========
 @api_router.post("/bookings", response_model=Booking)
 async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):

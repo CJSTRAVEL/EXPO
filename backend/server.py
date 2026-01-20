@@ -54,6 +54,9 @@ if VONAGE_API_KEY and VONAGE_API_SECRET:
     except Exception as e:
         logging.error(f"Failed to initialize Vonage client: {e}")
 
+# AviationStack API Key for flight tracking
+AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
+
 # Security
 security = HTTPBearer(auto_error=False)
 

@@ -168,10 +168,16 @@ const PassengerPortal = () => {
 
   const fetchBookings = async (token) => {
     try {
-      const response = await axios.get(`${API}/passenger/bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBookings(response.data);
+      const [bookingsRes, requestsRes] = await Promise.all([
+        axios.get(`${API}/passenger/bookings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/passenger/booking-requests`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: [] })) // Handle if endpoint doesn't exist yet
+      ]);
+      setBookings(bookingsRes.data);
+      setBookingRequests(requestsRes.data || []);
     } catch (error) {
       if (error.response?.status === 401) {
         handleLogout();
@@ -180,6 +186,39 @@ const PassengerPortal = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmitRequest = async () => {
+    if (!requestForm.pickup_location || !requestForm.dropoff_location) {
+      toast.error("Please enter pickup and drop-off locations");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem("passengerToken");
+      await axios.post(`${API}/passenger/booking-requests`, {
+        ...requestForm,
+        pickup_datetime: requestForm.pickup_datetime.toISOString(),
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success("Booking request submitted! We'll confirm shortly.");
+      setShowRequestForm(false);
+      setRequestForm({
+        pickup_location: "",
+        dropoff_location: "",
+        pickup_datetime: new Date(),
+        notes: "",
+        flight_number: "",
+      });
+      fetchBookings(token);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to submit request");
+    } finally {
+      setSubmitting(false);
     }
   };
 

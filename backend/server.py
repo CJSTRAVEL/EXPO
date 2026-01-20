@@ -462,6 +462,117 @@ async def lookup_postcode(postcode: str):
         logging.error(f"Postcode lookup error: {e}")
         return {"postcode": postcode, "addresses": [], "error": str(e)}
 
+# ========== FLIGHT TRACKING ENDPOINT ==========
+class FlightInfoResponse(BaseModel):
+    flight_number: Optional[str] = None
+    airline: Optional[str] = None
+    airline_iata: Optional[str] = None
+    departure_airport: Optional[str] = None
+    departure_iata: Optional[str] = None
+    arrival_airport: Optional[str] = None
+    arrival_iata: Optional[str] = None
+    departure_scheduled: Optional[str] = None
+    departure_actual: Optional[str] = None
+    arrival_scheduled: Optional[str] = None
+    arrival_actual: Optional[str] = None
+    departure_terminal: Optional[str] = None
+    arrival_terminal: Optional[str] = None
+    departure_gate: Optional[str] = None
+    arrival_gate: Optional[str] = None
+    flight_status: Optional[str] = None
+    flight_date: Optional[str] = None
+    error: Optional[str] = None
+
+@api_router.get("/flight/{flight_number}")
+async def lookup_flight(flight_number: str):
+    """Look up live flight data from AviationStack API"""
+    if not AVIATIONSTACK_API_KEY:
+        return {"error": "Flight tracking not configured"}
+    
+    # Clean flight number (remove spaces, uppercase)
+    flight_number = flight_number.strip().upper().replace(" ", "")
+    
+    # Check cache first (store in MongoDB for 30 mins)
+    cached = await db.flight_cache.find_one({
+        "flight_number": flight_number,
+        "cached_at": {"$gte": datetime.now(timezone.utc) - timedelta(minutes=30)}
+    })
+    
+    if cached:
+        logging.info(f"Flight {flight_number} found in cache")
+        del cached["_id"]
+        del cached["cached_at"]
+        cached["is_cached"] = True
+        return cached
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                "http://api.aviationstack.com/v1/flights",
+                params={
+                    "access_key": AVIATIONSTACK_API_KEY,
+                    "flight_iata": flight_number,
+                    "limit": 1
+                }
+            )
+            
+            if response.status_code != 200:
+                logging.error(f"AviationStack API error: {response.status_code}")
+                return {"error": "Flight lookup failed", "flight_number": flight_number}
+            
+            data = response.json()
+            
+            if data.get("error"):
+                logging.error(f"AviationStack error: {data['error']}")
+                return {"error": data["error"].get("message", "API error"), "flight_number": flight_number}
+            
+            if not data.get("data") or len(data["data"]) == 0:
+                return {"error": "Flight not found", "flight_number": flight_number}
+            
+            flight = data["data"][0]
+            
+            # Parse the response
+            result = {
+                "flight_number": flight.get("flight", {}).get("iata", flight_number),
+                "airline": flight.get("airline", {}).get("name"),
+                "airline_iata": flight.get("airline", {}).get("iata"),
+                "departure_airport": flight.get("departure", {}).get("airport"),
+                "departure_iata": flight.get("departure", {}).get("iata"),
+                "arrival_airport": flight.get("arrival", {}).get("airport"),
+                "arrival_iata": flight.get("arrival", {}).get("iata"),
+                "departure_scheduled": flight.get("departure", {}).get("scheduled"),
+                "departure_actual": flight.get("departure", {}).get("actual"),
+                "departure_estimated": flight.get("departure", {}).get("estimated"),
+                "arrival_scheduled": flight.get("arrival", {}).get("scheduled"),
+                "arrival_actual": flight.get("arrival", {}).get("actual"),
+                "arrival_estimated": flight.get("arrival", {}).get("estimated"),
+                "departure_terminal": flight.get("departure", {}).get("terminal"),
+                "arrival_terminal": flight.get("arrival", {}).get("terminal"),
+                "departure_gate": flight.get("departure", {}).get("gate"),
+                "arrival_gate": flight.get("arrival", {}).get("gate"),
+                "flight_status": flight.get("flight_status"),
+                "flight_date": flight.get("flight_date"),
+                "is_cached": False
+            }
+            
+            # Cache the result
+            cache_doc = {**result, "cached_at": datetime.now(timezone.utc)}
+            await db.flight_cache.update_one(
+                {"flight_number": flight_number},
+                {"$set": cache_doc},
+                upsert=True
+            )
+            
+            logging.info(f"Flight {flight_number} fetched from API: {result.get('flight_status')}")
+            return result
+            
+    except httpx.TimeoutException:
+        logging.error(f"Flight lookup timeout for {flight_number}")
+        return {"error": "Flight lookup timed out", "flight_number": flight_number}
+    except Exception as e:
+        logging.error(f"Flight lookup error: {e}")
+        return {"error": str(e), "flight_number": flight_number}
+
 # ========== DRIVER ENDPOINTS ==========
 @api_router.post("/drivers", response_model=Driver)
 async def create_driver(driver: DriverCreate):

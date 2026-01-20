@@ -81,6 +81,15 @@ Build a private hire application where you can add bookings and assign them to d
 - `GET /api/stats` - Dashboard statistics
 - `GET /api/postcode/{postcode}` - UK postcode lookup (proxy to Getaddress.io)
 - `GET /api/directions` - Route calculation (proxy to Google Maps)
+- `GET /api/bookings/by-short-id/{short_id}` - Get booking by short ID (CJ-001)
+- `POST /api/bookings/{booking_id}/resend-sms` - Resend SMS confirmation
+- `POST /api/passenger/register` - Register new passenger account
+- `POST /api/passenger/login` - Passenger login
+- `GET /api/passenger/bookings` - Get authenticated passenger's bookings
+- `GET /api/admin/passengers` - Get all passengers (admin)
+- `POST /api/admin/passengers` - Create passenger (admin)
+- `PUT /api/admin/passengers/{id}/password` - Change passenger password (admin)
+- `DELETE /api/admin/passengers/{id}` - Delete passenger (admin)
 
 ## Prioritized Backlog
 

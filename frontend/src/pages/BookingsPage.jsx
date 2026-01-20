@@ -868,7 +868,9 @@ const BookingsPage = () => {
         axios.get(`${API}/drivers`),
         axios.get(`${API}/clients`),
       ]);
-      setBookings(bookingsRes.data);
+      // Filter out contract work bookings (those linked to clients)
+      const regularBookings = bookingsRes.data.filter(b => !b.client_id);
+      setBookings(regularBookings);
       setDrivers(driversRes.data);
       setClients(clientsRes.data);
     } catch (error) {

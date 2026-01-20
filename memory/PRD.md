@@ -74,6 +74,7 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Split Customer Name** (Jan 20, 2026) - New booking form now has separate First Name and Last Name fields (backward compatible with existing bookings)
 - ✅ **Clients Page** (Jan 20, 2026) - B2B client account management with auto-generated account numbers (E001, E002...), client types, payment methods, and invoice tracking
 - ✅ **Booking-Client Integration** (Jan 20, 2026) - Bookings can be linked to clients for invoicing purposes
+- ✅ **Generate Invoice PDF** (Jan 20, 2026) - Download professional PDF invoices for clients with customizable date range, quick select options (This Month, Last Month, All Time), and full booking details
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

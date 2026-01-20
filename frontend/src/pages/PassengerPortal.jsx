@@ -256,7 +256,7 @@ const PassengerPortal = () => {
               className="w-10 h-10 object-contain"
             />
             <div>
-              <h1 className="font-bold text-slate-800">CJ's Executive Travel</h1>
+              <h1 className="font-bold text-slate-800">CJ&apos;s Executive Travel</h1>
               <p className="text-xs text-muted-foreground">Passenger Portal</p>
             </div>
           </div>

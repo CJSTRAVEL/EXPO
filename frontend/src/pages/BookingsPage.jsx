@@ -75,6 +75,9 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [showFlightInfo, setShowFlightInfo] = useState(false);
+  const [loadingFlight, setLoadingFlight] = useState(false);
+  const [flightData, setFlightData] = useState(null);
+  const [flightError, setFlightError] = useState(null);
 
   useEffect(() => {
     if (booking) {

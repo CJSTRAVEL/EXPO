@@ -1486,104 +1486,129 @@ const BookingsPage = () => {
                 
                 {/* Bookings for this date */}
                 <div className="space-y-2">
-                  {groupedBookings[date].map((booking) => (
-                    <div
-                      key={booking.id}
-                      className={`bg-white rounded-lg border-l-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${getStatusColor(booking.status)}`}
-                      data-testid={`booking-row-${booking.id}`}
-                      onClick={() => setViewBooking(booking)}
-                    >
-                      <div className="p-4">
-                        <div className="grid grid-cols-12 gap-4 items-center">
-                          {/* Time & Booking ID */}
-                          <div className="col-span-2 lg:col-span-1">
-                            <p className="text-lg font-bold text-slate-800">
-                              {format(new Date(booking.booking_datetime), "HH:mm")}
-                            </p>
-                            <p className="text-xs font-mono text-primary font-semibold" data-testid={`booking-id-${booking.id}`}>
-                              {booking.booking_id || '-'}
-                            </p>
-                          </div>
-
-                          {/* Pickup & Dropoff */}
-                          <div className="col-span-4 lg:col-span-4">
-                            <div className="flex items-start gap-2">
-                              <div className="flex flex-col items-center">
-                                <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow"></div>
-                                <div className="w-0.5 h-8 bg-slate-300"></div>
-                                <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow"></div>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-800 truncate">{booking.pickup_location}</p>
-                                <div className="h-4"></div>
-                                <p className="text-sm text-slate-600 truncate">{booking.dropoff_location}</p>
-                              </div>
+                  {groupedBookings[date].map((booking) => {
+                    // Skip return bookings as they'll be shown under their parent
+                    if (booking.is_return) {
+                      // Check if parent is in the same date group - if so, skip (shown with parent)
+                      const parentBooking = bookings.find(b => b.id === booking.linked_booking_id);
+                      if (parentBooking) {
+                        const parentDate = format(new Date(parentBooking.booking_datetime), "yyyy-MM-dd");
+                        if (parentDate === date || groupedBookings[parentDate]?.some(b => b.id === parentBooking.id)) {
+                          return null; // Will be shown with parent
+                        }
+                      }
+                    }
+                    
+                    const linkedReturn = getLinkedReturnBooking(booking);
+                    const hasReturnJourney = linkedReturn !== null;
+                    
+                    return (
+                      <div key={booking.id} className="space-y-0">
+                        {/* Main Booking Card */}
+                        <div
+                          className={`bg-white rounded-lg ${hasReturnJourney ? 'rounded-b-none' : ''} border-l-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${getStatusColor(booking.status)}`}
+                          data-testid={`booking-row-${booking.id}`}
+                          onClick={() => setViewBooking(booking)}
+                        >
+                          {/* Outbound Label for linked journeys */}
+                          {hasReturnJourney && (
+                            <div className="px-4 pt-2 pb-0">
+                              <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                                OUTBOUND
+                              </span>
                             </div>
-                          </div>
-
-                          {/* Customer */}
-                          <div className="col-span-2 lg:col-span-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                <User className="w-4 h-4 text-primary" />
+                          )}
+                          <div className="p-4 pt-2">
+                            <div className="grid grid-cols-12 gap-4 items-center">
+                              {/* Time & Booking ID */}
+                              <div className="col-span-2 lg:col-span-1">
+                                <p className="text-lg font-bold text-slate-800">
+                                  {format(new Date(booking.booking_datetime), "HH:mm")}
+                                </p>
+                                <p className="text-xs font-mono text-primary font-semibold" data-testid={`booking-id-${booking.id}`}>
+                                  {booking.booking_id || '-'}
+                                </p>
                               </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-800 truncate">{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</p>
-                                <p className="text-xs text-muted-foreground truncate">{booking.customer_phone}</p>
-                              </div>
-                            </div>
-                          </div>
 
-                          {/* Driver */}
-                          <div className="col-span-2 lg:col-span-2" onClick={(e) => e.stopPropagation()}>
-                            {booking.driver_id ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                  <UserCheck className="w-4 h-4 text-blue-600" />
+                              {/* Pickup & Dropoff */}
+                              <div className="col-span-4 lg:col-span-4">
+                                <div className="flex items-start gap-2">
+                                  <div className="flex flex-col items-center">
+                                    <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow"></div>
+                                    <div className="w-0.5 h-8 bg-slate-300"></div>
+                                    <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-white shadow"></div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-800 truncate">{booking.pickup_location}</p>
+                                    <div className="h-4"></div>
+                                    <p className="text-sm text-slate-600 truncate">{booking.dropoff_location}</p>
+                                  </div>
                                 </div>
-                                <span className="text-sm font-medium text-slate-700 truncate">{getDriverName(booking.driver_id)}</span>
                               </div>
-                            ) : (
-                              <button
-                                onClick={() => setAssignBooking(booking)}
-                                className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
-                                data-testid={`quick-assign-${booking.id}`}
-                              >
-                                <Plus className="w-4 h-4" />
-                                Assign Driver
-                              </button>
-                            )}
-                          </div>
 
-                          {/* Status & Actions */}
-                          <div className="col-span-2 lg:col-span-3 flex items-center justify-end gap-3">
-                            {booking.distance_miles && (
-                              <span className="text-xs text-slate-500 hidden lg:inline">
-                                {booking.distance_miles} mi
-                              </span>
-                            )}
-                            {booking.fare && (
-                              <span className="text-sm font-semibold text-green-600">
-                                £{booking.fare.toFixed(2)}
-                              </span>
-                            )}
-                            {getStatusBadge(booking.status)}
-                            <div onClick={(e) => e.stopPropagation()}>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`booking-actions-${booking.id}`}>
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => setViewBooking(booking)} data-testid={`view-booking-${booking.id}`}>
-                                    <MapPin className="w-4 h-4 mr-2" />
-                                    View
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(booking)} data-testid={`edit-booking-${booking.id}`}>
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
+                              {/* Customer */}
+                              <div className="col-span-2 lg:col-span-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <User className="w-4 h-4 text-primary" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-slate-800 truncate">{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{booking.customer_phone}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Driver */}
+                              <div className="col-span-2 lg:col-span-2" onClick={(e) => e.stopPropagation()}>
+                                {booking.driver_id ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                      <UserCheck className="w-4 h-4 text-blue-600" />
+                                    </div>
+                                    <span className="text-sm font-medium text-slate-700 truncate">{getDriverName(booking.driver_id)}</span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setAssignBooking(booking)}
+                                    className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                                    data-testid={`quick-assign-${booking.id}`}
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                    Assign Driver
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Status & Actions */}
+                              <div className="col-span-2 lg:col-span-3 flex items-center justify-end gap-3">
+                                {booking.distance_miles && (
+                                  <span className="text-xs text-slate-500 hidden lg:inline">
+                                    {booking.distance_miles} mi
+                                  </span>
+                                )}
+                                {booking.fare && (
+                                  <span className="text-sm font-semibold text-green-600">
+                                    £{booking.fare.toFixed(2)}
+                                  </span>
+                                )}
+                                {getStatusBadge(booking.status)}
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`booking-actions-${booking.id}`}>
+                                        <MoreHorizontal className="w-4 h-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => setViewBooking(booking)} data-testid={`view-booking-${booking.id}`}>
+                                        <MapPin className="w-4 h-4 mr-2" />
+                                        View
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleEdit(booking)} data-testid={`edit-booking-${booking.id}`}>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
                                   {booking.status === 'pending' && (
                                     <DropdownMenuItem onClick={() => setAssignBooking(booking)} data-testid={`assign-booking-${booking.id}`}>
                                       <UserCheck className="w-4 h-4 mr-2" />

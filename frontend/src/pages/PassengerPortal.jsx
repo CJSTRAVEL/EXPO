@@ -146,12 +146,36 @@ const PassengerPortal = () => {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [returnDateOpen, setReturnDateOpen] = useState(false);
+  const [showFlightInfo, setShowFlightInfo] = useState(false);
+  const [showReturnFlightInfo, setShowReturnFlightInfo] = useState(false);
+  const [loadingFlight, setLoadingFlight] = useState(false);
+  const [loadingReturnFlight, setLoadingReturnFlight] = useState(false);
+  const [flightData, setFlightData] = useState(null);
+  const [returnFlightData, setReturnFlightData] = useState(null);
+  const [flightError, setFlightError] = useState(null);
+  const [returnFlightError, setReturnFlightError] = useState(null);
   const [requestForm, setRequestForm] = useState({
     pickup_location: "",
     dropoff_location: "",
+    additional_stops: [],
     pickup_datetime: new Date(),
     notes: "",
+    // Flight info
     flight_number: "",
+    airline: "",
+    flight_type: "",
+    terminal: "",
+    // Return booking
+    create_return: false,
+    return_pickup_location: "",
+    return_dropoff_location: "",
+    return_datetime: null,
+    // Return flight info
+    return_flight_number: "",
+    return_airline: "",
+    return_flight_type: "",
+    return_terminal: "",
   });
 
   useEffect(() => {

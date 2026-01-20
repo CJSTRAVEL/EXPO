@@ -43,12 +43,23 @@ const ContractWorkPage = () => {
     customer_phone: "",
     pickup_location: "",
     dropoff_location: "",
+    additional_stops: [],
     booking_datetime: new Date(),
     notes: "",
     fare: "",
     driver_id: "",
     client_id: "",
+    // Flight info
+    flight_number: "",
+    airline: "",
+    flight_type: "",
+    terminal: "",
+    // Return booking
+    create_return: false,
+    return_datetime: null,
   });
+  const [showFlightInfo, setShowFlightInfo] = useState(false);
+  const [returnDateOpen, setReturnDateOpen] = useState(false);
 
   useEffect(() => {
     fetchData();

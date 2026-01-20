@@ -419,6 +419,153 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
               </div>
             )}
 
+            {/* Flight Information Toggle */}
+            <div className="space-y-3 border rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showFlightInfo}
+                    onChange={(e) => setShowFlightInfo(e.target.checked)}
+                    className="rounded"
+                    data-testid="flight-info-toggle"
+                  />
+                  <span>Airport Transfer / Flight Info</span>
+                </Label>
+              </div>
+              
+              {showFlightInfo && (
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Flight Number</Label>
+                      <Input
+                        value={formData.flight_number}
+                        onChange={(e) => setFormData({ ...formData, flight_number: e.target.value.toUpperCase() })}
+                        placeholder="BA123"
+                        data-testid="flight-number-input"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Airline</Label>
+                      <Input
+                        value={formData.airline}
+                        onChange={(e) => setFormData({ ...formData, airline: e.target.value })}
+                        placeholder="British Airways"
+                        data-testid="flight-airline-input"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Flight Type</Label>
+                      <Select
+                        value={formData.flight_type || ""}
+                        onValueChange={(value) => setFormData({ ...formData, flight_type: value })}
+                      >
+                        <SelectTrigger data-testid="flight-type-select">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="arrival">Arrival (Pickup)</SelectItem>
+                          <SelectItem value="departure">Departure (Drop-off)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Terminal</Label>
+                      <Input
+                        value={formData.terminal}
+                        onChange={(e) => setFormData({ ...formData, terminal: e.target.value })}
+                        placeholder="Terminal 5"
+                        data-testid="flight-terminal-input"
+                      />
+                    </div>
+                  </div>
+                  {formData.flight_number && (
+                    <p className="text-xs text-muted-foreground">
+                      💡 Flight tracking will be enabled for this booking
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Return Booking Option (only for new bookings) */}
+            {!booking && (
+              <div className="space-y-3 border rounded-lg p-3 bg-amber-50/50">
+                <Label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.create_return}
+                    onChange={(e) => {
+                      setFormData({ 
+                        ...formData, 
+                        create_return: e.target.checked,
+                        return_datetime: e.target.checked ? new Date(formData.booking_datetime.getTime() + 3600000 * 3) : null
+                      });
+                    }}
+                    className="rounded"
+                    data-testid="create-return-toggle"
+                  />
+                  <span>Create Return Journey</span>
+                </Label>
+                
+                {formData.create_return && (
+                  <div className="pt-2 border-t border-amber-200">
+                    <Label className="text-xs mb-2 block">Return Date & Time</Label>
+                    <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-white",
+                            !formData.return_datetime && "text-muted-foreground"
+                          )}
+                          data-testid="return-datetime-btn"
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          {formData.return_datetime 
+                            ? format(formData.return_datetime, "PPP p") 
+                            : "Pick return date & time"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={formData.return_datetime}
+                          onSelect={(date) => {
+                            if (date) {
+                              const current = formData.return_datetime || new Date();
+                              date.setHours(current.getHours(), current.getMinutes());
+                              setFormData({ ...formData, return_datetime: date });
+                            }
+                          }}
+                          initialFocus
+                        />
+                        <div className="p-3 border-t">
+                          <Input
+                            type="time"
+                            value={formData.return_datetime ? format(formData.return_datetime, "HH:mm") : "12:00"}
+                            onChange={(e) => {
+                              const [hours, minutes] = e.target.value.split(':');
+                              const newDate = new Date(formData.return_datetime || new Date());
+                              newDate.setHours(parseInt(hours), parseInt(minutes));
+                              setFormData({ ...formData, return_datetime: newDate });
+                            }}
+                            data-testid="return-time-input"
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-amber-700 mt-2">
+                      A separate return booking will be created with pickup/dropoff swapped
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date & Time</Label>

@@ -1291,6 +1291,7 @@ async def register_passenger(data: PassengerRegister):
     passenger = Passenger(
         name=data.name,
         phone=phone,
+        email=data.email,
         password_hash=hash_password(data.password)
     )
     
@@ -1304,6 +1305,7 @@ async def register_passenger(data: PassengerRegister):
         id=passenger.id,
         name=passenger.name,
         phone=phone,
+        email=data.email,
         token=token
     )
 

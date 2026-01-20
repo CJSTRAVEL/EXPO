@@ -184,6 +184,64 @@ const ClientsPage = () => {
     }
   };
 
+  const handleGenerateInvoice = async () => {
+    if (!selectedClient) return;
+    
+    setGeneratingInvoice(true);
+    try {
+      const params = new URLSearchParams();
+      if (invoiceDateRange.start) params.append('start_date', invoiceDateRange.start);
+      if (invoiceDateRange.end) params.append('end_date', invoiceDateRange.end);
+      
+      const response = await axios.get(
+        `${API}/clients/${selectedClient.id}/invoice?${params.toString()}`,
+        { responseType: 'blob' }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice_${selectedClient.account_no}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Invoice downloaded successfully");
+      setShowInvoiceModal(false);
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      toast.error("Failed to generate invoice");
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  };
+
+  const setQuickDateRange = (range) => {
+    const now = new Date();
+    switch (range) {
+      case 'this_month':
+        setInvoiceDateRange({
+          start: format(startOfMonth(now), "yyyy-MM-dd"),
+          end: format(endOfMonth(now), "yyyy-MM-dd"),
+        });
+        break;
+      case 'last_month':
+        const lastMonth = subMonths(now, 1);
+        setInvoiceDateRange({
+          start: format(startOfMonth(lastMonth), "yyyy-MM-dd"),
+          end: format(endOfMonth(lastMonth), "yyyy-MM-dd"),
+        });
+        break;
+      case 'all_time':
+        setInvoiceDateRange({ start: '', end: '' });
+        break;
+      default:
+        break;
+    }
+  };
+
   // Filter clients based on search
   const filteredClients = clients.filter(client => {
     if (!searchText) return true;

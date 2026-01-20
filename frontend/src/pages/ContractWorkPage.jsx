@@ -892,6 +892,34 @@ const ContractWorkPage = () => {
               />
             </div>
 
+            {/* PAX and Cases */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>PAX (Passengers)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={formData.passenger_count}
+                  onChange={(e) => setFormData({ ...formData, passenger_count: e.target.value })}
+                  placeholder="1"
+                  data-testid="contract-pax"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Cases (Luggage)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="20"
+                  value={formData.luggage_count}
+                  onChange={(e) => setFormData({ ...formData, luggage_count: e.target.value })}
+                  placeholder="0"
+                  data-testid="contract-cases"
+                />
+              </div>
+            </div>
+
             {/* Locations */}
             <div className="space-y-2">
               <Label>Pickup Location *</Label>

@@ -127,6 +127,24 @@ const PassengerLogin = () => {
               </div>
             </div>
 
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email (for booking confirmations)</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="pl-10"
+                    data-testid="register-email-input"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">

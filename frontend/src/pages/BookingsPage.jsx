@@ -156,8 +156,11 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
       });
       setRouteInfo(null);
       setShowFlightInfo(false);
+      setShowReturnFlightInfo(false);
       setFlightData(null);
+      setReturnFlightData(null);
       setFlightError(null);
+      setReturnFlightError(null);
     }
   }, [booking]);
 

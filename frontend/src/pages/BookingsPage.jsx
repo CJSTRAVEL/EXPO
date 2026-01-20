@@ -1630,8 +1630,120 @@ const BookingsPage = () => {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                        </div>
+                        
+                        {/* Return Journey Card - Shown directly under parent */}
+                        {linkedReturn && (
+                          <div
+                            className={`bg-amber-50 rounded-lg rounded-t-none border-l-4 border-t border-amber-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${getStatusColor(linkedReturn.status)}`}
+                            data-testid={`booking-row-${linkedReturn.id}`}
+                            onClick={() => setViewBooking(linkedReturn)}
+                          >
+                            <div className="px-4 pt-2 pb-0">
+                              <span className="text-xs font-semibold text-amber-700 bg-amber-200 px-2 py-0.5 rounded">
+                                RETURN
+                              </span>
+                            </div>
+                            <div className="p-4 pt-2">
+                              <div className="grid grid-cols-12 gap-4 items-center">
+                                {/* Time & Booking ID */}
+                                <div className="col-span-2 lg:col-span-1">
+                                  <p className="text-lg font-bold text-slate-800">
+                                    {format(new Date(linkedReturn.booking_datetime), "HH:mm")}
+                                  </p>
+                                  <p className="text-xs font-mono text-amber-700 font-semibold" data-testid={`booking-id-${linkedReturn.id}`}>
+                                    {linkedReturn.booking_id || '-'}
+                                  </p>
+                                </div>
+
+                                {/* Pickup & Dropoff (swapped) */}
+                                <div className="col-span-4 lg:col-span-4">
+                                  <div className="flex items-start gap-2">
+                                    <div className="flex flex-col items-center">
+                                      <div className="w-3 h-3 rounded-full bg-amber-500 border-2 border-white shadow"></div>
+                                      <div className="w-0.5 h-8 bg-amber-300"></div>
+                                      <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow"></div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-slate-800 truncate">{linkedReturn.pickup_location}</p>
+                                      <div className="h-4"></div>
+                                      <p className="text-sm text-slate-600 truncate">{linkedReturn.dropoff_location}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Same Customer */}
+                                <div className="col-span-2 lg:col-span-2">
+                                  <div className="flex items-center gap-2 opacity-60">
+                                    <ArrowLeftRight className="w-4 h-4 text-amber-600" />
+                                    <span className="text-sm text-slate-600">Same passenger</span>
+                                  </div>
+                                </div>
+
+                                {/* Driver */}
+                                <div className="col-span-2 lg:col-span-2" onClick={(e) => e.stopPropagation()}>
+                                  {linkedReturn.driver_id ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <UserCheck className="w-4 h-4 text-blue-600" />
+                                      </div>
+                                      <span className="text-sm font-medium text-slate-700 truncate">{getDriverName(linkedReturn.driver_id)}</span>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setAssignBooking(linkedReturn)}
+                                      className="text-sm text-amber-600 hover:text-amber-700 hover:underline font-medium flex items-center gap-1"
+                                      data-testid={`quick-assign-${linkedReturn.id}`}
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      Assign Driver
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Status & Actions */}
+                                <div className="col-span-2 lg:col-span-3 flex items-center justify-end gap-3">
+                                  {linkedReturn.fare && (
+                                    <span className="text-sm font-semibold text-green-600">
+                                      £{linkedReturn.fare.toFixed(2)}
+                                    </span>
+                                  )}
+                                  {getStatusBadge(linkedReturn.status)}
+                                  <div onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`booking-actions-${linkedReturn.id}`}>
+                                          <MoreHorizontal className="w-4 h-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => setViewBooking(linkedReturn)}>
+                                          <MapPin className="w-4 h-4 mr-2" />
+                                          View Return
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleEdit(linkedReturn)}>
+                                          <Edit className="w-4 h-4 mr-2" />
+                                          Edit Return
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem 
+                                          onClick={() => setDeleteBooking(linkedReturn)}
+                                          className="text-destructive focus:text-destructive"
+                                        >
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Delete Return
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}

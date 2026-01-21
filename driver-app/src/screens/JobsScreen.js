@@ -320,7 +320,7 @@ export default function JobsScreen({ navigation }) {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

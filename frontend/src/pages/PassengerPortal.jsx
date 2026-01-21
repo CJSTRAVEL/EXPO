@@ -434,9 +434,9 @@ const PassengerPortal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50" data-testid="passenger-portal">
+    <div className="min-h-screen bg-[#f5f5f5]" data-testid="passenger-portal">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-10">
+      <header className="bg-[#1a1a1a] shadow-lg sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
@@ -445,11 +445,11 @@ const PassengerPortal = () => {
               className="w-10 h-10 object-contain"
             />
             <div>
-              <h1 className="font-bold text-slate-800">CJ&apos;s Executive Travel</h1>
-              <p className="text-xs text-muted-foreground">Passenger Portal</p>
+              <h1 className="font-bold text-white">CJ&apos;s Executive Travel</h1>
+              <p className="text-xs text-[#D4A853]">Passenger Portal</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} data-testid="logout-btn">
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:bg-white/10" data-testid="logout-btn">
             <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>
@@ -458,16 +458,16 @@ const PassengerPortal = () => {
 
       <main className="max-w-2xl mx-auto px-4 py-6">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 text-white mb-6">
+        <div className="bg-[#1a1a1a] rounded-xl p-6 text-white mb-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-                <User className="w-7 h-7" />
+              <div className="w-14 h-14 rounded-full bg-[#D4A853]/20 flex items-center justify-center border border-[#D4A853]/30">
+                <User className="w-7 h-7 text-[#D4A853]" />
               </div>
               <div>
-                <p className="text-white/80 text-sm">Welcome back,</p>
-                <h2 className="text-xl font-bold">{user?.name}</h2>
-                <p className="text-white/70 text-sm flex items-center gap-1 mt-1">
+                <p className="text-gray-400 text-sm">Welcome back,</p>
+                <h2 className="text-xl font-bold text-white">{user?.name}</h2>
+                <p className="text-gray-400 text-sm flex items-center gap-1 mt-1">
                   <Phone className="w-3 h-3" />
                   {user?.phone}
                 </p>
@@ -475,7 +475,7 @@ const PassengerPortal = () => {
             </div>
             <Button 
               onClick={() => setShowRequestForm(true)}
-              className="bg-white text-primary hover:bg-white/90"
+              className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold"
               data-testid="request-booking-btn"
             >
               <Plus className="w-4 h-4 mr-2" />

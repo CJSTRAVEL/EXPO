@@ -3222,7 +3222,23 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
     elif status == "completed":
         update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.bookings.update_one({"id": booking_id}, {"$set": update_data})
+    # Add history entry for driver status change
+    history_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": "status_changed",
+        "user_id": driver["id"],
+        "user_name": driver.get("name", "Driver"),
+        "user_type": "driver",
+        "details": f"Status changed to {status}"
+    }
+    
+    await db.bookings.update_one(
+        {"id": booking_id}, 
+        {
+            "$set": update_data,
+            "$push": {"history": history_entry}
+        }
+    )
     
     # Send notification to passenger if they have an account
     # TODO: Implement push notification to passenger

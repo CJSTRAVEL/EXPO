@@ -34,6 +34,7 @@ Build a private hire application where you can add bookings and assign them to d
 - **SMS Provider**: Vonage (sender ID: "CJs Travel")
 - **Mapping**: Google Maps (Places, Directions, Static Maps, Embed API)
 - **Address Lookup**: Getaddress.io for UK postcodes
+- **Email Provider**: Mailgun SMTP for booking confirmations
 
 ## What's Been Implemented (January 2026)
 - ✅ Dashboard with stats (Total Bookings, Active Drivers, In Progress, Revenue)
@@ -88,6 +89,8 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **PAX and Cases Fields** (Jan 20, 2026) - Added passenger count (PAX) and luggage count (Cases) fields to all booking forms (Bookings, Contract Work, Passenger Portal)
 - ✅ **Return Journey Multi-Stop** (Jan 20, 2026) - Added multiple drop-off locations (additional stops) support to return journey section in all booking forms
 - ✅ **Email Confirmations** (Jan 20, 2026) - Added SMTP email notifications alongside SMS. Beautiful HTML emails sent for booking confirmations, driver assignments, status updates. Includes resend-email and resend-notifications endpoints.
+- ✅ **Passenger Email Field in Portal** (Jan 21, 2026) - Added email field to passenger portal booking request form for email confirmations
+- ✅ **Google Maps API Key Security Fix** (Jan 21, 2026) - Moved hardcoded API key to environment variable (backend/.env)
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers
@@ -100,6 +103,7 @@ Build a private hire application where you can add bookings and assign them to d
 - `GET /api/directions` - Route calculation (proxy to Google Maps)
 - `GET /api/bookings/by-short-id/{short_id}` - Get booking by short ID (CJ-001)
 - `POST /api/bookings/{booking_id}/resend-sms` - Resend SMS confirmation
+- `POST /api/bookings/{booking_id}/resend-email` - Resend email confirmation
 - `POST /api/passenger/register` - Register new passenger account
 - `POST /api/passenger/login` - Passenger login
 - `GET /api/passenger/bookings` - Get authenticated passenger's bookings
@@ -132,6 +136,7 @@ Build a private hire application where you can add bookings and assign them to d
 - [x] SMS link preview fix (completed Jan 20, 2026 - SSR endpoint with OG tags)
 - [x] Allow passengers to request new bookings from portal (completed Jan 20, 2026)
 - [x] Dedicated Requests page for admin (completed Jan 20, 2026)
+- [x] Email field for passenger booking requests (completed Jan 21, 2026)
 - [ ] Forgot password / SMS verification for passenger portal
 
 ### P2 (Medium Priority) - Future
@@ -141,18 +146,20 @@ Build a private hire application where you can add bookings and assign them to d
 - [ ] SMS notifications for driver assignment
 - [ ] Driver mobile app for live location updates
 - [ ] Push notifications for booking status changes
+- [ ] Email invoice PDF directly to clients
 
 ## Refactoring Notes
-- `server.py` is a monolith - should be split using FastAPI APIRouter (routes/bookings.py, routes/passengers.py, etc.)
+- `server.py` is a monolith (~1700+ lines) - should be split using FastAPI APIRouter (routes/bookings.py, routes/passengers.py, etc.)
 - `BookingsPage.jsx` is large (~710 lines) - consider decomposing into smaller components
 - `AddressAutocomplete.jsx` has complex dual-service logic - could be simplified
+- Email HTML template is hardcoded in server.py - should be extracted to separate template files (Jinja2)
 
 ## Database Schema
 - **drivers**: `{id, name, phone, vehicle_type, vehicle_number, status}`
 - **bookings**: `{id, booking_id, first_name, last_name, customer_name, customer_phone, customer_email, passenger_count, luggage_count, pickup_address, dropoff_address, additional_stops[], client_id, flight_info{flight_number, airline, flight_type, terminal}, is_return, linked_booking_id, sms_sent, email_sent, ...}`
-- **passengers**: `{id, phone, name, password_hash, created_at}` - Portal user accounts
+- **passengers**: `{id, phone, name, email, password_hash, created_at}` - Portal user accounts
 - **clients**: `{id, account_no, name, mobile, email, client_type, payment_method, status, start_date, address, town_city, post_code, country, notes}` - B2B client accounts
-- **booking_requests**: `{_id, passenger_id, passenger_name, passenger_phone, pickup_location, dropoff_location, pickup_datetime, flight_number, notes, status, admin_notes, created_at}` - Passenger booking requests
+- **booking_requests**: `{id, passenger_id, passenger_name, passenger_phone, passenger_email, pickup_location, dropoff_location, additional_stops[], pickup_datetime, passenger_count, luggage_count, flight_number, flight_info, create_return, return_*, notes, status, admin_notes, created_at}` - Passenger booking requests
 
 ## Known Issues
 - None currently - SMS Link Preview has been fixed with SSR endpoint

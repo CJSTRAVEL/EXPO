@@ -543,25 +543,9 @@ const NewBookingPage = () => {
           </div>
           <h1 className="text-lg font-bold">New Booking</h1>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Flight Lookup Button */}
-          <Button
-            onClick={() => setFlightModalOpen(true)}
-            variant="outline"
-            size="sm"
-            className={cn(
-              "gap-2 border-[#3d3d3d] hover:bg-[#2d2d2d]",
-              formData.flight_number ? "text-[#D4A853] border-[#D4A853]/50" : "text-gray-300"
-            )}
-            data-testid="open-flight-modal-btn"
-          >
-            <Plane className="w-4 h-4" />
-            {formData.flight_number || "Flight Info"}
-          </Button>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Clock className="w-4 h-4" />
-            <span>{format(new Date(), "dd/MM/yyyy HH:mm")}</span>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Clock className="w-4 h-4" />
+          <span>{format(new Date(), "dd/MM/yyyy HH:mm")}</span>
         </div>
       </div>
 

@@ -1296,7 +1296,7 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                     )}
                   </div>
                 ) : (
-                  <p className="text-xs text-purple-600 italic">No flight information - click "Lookup Flight" to add</p>
+                  <p className="text-xs text-purple-600 italic">No flight information - click &quot;Lookup Flight&quot; to add</p>
                 )}
               </div>
             )}

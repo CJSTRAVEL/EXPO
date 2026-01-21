@@ -233,6 +233,10 @@ export default function JobsScreen({ navigation }) {
     navigation.navigate('Chat', { booking });
   };
 
+  const handleStartNavigation = (booking, destinationType) => {
+    navigation.navigate('Navigation', { booking, destinationType });
+  };
+
   const handleNotifyArrival = async (bookingId) => {
     try {
       await notifyArrival(bookingId);

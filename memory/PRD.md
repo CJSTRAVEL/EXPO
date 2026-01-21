@@ -194,14 +194,16 @@ eas build --platform ios --profile production       # App Store
 - [x] Allow passengers to request new bookings from portal (completed Jan 20, 2026)
 - [x] Dedicated Requests page for admin (completed Jan 20, 2026)
 - [x] Email field for passenger booking requests (completed Jan 21, 2026)
+- [x] Driver mobile app EAS configuration (completed Jan 21, 2026)
+- [x] Enhanced driver app with job detail screen, timeline, active job display (completed Jan 21, 2026)
 - [ ] Forgot password / SMS verification for passenger portal
 
 ### P2 (Medium Priority) - Future
+- [ ] Build and deploy driver app to Google Play/App Store
 - [ ] Bulk status updates
 - [ ] Driver availability calendar
 - [ ] Export bookings to CSV
 - [ ] SMS notifications for driver assignment
-- [ ] Driver mobile app for live location updates
 - [ ] Push notifications for booking status changes
 - [ ] Email invoice PDF directly to clients
 

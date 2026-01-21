@@ -1164,17 +1164,30 @@ const NewBookingPage = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs text-gray-400">Vehicle Type</Label>
                 <Select
-                  value={formData.vehicle_type || "saloon"}
+                  value={formData.vehicle_type || ""}
                   onValueChange={(value) => setFormData({ ...formData, vehicle_type: value })}
                 >
                   <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
-                    <SelectValue placeholder="Select vehicle" />
+                    <SelectValue placeholder="Select vehicle type" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#252525] border-[#3d3d3d]">
-                    <SelectItem value="saloon">Executive Saloon</SelectItem>
-                    <SelectItem value="estate">Estate</SelectItem>
-                    <SelectItem value="mpv">MPV (6 Seater)</SelectItem>
-                    <SelectItem value="minibus">Minibus (8 Seater)</SelectItem>
+                    {vehicleTypes.length > 0 ? (
+                      vehicleTypes.map((vt) => (
+                        <SelectItem key={vt.id} value={vt.id}>
+                          <div className="flex items-center gap-2">
+                            <span>{vt.name}</span>
+                            <span className="text-xs text-gray-400">({vt.capacity} seats)</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="saloon">Executive Saloon</SelectItem>
+                        <SelectItem value="estate">Estate</SelectItem>
+                        <SelectItem value="mpv">MPV (6 Seater)</SelectItem>
+                        <SelectItem value="minibus">Minibus (8 Seater)</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

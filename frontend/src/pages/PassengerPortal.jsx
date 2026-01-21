@@ -155,6 +155,8 @@ const PassengerPortal = () => {
   const [returnFlightData, setReturnFlightData] = useState(null);
   const [flightError, setFlightError] = useState(null);
   const [returnFlightError, setReturnFlightError] = useState(null);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [showVehicleSelector, setShowVehicleSelector] = useState(false);
   const [requestForm, setRequestForm] = useState({
     pickup_location: "",
     dropoff_location: "",
@@ -164,6 +166,8 @@ const PassengerPortal = () => {
     luggage_count: 0,
     notes: "",
     customer_email: "",  // Email for confirmation
+    vehicle_type_id: "",  // Selected vehicle type
+    vehicle_type_name: "",  // For display
     // Flight info
     flight_number: "",
     airline: "",

@@ -246,6 +246,62 @@ const NewBookingPage = () => {
     }
   };
 
+  // Return flight lookup - auto-populates return pickup location and time
+  const handleReturnFlightLookup = async () => {
+    const searchNum = returnFlightSearchNumber || formData.return_flight_number;
+    if (!searchNum) {
+      toast.error("Please enter a return flight number");
+      return;
+    }
+    setLoadingReturnFlight(true);
+    try {
+      const flightNum = searchNum.trim().toUpperCase().replace(/\s+/g, '');
+      const response = await axios.get(`${API}/flight/${flightNum}`);
+      const data = response.data;
+      if (data.error) {
+        toast.error(data.error);
+      } else {
+        setReturnFlightData(data);
+        
+        // Build airport address from flight data
+        let airportAddress = "";
+        if (data.arrival_airport) {
+          airportAddress = data.arrival_airport;
+          if (data.arrival_terminal) {
+            airportAddress = `Terminal ${data.arrival_terminal}, ${airportAddress}`;
+          }
+        }
+        
+        // Parse landing time and set return datetime
+        let newReturnDatetime = formData.return_datetime || new Date();
+        if (data.arrival_scheduled || data.arrival_estimated) {
+          const landingTimeStr = data.arrival_estimated || data.arrival_scheduled;
+          const landingTime = new Date(landingTimeStr);
+          if (!isNaN(landingTime.getTime())) {
+            newReturnDatetime = landingTime;
+          }
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          return_flight_number: flightNum,
+          return_airline: data.airline || prev.return_airline,
+          return_terminal: data.arrival_terminal || data.departure_terminal || prev.return_terminal,
+          // Auto-set return pickup location to arrival airport
+          return_pickup_location: airportAddress || prev.return_pickup_location,
+          // Auto-set return time to landing time
+          return_datetime: newReturnDatetime,
+        }));
+        
+        toast.success("Return flight data loaded! Pickup location and time updated.");
+      }
+    } catch (error) {
+      toast.error("Return flight lookup failed");
+    } finally {
+      setLoadingReturnFlight(false);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async () => {
     if (!formData.first_name || !formData.customer_phone) {

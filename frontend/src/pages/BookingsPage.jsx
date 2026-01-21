@@ -1720,6 +1720,7 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
 };
 
 const BookingsPage = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [clients, setClients] = useState([]);

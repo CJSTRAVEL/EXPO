@@ -1,5 +1,5 @@
 // API Configuration
-export const API_URL = 'https://hirebooking.preview.emergentagent.com/api';
+export const API_URL = 'https://executive-rides-7.preview.emergentagent.com/api';
 
 // App Configuration
 export const APP_CONFIG = {

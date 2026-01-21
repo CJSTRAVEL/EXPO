@@ -2405,6 +2405,7 @@ const BookingsPage = () => {
       <BookingViewDialog
         booking={viewBooking}
         driver={viewBooking ? drivers.find(d => d.id === viewBooking.driver_id) : null}
+        vehicleTypes={vehicleTypes}
         onClose={() => setViewBooking(null)}
         onEdit={() => {
           setSelectedBooking(viewBooking);

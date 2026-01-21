@@ -28,7 +28,7 @@ const formatDateTime = (dateString) => {
   };
 };
 
-const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onStartNavigation }) => {
+const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onStartNavigation, onViewDetail }) => {
   const { date, time } = formatDateTime(booking.booking_datetime);
   const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
   

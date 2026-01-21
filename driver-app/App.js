@@ -271,6 +271,13 @@ function AppNavigator({ navigationRef }) {
             })}
           />
           <Stack.Screen
+            name="JobDetail"
+            component={JobDetailScreen}
+            options={({ route }) => ({
+              title: route.params?.booking?.booking_id || 'Job Details',
+            })}
+          />
+          <Stack.Screen
             name="Navigation"
             component={NavigationScreen}
             options={{

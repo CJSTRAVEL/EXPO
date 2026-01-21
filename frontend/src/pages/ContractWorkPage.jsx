@@ -141,6 +141,15 @@ const ContractWorkPage = () => {
       toast.error("Please select a driver");
       return;
     }
+    
+    // Handle unassign case
+    if (selectedDriverForAssign === "unassign") {
+      await handleUnassignDriver(assignBooking.id);
+      setAssignBooking(null);
+      setSelectedDriverForAssign("");
+      return;
+    }
+    
     try {
       await axios.post(`${API}/bookings/${assignBooking.id}/assign/${selectedDriverForAssign}`);
       toast.success("Driver assigned successfully");

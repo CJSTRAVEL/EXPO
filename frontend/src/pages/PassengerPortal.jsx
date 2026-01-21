@@ -762,6 +762,28 @@ const PassengerPortal = () => {
               />
             </div>
 
+            {/* Vehicle Type Selection */}
+            <div className="space-y-2">
+              <Label>Select Vehicle *</Label>
+              <Button
+                type="button"
+                variant="outline"
+                className={`w-full justify-between ${!requestForm.vehicle_type_id ? 'text-muted-foreground' : ''}`}
+                onClick={() => setShowVehicleSelector(true)}
+                data-testid="select-vehicle-btn"
+              >
+                {requestForm.vehicle_type_name ? (
+                  <span className="flex items-center gap-2">
+                    <Car className="w-4 h-4 text-[#D4A853]" />
+                    {requestForm.vehicle_type_name}
+                  </span>
+                ) : (
+                  <span>Choose your vehicle...</span>
+                )}
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+
             {/* PAX and Cases */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

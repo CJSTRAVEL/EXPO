@@ -1911,7 +1911,7 @@ const BookingsPage = () => {
           <h1 className="text-2xl font-bold tracking-tight">Bookings</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage customer bookings</p>
         </div>
-        <Button onClick={handleAdd} className="btn-animate" data-testid="add-booking-btn">
+        <Button onClick={() => navigate('/bookings/new')} className="btn-animate" data-testid="add-booking-btn">
           <Plus className="w-4 h-4 mr-2" />
           New Booking
         </Button>

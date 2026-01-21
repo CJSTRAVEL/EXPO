@@ -421,6 +421,9 @@ class BookingResponse(BaseModel):
     flight_info: Optional[dict] = None
     is_return: Optional[bool] = False
     linked_booking_id: Optional[str] = None
+    vehicle_type: Optional[str] = None
+    passenger_count: Optional[int] = 1
+    luggage_count: Optional[int] = 0
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

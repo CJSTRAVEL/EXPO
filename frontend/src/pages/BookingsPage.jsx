@@ -2175,14 +2175,16 @@ const BookingsPage = () => {
 
                               {/* Status & Actions */}
                               <div className="col-span-2 lg:col-span-3 flex items-center justify-end gap-3">
-                                {booking.distance_miles && (
-                                  <span className="text-xs text-slate-500 hidden lg:inline">
-                                    {booking.distance_miles} mi
+                                {booking.duration_minutes && (
+                                  <span className="text-xs text-slate-500 hidden lg:inline flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {formatDuration(booking.duration_minutes)}
                                   </span>
                                 )}
-                                {booking.fare && (
-                                  <span className="text-sm font-semibold text-green-600">
-                                    £{booking.fare.toFixed(2)}
+                                {booking.vehicle_type && (
+                                  <span className="text-xs text-slate-600 hidden lg:inline flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded">
+                                    <Car className="w-3 h-3" />
+                                    {getVehicleTypeName(booking.vehicle_type)}
                                   </span>
                                 )}
                                 {getStatusBadge(booking.status)}

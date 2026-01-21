@@ -146,12 +146,17 @@ export default function DashboardScreen({ navigation }) {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Page Title */}
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Dashboard</Text>
+        </View>
       {/* Header Card */}
       <View style={styles.headerCard}>
         <View style={styles.profileRow}>

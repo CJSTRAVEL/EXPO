@@ -148,14 +148,16 @@ const NewBookingPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [driversRes, clientsRes, passengersRes] = await Promise.all([
+        const [driversRes, clientsRes, passengersRes, vehicleTypesRes] = await Promise.all([
           axios.get(`${API}/drivers`),
           axios.get(`${API}/clients`),
-          axios.get(`${API}/admin/passengers`).catch(() => ({ data: [] }))
+          axios.get(`${API}/admin/passengers`).catch(() => ({ data: [] })),
+          axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] }))
         ]);
         setDrivers(driversRes.data);
         setClients(clientsRes.data);
         setPassengers(passengersRes.data || []);
+        setVehicleTypes(vehicleTypesRes.data || []);
       } catch (error) {
         console.error("Error fetching data:", error);
       }

@@ -2006,7 +2006,7 @@ const BookingsPage = () => {
             <MapPin className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
             <p className="text-muted-foreground mb-4">Create your first booking to get started</p>
-            <Button onClick={handleAdd} data-testid="add-first-booking-btn">
+            <Button onClick={() => navigate('/bookings/new')} data-testid="add-first-booking-btn">
               <Plus className="w-4 h-4 mr-2" />
               New Booking
             </Button>

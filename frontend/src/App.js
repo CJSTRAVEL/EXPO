@@ -106,6 +106,7 @@ const Sidebar = () => {
     { path: "/clients", icon: Building2, label: "Clients" },
     { path: "/passengers", icon: UserCircle, label: "Passengers" },
     { path: "/drivers", icon: Users, label: "Drivers" },
+    { path: "/vehicles", icon: Truck, label: "Vehicles" },
     { path: "/passenger-portal", icon: KeyRound, label: "Passenger Portal" },
   ];
 

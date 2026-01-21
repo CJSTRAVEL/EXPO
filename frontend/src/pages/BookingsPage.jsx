@@ -1383,6 +1383,7 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
 
 const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, onRefresh }) => {
   const [sendingSms, setSendingSms] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   
   if (!booking) return null;
 
@@ -1396,6 +1397,19 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
       toast.error(error.response?.data?.detail || "Failed to send SMS");
     } finally {
       setSendingSms(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    setSendingEmail(true);
+    try {
+      await axios.post(`${API}/bookings/${booking.id}/resend-email`);
+      toast.success("Email confirmation sent successfully!");
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send email");
+    } finally {
+      setSendingEmail(false);
     }
   };
   

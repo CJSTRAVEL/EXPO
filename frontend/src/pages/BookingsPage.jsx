@@ -2135,11 +2135,11 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
                                   <div key={field} className="text-xs">
                                     <span className="font-medium text-slate-700">{field.replace(/_/g, ' ')}:</span>
                                     <span className="text-red-500 line-through ml-1">
-                                      {typeof change.old === 'object' ? JSON.stringify(change.old) : String(change.old || '(empty)')}
+                                      {formatHistoryValue(field, change.old)}
                                     </span>
                                     <span className="text-slate-400 mx-1">→</span>
                                     <span className="text-green-600">
-                                      {typeof change.new === 'object' ? JSON.stringify(change.new) : String(change.new || '(empty)')}
+                                      {formatHistoryValue(field, change.new)}
                                     </span>
                                   </div>
                                 ))}

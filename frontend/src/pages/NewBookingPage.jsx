@@ -801,7 +801,7 @@ const NewBookingPage = () => {
 
                 {/* Return Pickup Location */}
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-amber-900">Return Pickup Location</Label>
+                  <Label className="text-sm font-medium text-[#D4A853]">Return Pickup Location</Label>
                   <AddressAutocomplete
                     value={formData.return_pickup_location}
                     onChange={(value) => setFormData(prev => ({ ...prev, return_pickup_location: value }))}
@@ -813,11 +813,11 @@ const NewBookingPage = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-8 bg-amber-400 rounded"></div>
+                      <div className="w-1 h-8 bg-[#D4A853] rounded"></div>
                       <div>
-                        <Label className="text-sm font-medium text-amber-900">Return Stops (in order)</Label>
+                        <Label className="text-sm font-medium text-[#D4A853]">Return Stops (in order)</Label>
                         {formData.return_additional_stops.length === 0 && (
-                          <p className="text-xs text-amber-600 italic">No intermediate stops - direct return</p>
+                          <p className="text-xs text-[#D4A853]/70 italic">No intermediate stops - direct return</p>
                         )}
                       </div>
                     </div>
@@ -829,7 +829,7 @@ const NewBookingPage = () => {
                         ...prev,
                         return_additional_stops: [...prev.return_additional_stops, ""]
                       }))}
-                      className="h-7 text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-100"
+                      className="h-7 text-xs gap-1 text-[#D4A853] border-[#D4A853]/50 hover:bg-[#D4A853]/20"
                     >
                       <Plus className="w-3 h-3" /> Add Stop
                     </Button>
@@ -855,7 +855,7 @@ const NewBookingPage = () => {
                           ...prev,
                           return_additional_stops: prev.return_additional_stops.filter((_, i) => i !== index)
                         }))}
-                        className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="h-9 w-9 text-red-400 border-[#3d3d3d] hover:text-red-300 hover:bg-red-500/10"
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
@@ -865,7 +865,7 @@ const NewBookingPage = () => {
 
                 {/* Return Final Drop-off */}
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-amber-900">Return Final Drop-off</Label>
+                  <Label className="text-sm font-medium text-[#D4A853]">Return Final Drop-off</Label>
                   <AddressAutocomplete
                     value={formData.return_dropoff_location}
                     onChange={(value) => setFormData(prev => ({ ...prev, return_dropoff_location: value }))}
@@ -875,18 +875,18 @@ const NewBookingPage = () => {
 
                 {/* Return Date & Time */}
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-amber-900">Return Date & Time</Label>
+                  <Label className="text-sm font-medium text-[#D4A853]">Return Date & Time</Label>
                   <div className="flex gap-2">
                     <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="flex-1 h-9 justify-start text-left font-normal bg-white">
-                          <Clock className="mr-2 h-4 w-4 text-amber-600" />
+                        <Button variant="outline" className="flex-1 h-9 justify-start text-left font-normal bg-[#1a1a1a] border-[#3d3d3d] text-white hover:bg-[#2d2d2d]">
+                          <Clock className="mr-2 h-4 w-4 text-[#D4A853]" />
                           {formData.return_datetime 
                             ? format(formData.return_datetime, "MMMM do, yyyy 'at' h:mm a")
                             : "Select date & time"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 bg-[#252525] border-[#3d3d3d]" align="start">
                         <CalendarComponent
                           mode="single"
                           selected={formData.return_datetime}
@@ -911,13 +911,13 @@ const NewBookingPage = () => {
                         newDate.setHours(parseInt(hours), parseInt(minutes));
                         setFormData(prev => ({ ...prev, return_datetime: newDate }));
                       }}
-                      className="w-24 h-9 bg-white"
+                      className="w-24 h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white"
                     />
                   </div>
                 </div>
 
                 {/* Return Airport Transfer */}
-                <div className="pt-2 border-t border-amber-200">
+                <div className="pt-2 border-t border-[#D4A853]/30">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -926,20 +926,20 @@ const NewBookingPage = () => {
                         ...prev, 
                         return_is_airport_transfer: e.target.checked 
                       }))}
-                      className="rounded border-amber-300"
+                      className="rounded border-[#3d3d3d] bg-[#1a1a1a]"
                     />
-                    <span className="text-sm text-amber-800 flex items-center gap-1">
+                    <span className="text-sm text-[#D4A853] flex items-center gap-1">
                       <Plane className="w-4 h-4" /> Return Airport Transfer
                     </span>
                   </label>
                 </div>
 
                 {/* Info Banner */}
-                <div className="bg-amber-100 rounded-md p-3 flex items-start gap-2">
-                  <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-white text-xs font-bold">i</span>
+                <div className="bg-[#1a1a1a] rounded-md p-3 flex items-start gap-2 border border-[#3d3d3d]">
+                  <div className="w-5 h-5 bg-[#D4A853] rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-black text-xs font-bold">i</span>
                   </div>
-                  <p className="text-sm text-amber-800">
+                  <p className="text-sm text-gray-300">
                     A separate return booking will be created for the same passenger
                   </p>
                 </div>

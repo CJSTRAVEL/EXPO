@@ -1146,14 +1146,14 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                 <div className="space-y-2">
                   <Label>Vehicle Type</Label>
                   <Select
-                    value={formData.vehicle_type || ""}
-                    onValueChange={(value) => setFormData({ ...formData, vehicle_type: value })}
+                    value={formData.vehicle_type || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, vehicle_type: value === "none" ? "" : value })}
                   >
                     <SelectTrigger data-testid="booking-vehicle-type-select">
                       <SelectValue placeholder="Select vehicle type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Not specified</SelectItem>
+                      <SelectItem value="none">Not specified</SelectItem>
                       {vehicleTypes && vehicleTypes.map((vt) => (
                         <SelectItem key={vt.id} value={vt.id}>
                           {vt.name} ({vt.capacity} seats)

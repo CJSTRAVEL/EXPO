@@ -260,7 +260,7 @@ const AddressAutocomplete = ({
         onChange={handleInputChangeWithTracking}
         onFocus={() => postcodeData?.addresses?.length && setShowDropdown(true)}
         placeholder={placeholder}
-        className="pl-10"
+        className={`pl-10 ${className}`}
         id={id}
         data-testid={dataTestId}
         autoComplete="off"

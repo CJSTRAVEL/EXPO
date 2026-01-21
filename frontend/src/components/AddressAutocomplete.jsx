@@ -258,7 +258,7 @@ const AddressAutocomplete = ({
         ref={inputRef}
         type="text"
         value={inputValue}
-        onChange={handleInputChange}
+        onChange={handleInputChangeWithTracking}
         onFocus={() => postcodeData?.addresses?.length && setShowDropdown(true)}
         placeholder={placeholder}
         className="pl-10"

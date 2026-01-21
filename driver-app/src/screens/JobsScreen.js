@@ -65,7 +65,11 @@ const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onSt
   };
 
   return (
-    <View style={styles.bookingCard}>
+    <TouchableOpacity 
+      style={styles.bookingCard}
+      onPress={() => onViewDetail(booking)}
+      activeOpacity={0.7}
+    >
       {/* Header */}
       <View style={styles.cardHeader}>
         <View style={styles.bookingIdContainer}>

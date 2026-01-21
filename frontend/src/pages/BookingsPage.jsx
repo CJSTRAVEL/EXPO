@@ -1832,16 +1832,16 @@ const BookingsPage = () => {
   };
 
   const getVehicleTypeColor = (vehicleTypeId) => {
-    if (!vehicleTypeId) return "bg-yellow-100 text-yellow-700 border-yellow-300"; // Not specified
+    if (!vehicleTypeId) return "bg-yellow-500 text-white border-yellow-600"; // Not specified
     const vt = vehicleTypes.find(v => v.id === vehicleTypeId);
-    if (!vt) return "bg-yellow-100 text-yellow-700 border-yellow-300";
+    if (!vt) return "bg-yellow-500 text-white border-yellow-600";
     
     const name = vt.name.toLowerCase();
-    if (name.includes("taxi")) return "bg-blue-100 text-blue-700 border-blue-300";
-    if (name.includes("8") && name.includes("minibus")) return "bg-green-100 text-green-700 border-green-300";
-    if (name.includes("16") && name.includes("trailer")) return "bg-red-100 text-red-700 border-red-300";
-    if (name.includes("16") && name.includes("minibus")) return "bg-pink-100 text-pink-700 border-pink-300";
-    return "bg-slate-100 text-slate-600 border-slate-300"; // Default
+    if (name.includes("taxi")) return "bg-blue-500 text-white border-blue-600";
+    if (name.includes("8") && name.includes("minibus")) return "bg-green-500 text-white border-green-600";
+    if (name.includes("16") && name.includes("trailer")) return "bg-red-500 text-white border-red-600";
+    if (name.includes("16") && name.includes("minibus")) return "bg-pink-500 text-white border-pink-600";
+    return "bg-slate-500 text-white border-slate-600"; // Default
   };
 
   const formatDuration = (minutes) => {

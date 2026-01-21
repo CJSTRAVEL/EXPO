@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, NavLink, useLocation, useParams, Navigate } from "react-router-dom";
-import { LayoutDashboard, Users, Calendar, Car, UserCircle, KeyRound, Building2, FileText, Inbox, PlusCircle, Truck } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Car, UserCircle, KeyRound, Building2, FileText, Inbox, PlusCircle, Truck, Settings, LogOut } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Dashboard from "@/pages/Dashboard";
 import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";
@@ -16,9 +17,33 @@ import ClientsPage from "@/pages/ClientsPage";
 import ContractWorkPage from "@/pages/ContractWorkPage";
 import RequestsPage from "@/pages/RequestsPage";
 import VehiclesPage from "@/pages/VehiclesPage";
+import AdminLogin from "@/pages/AdminLogin";
+import SettingsPage from "@/pages/SettingsPage";
 import "@/App.css";
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return children;
+};
 
 // Component to handle short URL redirects
 const ShortUrlBooking = () => {
@@ -69,6 +94,7 @@ const ShortUrlBooking = () => {
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   
   const isPublicPage = location.pathname.startsWith('/booking/') || location.pathname.startsWith('/b/');
@@ -144,6 +170,36 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
+      
+      {/* User Section at bottom */}
+      <div className="mt-auto border-t border-border p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+            <UserCircle className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => `flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'}`}
+            data-testid="nav-settings"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </NavLink>
+          <button
+            onClick={logout}
+            className="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md bg-muted hover:bg-red-100 hover:text-red-600 transition-colors"
+            data-testid="logout-btn"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
     </aside>
   );
 };
@@ -159,22 +215,25 @@ const AppLayout = ({ children, showSidebar }) => {
   );
 };
 
-function App() {
+function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public booking details page (no sidebar) */}
-        <Route path="/booking/:bookingId" element={<BookingDetails />} />
-        
-        {/* Short URL for booking details - uses booking_id like CJ-001 */}
-        <Route path="/b/:shortId" element={<ShortUrlBooking />} />
-        
-        {/* Passenger Login and Portal */}
-        <Route path="/login" element={<PassengerLogin />} />
-        <Route path="/portal" element={<PassengerPortal />} />
-        
-        {/* Admin pages with sidebar */}
-        <Route path="/*" element={
+    <Routes>
+      {/* Public booking details page (no sidebar) */}
+      <Route path="/booking/:bookingId" element={<BookingDetails />} />
+      
+      {/* Short URL for booking details - uses booking_id like CJ-001 */}
+      <Route path="/b/:shortId" element={<ShortUrlBooking />} />
+      
+      {/* Passenger Login and Portal */}
+      <Route path="/login" element={<PassengerLogin />} />
+      <Route path="/portal" element={<PassengerPortal />} />
+      
+      {/* Admin Login */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      
+      {/* Protected Admin pages with sidebar */}
+      <Route path="/*" element={
+        <ProtectedRoute>
           <div className="app-container">
             <Sidebar />
             <main className="main-content">
@@ -189,12 +248,23 @@ function App() {
                 <Route path="/drivers" element={<DriversPage />} />
                 <Route path="/vehicles" element={<VehiclesPage />} />
                 <Route path="/passenger-portal" element={<PassengerPortalAdmin />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </main>
             <Toaster position="top-right" richColors />
           </div>
-        } />
-      </Routes>
+        </ProtectedRoute>
+      } />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

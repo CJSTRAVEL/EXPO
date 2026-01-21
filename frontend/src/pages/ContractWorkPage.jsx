@@ -40,6 +40,8 @@ const ContractWorkPage = () => {
   const [saving, setSaving] = useState(false);
   const [sendingSms, setSendingSms] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [assignBooking, setAssignBooking] = useState(null);
+  const [selectedDriverForAssign, setSelectedDriverForAssign] = useState("");
   
   // Search and filter states
   const [searchText, setSearchText] = useState("");

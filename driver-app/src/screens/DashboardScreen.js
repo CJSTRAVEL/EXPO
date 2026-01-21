@@ -11,20 +11,38 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { COLORS } from '../config';
-import { getEarnings, updateStatus } from '../services/api';
+import { COLORS, BOOKING_STATUS_LABELS } from '../config';
+import { getEarnings, updateStatus, getBookings } from '../services/api';
+import {
+  requestLocationPermissions,
+  startBackgroundLocationTracking,
+  stopBackgroundLocationTracking,
+} from '../services/locationService';
 
 export default function DashboardScreen({ navigation }) {
   const { user, refreshProfile } = useAuth();
   const [isOnline, setIsOnline] = useState(user?.is_online || false);
   const [onBreak, setOnBreak] = useState(user?.on_break || false);
   const [earnings, setEarnings] = useState(null);
+  const [activeJob, setActiveJob] = useState(null);
+  const [todayJobs, setTodayJobs] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
     try {
-      const earningsData = await getEarnings();
+      const [earningsData, bookingsData] = await Promise.all([
+        getEarnings(),
+        getBookings(),
+      ]);
       setEarnings(earningsData);
+      
+      // Find active job (in_progress or on_way or arrived)
+      const allBookings = [...(bookingsData.today || []), ...(bookingsData.upcoming || [])];
+      const active = allBookings.find(b => 
+        ['on_way', 'arrived', 'in_progress'].includes(b.status)
+      );
+      setActiveJob(active);
+      setTodayJobs(bookingsData.today || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -32,7 +50,16 @@ export default function DashboardScreen({ navigation }) {
 
   useEffect(() => {
     fetchData();
+    // Set up refresh interval
+    const interval = setInterval(fetchData, 60000); // Refresh every minute
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    // Update local state when user changes
+    setIsOnline(user?.is_online || false);
+    setOnBreak(user?.on_break || false);
+  }, [user]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -42,9 +69,30 @@ export default function DashboardScreen({ navigation }) {
 
   const handleOnlineToggle = async (value) => {
     try {
+      if (value) {
+        // Request location permissions and start tracking
+        const permissions = await requestLocationPermissions();
+        if (!permissions.granted) {
+          Alert.alert(
+            'Location Required',
+            'Location permission is required to go online. Please enable it in settings.',
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+        
+        if (permissions.background) {
+          await startBackgroundLocationTracking();
+        }
+      } else {
+        // Stop location tracking when going offline
+        await stopBackgroundLocationTracking();
+      }
+
       setIsOnline(value);
       await updateStatus({ is_online: value });
       if (!value) setOnBreak(false);
+      await refreshProfile();
     } catch (error) {
       setIsOnline(!value);
       Alert.alert('Error', 'Failed to update status');
@@ -55,6 +103,7 @@ export default function DashboardScreen({ navigation }) {
     try {
       setOnBreak(value);
       await updateStatus({ on_break: value });
+      await refreshProfile();
     } catch (error) {
       setOnBreak(!value);
       Alert.alert('Error', 'Failed to update break status');
@@ -71,6 +120,27 @@ export default function DashboardScreen({ navigation }) {
     if (!isOnline) return 'Offline';
     if (onBreak) return 'On Break';
     return 'Online';
+  };
+
+  const getJobStatusColor = (status) => {
+    const colors = {
+      on_way: '#8b5cf6',
+      arrived: '#06b6d4',
+      in_progress: COLORS.success,
+    };
+    return colors[status] || COLORS.info;
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleViewActiveJob = () => {
+    if (activeJob) {
+      navigation.navigate('JobDetail', { booking: activeJob, onRefresh: fetchData });
+    }
   };
 
   return (
@@ -95,6 +165,7 @@ export default function DashboardScreen({ navigation }) {
             </Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
+            <View style={[styles.statusDot, { backgroundColor: isOnline ? '#fff' : 'transparent' }]} />
             <Text style={styles.statusText}>{getStatusText()}</Text>
           </View>
         </View>
@@ -130,6 +201,43 @@ export default function DashboardScreen({ navigation }) {
         </View>
       </View>
 
+      {/* Active Job Card */}
+      {activeJob && (
+        <TouchableOpacity style={styles.activeJobCard} onPress={handleViewActiveJob}>
+          <View style={styles.activeJobHeader}>
+            <View style={styles.activeJobBadge}>
+              <View style={styles.pulseDot} />
+              <Text style={styles.activeJobBadgeText}>ACTIVE JOB</Text>
+            </View>
+            <Text style={styles.activeJobId}>{activeJob.booking_id}</Text>
+          </View>
+          
+          <View style={styles.activeJobContent}>
+            <View style={styles.activeJobRoute}>
+              <View style={styles.activeJobLocation}>
+                <View style={[styles.locationDot, { backgroundColor: COLORS.success }]} />
+                <Text style={styles.activeJobAddress} numberOfLines={1}>
+                  {activeJob.pickup_location}
+                </Text>
+              </View>
+              <View style={styles.activeJobLocation}>
+                <View style={[styles.locationDot, { backgroundColor: COLORS.danger }]} />
+                <Text style={styles.activeJobAddress} numberOfLines={1}>
+                  {activeJob.dropoff_location}
+                </Text>
+              </View>
+            </View>
+            
+            <View style={[styles.activeJobStatus, { backgroundColor: getJobStatusColor(activeJob.status) }]}>
+              <Text style={styles.activeJobStatusText}>
+                {BOOKING_STATUS_LABELS[activeJob.status]}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#fff" />
+            </View>
+          </View>
+        </TouchableOpacity>
+      )}
+
       {/* Quick Actions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -142,6 +250,11 @@ export default function DashboardScreen({ navigation }) {
               <Ionicons name="car" size={24} color={COLORS.info} />
             </View>
             <Text style={styles.actionLabel}>My Jobs</Text>
+            {todayJobs.length > 0 && (
+              <View style={styles.actionBadge}>
+                <Text style={styles.actionBadgeText}>{todayJobs.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -196,6 +309,36 @@ export default function DashboardScreen({ navigation }) {
         </View>
       </View>
 
+      {/* Upcoming Jobs Preview */}
+      {todayJobs.length > 0 && !activeJob && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Today's Jobs</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Jobs')}>
+              <Text style={styles.seeAll}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          {todayJobs.slice(0, 2).map((job, index) => (
+            <TouchableOpacity 
+              key={job.id || index} 
+              style={styles.upcomingJob}
+              onPress={() => navigation.navigate('JobDetail', { booking: job, onRefresh: fetchData })}
+            >
+              <View style={styles.upcomingJobTime}>
+                <Text style={styles.upcomingJobTimeText}>{formatTime(job.booking_datetime)}</Text>
+              </View>
+              <View style={styles.upcomingJobInfo}>
+                <Text style={styles.upcomingJobId}>{job.booking_id}</Text>
+                <Text style={styles.upcomingJobAddress} numberOfLines={1}>
+                  {job.pickup_location}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       {/* This Week */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>This Week</Text>
@@ -216,6 +359,8 @@ export default function DashboardScreen({ navigation }) {
           </View>
         </View>
       </View>
+
+      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 }
@@ -264,9 +409,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   statusText: {
     color: '#fff',
@@ -294,8 +447,95 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  // Active Job Card
+  activeJobCard: {
+    backgroundColor: COLORS.card,
+    margin: 16,
+    marginTop: -12,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 2,
+    borderColor: COLORS.success + '40',
+  },
+  activeJobHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  activeJobBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.success,
+  },
+  activeJobBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.success,
+    letterSpacing: 0.5,
+  },
+  activeJobId: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  activeJobContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  activeJobRoute: {
+    flex: 1,
+    gap: 8,
+  },
+  activeJobLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  locationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  activeJobAddress: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.text,
+  },
+  activeJobStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
+  },
+  activeJobStatusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  // Section styles
   section: {
     padding: 16,
+    paddingBottom: 0,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
@@ -303,6 +543,12 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 12,
   },
+  seeAll: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
+  // Actions Grid
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -319,6 +565,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+    position: 'relative',
   },
   actionIcon: {
     width: 48,
@@ -333,6 +580,24 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.text,
   },
+  actionBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: COLORS.danger,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  actionBadgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  // Earnings Card
   earningsCard: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
@@ -364,6 +629,41 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: COLORS.border,
   },
+  // Upcoming Jobs
+  upcomingJob: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  upcomingJobTime: {
+    backgroundColor: COLORS.primary + '15',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  upcomingJobTimeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  upcomingJobInfo: {
+    flex: 1,
+  },
+  upcomingJobId: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  upcomingJobAddress: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  // Stats Row
   statsRow: {
     flexDirection: 'row',
     gap: 12,
@@ -390,5 +690,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  bottomPadding: {
+    height: 24,
   },
 });

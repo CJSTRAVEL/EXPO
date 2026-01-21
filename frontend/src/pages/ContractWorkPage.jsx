@@ -720,10 +720,18 @@ const ContractWorkPage = () => {
                             <div className="col-span-2 lg:col-span-2">
                               <div className="flex items-center gap-2">
                                 {booking.driver_id ? (
-                                  <>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAssignBooking(booking);
+                                      setSelectedDriverForAssign(booking.driver_id);
+                                    }}
+                                    className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                                    data-testid={`change-driver-${booking.id}`}
+                                  >
                                     <UserCheck className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm text-slate-700 truncate">{getDriverName(booking.driver_id)}</span>
-                                  </>
+                                    <span className="truncate">{getDriverName(booking.driver_id)}</span>
+                                  </button>
                                 ) : (
                                   <button
                                     onClick={(e) => {

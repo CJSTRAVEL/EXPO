@@ -44,7 +44,7 @@ const Section = ({ icon, title, actions, children, className = "" }) => (
   </div>
 );
 
-// Notification Badge Component
+// Notification Badge Component - Dark Theme
 const NotificationBadge = ({ label, active, onClick }) => (
   <button
     type="button"
@@ -52,8 +52,8 @@ const NotificationBadge = ({ label, active, onClick }) => (
     className={cn(
       "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
       active 
-        ? "bg-green-50 text-green-700 border-green-300 shadow-sm" 
-        : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+        ? "bg-[#D4A853]/20 text-[#D4A853] border-[#D4A853]/50 shadow-sm" 
+        : "bg-[#1a1a1a] text-gray-400 border-[#3d3d3d] hover:bg-[#2d2d2d]"
     )}
   >
     {active && <Check className="w-3 h-3" />}
@@ -61,14 +61,14 @@ const NotificationBadge = ({ label, active, onClick }) => (
   </button>
 );
 
-// Info Card for Map overlay
+// Info Card for Map overlay - Dark Theme
 const InfoCard = ({ label, value, icon: Icon }) => (
-  <div className="bg-white rounded-lg border border-slate-200 p-3 text-center min-w-[100px]">
-    <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
+  <div className="bg-[#252525] rounded-lg border border-[#3d3d3d] p-3 text-center min-w-[100px]">
+    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mb-1">
       {Icon && <Icon className="w-3 h-3" />}
       {label}
     </div>
-    <div className="text-lg font-bold text-slate-800">{value || "--"}</div>
+    <div className="text-lg font-bold text-white">{value || "--"}</div>
   </div>
 );
 

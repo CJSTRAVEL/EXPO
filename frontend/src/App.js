@@ -98,6 +98,7 @@ const Sidebar = () => {
   
   const navItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/bookings/new", icon: PlusCircle, label: "New Booking", highlight: true },
     { path: "/bookings", icon: Calendar, label: "Bookings" },
     { path: "/requests", icon: Inbox, label: "Requests", badge: pendingRequestsCount },
     { path: "/contract-work", icon: FileText, label: "Contract Work" },
@@ -128,8 +129,8 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             end={item.path === "/"}
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-            data-testid={`nav-${item.label.toLowerCase()}`}
+            className={({ isActive }) => `nav-item ${isActive ? "active" : ""} ${item.highlight ? "bg-green-600 text-white hover:bg-green-700" : ""}`}
+            data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
           >
             <item.icon className="w-5 h-5" />
             {item.label}

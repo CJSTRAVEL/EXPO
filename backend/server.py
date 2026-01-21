@@ -681,6 +681,12 @@ async def update_driver(driver_id: str, driver_update: DriverUpdate):
         raise HTTPException(status_code=404, detail="Driver not found")
     
     update_data = {k: v for k, v in driver_update.model_dump().items() if v is not None}
+    
+    # Hash password if provided
+    if 'password' in update_data and update_data['password']:
+        update_data['password_hash'] = hashlib.sha256(update_data['password'].encode()).hexdigest()
+        del update_data['password']
+    
     if update_data:
         await db.drivers.update_one({"id": driver_id}, {"$set": update_data})
     

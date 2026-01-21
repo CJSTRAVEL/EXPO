@@ -1669,6 +1669,7 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
 const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onAssignDriver, onRefresh }) => {
   const [sendingSms, setSendingSms] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
   
   if (!booking) return null;
 
@@ -1676,6 +1677,28 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
     if (!vehicleTypeId) return "Not specified";
     const vt = vehicleTypes?.find(v => v.id === vehicleTypeId);
     return vt ? vt.name : vehicleTypeId;
+  };
+
+  const getActionIcon = (action) => {
+    switch(action) {
+      case 'created': return <Plus className="w-3 h-3 text-green-600" />;
+      case 'updated': return <Edit className="w-3 h-3 text-blue-600" />;
+      case 'driver_assigned': return <UserCheck className="w-3 h-3 text-purple-600" />;
+      case 'driver_unassigned': return <UserX className="w-3 h-3 text-orange-600" />;
+      case 'status_changed': return <Clock className="w-3 h-3 text-amber-600" />;
+      default: return <History className="w-3 h-3 text-gray-600" />;
+    }
+  };
+
+  const getActionLabel = (action) => {
+    switch(action) {
+      case 'created': return 'Booking Created';
+      case 'updated': return 'Booking Updated';
+      case 'driver_assigned': return 'Driver Assigned';
+      case 'driver_unassigned': return 'Driver Unassigned';
+      case 'status_changed': return 'Status Changed';
+      default: return action?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Action';
+    }
   };
 
   const handleResendSms = async () => {

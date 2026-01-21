@@ -9,6 +9,7 @@ import {
   Alert,
   Linking,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, BOOKING_STATUS_LABELS } from '../config';

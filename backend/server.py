@@ -351,8 +351,8 @@ async def generate_booking_id():
 async def root():
     return {"message": "Private Hire Booking API"}
 
-# Google Maps API Key
-GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+# Google Maps API Key (from environment variable)
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY')
 
 # ========== DIRECTIONS/DISTANCE ENDPOINT ==========
 @api_router.get("/directions")

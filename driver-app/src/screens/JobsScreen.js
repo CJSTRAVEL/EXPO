@@ -178,7 +178,7 @@ const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onSt
           <Text style={styles.notifyButtonText}>Notify Customer</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 

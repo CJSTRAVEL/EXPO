@@ -5,7 +5,7 @@ import {
   User, MapPin, Calendar, Car, CreditCard, FileText, 
   Plus, Minus, Save, RotateCcw, Check, Clock, Navigation,
   Phone, Mail, Users, Briefcase, Plane, ArrowLeftRight,
-  MessageSquare, Bell, Loader2, ChevronRight, X
+  MessageSquare, Bell, Loader2, ChevronRight, X, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";

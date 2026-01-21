@@ -1738,7 +1738,12 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
         doc.get('distance_miles'),
         doc.get('duration_minutes'),
         doc['booking_datetime'],
-        readable_booking_id  # Pass the short booking ID
+        readable_booking_id,  # Pass the short booking ID
+        None,  # status
+        None,  # driver_name
+        booking.customer_phone,  # customer_phone
+        None,  # vehicle_type
+        booking.additional_stops  # additional_stops
     )
     
     # Return response with customer_name included

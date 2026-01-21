@@ -395,9 +395,9 @@ const styles = StyleSheet.create({
   headerCard: {
     backgroundColor: COLORS.primary,
     padding: 20,
-    paddingTop: 60,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingTop: 16,
+    marginHorizontal: 16,
+    borderRadius: 16,
   },
   profileRow: {
     flexDirection: 'row',

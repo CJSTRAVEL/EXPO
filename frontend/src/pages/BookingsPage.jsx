@@ -1664,6 +1664,45 @@ const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, o
               )}
             </button>
           </div>
+
+          {/* Email Status */}
+          <div className="flex items-center justify-between text-sm bg-slate-50 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              {booking.email_sent ? (
+                <>
+                  <Mail className="w-4 h-4 text-green-600" />
+                  <span className="text-green-600">Email confirmation sent</span>
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {booking.customer_email ? "Email not sent" : "No email on file"}
+                  </span>
+                </>
+              )}
+            </div>
+            {booking.customer_email && (
+              <button
+                onClick={handleResendEmail}
+                disabled={sendingEmail}
+                className="text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1 disabled:opacity-50"
+                data-testid="resend-email-link"
+              >
+                {sendingEmail ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-3 h-3" />
+                    {booking.email_sent ? "Resend Email" : "Send Email"}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>

@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "scheme": "cjsdriver",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -15,25 +16,63 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "uk.co.cjstravel.driver"
+      "bundleIdentifier": "uk.co.cjstravel.driver",
+      "buildNumber": "2",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "CJ's Driver needs your location to navigate to pickup and dropoff locations.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "CJ's Driver needs your location to track your position and provide accurate ETAs.",
+        "NSLocationAlwaysUsageDescription": "CJ's Driver needs background location access to update dispatch with your position.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1a3a5c"
       },
-      "package": "uk.co.cjstravel.driver"
+      "package": "uk.co.cjstravel.driver",
+      "versionCode": 2,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+        }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      ["expo-location", {
+        "locationAlwaysAndWhenInUsePermission": "CJ's Driver needs your location to navigate to customers.",
+        "isAndroidBackgroundLocationEnabled": true,
+        "isAndroidForegroundServiceEnabled": true
+      }],
+      "expo-secure-store",
+      ["expo-local-authentication", {
+        "faceIDPermission": "Allow CJ's Driver to use Face ID for biometric login."
+      }]
     ],
     "extra": {
       "eas": {
         "projectId": "c2c6287f-c151-494a-bbe7-8b1bd62daeec"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/c2c6287f-c151-494a-bbe7-8b1bd62daeec"
     },
     "owner": "cjsexecutivetravel"
   }

@@ -96,10 +96,14 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
+    console.log('LoginScreen: Starting login for', email.trim().toLowerCase());
+    console.log('LoginScreen: API URL is', API_URL);
+    
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
 
     if (result.success) {
+      console.log('LoginScreen: Login successful');
       // Save credentials for biometric login
       try {
         await SecureStore.setItemAsync('driver_email', email.trim().toLowerCase());
@@ -108,7 +112,12 @@ export default function LoginScreen() {
         console.log('Error saving credentials:', error);
       }
     } else {
-      Alert.alert('Login Failed', result.error);
+      console.log('LoginScreen: Login failed -', result.error);
+      Alert.alert(
+        'Login Failed', 
+        `${result.error}\n\nAPI: ${API_URL}`,
+        [{ text: 'OK' }]
+      );
     }
   };
 

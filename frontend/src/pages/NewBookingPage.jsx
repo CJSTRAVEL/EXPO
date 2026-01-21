@@ -129,9 +129,13 @@ const NewBookingPage = () => {
   const [dateOpen, setDateOpen] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);
   const [flightModalOpen, setFlightModalOpen] = useState(false);
+  const [returnFlightModalOpen, setReturnFlightModalOpen] = useState(false);
   const [loadingFlight, setLoadingFlight] = useState(false);
+  const [loadingReturnFlight, setLoadingReturnFlight] = useState(false);
   const [flightData, setFlightData] = useState(null);
+  const [returnFlightData, setReturnFlightData] = useState(null);
   const [flightSearchNumber, setFlightSearchNumber] = useState("");
+  const [returnFlightSearchNumber, setReturnFlightSearchNumber] = useState("");
 
   // Fetch data
   useEffect(() => {

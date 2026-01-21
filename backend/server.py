@@ -358,6 +358,9 @@ class BookingBase(BaseModel):
     flight_info: Optional[FlightInfo] = None  # Flight tracking info
     is_return: Optional[bool] = False  # Is this a return leg
     linked_booking_id: Optional[str] = None  # Link to original/return booking
+    vehicle_type: Optional[str] = None  # Vehicle type ID
+    passenger_count: Optional[int] = 1
+    luggage_count: Optional[int] = 0
 
 class BookingCreate(BookingBase):
     distance_miles: Optional[float] = None

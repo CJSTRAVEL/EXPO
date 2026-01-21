@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { 
   Car, Plus, Edit, Trash2, Users, Calendar, FileText, 
-  Shield, AlertTriangle, CheckCircle2, Truck, Search, Filter
+  Shield, AlertTriangle, CheckCircle2, Truck, Search, Filter, Image, Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,11 +68,12 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
     capacity: 4,
     description: "",
     has_trailer: false,
+    photo_url: "",
   });
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
-    setFormData({ name: "", capacity: 4, description: "", has_trailer: false });
+    setFormData({ name: "", capacity: 4, description: "", has_trailer: false, photo_url: "" });
     setEditing(null);
   };
 
@@ -83,6 +84,7 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
       capacity: vt.capacity || 4,
       description: vt.description || "",
       has_trailer: vt.has_trailer || false,
+      photo_url: vt.photo_url || "",
     });
     setShowForm(true);
   };
@@ -91,11 +93,14 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
     e.preventDefault();
     setSaving(true);
     try {
+      const dataToSend = { ...formData };
+      if (!dataToSend.photo_url) dataToSend.photo_url = null;
+      
       if (editing) {
-        await axios.put(`${API}/vehicle-types/${editing.id}`, formData);
+        await axios.put(`${API}/vehicle-types/${editing.id}`, dataToSend);
         toast.success("Vehicle type updated");
       } else {
-        await axios.post(`${API}/vehicle-types`, formData);
+        await axios.post(`${API}/vehicle-types`, dataToSend);
         toast.success("Vehicle type created");
       }
       onRefresh();
@@ -147,23 +152,33 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {vehicleTypes.map((vt) => (
-            <Card key={vt.id} className="group hover:shadow-md transition-shadow" data-testid={`vehicle-type-card-${vt.id}`}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      {vt.has_trailer ? (
-                        <Truck className="w-5 h-5 text-blue-600" />
-                      ) : (
-                        <Car className="w-5 h-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{vt.name}</h3>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Users className="w-3 h-3" />
-                        <span>{vt.capacity} passengers</span>
-                      </div>
+            <Card key={vt.id} className="group hover:shadow-md transition-shadow overflow-hidden" data-testid={`vehicle-type-card-${vt.id}`}>
+              {/* Photo Section */}
+              {vt.photo_url ? (
+                <div className="h-32 bg-gray-100 overflow-hidden">
+                  <img 
+                    src={vt.photo_url} 
+                    alt={vt.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              ) : (
+                <div className="h-32 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                  {vt.has_trailer ? (
+                    <Truck className="w-12 h-12 text-blue-300" />
+                  ) : (
+                    <Car className="w-12 h-12 text-blue-300" />
+                  )}
+                </div>
+              )}
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="font-semibold">{vt.name}</h3>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Users className="w-3 h-3" />
+                      <span>{vt.capacity} passengers</span>
                     </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -182,7 +197,7 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
                 </div>
                 
                 {vt.description && (
-                  <p className="text-sm text-muted-foreground mb-3">{vt.description}</p>
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{vt.description}</p>
                 )}
                 
                 <div className="flex items-center justify-between text-sm">
@@ -206,7 +221,7 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
 
       {/* Vehicle Type Form Modal */}
       <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); resetForm(); }}}>
-        <DialogContent className="sm:max-w-[425px]" data-testid="vehicle-type-form-modal">
+        <DialogContent className="sm:max-w-[500px]" data-testid="vehicle-type-form-modal">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Vehicle Type" : "Add Vehicle Type"}</DialogTitle>
           </DialogHeader>
@@ -247,6 +262,32 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
                   data-testid="vehicle-type-description-input"
                 />
               </div>
+              
+              {/* Photo URL */}
+              <div className="space-y-2">
+                <Label htmlFor="vt-photo" className="flex items-center gap-2">
+                  <Image className="w-4 h-4" />
+                  Photo URL
+                </Label>
+                <Input
+                  id="vt-photo"
+                  value={formData.photo_url}
+                  onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
+                  placeholder="https://example.com/vehicle-photo.jpg"
+                  data-testid="vehicle-type-photo-input"
+                />
+                {formData.photo_url && (
+                  <div className="mt-2 rounded-lg overflow-hidden border h-24">
+                    <img 
+                      src={formData.photo_url} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = ''; e.target.alt = 'Invalid URL'; }}
+                    />
+                  </div>
+                )}
+              </div>
+              
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="vt-trailer">Has Trailer</Label>
@@ -318,9 +359,11 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
     color: "",
     year: new Date().getFullYear(),
     vehicle_type_id: "",
+    photo_url: "",
     insurance_expiry: "",
     tax_expiry: "",
-    mot_expiry: "",
+    dcc_test_date_1: "",
+    dcc_test_date_2: "",
     notes: "",
     is_active: true,
   });
@@ -334,9 +377,11 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
       color: "",
       year: new Date().getFullYear(),
       vehicle_type_id: "",
+      photo_url: "",
       insurance_expiry: "",
       tax_expiry: "",
-      mot_expiry: "",
+      dcc_test_date_1: "",
+      dcc_test_date_2: "",
       notes: "",
       is_active: true,
     });
@@ -352,9 +397,11 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
       color: v.color || "",
       year: v.year || new Date().getFullYear(),
       vehicle_type_id: v.vehicle_type_id || "",
+      photo_url: v.photo_url || "",
       insurance_expiry: v.insurance_expiry || "",
       tax_expiry: v.tax_expiry || "",
-      mot_expiry: v.mot_expiry || "",
+      dcc_test_date_1: v.dcc_test_date_1 || "",
+      dcc_test_date_2: v.dcc_test_date_2 || "",
       notes: v.notes || "",
       is_active: v.is_active !== false,
     });
@@ -368,9 +415,11 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
       const dataToSend = { ...formData };
       // Convert empty strings to null for optional fields
       if (!dataToSend.vehicle_type_id) dataToSend.vehicle_type_id = null;
+      if (!dataToSend.photo_url) dataToSend.photo_url = null;
       if (!dataToSend.insurance_expiry) dataToSend.insurance_expiry = null;
       if (!dataToSend.tax_expiry) dataToSend.tax_expiry = null;
-      if (!dataToSend.mot_expiry) dataToSend.mot_expiry = null;
+      if (!dataToSend.dcc_test_date_1) dataToSend.dcc_test_date_1 = null;
+      if (!dataToSend.dcc_test_date_2) dataToSend.dcc_test_date_2 = null;
       
       if (editing) {
         await axios.put(`${API}/vehicles/${editing.id}`, dataToSend);
@@ -414,7 +463,7 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
     if (filterStatus === "inactive") matchesStatus = v.is_active === false;
     if (filterStatus === "expiring") {
       // Has any document expiring in 30 days
-      const docs = [v.insurance_expiry, v.tax_expiry, v.mot_expiry];
+      const docs = [v.insurance_expiry, v.tax_expiry, v.dcc_test_date_1, v.dcc_test_date_2];
       matchesStatus = docs.some(d => {
         if (!d) return false;
         const status = getDocumentStatus(d);
@@ -490,15 +539,28 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
           {filteredVehicles.map((v) => (
             <Card 
               key={v.id} 
-              className={`group hover:shadow-md transition-shadow ${!v.is_active ? 'opacity-60' : ''}`}
+              className={`group hover:shadow-md transition-shadow overflow-hidden ${!v.is_active ? 'opacity-60' : ''}`}
               data-testid={`vehicle-card-${v.id}`}
             >
+              {/* Photo Section */}
+              {v.photo_url ? (
+                <div className="h-36 bg-gray-100 overflow-hidden">
+                  <img 
+                    src={v.photo_url} 
+                    alt={v.registration} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              ) : null}
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${v.is_active ? 'bg-primary/10' : 'bg-gray-100'}`}>
-                      <Car className={`w-6 h-6 ${v.is_active ? 'text-primary' : 'text-gray-400'}`} />
-                    </div>
+                    {!v.photo_url && (
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${v.is_active ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                        <Car className={`w-6 h-6 ${v.is_active ? 'text-primary' : 'text-gray-400'}`} />
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-bold text-lg">{v.registration}</h3>
                       <p className="text-sm text-muted-foreground">
@@ -538,7 +600,8 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
                   </h4>
                   <DocumentBadge label="Insurance" date={v.insurance_expiry} />
                   <DocumentBadge label="Road Tax" date={v.tax_expiry} />
-                  <DocumentBadge label="MOT Test" date={v.mot_expiry} />
+                  <DocumentBadge label="DCC Test 1" date={v.dcc_test_date_1} />
+                  <DocumentBadge label="DCC Test 2" date={v.dcc_test_date_2} />
                 </div>
 
                 {/* Color & Notes */}
@@ -658,13 +721,38 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
                 </div>
               </div>
 
+              {/* Photo URL */}
+              <div className="space-y-2">
+                <Label htmlFor="v-photo" className="flex items-center gap-2">
+                  <Image className="w-4 h-4" />
+                  Photo URL
+                </Label>
+                <Input
+                  id="v-photo"
+                  value={formData.photo_url}
+                  onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
+                  placeholder="https://example.com/vehicle-photo.jpg"
+                  data-testid="vehicle-photo-input"
+                />
+                {formData.photo_url && (
+                  <div className="mt-2 rounded-lg overflow-hidden border h-24">
+                    <img 
+                      src={formData.photo_url} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = ''; e.target.alt = 'Invalid URL'; }}
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* Document Dates */}
               <div className="pt-4 border-t">
                 <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Document Expiry Dates
                 </h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="v-insurance">Insurance</Label>
                     <Input
@@ -686,13 +774,23 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="v-mot">MOT Test</Label>
+                    <Label htmlFor="v-dcc1">DCC Test Date 1</Label>
                     <Input
-                      id="v-mot"
+                      id="v-dcc1"
                       type="date"
-                      value={formData.mot_expiry}
-                      onChange={(e) => setFormData({ ...formData, mot_expiry: e.target.value })}
-                      data-testid="vehicle-mot-input"
+                      value={formData.dcc_test_date_1}
+                      onChange={(e) => setFormData({ ...formData, dcc_test_date_1: e.target.value })}
+                      data-testid="vehicle-dcc1-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="v-dcc2">DCC Test Date 2</Label>
+                    <Input
+                      id="v-dcc2"
+                      type="date"
+                      value={formData.dcc_test_date_2}
+                      onChange={(e) => setFormData({ ...formData, dcc_test_date_2: e.target.value })}
+                      data-testid="vehicle-dcc2-input"
                     />
                   </div>
                 </div>
@@ -799,7 +897,7 @@ const VehiclesPage = () => {
   // Stats for header
   const activeVehicles = vehicles.filter(v => v.is_active !== false).length;
   const expiringDocs = vehicles.filter(v => {
-    const docs = [v.insurance_expiry, v.tax_expiry, v.mot_expiry];
+    const docs = [v.insurance_expiry, v.tax_expiry, v.dcc_test_date_1, v.dcc_test_date_2];
     return docs.some(d => {
       if (!d) return false;
       const status = getDocumentStatus(d);

@@ -2238,12 +2238,45 @@ async def assign_driver_to_booking(booking_id: str, driver_id: str):
     )
     await db.drivers.update_one({"id": driver_id}, {"$set": {"status": DriverStatus.BUSY}})
     
+    # Send push notification to driver if they have a push token
+    if driver.get("push_token"):
+        await send_driver_push_notification(
+            driver["push_token"],
+            "New Booking Assigned",
+            f"Pickup: {booking.get('pickup_location', 'N/A')[:50]}",
+            {"type": "new_booking", "booking_id": booking_id}
+        )
+    
     updated = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if isinstance(updated.get('created_at'), str):
         updated['created_at'] = datetime.fromisoformat(updated['created_at'])
     if isinstance(updated.get('booking_datetime'), str):
         updated['booking_datetime'] = datetime.fromisoformat(updated['booking_datetime'])
     return updated
+
+# Send push notification to driver via Expo
+async def send_driver_push_notification(push_token: str, title: str, body: str, data: dict = None):
+    """Send push notification to driver's mobile app via Expo Push Service"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://exp.host/--/api/v2/push/send",
+                json={
+                    "to": push_token,
+                    "title": title,
+                    "body": body,
+                    "data": data or {},
+                    "sound": "default",
+                    "priority": "high",
+                    "channelId": "bookings",
+                },
+                headers={"Content-Type": "application/json"}
+            )
+            logging.info(f"Push notification sent to {push_token[:20]}...: {response.status_code}")
+            return response.status_code == 200
+    except Exception as e:
+        logging.error(f"Error sending push notification: {e}")
+        return False
 
 @api_router.post("/bookings/{booking_id}/resend-sms")
 async def resend_booking_sms(booking_id: str):

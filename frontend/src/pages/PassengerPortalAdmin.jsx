@@ -18,7 +18,6 @@ const PassengerPortalAdmin = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedPassenger, setSelectedPassenger] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

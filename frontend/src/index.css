@@ -22,30 +22,34 @@ code {
 @layer base {
     :root {
         --background: 0 0% 100%;
-        --foreground: 222 47% 11%;
+        --foreground: 20 10% 10%;
         --card: 0 0% 100%;
-        --card-foreground: 222 47% 11%;
+        --card-foreground: 20 10% 10%;
         --popover: 0 0% 100%;
-        --popover-foreground: 222 47% 11%;
-        --primary: 222 47% 11%;
-        --primary-foreground: 210 40% 98%;
-        --secondary: 210 40% 96%;
-        --secondary-foreground: 222 47% 11%;
-        --muted: 210 40% 96%;
-        --muted-foreground: 215 16% 47%;
-        --accent: 217 91% 60%;
-        --accent-foreground: 0 0% 100%;
+        --popover-foreground: 20 10% 10%;
+        /* CJ's Travel Gold */
+        --primary: 40 60% 58%;
+        --primary-foreground: 20 10% 10%;
+        --secondary: 40 20% 96%;
+        --secondary-foreground: 20 10% 10%;
+        --muted: 40 10% 96%;
+        --muted-foreground: 20 10% 40%;
+        --accent: 40 60% 58%;
+        --accent-foreground: 20 10% 10%;
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 100%;
         --success: 160 84% 39%;
         --success-foreground: 0 0% 100%;
         --warning: 38 92% 50%;
         --warning-foreground: 0 0% 100%;
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
-        --ring: 222 47% 11%;
+        --border: 40 15% 88%;
+        --input: 40 15% 88%;
+        --ring: 40 60% 58%;
         --radius: 0.5rem;
-        --surface: 210 40% 98%;
+        --surface: 40 10% 98%;
+        /* CJ's specific colors */
+        --cj-gold: 40 60% 58%;
+        --cj-dark: 20 10% 10%;
     }
 }
 

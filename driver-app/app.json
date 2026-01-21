@@ -54,7 +54,12 @@
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
         "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED"
+        "RECEIVE_BOOT_COMPLETED",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
@@ -83,13 +88,16 @@
       "expo-secure-store"
     ],
     "extra": {
-      "eas": {}
+      "eas": {
+        "projectId": "c2c6287f-c151-494a-bbe7-8b1bd62daeec"
+      }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
       "enabled": true
-    }
+    },
+    "owner": "cjsexecutivetravel"
   }
 }

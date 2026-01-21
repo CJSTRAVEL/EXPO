@@ -199,17 +199,15 @@ const AddressAutocomplete = ({
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef(null);
 
-  // Only sync from parent when value prop changes externally (e.g., form reset)
+  // Only sync from parent when value prop changes externally (e.g., form reset or flight lookup)
   useEffect(() => {
     // Don't sync if user is actively typing
     if (isTypingRef.current) return;
     
-    // Only update if the value is significantly different (not just a character behind)
+    // Sync when parent value differs from local state
+    // This handles form reset, flight lookup auto-fill, etc.
     if (value !== undefined && value !== inputValue) {
-      // If value is empty and inputValue has content, it might be a form reset
-      if (value === "" || Math.abs((value?.length || 0) - (inputValue?.length || 0)) > 1) {
-        setInputValue(value || "");
-      }
+      setInputValue(value || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);

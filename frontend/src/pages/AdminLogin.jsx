@@ -33,30 +33,30 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)' }}>
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <img
             src="https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png"
             alt="CJ's Executive Travel"
-            className="w-20 h-20 mx-auto mb-4 object-contain"
+            className="w-24 h-24 mx-auto mb-4 object-contain"
           />
           <h1 className="text-2xl font-bold text-white">CJ's Executive Travel</h1>
-          <p className="text-slate-400 mt-1">Dispatch System</p>
+          <p className="text-[#D4A853] mt-1 font-medium">Dispatch System</p>
         </div>
 
-        <Card className="border-slate-700 bg-slate-800/50 backdrop-blur" data-testid="admin-login-card">
+        <Card className="border-[#D4A853]/30 bg-[#1a1a1a]/90 backdrop-blur shadow-2xl" data-testid="admin-login-card">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl text-white">Sign In</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-gray-400">
               Enter your credentials to access the dispatch system
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-200">Email</Label>
+                <Label htmlFor="email" className="text-gray-200">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -64,12 +64,12 @@ const AdminLogin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary"
+                  className="bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853]"
                   data-testid="admin-email-input"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-200">Password</Label>
+                <Label htmlFor="password" className="text-gray-200">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -78,13 +78,13 @@ const AdminLogin = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary pr-10"
+                    className="bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853] pr-10"
                     data-testid="admin-password-input"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D4A853]"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -92,7 +92,7 @@ const AdminLogin = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90"
+                className="w-full bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a] font-semibold"
                 disabled={loading}
                 data-testid="admin-login-btn"
               >
@@ -112,8 +112,8 @@ const AdminLogin = () => {
           </CardContent>
         </Card>
 
-        <p className="text-center text-slate-500 text-sm mt-6">
-          Passenger portal? <a href="/login" className="text-primary hover:underline">Sign in here</a>
+        <p className="text-center text-gray-500 text-sm mt-6">
+          Passenger portal? <a href="/login" className="text-[#D4A853] hover:underline">Sign in here</a>
         </p>
       </div>
     </div>

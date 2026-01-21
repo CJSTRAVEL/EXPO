@@ -1701,6 +1701,29 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
     }
   };
 
+  // Format field values for history display (translate IDs to names)
+  const formatHistoryValue = (field, value) => {
+    if (value === null || value === undefined || value === '') return '(empty)';
+    
+    // Handle vehicle_type field - translate ID to name
+    if (field === 'vehicle_type') {
+      const vt = vehicleTypes?.find(v => v.id === value);
+      return vt ? vt.name : value;
+    }
+    
+    // Handle status field - make it readable
+    if (field === 'status') {
+      return String(value).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    // Handle objects (like flight_info)
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    
+    return String(value);
+  };
+
   const handleResendSms = async () => {
     setSendingSms(true);
     try {

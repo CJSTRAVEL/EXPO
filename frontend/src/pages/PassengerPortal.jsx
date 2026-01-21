@@ -1312,6 +1312,91 @@ const PassengerPortal = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Vehicle Selection Modal */}
+      <Dialog open={showVehicleSelector} onOpenChange={setShowVehicleSelector}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="vehicle-selector-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Car className="w-5 h-5 text-[#D4A853]" />
+              Select Your Vehicle
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+            {vehicleTypes.length === 0 ? (
+              <div className="col-span-2 text-center py-8 text-muted-foreground">
+                <Car className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No vehicles available</p>
+              </div>
+            ) : (
+              vehicleTypes.map((vt) => (
+                <div
+                  key={vt.id}
+                  onClick={() => {
+                    setRequestForm({ 
+                      ...requestForm, 
+                      vehicle_type_id: vt.id, 
+                      vehicle_type_name: vt.name 
+                    });
+                    setShowVehicleSelector(false);
+                  }}
+                  className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all hover:shadow-lg ${
+                    requestForm.vehicle_type_id === vt.id 
+                      ? 'border-[#D4A853] shadow-lg ring-2 ring-[#D4A853]/20' 
+                      : 'border-gray-200 hover:border-[#D4A853]/50'
+                  }`}
+                  data-testid={`vehicle-option-${vt.id}`}
+                >
+                  {/* Vehicle Photo */}
+                  <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                    {vt.photo_url ? (
+                      <img 
+                        src={vt.photo_url} 
+                        alt={vt.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Car className="w-16 h-16 text-gray-300" />
+                      </div>
+                    )}
+                    {/* Selected indicator */}
+                    {requestForm.vehicle_type_id === vt.id && (
+                      <div className="absolute top-2 right-2 w-8 h-8 bg-[#D4A853] rounded-full flex items-center justify-center">
+                        <Check className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                    {/* Has Trailer badge */}
+                    {vt.has_trailer && (
+                      <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                        + Trailer
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Vehicle Info */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg">{vt.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Users className="w-4 h-4 text-[#D4A853]" />
+                      <span className="text-sm font-medium">
+                        Max {vt.capacity} passengers
+                      </span>
+                    </div>
+                    {vt.description && (
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                        {vt.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

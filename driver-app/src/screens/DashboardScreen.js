@@ -8,6 +8,8 @@ import {
   RefreshControl,
   Switch,
   Alert,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';

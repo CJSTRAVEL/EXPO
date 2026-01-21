@@ -809,6 +809,7 @@ const NewBookingPage = () => {
                     value={formData.return_pickup_location}
                     onChange={(value) => setFormData(prev => ({ ...prev, return_pickup_location: value }))}
                     placeholder="Where to pick up for return..."
+                    className="bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   />
                 </div>
 
@@ -848,6 +849,7 @@ const NewBookingPage = () => {
                             return_additional_stops: prev.return_additional_stops.map((s, i) => i === index ? value : s)
                           }))}
                           placeholder={`Return stop ${index + 1}...`}
+                          className="bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                         />
                       </div>
                       <Button
@@ -873,6 +875,7 @@ const NewBookingPage = () => {
                     value={formData.return_dropoff_location}
                     onChange={(value) => setFormData(prev => ({ ...prev, return_dropoff_location: value }))}
                     placeholder="Where to drop off on return..."
+                    className="bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   />
                 </div>
 

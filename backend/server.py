@@ -1117,7 +1117,9 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
 def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                        pickup: str = None, dropoff: str = None,
                        booking_datetime: str = None, short_booking_id: str = None,
-                       status: str = None, driver_name: str = None):
+                       status: str = None, driver_name: str = None,
+                       customer_phone: str = None, vehicle_type: str = None,
+                       additional_stops: list = None):
     """Send email confirmation for booking"""
     if not smtp_configured:
         logging.warning("SMTP not configured, skipping email")
@@ -1131,7 +1133,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         # Generate booking details link
         app_url = os.environ.get('APP_URL', 'https://chauffeur-app-15.preview.emergentagent.com')
         if short_booking_id:
-            booking_link = f"{app_url}/api/preview/{short_booking_id}"
+            booking_link = f"{app_url}/b/{short_booking_id}"
         else:
             booking_link = f"{app_url}/booking/{booking_id}"
         
@@ -1140,109 +1142,193 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         if booking_datetime:
             try:
                 dt = datetime.fromisoformat(booking_datetime.replace('Z', '+00:00'))
-                formatted_datetime = dt.strftime("%A, %d %B %Y at %H:%M")
+                formatted_datetime = dt.strftime("%d/%m/%Y %H:%M")
             except:
                 formatted_datetime = str(booking_datetime)
         
-        # Determine email subject and content based on status
+        # Determine email subject
         if status == "driver_assigned" and driver_name:
             subject = f"Driver Assigned - CJ's Executive Travel Booking"
-            status_message = f"A driver has been assigned to your booking: <strong>{driver_name}</strong>"
         elif status == "confirmed":
             subject = f"Booking Confirmed - CJ's Executive Travel"
-            status_message = "Your booking has been confirmed."
         elif status == "completed":
             subject = f"Journey Completed - CJ's Executive Travel"
-            status_message = "Your journey has been completed. Thank you for travelling with us!"
         elif status == "cancelled":
             subject = f"Booking Cancelled - CJ's Executive Travel"
-            status_message = "Your booking has been cancelled."
         else:
-            subject = f"Booking Confirmation - CJ's Executive Travel"
-            status_message = "Your booking is confirmed."
+            subject = f"Booking Confirmation email from CJs Executive Travel Limited"
         
-        # Create HTML email
+        # Build via stops HTML
+        via_stops_html = ""
+        if additional_stops and len(additional_stops) > 0:
+            for stop in additional_stops:
+                if stop:
+                    via_stops_html += f'''
+                    <tr>
+                        <td style="padding: 8px 0; color: #666; font-weight: bold; vertical-align: top; width: 80px;">Via</td>
+                        <td style="padding: 8px 0; color: #333;">{stop}</td>
+                    </tr>'''
+        
+        # Create HTML email matching the design
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-                .header h1 {{ margin: 0; font-size: 24px; }}
-                .content {{ background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }}
-                .booking-details {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e3a5f; }}
-                .detail-row {{ display: flex; margin: 10px 0; }}
-                .detail-label {{ font-weight: bold; width: 120px; color: #666; }}
-                .detail-value {{ flex: 1; }}
-                .cta-button {{ display: inline-block; background: #1e3a5f; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
-                .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
-                .status-badge {{ display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin: 10px 0; }}
-                .status-confirmed {{ background: #d4edda; color: #155724; }}
-                .status-assigned {{ background: #cce5ff; color: #004085; }}
-                .status-completed {{ background: #d4edda; color: #155724; }}
-                .status-cancelled {{ background: #f8d7da; color: #721c24; }}
-            </style>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>CJ's Executive Travel</h1>
-                    <p style="margin: 10px 0 0 0; opacity: 0.9;">Professional Chauffeur Services</p>
-                </div>
-                <div class="content">
-                    <p>Dear {customer_name},</p>
-                    <p>{status_message}</p>
-                    
-                    <div class="booking-details">
-                        <h3 style="margin-top: 0; color: #1e3a5f;">Booking Details</h3>
-                        <div class="detail-row">
-                            <span class="detail-label">Booking Ref:</span>
-                            <span class="detail-value"><strong>{short_booking_id or booking_id[:8]}</strong></span>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #e8eef3;">
+            <!-- Header Banner -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #1a3a5c;">
+                <tr>
+                    <td style="padding: 15px; text-align: center; color: #d4af37; font-size: 14px;">
+                        Booking Confirmation email from CJs Executive Travel Limited
+                    </td>
+                </tr>
+            </table>
+            
+            <!-- Main Container -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 700px; margin: 0 auto; background-color: #ffffff;">
+                <!-- Navigation -->
+                <tr>
+                    <td style="padding: 20px 0; border-bottom: 1px solid #eee;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="text-align: center;">
+                                    <a href="#" style="color: #333; text-decoration: none; padding: 0 15px; font-size: 14px;">Home</a>
+                                    <a href="#" style="color: #333; text-decoration: none; padding: 0 15px; font-size: 14px;">Reviews</a>
+                                    <span style="padding: 0 20px; font-weight: bold; color: #1a3a5c; font-size: 18px;">CJ's Executive</span>
+                                    <a href="#" style="color: #333; text-decoration: none; padding: 0 15px; font-size: 14px;">About</a>
+                                    <a href="#" style="color: #333; text-decoration: none; padding: 0 15px; font-size: 14px;">Contact</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                
+                <!-- Thank You Message -->
+                <tr>
+                    <td style="padding: 30px 40px; text-align: center; background-color: #f8f9fa;">
+                        <p style="margin: 0; color: #333; font-size: 16px;">
+                            Thanks for booking with CJs Executive Travel Limited.
+                        </p>
+                        <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">
+                            Need help? Call us on: <a href="tel:+4419177212223" style="color: #1a3a5c; text-decoration: none;">+44 191 77212223</a>
+                        </p>
+                    </td>
+                </tr>
+                
+                <!-- Journey Details Section -->
+                <tr>
+                    <td style="padding: 30px 40px;">
+                        <h2 style="margin: 0 0 20px 0; color: #333; font-size: 18px; font-weight: bold;">Journey Details</h2>
+                        
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="vertical-align: top; width: 55%;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #666; font-weight: bold; vertical-align: top; width: 80px;">Date & Time</td>
+                                            <td style="padding: 8px 0; color: #333;">{formatted_datetime}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #666; font-weight: bold; vertical-align: top;">Pickup</td>
+                                            <td style="padding: 8px 0; color: #333;">{pickup or 'N/A'}</td>
+                                        </tr>
+                                        {via_stops_html}
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #666; font-weight: bold; vertical-align: top;">Drop</td>
+                                            <td style="padding: 8px 0; color: #333;">{dropoff or 'N/A'}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="vertical-align: top; width: 45%; padding-left: 20px;">
+                                    <!-- Map placeholder - static map image -->
+                                    <div style="background-color: #e0f0f8; border-radius: 8px; height: 180px; display: flex; align-items: center; justify-content: center;">
+                                        <img src="https://maps.googleapis.com/maps/api/staticmap?size=250x180&markers=color:green|{pickup}&markers=color:red|{dropoff}&path=color:0x0000ff|weight:3|{pickup}|{dropoff}&key=" alt="Route Map" style="border-radius: 8px; max-width: 100%;" onerror="this.style.display='none'">
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                
+                <!-- Booking Details Section -->
+                <tr>
+                    <td style="padding: 0 40px 30px 40px;">
+                        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px;">
+                            <h2 style="margin: 0 0 15px 0; color: #333; font-size: 16px; font-weight: bold;">Booking Details</h2>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
+                                <tr>
+                                    <td style="padding: 5px 0; color: #666;">Passenger:</td>
+                                    <td style="padding: 5px 0; color: #333;">{customer_name}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; color: #666;">Passenger Mobile:</td>
+                                    <td style="padding: 5px 0; color: #333;">{customer_phone or 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; color: #666;">Vehicle Type:</td>
+                                    <td style="padding: 5px 0; color: #333;">{vehicle_type or "CJs 8 Minibus"}</td>
+                                </tr>
+                                {f'<tr><td style="padding: 5px 0; color: #666;">Driver:</td><td style="padding: 5px 0; color: #333;">{driver_name}</td></tr>' if driver_name else ''}
+                            </table>
                         </div>
-                        {f'<div class="detail-row"><span class="detail-label">Date & Time:</span><span class="detail-value">{formatted_datetime}</span></div>' if formatted_datetime else ''}
-                        {f'<div class="detail-row"><span class="detail-label">Pickup:</span><span class="detail-value">{pickup}</span></div>' if pickup else ''}
-                        {f'<div class="detail-row"><span class="detail-label">Drop-off:</span><span class="detail-value">{dropoff}</span></div>' if dropoff else ''}
-                        {f'<div class="detail-row"><span class="detail-label">Driver:</span><span class="detail-value">{driver_name}</span></div>' if driver_name else ''}
-                    </div>
-                    
-                    <p style="text-align: center;">
-                        <a href="{booking_link}" class="cta-button">View Full Booking Details</a>
-                    </p>
-                    
-                    <p>If you have any questions, please don't hesitate to contact us.</p>
-                    <p>Thank you for choosing CJ's Executive Travel.</p>
-                </div>
-                <div class="footer">
-                    <p>CJ's Executive Travel Limited</p>
-                    <p>This is an automated message. Please do not reply directly to this email.</p>
-                </div>
-            </div>
+                    </td>
+                </tr>
+                
+                <!-- CTA Button -->
+                <tr>
+                    <td style="padding: 0 40px 40px 40px; text-align: center;">
+                        <a href="{booking_link}" style="display: inline-block; background-color: #4a5568; color: #ffffff; padding: 15px 40px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold;">
+                            Live Journey Tracking
+                        </a>
+                    </td>
+                </tr>
+                
+                <!-- Footer -->
+                <tr>
+                    <td style="padding: 30px 40px; background-color: #f8f9fa; border-top: 1px solid #eee;">
+                        <p style="margin: 0; color: #888; font-size: 11px; text-align: center; line-height: 1.6;">
+                            This is an automated email confirmation from CJs Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 191 77212223.
+                        </p>
+                        <p style="margin: 15px 0 0 0; color: #888; font-size: 11px; text-align: center;">
+                            CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstravel.uk
+                        </p>
+                    </td>
+                </tr>
+            </table>
         </body>
         </html>
         """
         
         # Plain text version
         text_content = f"""
-Dear {customer_name},
+Booking Confirmation from CJs Executive Travel Limited
 
-{status_message}
+Thanks for booking with CJs Executive Travel Limited.
+Need help? Call us on: +44 191 77212223
+
+JOURNEY DETAILS
+---------------
+Date & Time: {formatted_datetime}
+Pickup: {pickup or 'N/A'}
+{chr(10).join([f'Via: {stop}' for stop in (additional_stops or []) if stop])}
+Drop: {dropoff or 'N/A'}
 
 BOOKING DETAILS
 ---------------
-Booking Ref: {short_booking_id or booking_id[:8]}
-{"Date & Time: " + formatted_datetime if formatted_datetime else ""}
-{"Pickup: " + pickup if pickup else ""}
-{"Drop-off: " + dropoff if dropoff else ""}
+Passenger: {customer_name}
+Passenger Mobile: {customer_phone or 'N/A'}
+Vehicle Type: {vehicle_type or 'CJs 8 Minibus'}
 {"Driver: " + driver_name if driver_name else ""}
 
-View your booking: {booking_link}
+Track your journey: {booking_link}
 
-Thank you for choosing CJ's Executive Travel.
+This is an automated email from CJs Executive Travel Limited.
+If any information is incorrect, please contact us on +44 191 77212223.
 
-CJ's Executive Travel Limited
+CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstravel.uk
         """
         
         # Create message

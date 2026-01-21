@@ -3650,6 +3650,24 @@ async def migrate_booking_ids():
             )
             logger.info(f"Assigned {new_booking_id} to booking {booking['id']}")
 
+@app.on_event("startup")
+async def create_default_admin():
+    """Create default admin user if none exists"""
+    admin_count = await db.admin_users.count_documents({})
+    if admin_count == 0:
+        logger.info("Creating default admin user...")
+        default_admin = {
+            "id": str(uuid.uuid4()),
+            "email": "admin@cjstravel.uk",
+            "name": "Admin",
+            "role": "super_admin",
+            "is_active": True,
+            "password_hash": hash_password("admin123"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.admin_users.insert_one(default_admin)
+        logger.info(f"Default admin created: admin@cjstravel.uk / admin123")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()

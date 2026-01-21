@@ -23,20 +23,20 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-// Section Header Component
+// Section Header Component - Dark Theme
 const SectionHeader = ({ icon: Icon, title, actions }) => (
-  <div className="flex items-center justify-between px-4 py-3 bg-slate-50/80 border-b border-slate-200">
+  <div className="flex items-center justify-between px-4 py-3 bg-[#1a1a1a] border-b border-[#2d2d2d]">
     <div className="flex items-center gap-2">
-      <Icon className="w-4 h-4 text-amber-600" />
-      <span className="text-sm font-bold text-slate-700 uppercase tracking-wide">{title}</span>
+      <Icon className="w-4 h-4 text-[#D4A853]" />
+      <span className="text-sm font-bold text-white uppercase tracking-wide">{title}</span>
     </div>
     {actions && <div className="flex items-center gap-2">{actions}</div>}
   </div>
 );
 
-// Section Container Component
+// Section Container Component - Dark Theme
 const Section = ({ icon, title, actions, children, className = "" }) => (
-  <div className={cn("bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden", className)}>
+  <div className={cn("bg-[#252525] rounded-lg border border-[#3d3d3d] shadow-lg overflow-hidden", className)}>
     <SectionHeader icon={icon} title={title} actions={actions} />
     <div className="p-4 space-y-4">
       {children}

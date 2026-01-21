@@ -1200,29 +1200,42 @@ const NewBookingPage = () => {
               </div>
             </div>
 
-            {/* Flight Info Summary (shows when flight is saved) */}
-            {formData.flight_number && (
-              <div className="bg-[#D4A853]/10 rounded-lg p-3 border border-[#D4A853]/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Plane className="w-4 h-4 text-[#D4A853]" />
-                    <span className="text-sm font-medium text-[#D4A853]">{formData.flight_number}</span>
-                    {formData.airline && <span className="text-xs text-gray-400">({formData.airline})</span>}
+            {/* Flight Info Section */}
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-400">Flight Information</Label>
+              {formData.flight_number ? (
+                <div className="bg-[#D4A853]/10 rounded-lg p-3 border border-[#D4A853]/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Plane className="w-4 h-4 text-[#D4A853]" />
+                      <span className="text-sm font-medium text-[#D4A853]">{formData.flight_number}</span>
+                      {formData.airline && <span className="text-xs text-gray-400">({formData.airline})</span>}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setFlightModalOpen(true)}
+                      className="h-7 text-xs text-[#D4A853] hover:bg-[#D4A853]/20"
+                    >
+                      Edit
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setFlightModalOpen(true)}
-                    className="h-7 text-xs text-[#D4A853] hover:bg-[#D4A853]/20"
-                  >
-                    Edit
-                  </Button>
+                  {formData.terminal && (
+                    <div className="text-xs text-gray-400 mt-1">Terminal {formData.terminal}</div>
+                  )}
                 </div>
-                {formData.terminal && (
-                  <div className="text-xs text-gray-400 mt-1">Terminal {formData.terminal}</div>
-                )}
-              </div>
-            )}
+              ) : (
+                <Button
+                  onClick={() => setFlightModalOpen(true)}
+                  variant="outline"
+                  className="w-full justify-start gap-2 h-9 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d] hover:text-[#D4A853]"
+                  data-testid="open-flight-modal-btn"
+                >
+                  <Plane className="w-4 h-4" />
+                  Add Flight Information
+                </Button>
+              )}
+            </div>
 
             <div className="space-y-1.5">
               <Label className="text-xs text-gray-400">Internal Notes</Label>

@@ -119,6 +119,56 @@ Build a private hire application where you can add bookings and assign them to d
 - `POST /api/passenger/booking-requests` - Create booking request (passenger portal)
 - `PUT /api/admin/booking-requests/{id}/approve` - Approve request and create booking
 - `PUT /api/admin/booking-requests/{id}/reject` - Reject booking request
+- `POST /api/payments/create-checkout` - Create Stripe checkout session
+- `GET /api/payments/status/{session_id}` - Get payment status
+
+### Driver Mobile App API Endpoints
+- `POST /api/driver/login` - Driver authentication
+- `GET /api/driver/profile` - Get driver profile
+- `PUT /api/driver/status` - Update online/break status
+- `PUT /api/driver/location` - Update GPS location
+- `GET /api/driver/bookings` - Get assigned bookings (today/upcoming/past)
+- `GET /api/driver/bookings/pending` - Get pending assignment requests
+- `PUT /api/driver/bookings/{id}/accept` - Accept booking
+- `PUT /api/driver/bookings/{id}/reject` - Reject booking
+- `PUT /api/driver/bookings/{id}/status` - Update booking status
+- `POST /api/driver/bookings/{id}/notify-arrival` - Send arrival SMS
+- `GET /api/driver/earnings` - Get earnings summary
+- `GET /api/driver/history` - Get booking history
+- `POST /api/driver/chat/send` - Send chat message
+- `GET /api/driver/chat/{booking_id}` - Get chat messages
+
+## Driver Mobile App (React Native / Expo)
+**Location:** `/app/driver-app/`
+
+### Features
+- ✅ Email + password authentication
+- ✅ Dashboard with online/offline toggle, break mode
+- ✅ View assigned bookings (today, upcoming, past)
+- ✅ Accept/reject booking assignments
+- ✅ Update booking status (On Way → Arrived → In Progress → Completed)
+- ✅ One-tap navigation (opens Google/Apple Maps)
+- ✅ In-app map navigation with route preview
+- ✅ Live GPS tracking (shares location with dispatch)
+- ✅ Push notifications for new bookings
+- ✅ One-tap call/text to passenger
+- ✅ "I've arrived" notification to passenger
+- ✅ Chat with dispatch
+- ✅ Earnings summary (today/weekly/all-time)
+- ✅ Booking history
+
+### Test Driver Account
+- Email: `john.driver@cjstravel.uk`
+- Password: `driver123`
+
+### Building for App Stores
+```bash
+cd /app/driver-app
+npm install -g eas-cli
+eas login
+eas build --platform android --profile production  # Google Play
+eas build --platform ios --profile production       # App Store
+```
 
 ## Prioritized Backlog
 

@@ -368,14 +368,29 @@ export default function DashboardScreen({ navigation }) {
       </View>
 
       <View style={styles.bottomPadding} />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  pageHeader: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+    paddingBottom: 16,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.text,
   },
   headerCard: {
     backgroundColor: COLORS.primary,

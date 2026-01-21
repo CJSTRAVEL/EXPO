@@ -1734,6 +1734,7 @@ const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [clients, setClients] = useState([]);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -1749,16 +1750,18 @@ const BookingsPage = () => {
 
   const fetchData = async () => {
     try {
-      const [bookingsRes, driversRes, clientsRes] = await Promise.all([
+      const [bookingsRes, driversRes, clientsRes, vehicleTypesRes] = await Promise.all([
         axios.get(`${API}/bookings`),
         axios.get(`${API}/drivers`),
         axios.get(`${API}/clients`),
+        axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
       ]);
       // Filter out contract work bookings (those linked to clients)
       const regularBookings = bookingsRes.data.filter(b => !b.client_id);
       setBookings(regularBookings);
       setDrivers(driversRes.data);
       setClients(clientsRes.data);
+      setVehicleTypes(vehicleTypesRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
@@ -1774,6 +1777,21 @@ const BookingsPage = () => {
   const getDriverName = (driverId) => {
     const driver = drivers.find(d => d.id === driverId);
     return driver ? driver.name : "Unassigned";
+  };
+
+  const getVehicleTypeName = (vehicleTypeId) => {
+    const vt = vehicleTypes.find(v => v.id === vehicleTypeId);
+    return vt ? vt.name : vehicleTypeId || "Not specified";
+  };
+
+  const formatDuration = (minutes) => {
+    if (!minutes) return null;
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${minutes} mins`;
   };
 
   const handleSave = async (formData) => {

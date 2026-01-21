@@ -89,7 +89,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/cjs-executive-travel-driver"
+      "enabled": true
     }
   }
 }

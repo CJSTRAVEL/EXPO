@@ -2241,9 +2241,9 @@ const BookingsPage = () => {
                                     {formatDuration(booking.duration_minutes)}
                                   </span>
                                 )}
-                                <span className={`text-xs hidden sm:flex items-center gap-1 px-2 py-0.5 rounded ${booking.vehicle_type ? 'text-slate-600 bg-slate-100' : 'text-slate-400 bg-slate-50'}`}>
+                                <span className={`text-xs hidden sm:flex items-center gap-1 px-2 py-0.5 rounded border ${getVehicleTypeColor(booking.vehicle_type)}`}>
                                   <Car className="w-3 h-3" />
-                                  {booking.vehicle_type ? getVehicleTypeName(booking.vehicle_type) : 'No vehicle'}
+                                  {booking.vehicle_type ? getVehicleTypeName(booking.vehicle_type) : 'Not specified'}
                                 </span>
                                 {getStatusBadge(booking.status)}
                                 <div onClick={(e) => e.stopPropagation()}>

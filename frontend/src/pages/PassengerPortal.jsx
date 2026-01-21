@@ -238,6 +238,11 @@ const PassengerPortal = () => {
       toast.error("Please enter pickup and drop-off locations");
       return;
     }
+    
+    if (!requestForm.vehicle_type_id) {
+      toast.error("Please select a vehicle type");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -274,6 +279,8 @@ const PassengerPortal = () => {
         luggage_count: parseInt(requestForm.luggage_count) || 0,
         notes: requestForm.notes,
         customer_email: requestForm.customer_email || null,
+        vehicle_type_id: requestForm.vehicle_type_id,
+        vehicle_type_name: requestForm.vehicle_type_name,
         flight_number: requestForm.flight_number || null,
         flight_info: flight_info,
         // Return booking fields

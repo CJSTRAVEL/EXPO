@@ -433,6 +433,9 @@ class BookingResponse(BaseModel):
     vehicle_type: Optional[str] = None
     passenger_count: Optional[int] = 1
     luggage_count: Optional[int] = 0
+    created_by_id: Optional[str] = None
+    created_by_name: Optional[str] = None
+    history: Optional[List[dict]] = None
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

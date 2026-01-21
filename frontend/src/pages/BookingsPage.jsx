@@ -2398,6 +2398,7 @@ const BookingsPage = () => {
         booking={selectedBooking}
         drivers={drivers}
         clients={clients}
+        vehicleTypes={vehicleTypes}
         isOpen={showForm}
         onSave={handleSave}
         onClose={() => {

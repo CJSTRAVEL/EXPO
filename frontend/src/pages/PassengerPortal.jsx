@@ -319,6 +319,8 @@ const PassengerPortal = () => {
       luggage_count: 0,
       notes: "",
       customer_email: "",
+      vehicle_type_id: "",
+      vehicle_type_name: "",
       flight_number: "",
       airline: "",
       flight_type: "",

@@ -569,13 +569,14 @@ const NewBookingPage = () => {
                   checked={formData.create_return}
                   onChange={(e) => {
                     const isChecked = e.target.checked;
-                    setFormData({ 
-                      ...formData, 
+                    setFormData(prev => ({ 
+                      ...prev, 
                       create_return: isChecked,
-                      return_pickup_location: isChecked ? formData.dropoff_location : "",
-                      return_dropoff_location: isChecked ? formData.pickup_location : "",
-                      return_datetime: isChecked ? new Date(formData.booking_datetime.getTime() + 3600000 * 3) : null
-                    });
+                      return_pickup_location: isChecked ? prev.dropoff_location : "",
+                      return_dropoff_location: isChecked ? prev.pickup_location : "",
+                      return_additional_stops: [],
+                      return_datetime: isChecked ? new Date(prev.booking_datetime.getTime() + 3600000 * 3) : null
+                    }));
                   }}
                   className="rounded border-slate-300"
                   data-testid="booking-return-toggle"
@@ -588,16 +589,96 @@ const NewBookingPage = () => {
             </div>
 
             {formData.create_return && (
-              <div className="bg-amber-50 rounded-lg p-3 space-y-3 border border-amber-200">
-                <div className="text-xs font-semibold text-amber-700 uppercase">Return Journey</div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-slate-500">Return Date</Label>
+              <div className="bg-amber-50 rounded-lg p-4 space-y-4 border border-amber-200">
+                <div className="bg-amber-100 -mx-4 -mt-4 px-4 py-2 border-b border-amber-200">
+                  <span className="text-sm font-bold text-amber-800 uppercase tracking-wide">Return Journey Details</span>
+                </div>
+
+                {/* Return Pickup Location */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-amber-900">Return Pickup Location</Label>
+                  <AddressAutocomplete
+                    value={formData.return_pickup_location}
+                    onChange={(value) => setFormData(prev => ({ ...prev, return_pickup_location: value }))}
+                    placeholder="Where to pick up for return..."
+                  />
+                </div>
+
+                {/* Return Stops */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-8 bg-amber-400 rounded"></div>
+                      <div>
+                        <Label className="text-sm font-medium text-amber-900">Return Stops (in order)</Label>
+                        {formData.return_additional_stops.length === 0 && (
+                          <p className="text-xs text-amber-600 italic">No intermediate stops - direct return</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        return_additional_stops: [...prev.return_additional_stops, ""]
+                      }))}
+                      className="h-7 text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-100"
+                    >
+                      <Plus className="w-3 h-3" /> Add Stop
+                    </Button>
+                  </div>
+                  
+                  {formData.return_additional_stops.map((stop, index) => (
+                    <div key={index} className="flex gap-2 ml-3">
+                      <div className="flex-1">
+                        <AddressAutocomplete
+                          value={stop}
+                          onChange={(value) => setFormData(prev => ({
+                            ...prev,
+                            return_additional_stops: prev.return_additional_stops.map((s, i) => i === index ? value : s)
+                          }))}
+                          placeholder={`Return stop ${index + 1}...`}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          return_additional_stops: prev.return_additional_stops.filter((_, i) => i !== index)
+                        }))}
+                        className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Return Final Drop-off */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-amber-900">Return Final Drop-off</Label>
+                  <AddressAutocomplete
+                    value={formData.return_dropoff_location}
+                    onChange={(value) => setFormData(prev => ({ ...prev, return_dropoff_location: value }))}
+                    placeholder="Where to drop off on return..."
+                  />
+                </div>
+
+                {/* Return Date & Time */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-amber-900">Return Date & Time</Label>
+                  <div className="flex gap-2">
                     <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full h-9 justify-start text-left font-normal text-xs">
-                          <Calendar className="mr-2 h-3 w-3" />
-                          {formData.return_datetime ? format(formData.return_datetime, "dd/MM/yy") : "Select"}
+                        <Button variant="outline" className="flex-1 h-9 justify-start text-left font-normal bg-white">
+                          <Clock className="mr-2 h-4 w-4 text-amber-600" />
+                          {formData.return_datetime 
+                            ? format(formData.return_datetime, "MMMM do, yyyy 'at' h:mm a")
+                            : "Select date & time"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -608,7 +689,7 @@ const NewBookingPage = () => {
                             if (date) {
                               const current = formData.return_datetime || new Date();
                               date.setHours(current.getHours(), current.getMinutes());
-                              setFormData({ ...formData, return_datetime: date });
+                              setFormData(prev => ({ ...prev, return_datetime: date }));
                               setReturnDateOpen(false);
                             }
                           }}
@@ -616,9 +697,6 @@ const NewBookingPage = () => {
                         />
                       </PopoverContent>
                     </Popover>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-slate-500">Return Time</Label>
                     <Input
                       type="time"
                       value={formData.return_datetime ? format(formData.return_datetime, "HH:mm") : "12:00"}
@@ -626,11 +704,39 @@ const NewBookingPage = () => {
                         const [hours, minutes] = e.target.value.split(':');
                         const newDate = new Date(formData.return_datetime || formData.booking_datetime);
                         newDate.setHours(parseInt(hours), parseInt(minutes));
-                        setFormData({ ...formData, return_datetime: newDate });
+                        setFormData(prev => ({ ...prev, return_datetime: newDate }));
                       }}
-                      className="h-9"
+                      className="w-24 h-9 bg-white"
                     />
                   </div>
+                </div>
+
+                {/* Return Airport Transfer */}
+                <div className="pt-2 border-t border-amber-200">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.return_is_airport_transfer || false}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        return_is_airport_transfer: e.target.checked 
+                      }))}
+                      className="rounded border-amber-300"
+                    />
+                    <span className="text-sm text-amber-800 flex items-center gap-1">
+                      <Plane className="w-4 h-4" /> Return Airport Transfer
+                    </span>
+                  </label>
+                </div>
+
+                {/* Info Banner */}
+                <div className="bg-amber-100 rounded-md p-3 flex items-start gap-2">
+                  <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-white text-xs font-bold">i</span>
+                  </div>
+                  <p className="text-sm text-amber-800">
+                    A separate return booking will be created for the same passenger
+                  </p>
                 </div>
               </div>
             )}

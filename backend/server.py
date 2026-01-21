@@ -708,6 +708,7 @@ class VehicleTypeBase(BaseModel):
     capacity: int  # Number of passengers
     description: Optional[str] = None
     has_trailer: bool = False
+    photo_url: Optional[str] = None  # Photo/image URL
 
 class VehicleTypeCreate(VehicleTypeBase):
     pass
@@ -717,6 +718,7 @@ class VehicleTypeUpdate(BaseModel):
     capacity: Optional[int] = None
     description: Optional[str] = None
     has_trailer: Optional[bool] = None
+    photo_url: Optional[str] = None
 
 class VehicleType(VehicleTypeBase):
     model_config = ConfigDict(extra="ignore")
@@ -731,10 +733,12 @@ class VehicleBase(BaseModel):
     color: Optional[str] = None
     year: Optional[int] = None
     vehicle_type_id: Optional[str] = None  # Links to VehicleType
+    photo_url: Optional[str] = None  # Photo/image URL
     # Document dates
     insurance_expiry: Optional[str] = None  # Date string
     tax_expiry: Optional[str] = None  # Date string (road tax)
-    mot_expiry: Optional[str] = None  # MOT test date
+    dcc_test_date_1: Optional[str] = None  # DCC Test Date 1
+    dcc_test_date_2: Optional[str] = None  # DCC Test Date 2
     # Additional info
     notes: Optional[str] = None
     is_active: bool = True
@@ -749,9 +753,11 @@ class VehicleUpdate(BaseModel):
     color: Optional[str] = None
     year: Optional[int] = None
     vehicle_type_id: Optional[str] = None
+    photo_url: Optional[str] = None
     insurance_expiry: Optional[str] = None
     tax_expiry: Optional[str] = None
-    mot_expiry: Optional[str] = None
+    dcc_test_date_1: Optional[str] = None
+    dcc_test_date_2: Optional[str] = None
     notes: Optional[str] = None
     is_active: Optional[bool] = None
 

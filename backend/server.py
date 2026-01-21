@@ -77,6 +77,10 @@ else:
 # AviationStack API Key for flight tracking
 AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
 
+# Stripe Configuration
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+stripe_checkout = None
+
 # Security
 security = HTTPBearer(auto_error=False)
 

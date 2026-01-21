@@ -1522,17 +1522,39 @@ class BookingRequestCreate(BaseModel):
     pickup_datetime: datetime
     notes: Optional[str] = None
     flight_number: Optional[str] = None
+    additional_stops: Optional[List[str]] = None
+    passenger_count: Optional[int] = 1
+    luggage_count: Optional[int] = 0
+    customer_email: Optional[str] = None
+    flight_info: Optional[FlightInfo] = None
+    create_return: Optional[bool] = False
+    return_pickup_location: Optional[str] = None
+    return_additional_stops: Optional[List[str]] = None
+    return_dropoff_location: Optional[str] = None
+    return_datetime: Optional[datetime] = None
+    return_flight_info: Optional[FlightInfo] = None
 
 class BookingRequest(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     passenger_id: str
     passenger_name: str
     passenger_phone: str
+    passenger_email: Optional[str] = None
     pickup_location: str
     dropoff_location: str
+    additional_stops: Optional[List[str]] = None
     pickup_datetime: datetime
+    passenger_count: Optional[int] = 1
+    luggage_count: Optional[int] = 0
     notes: Optional[str] = None
     flight_number: Optional[str] = None
+    flight_info: Optional[dict] = None
+    create_return: Optional[bool] = False
+    return_pickup_location: Optional[str] = None
+    return_additional_stops: Optional[List[str]] = None
+    return_dropoff_location: Optional[str] = None
+    return_datetime: Optional[datetime] = None
+    return_flight_info: Optional[dict] = None
     status: str = "pending"  # pending, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     admin_notes: Optional[str] = None

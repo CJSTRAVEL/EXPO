@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Plus, Edit, Trash2, Phone, Car, User, FileText, AlertTriangle, CheckCircle2, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Phone, Car, User, FileText, AlertTriangle, CheckCircle2, Calendar, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,6 @@ import { parseISO, differenceInDays } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const VEHICLE_TYPES = ["Sedan", "SUV", "MPV", "Executive", "Estate", "Minibus"];
 const DRIVER_TYPES = [
   { value: "taxi", label: "Taxi" },
   { value: "psv", label: "PSV" },
@@ -63,10 +62,19 @@ const getStatusBadge = (status) => {
     available: "status-available",
     busy: "status-busy",
     offline: "status-offline",
+    on_job: "status-busy",
+    break: "status-offline",
+  };
+  const labels = {
+    available: "Available",
+    busy: "Busy",
+    offline: "Offline",
+    on_job: "On Job",
+    break: "On Break",
   };
   return (
-    <Badge variant="outline" className={`${styles[status]} text-xs font-medium capitalize`}>
-      {status}
+    <Badge variant="outline" className={`${styles[status] || "status-offline"} text-xs font-medium`}>
+      {labels[status] || status || "Offline"}
     </Badge>
   );
 };
@@ -147,10 +155,22 @@ const DriverCard = ({ driver, onEdit, onDelete }) => {
             <Phone className="w-4 h-4" />
             <span>{driver.phone}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Car className="w-4 h-4" />
-            <span>{driver.vehicle_type} • {driver.vehicle_number}</span>
-          </div>
+          {driver.email && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail className="w-4 h-4" />
+              <span className="truncate">{driver.email}</span>
+            </div>
+          )}
+          {(driver.vehicle_type || driver.vehicle_number) && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Car className="w-4 h-4" />
+              <span>
+                {driver.vehicle_type && driver.vehicle_number 
+                  ? `${driver.vehicle_type} • ${driver.vehicle_number}`
+                  : driver.vehicle_type || driver.vehicle_number || "No vehicle assigned"}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Document Status */}
@@ -187,9 +207,6 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
     phone: "",
     email: "",
     driver_type: "taxi",
-    vehicle_type: "Sedan",
-    vehicle_number: "",
-    status: "available",
     password: "",
     // Taxi docs
     taxi_licence_expiry: "",
@@ -206,7 +223,9 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
   useEffect(() => {
     if (driver) {
       setFormData({
-        ...driver,
+        name: driver.name || "",
+        phone: driver.phone || "",
+        email: driver.email || "",
         driver_type: driver.driver_type || "taxi",
         password: "",
         taxi_licence_expiry: driver.taxi_licence_expiry || "",
@@ -223,9 +242,6 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
         phone: "",
         email: "",
         driver_type: "taxi",
-        vehicle_type: "Sedan",
-        vehicle_number: "",
-        status: "available",
         password: "",
         taxi_licence_expiry: "",
         dbs_expiry: "",
@@ -264,7 +280,7 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" data-testid="driver-form-modal">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto" data-testid="driver-form-modal">
         <DialogHeader>
           <DialogTitle>{driver ? "Edit Driver" : "Add New Driver"}</DialogTitle>
         </DialogHeader>
@@ -337,55 +353,6 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
                 data-testid="driver-password-input"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="vehicle_type">Vehicle Type</Label>
-                <Select
-                  value={formData.vehicle_type}
-                  onValueChange={(value) => setFormData({ ...formData, vehicle_type: value })}
-                >
-                  <SelectTrigger data-testid="driver-vehicle-type-select">
-                    <SelectValue placeholder="Select vehicle type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VEHICLE_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vehicle_number">Vehicle Registration *</Label>
-                <Input
-                  id="vehicle_number"
-                  value={formData.vehicle_number}
-                  onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value })}
-                  placeholder="AB12 CDE"
-                  required
-                  data-testid="driver-vehicle-number-input"
-                />
-              </div>
-            </div>
-
-            {driver && (
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger data-testid="driver-status-select">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="busy">Busy</SelectItem>
-                    <SelectItem value="offline">Offline</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {/* Document Expiry Dates */}
             <div className="pt-4 border-t">
@@ -493,6 +460,11 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Info about vehicle/status */}
+            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+              <p>Vehicle type, registration, and status are managed through the Driver App.</p>
             </div>
           </div>
           <DialogFooter>

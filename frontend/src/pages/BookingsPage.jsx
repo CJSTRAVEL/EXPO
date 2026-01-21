@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Plus, Edit, Trash2, MapPin, Clock, User, UserCheck, UserX, MoreHorizontal, MessageSquare, MessageSquareX, Loader2, Search, X, Calendar, Building2, Plane, ArrowLeftRight, Mail, Car } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Clock, User, UserCheck, UserX, MoreHorizontal, MessageSquare, MessageSquareX, Loader2, Search, X, Calendar, Building2, Plane, ArrowLeftRight, Mail, Car, History, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";

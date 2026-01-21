@@ -1044,6 +1044,79 @@ const ContractWorkPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Assign Driver Modal */}
+      <Dialog open={!!assignBooking} onOpenChange={(open) => {
+        if (!open) {
+          setAssignBooking(null);
+          setSelectedDriverForAssign("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="assign-driver-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-primary" />
+              Assign Driver
+            </DialogTitle>
+          </DialogHeader>
+          
+          {assignBooking && (
+            <div className="space-y-4 py-4">
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground">Booking</p>
+                <p className="font-semibold">{assignBooking.booking_id}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {assignBooking.pickup_location?.slice(0, 40)}...
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Select Driver</Label>
+                <Select
+                  value={selectedDriverForAssign}
+                  onValueChange={setSelectedDriverForAssign}
+                >
+                  <SelectTrigger data-testid="assign-driver-select">
+                    <SelectValue placeholder="Choose a driver..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {drivers.filter(d => d.status === "available").map((driver) => (
+                      <SelectItem key={driver.id} value={driver.id}>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          <span>{driver.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({driver.vehicle_type})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {drivers.filter(d => d.status === "available").length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground text-center">
+                        No available drivers
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignBooking(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignDriver}
+              disabled={!selectedDriverForAssign}
+              data-testid="confirm-assign-btn"
+            >
+              <UserCheck className="w-4 h-4 mr-2" />
+              Assign Driver
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* New/Edit Booking Modal */}
       <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
         <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" data-testid="contract-booking-form">

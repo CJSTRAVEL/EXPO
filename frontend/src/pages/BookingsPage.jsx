@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Plus, Edit, Trash2, MapPin, Clock, User, UserCheck, MoreHorizontal, MessageSquare, MessageSquareX, Loader2, Search, X, Calendar, Building2, Plane, ArrowLeftRight } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Clock, User, UserCheck, MoreHorizontal, MessageSquare, MessageSquareX, Loader2, Search, X, Calendar, Building2, Plane, ArrowLeftRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";

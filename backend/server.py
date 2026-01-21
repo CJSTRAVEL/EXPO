@@ -95,6 +95,17 @@ def create_token(passenger_id: str, phone: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+def create_admin_token(user_id: str, email: str, role: str) -> str:
+    """Create JWT token for admin users"""
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "role": role,
+        "type": "admin",
+        "exp": datetime.now(timezone.utc) + timedelta(days=7)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
 def verify_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -103,6 +114,18 @@ def verify_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current admin user from token"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    payload = verify_token(credentials.credentials)
+    if payload.get("type") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    user = await db.admin_users.find_one({"id": payload["sub"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
 
 async def get_current_passenger(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if not credentials:

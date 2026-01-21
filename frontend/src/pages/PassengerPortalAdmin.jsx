@@ -86,21 +86,6 @@ const PassengerPortalAdmin = () => {
     }
   };
 
-  const handleDeletePassenger = async () => {
-    setSaving(true);
-    try {
-      await axios.delete(`${API}/admin/passengers/${selectedPassenger.id}`);
-      toast.success("Passenger account deleted");
-      setShowDeleteModal(false);
-      setSelectedPassenger(null);
-      fetchPassengers();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to delete account");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   // Filter passengers based on search
   const filteredPassengers = passengers.filter(passenger => {
     if (!searchText) return true;

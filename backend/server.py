@@ -362,6 +362,15 @@ class BookingBase(BaseModel):
     passenger_count: Optional[int] = 1
     luggage_count: Optional[int] = 0
 
+class BookingHistoryEntry(BaseModel):
+    timestamp: datetime
+    action: str  # created, updated, status_changed, driver_assigned, driver_unassigned
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    user_type: str = "admin"  # admin, driver, system
+    changes: Optional[dict] = None
+    details: Optional[str] = None
+
 class BookingCreate(BookingBase):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None

@@ -2657,8 +2657,31 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
         last = update_data.get('last_name') or existing.get('last_name') or ''
         update_data['customer_name'] = f"{first} {last}".strip()
     
+    # Track changes for history
+    changes = {}
+    for key, new_value in update_data.items():
+        old_value = existing.get(key)
+        if old_value != new_value:
+            changes[key] = {"old": old_value, "new": new_value}
+    
     if update_data:
-        await db.bookings.update_one({"id": booking_id}, {"$set": update_data})
+        # Add history entry for the edit
+        history_entry = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "action": "updated",
+            "user_id": None,
+            "user_name": "Admin",
+            "user_type": "admin",
+            "changes": changes,
+            "details": f"Booking updated: {', '.join(changes.keys())}" if changes else "Booking updated"
+        }
+        await db.bookings.update_one(
+            {"id": booking_id}, 
+            {
+                "$set": update_data,
+                "$push": {"history": history_entry}
+            }
+        )
     
     updated = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if isinstance(updated.get('created_at'), str):

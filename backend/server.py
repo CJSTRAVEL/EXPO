@@ -2419,6 +2419,446 @@ async def get_stats():
         "revenue": total_revenue
     }
 
+# ========== DRIVER MOBILE APP ENDPOINTS ==========
+
+# Driver authentication dependency
+async def get_current_driver(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify driver JWT token"""
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        driver_id = payload.get("driver_id")
+        if not driver_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
+        if not driver:
+            raise HTTPException(status_code=401, detail="Driver not found")
+        
+        return driver
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@api_router.post("/driver/login")
+async def driver_login(login: DriverLogin):
+    """Driver login for mobile app"""
+    driver = await db.drivers.find_one({"email": login.email.lower()}, {"_id": 0})
+    if not driver:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Check password
+    password_hash = hashlib.sha256(login.password.encode()).hexdigest()
+    if driver.get("password_hash") != password_hash:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Generate JWT token
+    token_data = {
+        "driver_id": driver["id"],
+        "email": driver["email"],
+        "exp": datetime.now(timezone.utc) + timedelta(days=30)
+    }
+    token = jwt.encode(token_data, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    
+    # Update driver as online
+    await db.drivers.update_one(
+        {"id": driver["id"]},
+        {"$set": {"is_online": True, "last_login": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {
+        "token": token,
+        "driver": {
+            "id": driver["id"],
+            "name": driver["name"],
+            "email": driver["email"],
+            "phone": driver["phone"],
+            "vehicle_type": driver["vehicle_type"],
+            "vehicle_number": driver["vehicle_number"],
+            "status": driver["status"]
+        }
+    }
+
+@api_router.get("/driver/profile")
+async def get_driver_profile(driver: dict = Depends(get_current_driver)):
+    """Get current driver profile"""
+    return {
+        "id": driver["id"],
+        "name": driver["name"],
+        "email": driver.get("email"),
+        "phone": driver["phone"],
+        "vehicle_type": driver["vehicle_type"],
+        "vehicle_number": driver["vehicle_number"],
+        "status": driver["status"],
+        "is_online": driver.get("is_online", False),
+        "on_break": driver.get("on_break", False),
+        "current_location": driver.get("current_location")
+    }
+
+@api_router.put("/driver/status")
+async def update_driver_app_status(status_update: DriverAppStatus, driver: dict = Depends(get_current_driver)):
+    """Update driver online/break status"""
+    update_data = {}
+    
+    if status_update.is_online is not None:
+        update_data["is_online"] = status_update.is_online
+        if status_update.is_online:
+            update_data["status"] = DriverStatus.AVAILABLE
+        else:
+            update_data["status"] = DriverStatus.OFFLINE
+    
+    if status_update.on_break is not None:
+        update_data["on_break"] = status_update.on_break
+        if status_update.on_break:
+            update_data["status"] = DriverStatus.BREAK
+    
+    if status_update.selected_vehicle_id is not None:
+        update_data["selected_vehicle_id"] = status_update.selected_vehicle_id
+    
+    if status_update.push_token is not None:
+        update_data["push_token"] = status_update.push_token
+    
+    if update_data:
+        await db.drivers.update_one({"id": driver["id"]}, {"$set": update_data})
+    
+    return {"message": "Status updated", "updates": update_data}
+
+@api_router.put("/driver/location")
+async def update_driver_location(location: DriverLocationUpdate, driver: dict = Depends(get_current_driver)):
+    """Update driver's current GPS location"""
+    location_data = {
+        "lat": location.latitude,
+        "lng": location.longitude,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.drivers.update_one(
+        {"id": driver["id"]},
+        {"$set": {"current_location": location_data}}
+    )
+    
+    return {"message": "Location updated", "location": location_data}
+
+@api_router.get("/driver/bookings")
+async def get_driver_bookings(driver: dict = Depends(get_current_driver)):
+    """Get all bookings assigned to this driver"""
+    bookings = await db.bookings.find(
+        {"driver_id": driver["id"]},
+        {"_id": 0}
+    ).sort("booking_datetime", 1).to_list(100)
+    
+    # Categorize bookings
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+    
+    today_bookings = []
+    upcoming_bookings = []
+    past_bookings = []
+    
+    for booking in bookings:
+        booking_dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
+        if today_start <= booking_dt < today_end:
+            today_bookings.append(booking)
+        elif booking_dt >= today_end:
+            upcoming_bookings.append(booking)
+        else:
+            past_bookings.append(booking)
+    
+    return {
+        "today": today_bookings,
+        "upcoming": upcoming_bookings,
+        "past": past_bookings[-20:] if len(past_bookings) > 20 else past_bookings  # Limit past bookings
+    }
+
+@api_router.get("/driver/bookings/pending")
+async def get_pending_assignments(driver: dict = Depends(get_current_driver)):
+    """Get bookings pending acceptance by this driver"""
+    # Get bookings that are assigned but not yet accepted
+    bookings = await db.bookings.find(
+        {
+            "driver_id": driver["id"],
+            "status": BookingStatus.ASSIGNED,
+            "driver_accepted": {"$ne": True}
+        },
+        {"_id": 0}
+    ).sort("booking_datetime", 1).to_list(50)
+    
+    return bookings
+
+@api_router.put("/driver/bookings/{booking_id}/accept")
+async def accept_booking(booking_id: str, driver: dict = Depends(get_current_driver)):
+    """Accept a booking assignment"""
+    booking = await db.bookings.find_one({"id": booking_id, "driver_id": driver["id"]})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found or not assigned to you")
+    
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {
+            "driver_accepted": True,
+            "driver_accepted_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Booking accepted"}
+
+@api_router.put("/driver/bookings/{booking_id}/reject")
+async def reject_booking(booking_id: str, reason: Optional[str] = None, driver: dict = Depends(get_current_driver)):
+    """Reject a booking assignment"""
+    booking = await db.bookings.find_one({"id": booking_id, "driver_id": driver["id"]})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found or not assigned to you")
+    
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {
+            "driver_id": None,
+            "driver_rejected": True,
+            "driver_rejection_reason": reason,
+            "status": BookingStatus.PENDING
+        }}
+    )
+    
+    return {"message": "Booking rejected"}
+
+@api_router.put("/driver/bookings/{booking_id}/status")
+async def update_booking_status_driver(booking_id: str, status: str, driver: dict = Depends(get_current_driver)):
+    """Update booking status from driver app"""
+    booking = await db.bookings.find_one({"id": booking_id, "driver_id": driver["id"]})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found or not assigned to you")
+    
+    valid_statuses = ["on_way", "arrived", "in_progress", "completed"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    update_data = {"status": status}
+    
+    # Add timestamps for status changes
+    if status == "on_way":
+        update_data["driver_on_way_at"] = datetime.now(timezone.utc).isoformat()
+    elif status == "arrived":
+        update_data["driver_arrived_at"] = datetime.now(timezone.utc).isoformat()
+    elif status == "in_progress":
+        update_data["journey_started_at"] = datetime.now(timezone.utc).isoformat()
+    elif status == "completed":
+        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.bookings.update_one({"id": booking_id}, {"$set": update_data})
+    
+    # Send notification to passenger if they have an account
+    # TODO: Implement push notification to passenger
+    
+    return {"message": f"Booking status updated to {status}"}
+
+@api_router.post("/driver/bookings/{booking_id}/notify-arrival")
+async def notify_passenger_arrival(booking_id: str, driver: dict = Depends(get_current_driver)):
+    """Send 'I've arrived' notification to passenger"""
+    booking = await db.bookings.find_one({"id": booking_id, "driver_id": driver["id"]}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Send SMS notification
+    customer_phone = booking.get("customer_phone")
+    if customer_phone and vonage_client:
+        try:
+            message = f"Your driver {driver['name']} has arrived at the pickup location. Vehicle: {driver['vehicle_type']} ({driver['vehicle_number']})"
+            vonage_client.sms.send(
+                vonage.Sms(
+                    from_=VONAGE_FROM_NUMBER,
+                    to=customer_phone.replace("+", "").replace(" ", ""),
+                    text=message
+                )
+            )
+            logging.info(f"Arrival notification sent to {customer_phone}")
+        except Exception as e:
+            logging.error(f"Failed to send arrival notification: {e}")
+    
+    # Update booking
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {
+            "status": "arrived",
+            "driver_arrived_at": datetime.now(timezone.utc).isoformat(),
+            "arrival_notification_sent": True
+        }}
+    )
+    
+    return {"message": "Arrival notification sent"}
+
+@api_router.get("/driver/earnings")
+async def get_driver_earnings(driver: dict = Depends(get_current_driver)):
+    """Get driver's earnings summary"""
+    # Get completed bookings with fare
+    pipeline = [
+        {"$match": {"driver_id": driver["id"], "status": "completed", "fare": {"$exists": True, "$ne": None}}},
+        {"$group": {
+            "_id": None,
+            "total_earnings": {"$sum": "$fare"},
+            "total_trips": {"$sum": 1}
+        }}
+    ]
+    
+    result = await db.bookings.aggregate(pipeline).to_list(1)
+    total = result[0] if result else {"total_earnings": 0, "total_trips": 0}
+    
+    # Get today's earnings
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_pipeline = [
+        {
+            "$match": {
+                "driver_id": driver["id"],
+                "status": "completed",
+                "fare": {"$exists": True, "$ne": None},
+                "completed_at": {"$gte": today_start.isoformat()}
+            }
+        },
+        {"$group": {
+            "_id": None,
+            "earnings": {"$sum": "$fare"},
+            "trips": {"$sum": 1}
+        }}
+    ]
+    
+    today_result = await db.bookings.aggregate(today_pipeline).to_list(1)
+    today = today_result[0] if today_result else {"earnings": 0, "trips": 0}
+    
+    # Get this week's earnings
+    week_start = today_start - timedelta(days=today_start.weekday())
+    week_pipeline = [
+        {
+            "$match": {
+                "driver_id": driver["id"],
+                "status": "completed",
+                "fare": {"$exists": True, "$ne": None},
+                "completed_at": {"$gte": week_start.isoformat()}
+            }
+        },
+        {"$group": {
+            "_id": None,
+            "earnings": {"$sum": "$fare"},
+            "trips": {"$sum": 1}
+        }}
+    ]
+    
+    week_result = await db.bookings.aggregate(week_pipeline).to_list(1)
+    week = week_result[0] if week_result else {"earnings": 0, "trips": 0}
+    
+    return {
+        "today": {
+            "earnings": today.get("earnings", 0),
+            "trips": today.get("trips", 0)
+        },
+        "this_week": {
+            "earnings": week.get("earnings", 0),
+            "trips": week.get("trips", 0)
+        },
+        "all_time": {
+            "earnings": total.get("total_earnings", 0),
+            "trips": total.get("total_trips", 0)
+        }
+    }
+
+@api_router.get("/driver/history")
+async def get_driver_booking_history(driver: dict = Depends(get_current_driver), limit: int = 50, skip: int = 0):
+    """Get driver's booking history"""
+    bookings = await db.bookings.find(
+        {"driver_id": driver["id"], "status": "completed"},
+        {"_id": 0}
+    ).sort("completed_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    total = await db.bookings.count_documents({"driver_id": driver["id"], "status": "completed"})
+    
+    return {
+        "bookings": bookings,
+        "total": total,
+        "limit": limit,
+        "skip": skip
+    }
+
+# ========== CHAT ENDPOINTS ==========
+
+class ChatMessage(BaseModel):
+    booking_id: str
+    message: str
+    sender_type: str  # "driver" or "dispatch"
+
+@api_router.post("/driver/chat/send")
+async def send_chat_message(chat: ChatMessage, driver: dict = Depends(get_current_driver)):
+    """Send a chat message for a booking"""
+    booking = await db.bookings.find_one({"id": chat.booking_id, "driver_id": driver["id"]})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    message_doc = {
+        "id": str(uuid.uuid4()),
+        "booking_id": chat.booking_id,
+        "sender_type": "driver",
+        "sender_id": driver["id"],
+        "sender_name": driver["name"],
+        "message": chat.message,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    
+    await db.chat_messages.insert_one(message_doc)
+    
+    return {"message": "Message sent", "id": message_doc["id"]}
+
+@api_router.get("/driver/chat/{booking_id}")
+async def get_chat_messages(booking_id: str, driver: dict = Depends(get_current_driver)):
+    """Get chat messages for a booking"""
+    booking = await db.bookings.find_one({"id": booking_id, "driver_id": driver["id"]})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    messages = await db.chat_messages.find(
+        {"booking_id": booking_id},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    
+    # Mark messages as read
+    await db.chat_messages.update_many(
+        {"booking_id": booking_id, "sender_type": "dispatch", "read": False},
+        {"$set": {"read": True}}
+    )
+    
+    return messages
+
+# Dispatch-side chat endpoint
+@api_router.post("/dispatch/chat/send")
+async def send_dispatch_message(chat: ChatMessage):
+    """Send a chat message from dispatch"""
+    booking = await db.bookings.find_one({"id": chat.booking_id})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    message_doc = {
+        "id": str(uuid.uuid4()),
+        "booking_id": chat.booking_id,
+        "sender_type": "dispatch",
+        "sender_id": "dispatch",
+        "sender_name": "Dispatch",
+        "message": chat.message,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    
+    await db.chat_messages.insert_one(message_doc)
+    
+    return {"message": "Message sent", "id": message_doc["id"]}
+
+@api_router.get("/dispatch/chat/{booking_id}")
+async def get_dispatch_chat(booking_id: str):
+    """Get chat messages for dispatch view"""
+    messages = await db.chat_messages.find(
+        {"booking_id": booking_id},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    
+    return messages
+
 # ========== STRIPE PAYMENT ENDPOINTS ==========
 
 class PaymentRequest(BaseModel):

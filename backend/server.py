@@ -1141,8 +1141,8 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         # Passenger portal link
         portal_link = f"{app_url}/portal"
         
-        # Google Maps API Key
-        google_maps_key = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+        # Google Maps API Key (from environment variable)
+        google_maps_key = os.environ.get('GOOGLE_MAPS_API_KEY', '')
         
         # Company logo URL
         logo_url = "https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png"

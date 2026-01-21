@@ -2200,12 +2200,14 @@ async def resend_all_notifications(booking_id: str):
     
     customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
     
-    # Get driver name if assigned
+    # Get driver name and vehicle type if assigned
     driver_name = None
+    vehicle_type = None
     if booking.get('driver_id'):
         driver = await db.drivers.find_one({"id": booking['driver_id']})
         if driver:
             driver_name = driver.get('name')
+            vehicle_type = driver.get('vehicle_type')
     
     results = {"sms": None, "email": None}
     
@@ -2234,7 +2236,10 @@ async def resend_all_notifications(booking_id: str):
             booking_datetime=booking.get('booking_datetime'),
             short_booking_id=booking.get('booking_id'),
             status=booking.get('status'),
-            driver_name=driver_name
+            driver_name=driver_name,
+            customer_phone=booking.get('customer_phone'),
+            vehicle_type=vehicle_type,
+            additional_stops=booking.get('additional_stops')
         )
         results['email'] = {"success": email_success, "message": email_message}
     else:

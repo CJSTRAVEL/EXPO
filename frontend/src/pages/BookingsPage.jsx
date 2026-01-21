@@ -2198,17 +2198,15 @@ const BookingsPage = () => {
                               {/* Status & Actions */}
                               <div className="col-span-2 lg:col-span-3 flex items-center justify-end gap-3">
                                 {booking.duration_minutes && (
-                                  <span className="text-xs text-slate-500 hidden lg:inline flex items-center gap-1">
+                                  <span className="text-xs text-slate-500 hidden lg:flex items-center gap-1">
                                     <Clock className="w-3 h-3" />
                                     {formatDuration(booking.duration_minutes)}
                                   </span>
                                 )}
-                                {booking.vehicle_type && (
-                                  <span className="text-xs text-slate-600 hidden lg:inline flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded">
-                                    <Car className="w-3 h-3" />
-                                    {getVehicleTypeName(booking.vehicle_type)}
-                                  </span>
-                                )}
+                                <span className={`text-xs hidden sm:flex items-center gap-1 px-2 py-0.5 rounded ${booking.vehicle_type ? 'text-slate-600 bg-slate-100' : 'text-slate-400 bg-slate-50'}`}>
+                                  <Car className="w-3 h-3" />
+                                  {booking.vehicle_type ? getVehicleTypeName(booking.vehicle_type) : 'No vehicle'}
+                                </span>
                                 {getStatusBadge(booking.status)}
                                 <div onClick={(e) => e.stopPropagation()}>
                                   <DropdownMenu>

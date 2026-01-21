@@ -2133,6 +2133,20 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     if doc.get('flight_info'):
         doc['flight_info'] = doc['flight_info'] if isinstance(doc['flight_info'], dict) else doc['flight_info'].model_dump() if hasattr(doc['flight_info'], 'model_dump') else doc['flight_info']
     
+    # Add created_by info (will be set by admin auth in future)
+    doc['created_by_id'] = None
+    doc['created_by_name'] = "System"
+    
+    # Initialize history with creation entry
+    doc['history'] = [{
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": "created",
+        "user_id": None,
+        "user_name": "System",
+        "user_type": "admin",
+        "details": f"Booking {readable_booking_id} created"
+    }]
+    
     await db.bookings.insert_one(doc)
     
     # If return booking requested, create it

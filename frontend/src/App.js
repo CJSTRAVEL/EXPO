@@ -178,6 +178,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/bookings" element={<BookingsPage />} />
+                <Route path="/bookings/new" element={<NewBookingPage />} />
                 <Route path="/requests" element={<RequestsPage />} />
                 <Route path="/contract-work" element={<ContractWorkPage />} />
                 <Route path="/clients" element={<ClientsPage />} />

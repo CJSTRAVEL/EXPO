@@ -1566,16 +1566,29 @@ async def create_booking_request(request: BookingRequestCreate, passenger: dict 
         passenger_id=passenger['id'],
         passenger_name=passenger['name'],
         passenger_phone=passenger['phone'],
+        passenger_email=request.customer_email or passenger.get('email'),
         pickup_location=request.pickup_location,
         dropoff_location=request.dropoff_location,
+        additional_stops=request.additional_stops,
         pickup_datetime=request.pickup_datetime,
+        passenger_count=request.passenger_count or 1,
+        luggage_count=request.luggage_count or 0,
         notes=request.notes,
         flight_number=request.flight_number.upper() if request.flight_number else None,
+        flight_info=request.flight_info.model_dump() if request.flight_info else None,
+        create_return=request.create_return,
+        return_pickup_location=request.return_pickup_location,
+        return_additional_stops=request.return_additional_stops,
+        return_dropoff_location=request.return_dropoff_location,
+        return_datetime=request.return_datetime,
+        return_flight_info=request.return_flight_info.model_dump() if request.return_flight_info else None,
     )
     
     doc = booking_request.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['pickup_datetime'] = doc['pickup_datetime'].isoformat()
+    if doc.get('return_datetime'):
+        doc['return_datetime'] = doc['return_datetime'].isoformat()
     
     await db.booking_requests.insert_one(doc)
     

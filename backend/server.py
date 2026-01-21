@@ -1130,10 +1130,11 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         return False, "No email address provided"
     
     try:
-        # Generate booking details link
+        # Generate booking details link - use SSR preview URL (same as SMS) for proper link previews
         app_url = os.environ.get('APP_URL', 'https://chauffeur-app-15.preview.emergentagent.com')
         if short_booking_id:
-            booking_link = f"{app_url}/b/{short_booking_id}"
+            # Use the SSR preview endpoint which has proper OG meta tags (same as SMS)
+            booking_link = f"{app_url}/api/preview/{short_booking_id}"
         else:
             booking_link = f"{app_url}/booking/{booking_id}"
         

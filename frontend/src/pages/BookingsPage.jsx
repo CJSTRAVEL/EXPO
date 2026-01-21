@@ -1323,6 +1323,141 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Flight Lookup Modal for Edit */}
+      <Dialog open={flightModalOpen} onOpenChange={setFlightModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-purple-700">
+              <Plane className="w-5 h-5" />
+              Flight Information Lookup
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Flight Number</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={flightSearchNumber}
+                  onChange={(e) => setFlightSearchNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. BA123, EZY456"
+                  className="flex-1"
+                  data-testid="edit-flight-number-input"
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleFlightLookup())}
+                />
+                <Button
+                  type="button"
+                  onClick={handleFlightLookup}
+                  disabled={loadingFlight || !flightSearchNumber}
+                  data-testid="edit-flight-search-btn"
+                >
+                  {loadingFlight ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Enter the flight number to auto-fill pickup location and time</p>
+              {flightError && <p className="text-xs text-red-500">{flightError}</p>}
+            </div>
+            
+            {/* Flight Results */}
+            {flightData && (
+              <div className="bg-purple-50 rounded-lg border border-purple-200 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Plane className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold">{flightData.airline}</div>
+                    <div className="text-xs text-muted-foreground">{flightData.flight_number}</div>
+                  </div>
+                  <Badge className={cn(
+                    "ml-auto",
+                    flightData.flight_status === "landed" ? "bg-green-100 text-green-700 border-green-200" :
+                    flightData.flight_status === "active" ? "bg-blue-100 text-blue-700 border-blue-200" :
+                    "bg-gray-100 text-gray-700 border-gray-200"
+                  )}>
+                    {flightData.flight_status?.toUpperCase() || "SCHEDULED"}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-purple-200">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Arrival Airport</div>
+                    <div className="text-sm font-medium">{flightData.arrival_airport || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Terminal</div>
+                    <div className="text-sm font-medium">{flightData.arrival_terminal || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Scheduled Arrival</div>
+                    <div className="text-sm font-medium">
+                      {flightData.arrival_scheduled ? format(new Date(flightData.arrival_scheduled), "dd/MM HH:mm") : "N/A"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Estimated Arrival</div>
+                    <div className="text-sm font-medium text-purple-600">
+                      {flightData.arrival_estimated ? format(new Date(flightData.arrival_estimated), "dd/MM HH:mm") : "N/A"}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 rounded-md p-3 mt-2 border border-green-200">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div className="text-xs text-green-700">
+                      <strong>Auto-Applied:</strong> Pickup location set to {flightData.arrival_airport || "airport"} 
+                      {flightData.arrival_terminal && ` (Terminal ${flightData.arrival_terminal})`}. 
+                      Pickup time set to landing time.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Current Flight Info Display */}
+            {formData.flight_number && !flightData && (
+              <div className="bg-slate-50 rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground mb-1">Currently Saved</div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-purple-300 text-purple-700">
+                    {formData.flight_number}
+                  </Badge>
+                  {formData.airline && <span className="text-sm">{formData.airline}</span>}
+                  {formData.terminal && <span className="text-xs text-muted-foreground">Terminal {formData.terminal}</span>}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setFlightSearchNumber("");
+                setFlightData(null);
+                setFlightError(null);
+                setFormData(prev => ({ ...prev, flight_number: "", airline: "", terminal: "", flight_type: "" }));
+              }}
+            >
+              Clear Flight Info
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setFlightModalOpen(false);
+                setFlightSearchNumber("");
+                setFlightData(null);
+                setFlightError(null);
+              }}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

@@ -81,22 +81,26 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    email: "",
     vehicle_type: "Sedan",
     vehicle_number: "",
     status: "available",
+    password: "",
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (driver) {
-      setFormData(driver);
+      setFormData({ ...driver, password: "" });
     } else {
       setFormData({
         name: "",
         phone: "",
+        email: "",
         vehicle_type: "Sedan",
         vehicle_number: "",
         status: "available",
+        password: "",
       });
     }
   }, [driver]);
@@ -105,7 +109,12 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await onSave(formData);
+      // Don't send empty password on edit
+      const dataToSave = { ...formData };
+      if (!dataToSave.password) {
+        delete dataToSave.password;
+      }
+      await onSave(dataToSave);
       onClose();
     } catch (error) {
       console.error("Error saving driver:", error);
@@ -142,6 +151,28 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
                 placeholder="+44 7700 900000"
                 required
                 data-testid="driver-phone-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email (for Driver App)</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email || ""}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="driver@cjstravel.uk"
+                data-testid="driver-email-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{driver ? "New Password (leave blank to keep)" : "Password (for Driver App)"}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password || ""}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={driver ? "Leave blank to keep current" : "Set password"}
+                data-testid="driver-password-input"
               />
             </div>
             <div className="space-y-2">

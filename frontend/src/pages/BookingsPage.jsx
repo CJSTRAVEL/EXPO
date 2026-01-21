@@ -2265,12 +2265,16 @@ const BookingsPage = () => {
                                 {/* Driver */}
                                 <div className="col-span-2 lg:col-span-2" onClick={(e) => e.stopPropagation()}>
                                   {linkedReturn.driver_id ? (
-                                    <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setAssignBooking(linkedReturn)}
+                                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                      data-testid={`change-driver-return-${linkedReturn.id}`}
+                                    >
                                       <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                                         <UserCheck className="w-4 h-4 text-blue-600" />
                                       </div>
-                                      <span className="text-sm font-medium text-slate-700 truncate">{getDriverName(linkedReturn.driver_id)}</span>
-                                    </div>
+                                      <span className="text-sm font-medium text-primary hover:underline truncate">{getDriverName(linkedReturn.driver_id)}</span>
+                                    </button>
                                   ) : (
                                     <button
                                       onClick={() => setAssignBooking(linkedReturn)}

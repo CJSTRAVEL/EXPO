@@ -1218,7 +1218,7 @@ const NewBookingPage = () => {
           </div>
 
           {/* Map */}
-          <div className="flex-1 bg-slate-200 rounded-lg overflow-hidden border border-slate-300 min-h-[300px] relative">
+          <div className="flex-1 bg-[#1a1a1a] rounded-lg overflow-hidden border border-[#3d3d3d] min-h-[300px] relative">
             <iframe
               src={getMapUrl()}
               className="w-full h-full min-h-[300px]"
@@ -1229,8 +1229,8 @@ const NewBookingPage = () => {
               title="Route Map"
             />
             {loadingRoute && (
-              <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#1a3a5c]" />
+              <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#D4A853]" />
               </div>
             )}
           </div>
@@ -1241,7 +1241,7 @@ const NewBookingPage = () => {
               type="button"
               variant="outline"
               onClick={handleReset}
-              className="flex-1 h-11 gap-2"
+              className="flex-1 h-11 gap-2 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
               data-testid="booking-reset-btn"
             >
               <RotateCcw className="w-4 h-4" />
@@ -1251,7 +1251,7 @@ const NewBookingPage = () => {
               type="button"
               onClick={handleSubmit}
               disabled={saving}
-              className="flex-[2] h-11 gap-2 bg-green-600 hover:bg-green-700"
+              className="flex-[2] h-11 gap-2 bg-[#D4A853] hover:bg-[#c49743] text-black font-semibold"
               data-testid="booking-save-btn"
             >
               {saving ? (

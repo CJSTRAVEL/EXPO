@@ -290,6 +290,7 @@ export default function JobsScreen({ navigation }) {
             onNavigate={handleNavigate}
             onCall={handleCall}
             onChat={handleChat}
+            onStartNavigation={handleStartNavigation}
             onNotifyArrival={handleNotifyArrival}
           />
         )}

@@ -1099,13 +1099,13 @@ const NewBookingPage = () => {
                   </div>
                 </div>
                 {formData.customer_email && (
-                  <div className="text-xs text-slate-500 flex items-center gap-1">
+                  <div className="text-xs text-gray-400 flex items-center gap-1">
                     <Mail className="w-3 h-3" /> {formData.customer_email}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-6 text-slate-400">
+              <div className="text-center py-6 text-gray-500">
                 <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No passenger selected</p>
               </div>
@@ -1115,18 +1115,18 @@ const NewBookingPage = () => {
           {/* Additional Info Section */}
           <Section icon={FileText} title="Additional Info">
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">Driver Notes</Label>
+              <Label className="text-xs text-gray-400">Driver Notes</Label>
               <Textarea
                 value={formData.driver_notes}
                 onChange={(e) => setFormData({ ...formData, driver_notes: e.target.value })}
                 placeholder="Special instructions for driver..."
                 rows={2}
-                className="resize-none text-sm"
+                className="resize-none text-sm bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">Notifications</Label>
+              <Label className="text-xs text-gray-400">Notifications</Label>
               <div className="flex flex-wrap gap-2">
                 <NotificationBadge 
                   label="Text Confirmation" 
@@ -1141,99 +1141,65 @@ const NewBookingPage = () => {
               </div>
             </div>
 
-            {/* Flight Info Toggle */}
-            <div className="pt-2 border-t border-slate-100">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showFlightInfo}
-                  onChange={(e) => setShowFlightInfo(e.target.checked)}
-                  className="rounded border-slate-300"
-                />
-                <span className="text-sm text-slate-600 flex items-center gap-1">
-                  <Plane className="w-4 h-4" /> Flight Info
-                </span>
-              </label>
-            </div>
-
-            {showFlightInfo && (
-              <div className="bg-purple-50 rounded-lg p-3 space-y-3 border border-purple-200">
-                <div className="flex gap-2">
-                  <Input
-                    value={formData.flight_number}
-                    onChange={(e) => setFormData({ ...formData, flight_number: e.target.value.toUpperCase() })}
-                    placeholder="BA123"
-                    className="h-9 flex-1"
-                  />
+            {/* Flight Info Summary (shows when flight is saved) */}
+            {formData.flight_number && (
+              <div className="bg-[#D4A853]/10 rounded-lg p-3 border border-[#D4A853]/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Plane className="w-4 h-4 text-[#D4A853]" />
+                    <span className="text-sm font-medium text-[#D4A853]">{formData.flight_number}</span>
+                    {formData.airline && <span className="text-xs text-gray-400">({formData.airline})</span>}
+                  </div>
                   <Button
-                    type="button"
-                    variant="secondary"
                     size="sm"
-                    onClick={handleFlightLookup}
-                    disabled={loadingFlight}
-                    className="h-9"
+                    variant="ghost"
+                    onClick={() => setFlightModalOpen(true)}
+                    className="h-7 text-xs text-[#D4A853] hover:bg-[#D4A853]/20"
                   >
-                    {loadingFlight ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lookup"}
+                    Edit
                   </Button>
                 </div>
-                {flightData && (
-                  <div className="text-xs text-purple-700 bg-purple-100 rounded p-2">
-                    <strong>{flightData.airline}</strong> - {flightData.flight_status?.toUpperCase()}
-                    {flightData.arrival_terminal && <span className="ml-2">Terminal {flightData.arrival_terminal}</span>}
-                  </div>
+                {formData.terminal && (
+                  <div className="text-xs text-gray-400 mt-1">Terminal {formData.terminal}</div>
                 )}
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    value={formData.airline}
-                    onChange={(e) => setFormData({ ...formData, airline: e.target.value })}
-                    placeholder="Airline"
-                    className="h-8 text-xs"
-                  />
-                  <Input
-                    value={formData.terminal}
-                    onChange={(e) => setFormData({ ...formData, terminal: e.target.value })}
-                    placeholder="Terminal"
-                    className="h-8 text-xs"
-                  />
-                </div>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500">Internal Notes</Label>
+              <Label className="text-xs text-gray-400">Internal Notes</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Office notes (not shown to driver)..."
                 rows={2}
-                className="resize-none text-sm"
+                className="resize-none text-sm bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                 data-testid="booking-notes"
               />
             </div>
           </Section>
 
           {/* Booking Quote */}
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Booking Quote</div>
+          <div className="bg-[#252525] rounded-lg border border-[#3d3d3d] shadow-lg p-4">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Booking Quote</div>
             {routeInfo ? (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Distance</span>
-                  <span className="font-bold text-slate-800">{routeInfo.distance.text}</span>
+                  <span className="text-sm text-gray-400">Distance</span>
+                  <span className="font-bold text-white">{routeInfo.distance.text}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Duration</span>
-                  <span className="font-bold text-slate-800">{routeInfo.duration.text}</span>
+                  <span className="text-sm text-gray-400">Duration</span>
+                  <span className="font-bold text-white">{routeInfo.duration.text}</span>
                 </div>
                 {formData.fare && (
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-                    <span className="text-sm text-slate-600">Fare</span>
-                    <span className="text-xl font-bold text-green-600">£{parseFloat(formData.fare).toFixed(2)}</span>
+                  <div className="flex justify-between items-center pt-2 border-t border-[#3d3d3d]">
+                    <span className="text-sm text-gray-400">Fare</span>
+                    <span className="text-xl font-bold text-[#D4A853]">£{parseFloat(formData.fare).toFixed(2)}</span>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-4 text-slate-400">
+              <div className="text-center py-4 text-gray-500">
                 <Navigation className="w-6 h-6 mx-auto mb-2 opacity-50" />
                 <p className="text-xs">Enter pickup and drop-off to get journey quote</p>
               </div>

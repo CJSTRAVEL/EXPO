@@ -1807,12 +1807,18 @@ const BookingsPage = () => {
 
   const handleAssignDriver = async (bookingId, driverId) => {
     try {
-      await axios.post(`${API}/bookings/${bookingId}/assign/${driverId}`);
-      toast.success("Driver assigned successfully");
+      // Handle unassign case
+      if (driverId === "unassign") {
+        await axios.post(`${API}/bookings/${bookingId}/unassign`);
+        toast.success("Driver unassigned successfully");
+      } else {
+        await axios.post(`${API}/bookings/${bookingId}/assign/${driverId}`);
+        toast.success("Driver assigned successfully");
+      }
       fetchData();
       setAssignBooking(null);
     } catch (error) {
-      toast.error("Failed to assign driver");
+      toast.error(error.response?.data?.detail || "Failed to update driver assignment");
     }
   };
 

@@ -769,6 +769,19 @@ const PassengerPortal = () => {
               </div>
             </div>
 
+            {/* Email for Confirmation */}
+            <div className="space-y-2">
+              <Label>Email (for confirmation)</Label>
+              <Input
+                type="email"
+                value={requestForm.customer_email}
+                onChange={(e) => setRequestForm({ ...requestForm, customer_email: e.target.value })}
+                placeholder="your@email.com"
+                data-testid="request-email-input"
+              />
+              <p className="text-xs text-muted-foreground">Optional - receive booking confirmation via email</p>
+            </div>
+
             {/* Date & Time */}
             <div className="space-y-2">
               <Label>Pickup Date & Time *</Label>

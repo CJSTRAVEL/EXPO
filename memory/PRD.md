@@ -129,6 +129,10 @@ Build a private hire application where you can add bookings and assign them to d
 - `PUT /api/admin/booking-requests/{id}/reject` - Reject booking request
 - `POST /api/payments/create-checkout` - Create Stripe checkout session
 - `GET /api/payments/status/{session_id}` - Get payment status
+- `GET/POST /api/vehicle-types` - List/Create vehicle types
+- `GET/PUT/DELETE /api/vehicle-types/{id}` - Get/Update/Delete vehicle type
+- `GET/POST /api/vehicles` - List/Create vehicles
+- `GET/PUT/DELETE /api/vehicles/{id}` - Get/Update/Delete vehicle
 
 ### Driver Mobile App API Endpoints
 - `POST /api/driver/login` - Driver authentication

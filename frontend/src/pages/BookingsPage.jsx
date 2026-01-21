@@ -1743,21 +1743,47 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
             )}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-          {/* Customer Info */}
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-slate-600 mb-3">Customer Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Name</p>
-                <p className="font-medium">{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</p>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details" data-testid="details-tab">Details</TabsTrigger>
+            <TabsTrigger value="history" data-testid="history-tab" className="flex items-center gap-1">
+              <History className="w-3 h-3" />
+              History
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details" className="mt-4">
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+              {/* Created By Info */}
+              {booking.created_by_name && (
+                <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-green-600" />
+                    <span className="text-xs text-green-700">Created by <strong>{booking.created_by_name}</strong></span>
+                    {booking.created_at && (
+                      <span className="text-xs text-green-600 ml-auto">
+                        {format(new Date(booking.created_at), "dd/MM/yyyy HH:mm")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Customer Info */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-slate-600 mb-3">Customer Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Name</p>
+                    <p className="font-medium">{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="font-medium">{booking.customer_phone}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="font-medium">{booking.customer_phone}</p>
-              </div>
-            </div>
-          </div>
 
           {/* Booking Details - PAX, Cases, Vehicle */}
           <div className="bg-amber-50 rounded-lg p-4">

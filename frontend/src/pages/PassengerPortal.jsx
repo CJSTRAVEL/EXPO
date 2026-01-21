@@ -198,7 +198,17 @@ const PassengerPortal = () => {
 
     setUser(JSON.parse(userInfo));
     fetchBookings(token);
+    fetchVehicleTypes();
   }, [navigate]);
+
+  const fetchVehicleTypes = async () => {
+    try {
+      const response = await axios.get(`${API}/vehicle-types`);
+      setVehicleTypes(response.data);
+    } catch (error) {
+      console.error("Failed to fetch vehicle types:", error);
+    }
+  };
 
   const fetchBookings = async (token) => {
     try {

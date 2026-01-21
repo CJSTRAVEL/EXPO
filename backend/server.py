@@ -1341,10 +1341,10 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                 <tr>
                     <td style="padding: 30px 40px; background-color: #f8f9fa; border-top: 1px solid #eee;">
                         <p style="margin: 0; color: #888; font-size: 11px; text-align: center; line-height: 1.6;">
-                            This is an automated email confirmation from CJs Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 191 77212223.
+                            This is an automated email confirmation from CJs Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 7383 185260.
                         </p>
                         <p style="margin: 15px 0 0 0; color: #888; font-size: 11px; text-align: center;">
-                            CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstravel.uk
+                            CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | <a href="https://cjstravel.uk" style="color: #1a3a5c;">cjstravel.uk</a>
                         </p>
                     </td>
                 </tr>
@@ -1358,26 +1358,30 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
 Booking Confirmation from CJs Executive Travel Limited
 
 Thanks for booking with CJs Executive Travel Limited.
-Need help? Call us on: +44 191 77212223
+Need help? Call us on: +44 7383 185260
 
 JOURNEY DETAILS
 ---------------
+Booking Ref: {short_booking_id or booking_id[:8]}
 Date & Time: {formatted_datetime}
 Pickup: {pickup or 'N/A'}
 {chr(10).join([f'Via: {stop}' for stop in (additional_stops or []) if stop])}
-Drop: {dropoff or 'N/A'}
+Drop-off: {dropoff or 'N/A'}
+
+View directions: {directions_url}
 
 BOOKING DETAILS
 ---------------
 Passenger: {customer_name}
 Passenger Mobile: {customer_phone or 'N/A'}
-Vehicle Type: {vehicle_type or 'CJs 8 Minibus'}
+Vehicle Type: {vehicle_type or 'Executive Saloon'}
 {"Driver: " + driver_name if driver_name else ""}
 
 Track your journey: {booking_link}
+Access your bookings: {portal_link}
 
 This is an automated email from CJs Executive Travel Limited.
-If any information is incorrect, please contact us on +44 191 77212223.
+If any information is incorrect, please contact us on +44 7383 185260.
 
 CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstravel.uk
         """

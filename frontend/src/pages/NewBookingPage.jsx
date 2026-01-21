@@ -128,9 +128,10 @@ const NewBookingPage = () => {
   // UI state
   const [dateOpen, setDateOpen] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);
-  const [showFlightInfo, setShowFlightInfo] = useState(false);
+  const [flightModalOpen, setFlightModalOpen] = useState(false);
   const [loadingFlight, setLoadingFlight] = useState(false);
   const [flightData, setFlightData] = useState(null);
+  const [flightSearchNumber, setFlightSearchNumber] = useState("");
 
   // Fetch data
   useEffect(() => {

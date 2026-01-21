@@ -251,15 +251,11 @@ class Client(ClientBase):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Driver Models
-class DriverType(str, Enum):
-    TAXI = "taxi"
-    PSV = "psv"
-
 class DriverBase(BaseModel):
     name: str
     phone: str
     email: Optional[str] = None
-    driver_type: DriverType = DriverType.TAXI  # taxi or psv
+    driver_types: List[str] = ["taxi"]  # Can be ["taxi"], ["psv"], or ["taxi", "psv"]
     # Taxi driver documents
     taxi_licence_expiry: Optional[str] = None
     dbs_expiry: Optional[str] = None
@@ -277,7 +273,7 @@ class DriverUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
-    driver_type: Optional[DriverType] = None
+    driver_types: Optional[List[str]] = None
     password: Optional[str] = None
     # Taxi driver documents
     taxi_licence_expiry: Optional[str] = None
@@ -299,7 +295,7 @@ class Driver(BaseModel):
     name: str
     phone: str
     email: Optional[str] = None
-    driver_type: DriverType = DriverType.TAXI
+    driver_types: List[str] = ["taxi"]
     # Documents
     taxi_licence_expiry: Optional[str] = None
     dbs_expiry: Optional[str] = None

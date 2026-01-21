@@ -716,7 +716,18 @@ const ContractWorkPage = () => {
                                     <span className="text-sm text-slate-700 truncate">{getDriverName(booking.driver_id)}</span>
                                   </>
                                 ) : (
-                                  <span className="text-sm text-muted-foreground">Unassigned</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAssignBooking(booking);
+                                      setSelectedDriverForAssign("");
+                                    }}
+                                    className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                                    data-testid={`assign-driver-${booking.id}`}
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                    Assign Driver
+                                  </button>
                                 )}
                               </div>
                               <Badge className={`mt-1 ${getStatusBadgeColor(booking.status)}`}>

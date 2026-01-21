@@ -1,180 +1,149 @@
 {
-  "design_system": {
+  "identity": {
+    "name": "E1",
+    "role": "Anti-AI Creative Designer",
+    "mission": "Create a high-density, professional dispatch interface that balances functional utility with aesthetic precision.",
+    "principles": [
+      "Density with Clarity: High information density without visual clutter.",
+      "Contextual Grouping: Logical flow from Left (Input) to Right (Confirmation).",
+      "Visual Anchors: Use color and icons to guide the eye through the booking flow.",
+      "Status Visibility: Immediate recognition of booking state via color-coded strips."
+    ]
+  },
+  "theme": {
+    "mode": "light",
+    "palette": {
+      "primary": {
+        "main": "#1a3a5c",
+        "foreground": "#ffffff",
+        "description": "Deep Navy Blue - Core Brand Color"
+      },
+      "secondary": {
+        "main": "#f8f9fa",
+        "foreground": "#1a3a5c",
+        "description": "Off-white/Light Gray for background contrast"
+      },
+      "accent": {
+        "main": "#d4af37",
+        "foreground": "#000000",
+        "description": "Gold - For premium actions and highlights"
+      },
+      "status": {
+        "incoming": "#f97316",
+        "allocated": "#16a34a",
+        "en_route": "#3b82f6",
+        "arrived": "#a855f7",
+        "completed": "#1a3a5c"
+      },
+      "surface": {
+        "card": "#ffffff",
+        "border": "#e2e8f0",
+        "input": "#f1f5f9"
+      }
+    },
     "typography": {
-      "font_family": {
-        "headings": "Manrope, sans-serif",
-        "body": "IBM Plex Sans, sans-serif",
-        "mono": "JetBrains Mono, monospace"
+      "headings": {
+        "family": "Manrope",
+        "weights": ["600", "700"],
+        "usage": "Section headers, Price quotes"
       },
-      "scale": {
-        "h1": "text-4xl font-bold tracking-tight lg:text-5xl",
-        "h2": "text-3xl font-semibold tracking-tight",
-        "h3": "text-2xl font-semibold tracking-tight",
-        "p": "text-base leading-7 text-muted-foreground",
-        "small": "text-sm font-medium leading-none"
+      "body": {
+        "family": "IBM Plex Sans",
+        "weights": ["400", "500"],
+        "usage": "Form labels, Input text, Data display"
       }
-    },
-    "colors": {
-      "theme": "light",
-      "palette": {
-        "primary": {
-          "DEFAULT": "#0F172A",
-          "foreground": "#F8FAFC"
-        },
-        "secondary": {
-          "DEFAULT": "#F1F5F9",
-          "foreground": "#0F172A"
-        },
-        "accent": {
-          "DEFAULT": "#3B82F6",
-          "foreground": "#FFFFFF"
-        },
-        "destructive": {
-          "DEFAULT": "#EF4444",
-          "foreground": "#FFFFFF"
-        },
-        "success": {
-          "DEFAULT": "#10B981",
-          "foreground": "#FFFFFF"
-        },
-        "warning": {
-          "DEFAULT": "#F59E0B",
-          "foreground": "#FFFFFF"
-        },
-        "background": "#FFFFFF",
-        "surface": "#F8FAFC",
-        "border": "#E2E8F0"
-      }
-    },
-    "spacing": {
-      "container_padding": "p-6 md:p-8 lg:p-12",
-      "section_gap": "gap-8",
-      "element_gap": "gap-4"
-    },
-    "visual_enhancers": {
-      "radius": "rounded-lg",
-      "shadows": {
-        "card": "shadow-sm hover:shadow-md transition-shadow duration-200",
-        "dropdown": "shadow-lg border border-border/50"
-      },
-      "glassmorphism": "bg-white/80 backdrop-blur-md border border-white/20",
-      "tracing_beam": "relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-1000"
     }
   },
-  "layout_strategies": {
-    "dashboard": {
-      "type": "bento_grid_mode_b",
-      "grid_cols": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
-      "gap": "gap-6",
-      "widgets": {
-        "summary": "col-span-1 bg-white border border-border p-6 rounded-xl shadow-sm",
-        "main_chart": "col-span-2 row-span-2 bg-white border border-border p-6 rounded-xl shadow-sm",
-        "feed": "col-span-1 row-span-2 bg-surface border border-border p-6 rounded-xl shadow-sm overflow-hidden"
+  "layout": {
+    "structure": "3-Column Dispatch Grid",
+    "grid_system": "grid-cols-1 lg:grid-cols-12 gap-4 p-4 h-[calc(100vh-64px)] overflow-hidden",
+    "columns": {
+      "left": {
+        "span": "col-span-12 lg:col-span-5",
+        "content": "Primary Input Form (Who, Where, When, What)",
+        "behavior": "Scrollable vertical stack"
+      },
+      "center": {
+        "span": "col-span-12 lg:col-span-3",
+        "content": "Context & Extras (Passenger Info, Notes, Payment, Tags)",
+        "behavior": "Scrollable vertical stack"
+      },
+      "right": {
+        "span": "col-span-12 lg:col-span-4",
+        "content": "Visual Confirmation (Map, Quote, Actions)",
+        "behavior": "Sticky/Fixed height"
       }
-    },
-    "bookings_page": {
-      "type": "data_table",
-      "style": "clean_rows",
-      "interaction": "hover:bg-slate-50 cursor-pointer transition-colors"
-    },
-    "drivers_page": {
-      "type": "card_grid",
-      "grid_cols": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-      "card_style": "group relative overflow-hidden bg-white border border-border hover:border-primary/50 transition-all duration-300"
     }
   },
   "components": {
-    "buttons": {
-      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
-      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
-      "ghost": "hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md font-medium transition-all"
+    "section_container": {
+      "base": "bg-white rounded-lg border border-border shadow-sm overflow-hidden",
+      "header": "flex items-center gap-2 px-4 py-3 bg-slate-50/50 border-b border-border",
+      "header_title": "text-sm font-bold text-primary uppercase tracking-wide",
+      "header_icon": "w-4 h-4 text-accent",
+      "content": "p-4 space-y-4"
     },
-    "inputs": {
-      "default": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    },
-    "cards": {
-      "default": "rounded-lg border bg-card text-card-foreground shadow-sm"
+    "form_elements": {
+      "input": "h-9 bg-white border-input focus:border-primary focus:ring-1 focus:ring-primary transition-all",
+      "label": "text-xs font-medium text-muted-foreground mb-1.5 block",
+      "select": "h-9 bg-white border-input",
+      "checkbox": "rounded border-input text-primary focus:ring-primary"
     },
     "badges": {
-      "status_pending": "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100",
-      "status_assigned": "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100",
-      "status_completed": "bg-green-100 text-green-800 border-green-200 hover:bg-green-100",
-      "status_cancelled": "bg-red-100 text-red-800 border-red-200 hover:bg-red-100"
+      "notification": "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer border",
+      "active": "bg-green-50 text-green-700 border-green-200",
+      "inactive": "bg-slate-50 text-slate-500 border-slate-200"
+    },
+    "map_card": {
+      "container": "h-full min-h-[300px] bg-slate-100 rounded-lg relative overflow-hidden border border-border",
+      "overlay_card": "absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-white/20"
+    }
+  },
+  "sections_map": {
+    "who": {
+      "title": "Passenger Details",
+      "icon": "User",
+      "fields": ["Account", "Booker", "Passenger Name", "Mobile", "Email"]
+    },
+    "where": {
+      "title": "Journey",
+      "icon": "MapPin",
+      "fields": ["Pickup Address", "Dropoff Address", "Stops (+/- buttons)"]
+    },
+    "when": {
+      "title": "Schedule",
+      "icon": "Calendar",
+      "fields": ["Date Picker", "Time Picker", "Return Journey Toggle"]
+    },
+    "what": {
+      "title": "Vehicle & Driver",
+      "icon": "Car",
+      "fields": ["Vehicle Type", "Driver Selection", "Passengers (PAX)", "Luggage"]
+    },
+    "payment": {
+      "title": "Payment",
+      "icon": "CreditCard",
+      "fields": ["Method", "Price Override", "Account Reference"]
+    },
+    "additional": {
+      "title": "Additional Info",
+      "icon": "FileText",
+      "fields": ["Driver Notes", "Internal Notes", "Flight Number", "Tags"]
     }
   },
   "assets": {
-    "images": {
-      "drivers": [
-        {
-          "url": "https://images.unsplash.com/photo-1622169804256-0eb6873ff441?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBkcml2ZXIlMjBwb3J0cmFpdCUyMGhlYWRzaG90fGVufDB8fHx8MTc2ODg0MzM0OXww&ixlib=rb-4.1.0&q=85",
-          "alt": "Professional Driver 1",
-          "category": "driver_avatar"
-        },
-        {
-          "url": "https://images.pexels.com/photos/5835254/pexels-photo-5835254.jpeg",
-          "alt": "Professional Driver 2",
-          "category": "driver_avatar"
-        },
-        {
-          "url": "https://images.pexels.com/photos/5835456/pexels-photo-5835456.jpeg",
-          "alt": "Professional Driver 3",
-          "category": "driver_avatar"
-        }
-      ],
-      "vehicles": [
-        {
-          "url": "https://images.pexels.com/photos/28406847/pexels-photo-28406847.png",
-          "alt": "Luxury Sedan",
-          "category": "vehicle_type"
-        },
-        {
-          "url": "https://images.unsplash.com/photo-1677352278890-0eb11c657c00?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHxNZXJjZWRlcyUyMEJlbnolMjBTJTIwQ2xhc3MlMjBzaWRlJTIwdmlldyUyMHdoaXRlJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3Njg4NDMzNzB8MA&ixlib=rb-4.1.0&q=85",
-          "alt": "Premium SUV",
-          "category": "vehicle_type"
-        }
-      ],
-      "maps": [
-        {
-          "url": "https://images.unsplash.com/photo-1755076652245-3d7de4c886ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwY2l0eSUyMG1hcCUyMHRvcCUyMHZpZXd8ZW58MHx8fHwxNzY4ODQzMzU0fDA&ixlib=rb-4.1.0&q=85",
-          "alt": "City Map Background",
-          "category": "map_bg"
-        }
-      ]
-    },
-    "icons": {
-      "library": "lucide-react",
-      "preferred_icons": ["Car", "User", "Calendar", "MapPin", "Clock", "CheckCircle", "XCircle", "AlertTriangle", "LayoutDashboard", "Settings", "LogOut"]
-    }
-  },
-  "instructions_to_main_agent": {
-    "general": [
-      "Implement the 'Soft Utility' design style: Rounded Humanist Sans (Manrope) for headings, Clean Sans (IBM Plex Sans) for body.",
-      "Use the 'Bento Grid Mode B' for the Dashboard layout: High density, data correlation, scanability.",
-      "Ensure all interactive elements have 'data-testid' attributes.",
-      "Use 'sonner' for toast notifications.",
-      "Do NOT use 'Inter' font for headings.",
-      "Use 'lucide-react' for icons.",
-      "Follow the 'Swiss & High-Contrast' color archetype with 'Vibrant Play' accents for status."
-    ],
-    "pages": {
-      "dashboard": "Create a high-density grid with summary cards (Total Bookings, Active Drivers, Revenue) and a main chart (Bookings over time). Use a 'Feed' widget for recent activity.",
-      "bookings": "Implement a data table with sortable columns, status badges, and a 'Tracing Beam' hover effect on rows. Include a 'New Booking' modal.",
-      "drivers": "Create a grid of driver cards. Each card should show the driver's avatar, vehicle info, and current status (Available/Busy).",
-      "booking_details": "A detailed view/modal showing pickup/dropoff map (static image background), customer info, and assigned driver."
-    }
+    "icons": "lucide-react",
+    "required_icons": [
+      "User", "MapPin", "Calendar", "Car", "CreditCard", "FileText", 
+      "Plus", "Minus", "Save", "RotateCcw", "Check", "Clock", "Navigation"
+    ]
   },
   "universal_guidelines": [
-    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
-    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
-    "Create depth through layered design elements with z-index hierarchy.",
-    "Use glass-morphism effects with backdrop filters (12-24px blur).",
-    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms.",
-    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text.",
-    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
-    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
-    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
-    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
-    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
-    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN."
-  ]
+    "Do not use gradients for backgrounds, use solid colors or subtle patterns.",
+    "Ensure all form inputs have a consistent height (h-9) for alignment.",
+    "Use 'Manrope' for all section headers to maintain brand consistency.",
+    "Map container must take up the remaining height of the right column.",
+    "Action buttons (Save, Reset) should be placed in a fixed footer or at the bottom of the Right column."
+  ],
+  "instructions_to_main_agent": "Implement the 'NewBookingPage' component using the 3-column layout defined above. Reuse existing logic from 'BookingsPage.jsx' for data fetching and state management. Focus on the UI transformation to match the 'Cab9 Dispatch' density and professional look. Use the 'section_container' style for all major groups."
 }

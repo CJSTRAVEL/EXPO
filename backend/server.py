@@ -2707,9 +2707,22 @@ async def assign_driver_to_booking(booking_id: str, driver_id: str):
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
     
+    # Add history entry
+    history_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": "driver_assigned",
+        "user_id": None,
+        "user_name": "Admin",
+        "user_type": "admin",
+        "details": f"Driver {driver.get('name', 'Unknown')} assigned"
+    }
+    
     await db.bookings.update_one(
         {"id": booking_id},
-        {"$set": {"driver_id": driver_id, "status": BookingStatus.ASSIGNED}}
+        {
+            "$set": {"driver_id": driver_id, "status": BookingStatus.ASSIGNED},
+            "$push": {"history": history_entry}
+        }
     )
     await db.drivers.update_one({"id": driver_id}, {"$set": {"status": DriverStatus.BUSY}})
     

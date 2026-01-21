@@ -1103,22 +1103,41 @@ const NewBookingPage = () => {
                   </div>
                 </div>
 
-                {/* Return Airport Transfer */}
-                <div className="pt-2 border-t border-[#D4A853]/30">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.return_is_airport_transfer || false}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        return_is_airport_transfer: e.target.checked 
-                      }))}
-                      className="rounded border-[#3d3d3d] bg-[#1a1a1a]"
-                    />
-                    <span className="text-sm text-[#D4A853] flex items-center gap-1">
-                      <Plane className="w-4 h-4" /> Return Airport Transfer
-                    </span>
-                  </label>
+                {/* Return Flight Info */}
+                <div className="pt-2 border-t border-[#D4A853]/30 space-y-2">
+                  <Label className="text-sm font-medium text-[#D4A853]">Return Flight Information</Label>
+                  {formData.return_flight_number ? (
+                    <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#3d3d3d]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Plane className="w-4 h-4 text-[#D4A853]" />
+                          <span className="text-sm font-medium text-white">{formData.return_flight_number}</span>
+                          {formData.return_airline && <span className="text-xs text-gray-400">({formData.return_airline})</span>}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setReturnFlightModalOpen(true)}
+                          className="h-7 text-xs text-[#D4A853] hover:bg-[#D4A853]/20"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                      {formData.return_terminal && (
+                        <div className="text-xs text-gray-400 mt-1">Terminal {formData.return_terminal}</div>
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => setReturnFlightModalOpen(true)}
+                      variant="outline"
+                      className="w-full justify-start gap-2 h-9 border-[#3d3d3d] text-[#D4A853] hover:bg-[#D4A853]/20"
+                      data-testid="open-return-flight-modal-btn"
+                    >
+                      <Plane className="w-4 h-4" />
+                      Add Return Flight Information
+                    </Button>
+                  )}
                 </div>
 
                 {/* Info Banner */}

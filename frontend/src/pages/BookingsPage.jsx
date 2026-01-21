@@ -45,7 +45,7 @@ const getStatusBadge = (status) => {
   );
 };
 
-const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => {
+const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose, isOpen }) => {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -62,6 +62,7 @@ const BookingForm = ({ booking, drivers, clients, onSave, onClose, isOpen }) => 
     status: "pending",
     driver_id: "",
     client_id: "",
+    vehicle_type: "",
     // Flight info
     flight_number: "",
     airline: "",

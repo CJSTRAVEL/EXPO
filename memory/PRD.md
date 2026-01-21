@@ -15,8 +15,11 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 21, 2026
 1. **New Booking Page Enhancements**
-   - Flight information lookup moved to popup modal
+   - Flight information lookup moved to popup modal (in Additional Info section)
+   - Return flight lookup popup modal with same styling
    - Auto-population of pickup location (airport) and time (landing time) on flight lookup
+   - Auto-population of return pickup location and time for return flights
+   - Removed flight info button from header - moved to Additional Info section
    - Dark theme styling to match rest of dispatch system
    - Dark theme with gold/amber accents (#D4A853, #1a1a1a, #252525)
 

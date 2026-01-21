@@ -260,9 +260,6 @@ class DriverBase(BaseModel):
     phone: str
     email: Optional[str] = None
     driver_type: DriverType = DriverType.TAXI  # taxi or psv
-    vehicle_type: str
-    vehicle_number: str
-    status: DriverStatus = DriverStatus.AVAILABLE
     # Taxi driver documents
     taxi_licence_expiry: Optional[str] = None
     dbs_expiry: Optional[str] = None
@@ -281,9 +278,6 @@ class DriverUpdate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     driver_type: Optional[DriverType] = None
-    vehicle_type: Optional[str] = None
-    vehicle_number: Optional[str] = None
-    status: Optional[DriverStatus] = None
     password: Optional[str] = None
     # Taxi driver documents
     taxi_licence_expiry: Optional[str] = None
@@ -294,10 +288,30 @@ class DriverUpdate(BaseModel):
     # PSV driver documents
     cpc_expiry: Optional[str] = None
     tacho_card_expiry: Optional[str] = None
+    # These come from driver app
+    vehicle_type: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    status: Optional[DriverStatus] = None
 
-class Driver(DriverBase):
+class Driver(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    phone: str
+    email: Optional[str] = None
+    driver_type: DriverType = DriverType.TAXI
+    # Documents
+    taxi_licence_expiry: Optional[str] = None
+    dbs_expiry: Optional[str] = None
+    school_badge_expiry: Optional[str] = None
+    driving_licence_expiry: Optional[str] = None
+    medical_due: Optional[str] = None
+    cpc_expiry: Optional[str] = None
+    tacho_card_expiry: Optional[str] = None
+    # From driver app
+    vehicle_type: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    status: DriverStatus = DriverStatus.OFFLINE
     password_hash: Optional[str] = None
     current_location: Optional[dict] = None  # {lat, lng, updated_at}
     is_online: bool = False

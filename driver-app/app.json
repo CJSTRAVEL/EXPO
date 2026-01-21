@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "driver-app",
-    "slug": "driver-app",
+    "name": "CJ's Driver",
+    "slug": "cjs-driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,20 +10,52 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1a3a5c"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "uk.co.cjstravel.driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to share your position with dispatch.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to your location to share your position with dispatch even when in the background.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1a3a5c"
       },
-      "edgeToEdgeEnabled": true
+      "package": "uk.co.cjstravel.driver",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow CJ's Driver to use your location for navigation and dispatch tracking."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1a3a5c"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cjs-driver-app"
+      }
     }
   }
 }

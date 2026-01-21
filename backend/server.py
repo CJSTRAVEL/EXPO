@@ -450,7 +450,10 @@ async def get_directions(origin: str, destination: str):
                     },
                     "start_address": leg.get("start_address", origin),
                     "end_address": leg.get("end_address", destination),
-                    "summary": route.get("summary", "")
+                    "summary": route.get("summary", ""),
+                    "polyline": route.get("overview_polyline", {}).get("points", ""),
+                    "start_location": leg.get("start_location", {}),
+                    "end_location": leg.get("end_location", {})
                 }
             else:
                 return {

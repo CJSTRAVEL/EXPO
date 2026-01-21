@@ -133,6 +133,13 @@ Build a private hire application where you can add bookings and assign them to d
 - `GET/PUT/DELETE /api/vehicle-types/{id}` - Get/Update/Delete vehicle type
 - `GET/POST /api/vehicles` - List/Create vehicles
 - `GET/PUT/DELETE /api/vehicles/{id}` - Get/Update/Delete vehicle
+- `POST /api/auth/login` - Admin user login
+- `GET /api/auth/me` - Get current admin user profile
+- `PUT /api/auth/profile` - Update current user's profile
+- `GET /api/auth/users` - List all admin users (admin only)
+- `POST /api/auth/users` - Create new admin user (super_admin only)
+- `PUT /api/auth/users/{id}` - Update admin user (super_admin only)
+- `DELETE /api/auth/users/{id}` - Delete admin user (super_admin only)
 
 ### Driver Mobile App API Endpoints
 - `POST /api/driver/login` - Driver authentication

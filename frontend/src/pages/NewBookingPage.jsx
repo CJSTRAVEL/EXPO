@@ -604,6 +604,134 @@ const NewBookingPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Return Flight Lookup Modal */}
+      <Dialog open={returnFlightModalOpen} onOpenChange={setReturnFlightModalOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-[#3d3d3d] text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#D4A853]">
+              <Plane className="w-5 h-5" />
+              Return Flight Information
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Return Flight Number</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={returnFlightSearchNumber}
+                  onChange={(e) => setReturnFlightSearchNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. BA123, EZY456"
+                  className="flex-1 bg-[#252525] border-[#3d3d3d] text-white placeholder:text-gray-500"
+                  data-testid="return-flight-number-input"
+                  onKeyDown={(e) => e.key === 'Enter' && handleReturnFlightLookup()}
+                />
+                <Button
+                  onClick={handleReturnFlightLookup}
+                  disabled={loadingReturnFlight || !returnFlightSearchNumber}
+                  className="bg-[#D4A853] hover:bg-[#c49743] text-black"
+                  data-testid="return-flight-lookup-btn"
+                >
+                  {loadingReturnFlight ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">Enter the return flight number to auto-fill pickup location and time</p>
+            </div>
+            
+            {/* Return Flight Results */}
+            {returnFlightData && (
+              <div className="bg-[#252525] rounded-lg border border-[#D4A853]/30 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#D4A853]/20 flex items-center justify-center">
+                    <Plane className="w-4 h-4 text-[#D4A853]" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">{returnFlightData.airline}</div>
+                    <div className="text-xs text-gray-400">{returnFlightData.flight_number}</div>
+                  </div>
+                  <Badge className={cn(
+                    "ml-auto",
+                    returnFlightData.flight_status === "landed" ? "bg-green-500/20 text-green-400 border-green-500/30" :
+                    returnFlightData.flight_status === "active" ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
+                    "bg-gray-500/20 text-gray-400 border-gray-500/30"
+                  )}>
+                    {returnFlightData.flight_status?.toUpperCase() || "SCHEDULED"}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#3d3d3d]">
+                  <div>
+                    <div className="text-xs text-gray-500">Arrival Airport</div>
+                    <div className="text-sm text-white font-medium">{returnFlightData.arrival_airport || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Terminal</div>
+                    <div className="text-sm text-white font-medium">{returnFlightData.arrival_terminal || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Scheduled Arrival</div>
+                    <div className="text-sm text-white font-medium">
+                      {returnFlightData.arrival_scheduled ? format(new Date(returnFlightData.arrival_scheduled), "dd/MM HH:mm") : "N/A"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Estimated Arrival</div>
+                    <div className="text-sm text-[#D4A853] font-medium">
+                      {returnFlightData.arrival_estimated ? format(new Date(returnFlightData.arrival_estimated), "dd/MM HH:mm") : "N/A"}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-[#D4A853]/10 rounded-md p-3 mt-2">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-[#D4A853] mt-0.5" />
+                    <div className="text-xs text-[#D4A853]">
+                      <strong>Auto-Applied:</strong> Return pickup set to {returnFlightData.arrival_airport || "airport"} 
+                      {returnFlightData.arrival_terminal && ` (Terminal ${returnFlightData.arrival_terminal})`}. 
+                      Return time set to landing time.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Current Return Flight Info Display */}
+            {formData.return_flight_number && !returnFlightData && (
+              <div className="bg-[#252525] rounded-lg border border-[#3d3d3d] p-3">
+                <div className="text-xs text-gray-500 mb-1">Currently Saved</div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-[#D4A853]/50 text-[#D4A853]">
+                    {formData.return_flight_number}
+                  </Badge>
+                  {formData.return_airline && <span className="text-sm text-gray-300">{formData.return_airline}</span>}
+                  {formData.return_terminal && <span className="text-xs text-gray-500">Terminal {formData.return_terminal}</span>}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="border-t border-[#3d3d3d] pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReturnFlightSearchNumber("");
+                setReturnFlightData(null);
+                setFormData(prev => ({ ...prev, return_flight_number: "", return_airline: "", return_terminal: "" }));
+              }}
+              className="border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+            >
+              Clear Flight Info
+            </Button>
+            <Button
+              onClick={() => setReturnFlightModalOpen(false)}
+              className="bg-[#D4A853] hover:bg-[#c49743] text-black"
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="bg-[#1a1a1a] text-white px-6 py-3 flex items-center justify-between border-b border-[#2d2d2d]">
         <div className="flex items-center gap-3">

@@ -242,18 +242,6 @@ const PassengerPortalAdmin = () => {
                             <Key className="w-4 h-4 mr-2" />
                             Change Password
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedPassenger(passenger);
-                              setShowDeleteModal(true);
-                            }}
-                            className="text-destructive focus:text-destructive"
-                            data-testid={`delete-passenger-${passenger.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Account
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>

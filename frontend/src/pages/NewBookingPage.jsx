@@ -1170,22 +1170,22 @@ const NewBookingPage = () => {
                   <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
                     <SelectValue placeholder="Select vehicle type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d] text-white">
                     {vehicleTypes.length > 0 ? (
                       vehicleTypes.map((vt) => (
-                        <SelectItem key={vt.id} value={vt.id}>
+                        <SelectItem key={vt.id} value={vt.id} className="text-white focus:bg-[#3d3d3d] focus:text-white">
                           <div className="flex items-center gap-2">
-                            <span>{vt.name}</span>
+                            <span className="text-white">{vt.name}</span>
                             <span className="text-xs text-gray-400">({vt.capacity} seats)</span>
                           </div>
                         </SelectItem>
                       ))
                     ) : (
                       <>
-                        <SelectItem value="saloon">Executive Saloon</SelectItem>
-                        <SelectItem value="estate">Estate</SelectItem>
-                        <SelectItem value="mpv">MPV (6 Seater)</SelectItem>
-                        <SelectItem value="minibus">Minibus (8 Seater)</SelectItem>
+                        <SelectItem value="saloon" className="text-white focus:bg-[#3d3d3d] focus:text-white">Executive Saloon</SelectItem>
+                        <SelectItem value="estate" className="text-white focus:bg-[#3d3d3d] focus:text-white">Estate</SelectItem>
+                        <SelectItem value="mpv" className="text-white focus:bg-[#3d3d3d] focus:text-white">MPV (6 Seater)</SelectItem>
+                        <SelectItem value="minibus" className="text-white focus:bg-[#3d3d3d] focus:text-white">Minibus (8 Seater)</SelectItem>
                       </>
                     )}
                   </SelectContent>

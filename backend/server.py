@@ -251,13 +251,27 @@ class Client(ClientBase):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Driver Models
+class DriverType(str, Enum):
+    TAXI = "taxi"
+    PSV = "psv"
+
 class DriverBase(BaseModel):
     name: str
     phone: str
     email: Optional[str] = None
+    driver_type: DriverType = DriverType.TAXI  # taxi or psv
     vehicle_type: str
     vehicle_number: str
     status: DriverStatus = DriverStatus.AVAILABLE
+    # Taxi driver documents
+    taxi_licence_expiry: Optional[str] = None
+    dbs_expiry: Optional[str] = None
+    school_badge_expiry: Optional[str] = None
+    driving_licence_expiry: Optional[str] = None
+    medical_due: Optional[str] = None
+    # PSV driver documents
+    cpc_expiry: Optional[str] = None
+    tacho_card_expiry: Optional[str] = None
 
 class DriverCreate(DriverBase):
     password: Optional[str] = None  # For mobile app login
@@ -266,10 +280,20 @@ class DriverUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
+    driver_type: Optional[DriverType] = None
     vehicle_type: Optional[str] = None
     vehicle_number: Optional[str] = None
     status: Optional[DriverStatus] = None
     password: Optional[str] = None
+    # Taxi driver documents
+    taxi_licence_expiry: Optional[str] = None
+    dbs_expiry: Optional[str] = None
+    school_badge_expiry: Optional[str] = None
+    driving_licence_expiry: Optional[str] = None
+    medical_due: Optional[str] = None
+    # PSV driver documents
+    cpc_expiry: Optional[str] = None
+    tacho_card_expiry: Optional[str] = None
 
 class Driver(DriverBase):
     model_config = ConfigDict(extra="ignore")

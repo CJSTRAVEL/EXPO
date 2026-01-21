@@ -267,7 +267,12 @@ export default function JobsScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Bookings</Text>
+      </View>
+
       {/* Tabs */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity

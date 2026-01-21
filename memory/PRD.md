@@ -140,33 +140,40 @@ Build a private hire application where you can add bookings and assign them to d
 
 ## Driver Mobile App (React Native / Expo)
 **Location:** `/app/driver-app/`
+**Expo Project:** @cjsexecutivetravel/cjs-driver
+**Project ID:** c2c6287f-c151-494a-bbe7-8b1bd62daeec
 
 ### Features
 - ✅ Email + password authentication
 - ✅ Dashboard with online/offline toggle, break mode
+- ✅ Active job card on dashboard (shows current trip)
+- ✅ Today's jobs preview on dashboard
 - ✅ View assigned bookings (today, upcoming, past)
+- ✅ Detailed job view with full route, customer info, timeline
 - ✅ Accept/reject booking assignments
 - ✅ Update booking status (On Way → Arrived → In Progress → Completed)
+- ✅ Status progress timeline on job detail
 - ✅ One-tap navigation (opens Google/Apple Maps)
 - ✅ In-app map navigation with route preview
 - ✅ Live GPS tracking (shares location with dispatch)
+- ✅ Background location tracking service
 - ✅ Push notifications for new bookings
 - ✅ One-tap call/text to passenger
 - ✅ "I've arrived" notification to passenger
 - ✅ Chat with dispatch
 - ✅ Earnings summary (today/weekly/all-time)
-- ✅ Booking history
+- ✅ Booking history with pagination
 
 ### Test Driver Account
 - Email: `john.driver@cjstravel.uk`
-- Password: `driver123`
+- Password: `password123`
 
 ### Building for App Stores
 ```bash
 cd /app/driver-app
-npm install -g eas-cli
-eas login
-eas build --platform android --profile production  # Google Play
+export EXPO_TOKEN="your-expo-token"
+eas build --platform android --profile preview   # APK for testing
+eas build --platform android --profile production  # Google Play AAB
 eas build --platform ios --profile production       # App Store
 ```
 

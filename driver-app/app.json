@@ -98,7 +98,13 @@
           "mode": "production"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow CJ's Driver to use Face ID for biometric login."
+        }
+      ]
     ],
     "extra": {
       "eas": {

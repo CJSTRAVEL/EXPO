@@ -906,17 +906,18 @@ const ContractWorkPage = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">Assigned Driver</p>
                   {viewBooking.driver_id ? (
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{getDriverName(viewBooking.driver_id)}</p>
-                      <button
-                        onClick={() => handleUnassignDriver(viewBooking.id)}
-                        className="text-xs text-red-500 hover:text-red-700 hover:underline flex items-center gap-1"
-                        data-testid="unassign-driver-link"
-                      >
-                        <UserX className="w-3 h-3" />
-                        Unassign
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setAssignBooking(viewBooking);
+                        setSelectedDriverForAssign(viewBooking.driver_id);
+                      }}
+                      className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                      data-testid="change-driver-link"
+                    >
+                      <UserCheck className="w-4 h-4 text-blue-600" />
+                      {getDriverName(viewBooking.driver_id)}
+                      <span className="text-xs text-muted-foreground">(change)</span>
+                    </button>
                   ) : (
                     <button
                       onClick={() => {

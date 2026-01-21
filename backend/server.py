@@ -175,6 +175,43 @@ class PaymentMethod(str, Enum):
     CARD = "Card"
     ACCOUNT = "Account"
 
+class AdminRole(str, Enum):
+    SUPER_ADMIN = "super_admin"
+    ADMIN = "admin"
+    DISPATCHER = "dispatcher"
+
+# ========== ADMIN USER MODELS ==========
+class AdminUserBase(BaseModel):
+    email: str
+    name: str
+    role: AdminRole = AdminRole.DISPATCHER
+    is_active: bool = True
+
+class AdminUserCreate(AdminUserBase):
+    password: str
+
+class AdminUserUpdate(BaseModel):
+    email: Optional[str] = None
+    name: Optional[str] = None
+    role: Optional[AdminRole] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = None
+
+class AdminUser(AdminUserBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    password_hash: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_login: Optional[datetime] = None
+
+class AdminLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class AdminLoginResponse(BaseModel):
+    token: str
+    user: dict
+
 # Client Models
 class ClientBase(BaseModel):
     name: str

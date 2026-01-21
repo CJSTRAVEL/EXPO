@@ -2062,7 +2062,83 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
               </button>
             )}
           </div>
-        </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="history" className="mt-4">
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2" data-testid="booking-history-tab">
+              {booking.history && booking.history.length > 0 ? (
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-3 top-2 bottom-2 w-px bg-slate-200" />
+                  
+                  <div className="space-y-4">
+                    {[...booking.history].reverse().map((entry, index) => (
+                      <div key={index} className="relative flex gap-3 pl-7">
+                        {/* Timeline dot */}
+                        <div className="absolute left-0 w-6 h-6 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center">
+                          {getActionIcon(entry.action)}
+                        </div>
+                        
+                        <div className="flex-1 bg-slate-50 rounded-lg p-3 border border-slate-100">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-sm text-slate-800">
+                              {getActionLabel(entry.action)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {entry.timestamp && format(new Date(entry.timestamp), "dd/MM/yyyy HH:mm")}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <User className="w-3 h-3" />
+                            <span>by <strong>{entry.user_name || 'System'}</strong></span>
+                            {entry.user_type && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                {entry.user_type}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {entry.details && (
+                            <p className="text-xs text-slate-600">{entry.details}</p>
+                          )}
+                          
+                          {entry.changes && Object.keys(entry.changes).length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-slate-200">
+                              <p className="text-xs font-medium text-slate-500 mb-1">Changes:</p>
+                              <div className="space-y-1">
+                                {Object.entries(entry.changes).map(([field, change]) => (
+                                  <div key={field} className="text-xs">
+                                    <span className="font-medium text-slate-700">{field.replace(/_/g, ' ')}:</span>
+                                    <span className="text-red-500 line-through ml-1">
+                                      {typeof change.old === 'object' ? JSON.stringify(change.old) : String(change.old || '(empty)')}
+                                    </span>
+                                    <span className="text-slate-400 mx-1">→</span>
+                                    <span className="text-green-600">
+                                      {typeof change.new === 'object' ? JSON.stringify(change.new) : String(change.new || '(empty)')}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No history available for this booking</p>
+                  <p className="text-xs mt-1">History tracking starts from when this feature was enabled</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+        
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>
             Close

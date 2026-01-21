@@ -163,6 +163,7 @@ const PassengerPortal = () => {
     passenger_count: 1,
     luggage_count: 0,
     notes: "",
+    customer_email: "",  // Email for confirmation
     // Flight info
     flight_number: "",
     airline: "",
@@ -258,6 +259,7 @@ const PassengerPortal = () => {
         passenger_count: parseInt(requestForm.passenger_count) || 1,
         luggage_count: parseInt(requestForm.luggage_count) || 0,
         notes: requestForm.notes,
+        customer_email: requestForm.customer_email || null,
         flight_number: requestForm.flight_number || null,
         flight_info: flight_info,
         // Return booking fields
@@ -295,6 +297,7 @@ const PassengerPortal = () => {
       passenger_count: 1,
       luggage_count: 0,
       notes: "",
+      customer_email: "",
       flight_number: "",
       airline: "",
       flight_type: "",

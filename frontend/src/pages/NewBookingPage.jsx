@@ -225,6 +225,14 @@ const NewBookingPage = () => {
       return;
     }
 
+    // Validate fare if Stripe payment is selected
+    if (formData.payment_method === "stripe") {
+      if (!formData.fare || parseFloat(formData.fare) <= 0) {
+        toast.error("Please enter a fare amount for card payment");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       let flight_info = null;
@@ -251,6 +259,7 @@ const NewBookingPage = () => {
         notes: formData.notes,
         fare: formData.fare ? parseFloat(formData.fare) : null,
         status: "pending",
+        payment_method: formData.payment_method,
         driver_id: formData.driver_id || null,
         client_id: formData.client_id || null,
         flight_info: flight_info,
@@ -266,6 +275,30 @@ const NewBookingPage = () => {
       };
 
       const response = await axios.post(`${API}/bookings`, payload);
+      const bookingId = response.data.id;
+      
+      // If Stripe payment selected, create checkout session and redirect
+      if (formData.payment_method === "stripe" && formData.fare) {
+        try {
+          const paymentResponse = await axios.post(`${API}/payments/create-checkout`, {
+            booking_id: bookingId,
+            amount: parseFloat(formData.fare),
+            origin_url: window.location.origin,
+            customer_email: formData.customer_email,
+            customer_name: `${formData.first_name} ${formData.last_name}`.trim()
+          });
+          
+          if (paymentResponse.data.checkout_url) {
+            toast.success(`Booking ${response.data.booking_id} created! Redirecting to payment...`);
+            window.location.href = paymentResponse.data.checkout_url;
+            return;
+          }
+        } catch (paymentError) {
+          console.error("Payment error:", paymentError);
+          toast.error("Booking created but payment link failed. You can retry payment from the bookings page.");
+        }
+      }
+      
       toast.success(`Booking ${response.data.booking_id} created successfully!`);
       navigate("/bookings");
     } catch (error) {

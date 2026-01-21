@@ -7,18 +7,31 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "cjsdriver",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#1a3a5c"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "uk.co.cjstravel.driver",
+      "buildNumber": "1",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+      },
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to share your position with dispatch.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to your location to share your position with dispatch even when in the background.",
-        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+        "NSLocationWhenInUseUsageDescription": "CJ's Driver needs your location to navigate to pickup and dropoff locations, and to share your position with dispatch.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "CJ's Driver needs your location to track your position and provide accurate ETAs to customers, even when the app is in the background.",
+        "NSLocationAlwaysUsageDescription": "CJ's Driver needs background location access to update dispatch with your position while on a job.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -27,11 +40,21 @@
         "backgroundColor": "#1a3a5c"
       },
       "package": "uk.co.cjstravel.driver",
+      "versionCode": 1,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+        }
+      },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE"
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
@@ -41,21 +64,35 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow CJ's Driver to use your location for navigation and dispatch tracking."
+          "locationAlwaysAndWhenInUsePermission": "CJ's Driver needs your location to navigate to customers and share your position with dispatch.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#1a3a5c"
+          "color": "#1a3a5c",
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ],
+          "mode": "production"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {
-        "projectId": "cjs-driver-app"
+        "projectId": "cjs-executive-travel-driver"
       }
+    },
+    "owner": "cjstravel",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/cjs-executive-travel-driver"
     }
   }
 }

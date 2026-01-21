@@ -1247,6 +1247,60 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
               </div>
             )}
 
+            {/* Flight Information Section (for editing) */}
+            {booking && (
+              <div className="space-y-3 border border-purple-200 rounded-lg p-3 bg-purple-50/50">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2 text-purple-800 font-semibold">
+                    <Plane className="w-4 h-4" />
+                    Flight Information
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFlightModalOpen(true)}
+                    className="border-purple-300 text-purple-700 hover:bg-purple-100"
+                    data-testid="edit-flight-lookup-btn"
+                  >
+                    <Search className="w-3 h-3 mr-1" />
+                    Lookup Flight
+                  </Button>
+                </div>
+                
+                {(formData.flight_number || formData.airline) ? (
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    {formData.flight_number && (
+                      <div>
+                        <Label className="text-xs text-purple-600">Flight Number</Label>
+                        <p className="font-medium text-sm">{formData.flight_number}</p>
+                      </div>
+                    )}
+                    {formData.airline && (
+                      <div>
+                        <Label className="text-xs text-purple-600">Airline</Label>
+                        <p className="font-medium text-sm">{formData.airline}</p>
+                      </div>
+                    )}
+                    {formData.terminal && (
+                      <div>
+                        <Label className="text-xs text-purple-600">Terminal</Label>
+                        <p className="font-medium text-sm">{formData.terminal}</p>
+                      </div>
+                    )}
+                    {formData.flight_type && (
+                      <div>
+                        <Label className="text-xs text-purple-600">Type</Label>
+                        <p className="font-medium text-sm capitalize">{formData.flight_type}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-purple-600 italic">No flight information - click "Lookup Flight" to add</p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="notes">Notes</Label>
               <Textarea

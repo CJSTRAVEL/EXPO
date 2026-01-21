@@ -29,6 +29,8 @@ const ContractWorkPage = () => {
   const [viewBooking, setViewBooking] = useState(null);
   const [deleteBooking, setDeleteBooking] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [sendingSms, setSendingSms] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   
   // Search and filter states
   const [searchText, setSearchText] = useState("");

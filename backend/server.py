@@ -390,6 +390,9 @@ class BookingUpdate(BaseModel):
     is_return: Optional[bool] = None
     linked_booking_id: Optional[str] = None
     customer_email: Optional[str] = None
+    vehicle_type: Optional[str] = None
+    passenger_count: Optional[int] = None
+    luggage_count: Optional[int] = None
 
 # Response model that supports both old (customer_name) and new (first_name/last_name) formats
 class BookingResponse(BaseModel):

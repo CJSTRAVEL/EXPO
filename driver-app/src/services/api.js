@@ -41,11 +41,21 @@ export const getStoredToken = async () => {
 
 // Auth API
 export const loginDriver = async (email, password) => {
-  const response = await api.post('/driver/login', { email, password });
-  if (response.data.token) {
-    await setAuthToken(response.data.token);
+  try {
+    console.log('Attempting login for:', email);
+    console.log('API URL:', API_URL);
+    const response = await api.post('/driver/login', { email, password });
+    console.log('Login response:', response.data);
+    if (response.data.token) {
+      await setAuthToken(response.data.token);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    throw error;
   }
-  return response.data;
 };
 
 export const logoutDriver = async () => {

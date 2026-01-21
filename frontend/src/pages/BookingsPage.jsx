@@ -1414,11 +1414,17 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
   );
 };
 
-const BookingViewDialog = ({ booking, driver, onClose, onEdit, onAssignDriver, onRefresh }) => {
+const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onAssignDriver, onRefresh }) => {
   const [sendingSms, setSendingSms] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   
   if (!booking) return null;
+
+  const getVehicleTypeName = (vehicleTypeId) => {
+    if (!vehicleTypeId) return "Not specified";
+    const vt = vehicleTypes?.find(v => v.id === vehicleTypeId);
+    return vt ? vt.name : vehicleTypeId;
+  };
 
   const handleResendSms = async () => {
     setSendingSms(true);

@@ -368,7 +368,7 @@ const NewBookingPage = () => {
     });
     setRouteInfo(null);
     setFlightData(null);
-    setShowFlightInfo(false);
+    setFlightSearchNumber("");
     toast.info("Form reset");
   };
 

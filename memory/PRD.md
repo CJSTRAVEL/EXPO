@@ -91,6 +91,14 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Email Confirmations** (Jan 20, 2026) - Added SMTP email notifications alongside SMS. Beautiful HTML emails sent for booking confirmations, driver assignments, status updates. Includes resend-email and resend-notifications endpoints.
 - ✅ **Passenger Email Field in Portal** (Jan 21, 2026) - Added email field to passenger portal booking request form for email confirmations
 - ✅ **Google Maps API Key Security Fix** (Jan 21, 2026) - Moved hardcoded API key to environment variable (backend/.env)
+- ✅ **Fleet Management - Vehicles Page** (Jan 21, 2026) - New Vehicles page with:
+  - Vehicle Types CRUD - Create categories like "CJ's Taxi" (4 pax), "CJ's 8 Minibus", "CJ's 16 Minibus", "CJ's 16 with Trailer"
+  - Vehicles CRUD - Add individual vehicles with registration, make, model, color, year
+  - Document tracking - Insurance, Road Tax, MOT expiry dates with status badges (Valid/Expiring/Expired)
+  - Vehicle type linking - Assign vehicles to types, shows vehicle count per type
+  - Has Trailer flag - Special badge for vehicles with attached luggage trailers
+  - Search & Filter - Filter by type, status (active/inactive/expiring docs), search by registration/make/model
+  - Delete protection - Cannot delete vehicle types that have assigned vehicles
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

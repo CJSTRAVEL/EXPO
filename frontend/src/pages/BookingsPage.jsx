@@ -94,6 +94,68 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
   const [returnFlightData, setReturnFlightData] = useState(null);
   const [flightError, setFlightError] = useState(null);
   const [returnFlightError, setReturnFlightError] = useState(null);
+  const [flightModalOpen, setFlightModalOpen] = useState(false);
+  const [flightSearchNumber, setFlightSearchNumber] = useState("");
+
+  // Flight lookup handler for edit form
+  const handleFlightLookup = async () => {
+    const searchNum = flightSearchNumber || formData.flight_number;
+    if (!searchNum) {
+      toast.error("Please enter a flight number");
+      return;
+    }
+    setLoadingFlight(true);
+    setFlightError(null);
+    try {
+      const flightNum = searchNum.trim().toUpperCase().replace(/\s+/g, '');
+      const response = await axios.get(`${API}/flight/${flightNum}`);
+      const data = response.data;
+      if (data.error) {
+        setFlightError(data.error);
+        toast.error(data.error);
+      } else {
+        setFlightData(data);
+        
+        // Build airport address from flight data
+        let airportAddress = "";
+        if (data.arrival_airport) {
+          airportAddress = data.arrival_airport;
+          if (data.arrival_terminal) {
+            airportAddress = `Terminal ${data.arrival_terminal}, ${airportAddress}`;
+          }
+        }
+        
+        // Parse landing time and set booking datetime
+        let newBookingDatetime = formData.booking_datetime;
+        if (data.arrival_scheduled || data.arrival_estimated) {
+          const landingTimeStr = data.arrival_estimated || data.arrival_scheduled;
+          const landingTime = new Date(landingTimeStr);
+          if (!isNaN(landingTime.getTime())) {
+            newBookingDatetime = landingTime;
+          }
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          flight_number: flightNum,
+          airline: data.airline || prev.airline,
+          terminal: data.arrival_terminal || data.departure_terminal || prev.terminal,
+          flight_type: data.arrival_airport ? "arrival" : "departure",
+          // Auto-set pickup location to arrival airport
+          pickup_location: airportAddress || prev.pickup_location,
+          // Auto-set booking time to landing time
+          booking_datetime: newBookingDatetime,
+        }));
+        
+        toast.success("Flight data loaded! Pickup location and time updated.");
+      }
+    } catch (error) {
+      setFlightError("Flight lookup failed");
+      toast.error("Flight lookup failed");
+    } finally {
+      setLoadingFlight(false);
+    }
+  };
 
   useEffect(() => {
     if (booking) {

@@ -244,7 +244,7 @@ eas build --platform ios --profile production       # App Store
 - Email HTML template is hardcoded in server.py - should be extracted to separate template files (Jinja2)
 
 ## Database Schema
-- **drivers**: `{id, name, phone, vehicle_type, vehicle_number, status}`
+- **drivers**: `{id, name, phone, email, driver_type, vehicle_type, vehicle_number, status, password_hash, taxi_licence_expiry, dbs_expiry, school_badge_expiry, driving_licence_expiry, medical_due, cpc_expiry, tacho_card_expiry, current_location, is_online, on_break, selected_vehicle_id, push_token, created_at}` - driver_type: "taxi" or "psv", document fields shown based on type
 - **bookings**: `{id, booking_id, first_name, last_name, customer_name, customer_phone, customer_email, passenger_count, luggage_count, pickup_address, dropoff_address, additional_stops[], client_id, flight_info{flight_number, airline, flight_type, terminal}, is_return, linked_booking_id, sms_sent, email_sent, ...}`
 - **passengers**: `{id, phone, name, email, password_hash, created_at}` - Portal user accounts
 - **clients**: `{id, account_no, name, mobile, email, client_type, payment_method, status, start_date, address, town_city, post_code, country, notes}` - B2B client accounts

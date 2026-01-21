@@ -185,28 +185,55 @@ const NewBookingPage = () => {
     return () => clearTimeout(debounce);
   }, [formData.pickup_location, formData.dropoff_location]);
 
-  // Flight lookup
+  // Flight lookup - auto-populates pickup location and time
   const handleFlightLookup = async () => {
-    if (!formData.flight_number) {
+    const searchNum = flightSearchNumber || formData.flight_number;
+    if (!searchNum) {
       toast.error("Please enter a flight number");
       return;
     }
     setLoadingFlight(true);
     try {
-      const flightNum = formData.flight_number.trim().toUpperCase().replace(/\s+/g, '');
+      const flightNum = searchNum.trim().toUpperCase().replace(/\s+/g, '');
       const response = await axios.get(`${API}/flight/${flightNum}`);
       const data = response.data;
       if (data.error) {
         toast.error(data.error);
       } else {
         setFlightData(data);
+        
+        // Build airport address from flight data
+        let airportAddress = "";
+        if (data.arrival_airport) {
+          airportAddress = data.arrival_airport;
+          if (data.arrival_terminal) {
+            airportAddress = `Terminal ${data.arrival_terminal}, ${airportAddress}`;
+          }
+        }
+        
+        // Parse landing time and set booking datetime
+        let newBookingDatetime = formData.booking_datetime;
+        if (data.arrival_scheduled || data.arrival_estimated) {
+          const landingTimeStr = data.arrival_estimated || data.arrival_scheduled;
+          const landingTime = new Date(landingTimeStr);
+          if (!isNaN(landingTime.getTime())) {
+            newBookingDatetime = landingTime;
+          }
+        }
+        
         setFormData(prev => ({
           ...prev,
+          flight_number: flightNum,
           airline: data.airline || prev.airline,
           terminal: data.arrival_terminal || data.departure_terminal || prev.terminal,
           flight_type: data.arrival_airport ? "arrival" : "departure",
+          // Auto-set pickup location to arrival airport
+          pickup_location: airportAddress || prev.pickup_location,
+          // Auto-set booking time to landing time
+          booking_datetime: newBookingDatetime,
         }));
-        toast.success("Flight data loaded!");
+        
+        toast.success("Flight data loaded! Pickup location and time updated.");
       }
     } catch (error) {
       toast.error("Flight lookup failed");

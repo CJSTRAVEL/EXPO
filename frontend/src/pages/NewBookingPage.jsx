@@ -129,6 +129,9 @@ const NewBookingPage = () => {
     email: true,
   });
 
+  // Vehicle types from database
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+
   // UI state
   const [dateOpen, setDateOpen] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);

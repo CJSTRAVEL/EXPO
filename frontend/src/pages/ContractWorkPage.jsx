@@ -893,12 +893,61 @@ const ContractWorkPage = () => {
                   <p className="font-medium">{format(new Date(viewBooking.booking_datetime), "dd/MM/yyyy HH:mm")}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Driver</p>
-                  <p className="font-medium">{getDriverName(viewBooking.driver_id)}</p>
+                  <p className="text-xs text-muted-foreground">Assigned Driver</p>
+                  {viewBooking.driver_id ? (
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{getDriverName(viewBooking.driver_id)}</p>
+                      <button
+                        onClick={() => handleUnassignDriver(viewBooking.id)}
+                        className="text-xs text-red-500 hover:text-red-700 hover:underline flex items-center gap-1"
+                        data-testid="unassign-driver-link"
+                      >
+                        <UserX className="w-3 h-3" />
+                        Unassign
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setAssignBooking(viewBooking);
+                        setSelectedDriverForAssign("");
+                      }}
+                      className="text-sm text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1"
+                      data-testid="assign-driver-link"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Assign Driver
+                    </button>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Fare</p>
                   <p className="font-bold text-primary text-lg">£{(viewBooking.fare || 0).toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Status Change */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Status</p>
+                    <Badge className={getStatusBadgeColor(viewBooking.status)}>{viewBooking.status}</Badge>
+                  </div>
+                  <Select
+                    value={viewBooking.status}
+                    onValueChange={(value) => handleStatusChange(viewBooking.id, value)}
+                  >
+                    <SelectTrigger className="w-[160px] h-8" data-testid="contract-status-select">
+                      <SelectValue placeholder="Change status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BOOKING_STATUSES.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

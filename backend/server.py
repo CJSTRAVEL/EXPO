@@ -192,24 +192,50 @@ class Client(ClientBase):
 class DriverBase(BaseModel):
     name: str
     phone: str
+    email: Optional[str] = None
     vehicle_type: str
     vehicle_number: str
     status: DriverStatus = DriverStatus.AVAILABLE
 
 class DriverCreate(DriverBase):
-    pass
+    password: Optional[str] = None  # For mobile app login
 
 class DriverUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
     vehicle_type: Optional[str] = None
     vehicle_number: Optional[str] = None
     status: Optional[DriverStatus] = None
+    password: Optional[str] = None
 
 class Driver(DriverBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    password_hash: Optional[str] = None
+    current_location: Optional[dict] = None  # {lat, lng, updated_at}
+    is_online: bool = False
+    on_break: bool = False
+    selected_vehicle_id: Optional[str] = None
+    push_token: Optional[str] = None  # For push notifications
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Driver Login Model
+class DriverLogin(BaseModel):
+    email: str
+    password: str
+
+# Driver Location Update
+class DriverLocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+
+# Driver Status Update  
+class DriverAppStatus(BaseModel):
+    is_online: Optional[bool] = None
+    on_break: Optional[bool] = None
+    selected_vehicle_id: Optional[str] = None
+    push_token: Optional[str] = None
 
 # Flight Information Model
 class FlightInfo(BaseModel):

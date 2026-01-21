@@ -135,6 +135,57 @@ const ContractWorkPage = () => {
     }
   };
 
+  // Assign driver to booking
+  const handleAssignDriver = async () => {
+    if (!assignBooking || !selectedDriverForAssign) {
+      toast.error("Please select a driver");
+      return;
+    }
+    try {
+      await axios.post(`${API}/bookings/${assignBooking.id}/assign/${selectedDriverForAssign}`);
+      toast.success("Driver assigned successfully");
+      fetchData();
+      setAssignBooking(null);
+      setSelectedDriverForAssign("");
+      // Update view booking if it's the same
+      if (viewBooking && viewBooking.id === assignBooking.id) {
+        setViewBooking({ ...viewBooking, driver_id: selectedDriverForAssign, status: "assigned" });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to assign driver");
+    }
+  };
+
+  // Unassign driver from booking
+  const handleUnassignDriver = async (bookingId) => {
+    try {
+      await axios.post(`${API}/bookings/${bookingId}/unassign`);
+      toast.success("Driver unassigned successfully");
+      fetchData();
+      // Update view booking if it's the same
+      if (viewBooking && viewBooking.id === bookingId) {
+        setViewBooking({ ...viewBooking, driver_id: null, status: "pending" });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to unassign driver");
+    }
+  };
+
+  // Update booking status
+  const handleStatusChange = async (bookingId, newStatus) => {
+    try {
+      await axios.put(`${API}/bookings/${bookingId}`, { status: newStatus });
+      toast.success(`Status updated to ${newStatus}`);
+      fetchData();
+      // Update view booking if it's the same
+      if (viewBooking && viewBooking.id === bookingId) {
+        setViewBooking({ ...viewBooking, status: newStatus });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update status");
+    }
+  };
+
   const handleOpenForm = (booking = null) => {
     if (booking) {
       setEditingBooking(booking);

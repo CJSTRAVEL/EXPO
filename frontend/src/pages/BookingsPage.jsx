@@ -1840,7 +1840,7 @@ const BookingsPage = () => {
     if (name.includes("taxi")) return "bg-blue-100 text-blue-700 border-blue-300";
     if (name.includes("8") && name.includes("minibus")) return "bg-green-100 text-green-700 border-green-300";
     if (name.includes("16") && name.includes("trailer")) return "bg-red-100 text-red-700 border-red-300";
-    if (name.includes("16") && name.includes("minibus")) return "bg-amber-100 text-amber-700 border-amber-300";
+    if (name.includes("16") && name.includes("minibus")) return "bg-pink-100 text-pink-700 border-pink-300";
     return "bg-slate-100 text-slate-600 border-slate-300"; // Default
   };
 

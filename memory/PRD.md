@@ -94,11 +94,22 @@ Build a private hire application where you can add bookings and assign them to d
 - ✅ **Fleet Management - Vehicles Page** (Jan 21, 2026) - New Vehicles page with:
   - Vehicle Types CRUD - Create categories like "CJ's Taxi" (4 pax), "CJ's 8 Minibus", "CJ's 16 Minibus", "CJ's 16 with Trailer"
   - Vehicles CRUD - Add individual vehicles with registration, make, model, color, year
-  - Document tracking - Insurance, Road Tax, MOT expiry dates with status badges (Valid/Expiring/Expired)
+  - Document tracking - Insurance, Road Tax, DCC Test Date 1 & 2 expiry dates with status badges (Valid/Expiring/Expired)
+  - Photo URLs - Both vehicle types and vehicles support photo images
   - Vehicle type linking - Assign vehicles to types, shows vehicle count per type
   - Has Trailer flag - Special badge for vehicles with attached luggage trailers
   - Search & Filter - Filter by type, status (active/inactive/expiring docs), search by registration/make/model
   - Delete protection - Cannot delete vehicle types that have assigned vehicles
+
+- ✅ **Admin User Authentication** (Jan 21, 2026) - User login and account system for dispatch:
+  - Admin login page at /admin/login with professional dark theme
+  - JWT-based authentication with 7-day token expiry
+  - Protected routes - all dispatch pages require authentication
+  - Role-based access: Super Admin, Admin, Dispatcher
+  - User profile editing and password change
+  - User Management (Super Admin only) - Create, edit, disable, delete users
+  - Default admin created on first startup: admin@cjstravel.uk / admin123
+  - Logout functionality with token cleanup
 
 ## API Endpoints
 - `GET/POST /api/drivers` - List/Create drivers

@@ -117,6 +117,10 @@ const NewBookingPage = () => {
     return_additional_stops: [],
     return_dropoff_location: "",
     return_datetime: null,
+    // Return flight info
+    return_flight_number: "",
+    return_airline: "",
+    return_terminal: "",
   });
 
   // Notification toggles

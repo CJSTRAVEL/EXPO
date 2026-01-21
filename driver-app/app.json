@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "scheme": "cjsdriver",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -28,9 +28,6 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "CJ's Driver needs your location to track your position and provide accurate ETAs to customers, even when the app is in the background.",
         "NSLocationAlwaysUsageDescription": "CJ's Driver needs background location access to update dispatch with your position while on a job.",
         "UIBackgroundModes": [
-          "location",
-          "fetch",
-          "remote-notification",
           "location",
           "fetch",
           "remote-notification"

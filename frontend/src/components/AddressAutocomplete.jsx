@@ -195,14 +195,42 @@ const AddressAutocomplete = ({
     onChange(newValue);
   };
 
+  // Track if we're currently typing to avoid sync issues
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef(null);
+
   // Only sync from parent when value prop changes externally (e.g., form reset)
   useEffect(() => {
-    // Only update if the value is being set from outside (like form reset/edit)
-    if (value !== inputValue && value !== undefined) {
-      setInputValue(value || "");
+    // Don't sync if user is actively typing
+    if (isTypingRef.current) return;
+    
+    // Only update if the value is significantly different (not just a character behind)
+    if (value !== undefined && value !== inputValue) {
+      // If value is empty and inputValue has content, it might be a form reset
+      if (value === "" || Math.abs((value?.length || 0) - (inputValue?.length || 0)) > 1) {
+        setInputValue(value || "");
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
+
+  // Updated input change handler that tracks typing state
+  const handleInputChangeWithTracking = (e) => {
+    const newValue = e.target.value;
+    isTypingRef.current = true;
+    setInputValue(newValue);
+    onChange(newValue);
+    
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Reset typing flag after a short delay
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
+    }, 500);
+  };
 
   // Calculate dropdown position
   const [dropdownStyle, setDropdownStyle] = useState({});

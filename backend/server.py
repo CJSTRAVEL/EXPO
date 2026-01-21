@@ -1234,11 +1234,11 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                         <table width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                                 <td style="text-align: center;">
-                                    <a href="https://cjstravel.uk" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Home</a>
-                                    <a href="https://cjstravel.uk/reviews" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Reviews</a>
+                                    <a href="https://cjstravel.uk/" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Home</a>
+                                    <a href="https://cjstravel.uk/testimonials" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Reviews</a>
                                     <a href="{portal_link}" style="color: #1a3a5c; text-decoration: none; padding: 0 12px; font-size: 13px; font-weight: bold;">My Bookings</a>
                                     <a href="https://cjstravel.uk/about" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">About</a>
-                                    <a href="https://cjstravel.uk/contact" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Contact</a>
+                                    <a href="https://cjstravel.uk/contact-us" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Contact</a>
                                 </td>
                             </tr>
                         </table>

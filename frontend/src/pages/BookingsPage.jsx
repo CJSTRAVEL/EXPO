@@ -1251,25 +1251,35 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
           
           {!showAddDriver ? (
             <>
-              {availableDrivers.length === 0 ? (
-                <p className="text-sm text-destructive mb-3">No available drivers at the moment.</p>
-              ) : (
-                <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-                  <SelectTrigger data-testid="assign-driver-select">
-                    <SelectValue placeholder="Select a driver" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[110]">
-                    {availableDrivers.map((driver) => (
+              <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+                <SelectTrigger data-testid="assign-driver-select">
+                  <SelectValue placeholder="Select a driver" />
+                </SelectTrigger>
+                <SelectContent className="z-[110]">
+                  {booking?.driver_id && (
+                    <SelectItem value="unassign">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <UserX className="w-4 h-4" />
+                        No Driver (Unassign)
+                      </div>
+                    </SelectItem>
+                  )}
+                  {availableDrivers.length === 0 && !booking?.driver_id ? (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      No available drivers
+                    </div>
+                  ) : (
+                    availableDrivers.map((driver) => (
                       <SelectItem key={driver.id} value={driver.id}>
                         <div className="flex items-center gap-2">
                           <UserCheck className="w-4 h-4" />
                           {driver.name} - {driver.vehicle_type} ({driver.vehicle_number})
                         </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
               
               <button
                 type="button"

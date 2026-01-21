@@ -1,5 +1,5 @@
 // API Configuration
-export const API_URL = 'https://hire-booking-app.preview.emergentagent.com/api';
+export const API_URL = 'https://smart-dispatch-21.preview.emergentagent.com/api';
 
 // App Configuration
 export const APP_CONFIG = {

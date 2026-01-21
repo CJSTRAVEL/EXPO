@@ -1126,7 +1126,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 phone = '+44' + phone
         
         # Generate booking details link - use SSR preview URL for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://hire-booking-app.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://smart-dispatch-21.preview.emergentagent.com')
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags
             booking_link = f"{app_url}/api/preview/{short_booking_id}"
@@ -1177,7 +1177,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
     
     try:
         # Generate booking details link - use SSR preview URL (same as SMS) for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://hire-booking-app.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://smart-dispatch-21.preview.emergentagent.com')
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags (same as SMS)
             booking_link = f"{app_url}/api/preview/{short_booking_id}"

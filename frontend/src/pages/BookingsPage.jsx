@@ -2241,7 +2241,7 @@ const BookingsPage = () => {
                                     {formatDuration(booking.duration_minutes)}
                                   </span>
                                 )}
-                                <span className={`text-xs hidden sm:flex items-center gap-1 px-2 py-0.5 rounded border ${getVehicleTypeColor(booking.vehicle_type)}`}>
+                                <span className={`text-xs hidden sm:flex items-center gap-1 px-2 py-0.5 rounded border font-bold ${getVehicleTypeColor(booking.vehicle_type)}`}>
                                   <Car className="w-3 h-3" />
                                   {booking.vehicle_type ? getVehicleTypeName(booking.vehicle_type) : 'Not specified'}
                                 </span>

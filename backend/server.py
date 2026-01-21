@@ -1252,7 +1252,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                             Thanks for booking with CJs Executive Travel Limited.
                         </p>
                         <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">
-                            Need help? Call us on: <a href="tel:+447383185260" style="color: #1a3a5c; text-decoration: none; font-weight: bold;">+44 7383 185260</a>
+                            Need help? Call us on: <a href="tel:+441917221223" style="color: #1a3a5c; text-decoration: none; font-weight: bold;">+44 191 722 1223</a>
                         </p>
                     </td>
                 </tr>

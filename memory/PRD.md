@@ -238,7 +238,10 @@ eas build --platform ios --profile production       # App Store
 - None currently - SMS Link Preview has been fixed with SSR endpoint
 
 ## Next Tasks
-1. Implement forgot password with SMS verification for passenger portal
-2. Consider refactoring server.py into separate route files as it has grown significantly
-3. Add email invoice PDF directly to clients feature
-4. Implement driver availability calendar
+1. Test driver mobile app build (user verification pending - save to GitHub and trigger EAS preview build)
+2. Implement driver app menu functionality (hamburger menu, logo menu button)
+3. Implement forgot password with SMS verification for passenger portal
+4. Link vehicles to drivers (assign vehicle to driver)
+5. Consider refactoring server.py into separate route files as it has grown significantly
+6. Add email invoice PDF directly to clients feature
+7. Implement driver availability calendar

@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, NavLink, useLocation, useParams, Navigate } from "react-router-dom";
-import { LayoutDashboard, Users, Calendar, Car, UserCircle, KeyRound, Building2, FileText, Inbox } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Car, UserCircle, KeyRound, Building2, FileText, Inbox, PlusCircle } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Dashboard from "@/pages/Dashboard";
 import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";
+import NewBookingPage from "@/pages/NewBookingPage";
 import BookingDetails from "@/pages/BookingDetails";
 import PassengersPage from "@/pages/PassengersPage";
 import PassengerLogin from "@/pages/PassengerLogin";

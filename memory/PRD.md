@@ -231,6 +231,8 @@ eas build --platform ios --profile production       # App Store
 - **passengers**: `{id, phone, name, email, password_hash, created_at}` - Portal user accounts
 - **clients**: `{id, account_no, name, mobile, email, client_type, payment_method, status, start_date, address, town_city, post_code, country, notes}` - B2B client accounts
 - **booking_requests**: `{id, passenger_id, passenger_name, passenger_phone, passenger_email, pickup_location, dropoff_location, additional_stops[], pickup_datetime, passenger_count, luggage_count, flight_number, flight_info, create_return, return_*, notes, status, admin_notes, created_at}` - Passenger booking requests
+- **vehicle_types**: `{id, name, capacity, description, has_trailer, created_at}` - Vehicle categories (e.g., CJ's Taxi, CJ's 8 Minibus)
+- **vehicles**: `{id, registration, make, model, color, year, vehicle_type_id, insurance_expiry, tax_expiry, mot_expiry, notes, is_active, created_at}` - Individual fleet vehicles
 
 ## Known Issues
 - None currently - SMS Link Preview has been fixed with SSR endpoint

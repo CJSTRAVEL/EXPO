@@ -191,9 +191,8 @@ const NewBookingPage = () => {
     }
     setLoadingFlight(true);
     try {
-      const response = await axios.get(`${API}/flight-lookup`, {
-        params: { flight_number: formData.flight_number }
-      });
+      const flightNum = formData.flight_number.trim().toUpperCase().replace(/\s+/g, '');
+      const response = await axios.get(`${API}/flight/${flightNum}`);
       const data = response.data;
       if (data.error) {
         toast.error(data.error);

@@ -951,15 +951,15 @@ const NewBookingPage = () => {
           <Section icon={Car} title="Vehicle & Driver">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Vehicle Type</Label>
+                <Label className="text-xs text-gray-400">Vehicle Type</Label>
                 <Select
                   value={formData.vehicle_type || "saloon"}
                   onValueChange={(value) => setFormData({ ...formData, vehicle_type: value })}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
                     <SelectValue placeholder="Select vehicle" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
                     <SelectItem value="saloon">Executive Saloon</SelectItem>
                     <SelectItem value="estate">Estate</SelectItem>
                     <SelectItem value="mpv">MPV (6 Seater)</SelectItem>
@@ -968,15 +968,15 @@ const NewBookingPage = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Select Driver</Label>
+                <Label className="text-xs text-gray-400">Select Driver</Label>
                 <Select
                   value={formData.driver_id || "none"}
                   onValueChange={(value) => setFormData({ ...formData, driver_id: value === "none" ? "" : value })}
                 >
-                  <SelectTrigger className="h-9" data-testid="booking-driver-select">
+                  <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white" data-testid="booking-driver-select">
                     <SelectValue placeholder="Select driver" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
                     <SelectItem value="none">Unassigned</SelectItem>
                     {drivers.filter(d => d.status === "available").map((driver) => (
                       <SelectItem key={driver.id} value={driver.id}>
@@ -990,7 +990,7 @@ const NewBookingPage = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500 flex items-center gap-1">
+                <Label className="text-xs text-gray-400 flex items-center gap-1">
                   <Users className="w-3 h-3" /> PAX (Passengers)
                 </Label>
                 <Input
@@ -999,12 +999,12 @@ const NewBookingPage = () => {
                   max="8"
                   value={formData.passenger_count}
                   onChange={(e) => setFormData({ ...formData, passenger_count: e.target.value })}
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white"
                   data-testid="booking-pax"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500 flex items-center gap-1">
+                <Label className="text-xs text-gray-400 flex items-center gap-1">
                   <Briefcase className="w-3 h-3" /> Cases (Luggage)
                 </Label>
                 <Input
@@ -1013,7 +1013,7 @@ const NewBookingPage = () => {
                   max="10"
                   value={formData.luggage_count}
                   onChange={(e) => setFormData({ ...formData, luggage_count: e.target.value })}
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white"
                   data-testid="booking-cases"
                 />
               </div>
@@ -1024,15 +1024,15 @@ const NewBookingPage = () => {
           <Section icon={CreditCard} title="Payment & Pricing">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Payment Method</Label>
+                <Label className="text-xs text-gray-400">Payment Method</Label>
                 <Select
                   value={formData.payment_method}
                   onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
                     <SelectItem value="cash">Cash</SelectItem>
                     <SelectItem value="card">Card (In-Person)</SelectItem>
                     <SelectItem value="stripe">Card (Online - Stripe)</SelectItem>
@@ -1042,7 +1042,7 @@ const NewBookingPage = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Fare (£)</Label>
+                <Label className="text-xs text-gray-400">Fare (£)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1050,7 +1050,7 @@ const NewBookingPage = () => {
                   value={formData.fare}
                   onChange={(e) => setFormData({ ...formData, fare: e.target.value })}
                   placeholder="Auto"
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-fare"
                 />
               </div>
@@ -1058,18 +1058,18 @@ const NewBookingPage = () => {
 
             {/* Stripe Payment Info */}
             {formData.payment_method === "stripe" && (
-              <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-                <div className="flex items-center gap-2 text-purple-700 mb-2">
+              <div className="bg-[#D4A853]/10 rounded-lg p-3 border border-[#D4A853]/30">
+                <div className="flex items-center gap-2 text-[#D4A853] mb-2">
                   <CreditCard className="w-4 h-4" />
                   <span className="text-sm font-medium">Online Card Payment</span>
                 </div>
-                <p className="text-xs text-purple-600">
+                <p className="text-xs text-gray-400">
                   After saving the booking, a secure Stripe payment link will be generated. 
                   {formData.customer_email ? " A payment link can be sent to the customer's email." : " Add customer email to send payment link."}
                 </p>
                 {formData.fare && parseFloat(formData.fare) > 0 && (
-                  <div className="mt-2 pt-2 border-t border-purple-200">
-                    <span className="text-sm text-purple-800 font-semibold">
+                  <div className="mt-2 pt-2 border-t border-[#D4A853]/30">
+                    <span className="text-sm text-[#D4A853] font-semibold">
                       Amount to charge: £{parseFloat(formData.fare).toFixed(2)}
                     </span>
                   </div>
@@ -1083,19 +1083,19 @@ const NewBookingPage = () => {
         <div className="col-span-12 lg:col-span-3 space-y-4 overflow-y-auto">
           
           {/* Passenger Preview Card */}
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Passenger</div>
+          <div className="bg-[#252525] rounded-lg border border-[#3d3d3d] shadow-lg p-4">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Passenger</div>
             {formData.first_name || formData.customer_phone ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#1a3a5c] flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-[#D4A853] flex items-center justify-center text-black font-bold">
                     {formData.first_name ? formData.first_name[0].toUpperCase() : "?"}
                   </div>
                   <div>
-                    <div className="font-medium text-slate-800">
+                    <div className="font-medium text-white">
                       {formData.first_name} {formData.last_name}
                     </div>
-                    <div className="text-xs text-slate-500">{formData.customer_phone}</div>
+                    <div className="text-xs text-gray-400">{formData.customer_phone}</div>
                   </div>
                 </div>
                 {formData.customer_email && (

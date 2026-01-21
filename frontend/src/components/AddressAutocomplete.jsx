@@ -88,6 +88,7 @@ const AddressAutocomplete = ({
   onChange, 
   placeholder = "Enter postcode or address...",
   id,
+  className = "",
   "data-testid": dataTestId 
 }) => {
   const inputRef = useRef(null);

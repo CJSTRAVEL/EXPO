@@ -1137,6 +1137,15 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         else:
             booking_link = f"{app_url}/booking/{booking_id}"
         
+        # Passenger portal link
+        portal_link = f"{app_url}/portal"
+        
+        # Google Maps API Key
+        google_maps_key = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
+        
+        # Company logo URL
+        logo_url = "https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png"
+        
         # Format datetime for display
         formatted_datetime = ""
         if booking_datetime:
@@ -1158,16 +1167,40 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         else:
             subject = f"Booking Confirmation email from CJs Executive Travel Limited"
         
-        # Build via stops HTML
+        # Build via stops HTML and waypoints for map
         via_stops_html = ""
+        map_waypoints = ""
         if additional_stops and len(additional_stops) > 0:
-            for stop in additional_stops:
+            waypoint_list = []
+            for i, stop in enumerate(additional_stops):
                 if stop:
                     via_stops_html += f'''
                     <tr>
-                        <td style="padding: 8px 0; color: #666; font-weight: bold; vertical-align: top; width: 80px;">Via</td>
+                        <td style="padding: 8px 0; color: #666; font-weight: bold; vertical-align: top; width: 100px;">Via {i+1}</td>
                         <td style="padding: 8px 0; color: #333;">{stop}</td>
                     </tr>'''
+                    waypoint_list.append(stop)
+            if waypoint_list:
+                map_waypoints = "&waypoints=" + "|".join([f"via:{w}" for w in waypoint_list])
+        
+        # Build Google Static Map URL with directions
+        from urllib.parse import quote
+        pickup_encoded = quote(pickup or "")
+        dropoff_encoded = quote(dropoff or "")
+        
+        # Static map with markers and path
+        map_url = f"https://maps.googleapis.com/maps/api/staticmap?size=550x200&maptype=roadmap"
+        map_url += f"&markers=color:green%7Clabel:A%7C{pickup_encoded}"
+        map_url += f"&markers=color:red%7Clabel:B%7C{dropoff_encoded}"
+        map_url += f"&path=color:0x1a3a5c%7Cweight:4%7C{pickup_encoded}%7C{dropoff_encoded}"
+        map_url += f"&key={google_maps_key}"
+        
+        # Google Maps directions link
+        directions_url = f"https://www.google.com/maps/dir/?api=1&origin={pickup_encoded}&destination={dropoff_encoded}"
+        if additional_stops:
+            waypoints_encoded = "|".join([quote(s) for s in additional_stops if s])
+            if waypoints_encoded:
+                directions_url += f"&waypoints={waypoints_encoded}"
         
         # Create HTML email matching the design
         html_content = f"""

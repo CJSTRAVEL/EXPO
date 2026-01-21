@@ -2749,16 +2749,33 @@ async def unassign_driver_from_booking(booking_id: str):
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
-    # Get current driver to update their status
+    # Get driver name for history
+    driver_name = "Unknown"
     if booking.get("driver_id"):
+        driver = await db.drivers.find_one({"id": booking["driver_id"]}, {"_id": 0})
+        if driver:
+            driver_name = driver.get("name", "Unknown")
         await db.drivers.update_one(
             {"id": booking["driver_id"]},
             {"$set": {"status": DriverStatus.AVAILABLE}}
         )
     
+    # Add history entry
+    history_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": "driver_unassigned",
+        "user_id": None,
+        "user_name": "Admin",
+        "user_type": "admin",
+        "details": f"Driver {driver_name} unassigned"
+    }
+    
     await db.bookings.update_one(
         {"id": booking_id},
-        {"$set": {"driver_id": None, "status": BookingStatus.PENDING}}
+        {
+            "$set": {"driver_id": None, "status": BookingStatus.PENDING},
+            "$push": {"history": history_entry}
+        }
     )
     
     updated = await db.bookings.find_one({"id": booking_id}, {"_id": 0})

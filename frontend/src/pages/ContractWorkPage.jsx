@@ -19,6 +19,15 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+const BOOKING_STATUSES = [
+  { value: "pending", label: "Pending" },
+  { value: "assigned", label: "Assigned" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "on_way", label: "On Way" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 const ContractWorkPage = () => {
   const [clients, setClients] = useState([]);
   const [bookings, setBookings] = useState([]);

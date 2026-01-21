@@ -576,15 +576,15 @@ const NewBookingPage = () => {
             {/* Client/Account Selection */}
             {clients.length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Account</Label>
+                <Label className="text-xs text-gray-400">Account</Label>
                 <Select
                   value={formData.client_id || "none"}
                   onValueChange={(value) => setFormData({ ...formData, client_id: value === "none" ? "" : value })}
                 >
-                  <SelectTrigger className="h-9 bg-white" data-testid="booking-account-select">
+                  <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white" data-testid="booking-account-select">
                     <SelectValue placeholder="Select account..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
                     <SelectItem value="none">No Account (Direct)</SelectItem>
                     {clients.filter(c => c.status === "active").map((client) => (
                       <SelectItem key={client.id} value={client.id}>
@@ -598,22 +598,22 @@ const NewBookingPage = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">First Name *</Label>
+                <Label className="text-xs text-gray-400">First Name *</Label>
                 <Input
                   value={formData.first_name}
                   onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   placeholder="John"
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-first-name"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Last Name</Label>
+                <Label className="text-xs text-gray-400">Last Name</Label>
                 <Input
                   value={formData.last_name}
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   placeholder="Smith"
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-last-name"
                 />
               </div>
@@ -621,19 +621,19 @@ const NewBookingPage = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500 flex items-center gap-1">
+                <Label className="text-xs text-gray-400 flex items-center gap-1">
                   <Phone className="w-3 h-3" /> Mobile *
                 </Label>
                 <Input
                   value={formData.customer_phone}
                   onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
                   placeholder="+44 7700 900123"
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-phone"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500 flex items-center gap-1">
+                <Label className="text-xs text-gray-400 flex items-center gap-1">
                   <Mail className="w-3 h-3" /> Email
                 </Label>
                 <Input
@@ -641,7 +641,7 @@ const NewBookingPage = () => {
                   value={formData.customer_email}
                   onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
                   placeholder="john@example.com"
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-email"
                 />
               </div>

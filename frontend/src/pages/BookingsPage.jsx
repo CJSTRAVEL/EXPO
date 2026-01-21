@@ -1831,6 +1831,19 @@ const BookingsPage = () => {
     return vt ? vt.name : vehicleTypeId || "Not specified";
   };
 
+  const getVehicleTypeColor = (vehicleTypeId) => {
+    if (!vehicleTypeId) return "bg-yellow-100 text-yellow-700 border-yellow-300"; // Not specified
+    const vt = vehicleTypes.find(v => v.id === vehicleTypeId);
+    if (!vt) return "bg-yellow-100 text-yellow-700 border-yellow-300";
+    
+    const name = vt.name.toLowerCase();
+    if (name.includes("taxi")) return "bg-blue-100 text-blue-700 border-blue-300";
+    if (name.includes("8") && name.includes("minibus")) return "bg-green-100 text-green-700 border-green-300";
+    if (name.includes("16") && name.includes("trailer")) return "bg-red-100 text-red-700 border-red-300";
+    if (name.includes("16") && name.includes("minibus")) return "bg-amber-100 text-amber-700 border-amber-300";
+    return "bg-slate-100 text-slate-600 border-slate-300"; // Default
+  };
+
   const formatDuration = (minutes) => {
     if (!minutes) return null;
     if (minutes >= 60) {

@@ -99,12 +99,8 @@
         "projectId": "c2c6287f-c151-494a-bbe7-8b1bd62daeec"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
     "updates": {
-      "enabled": true,
-      "url": "https://u.expo.dev/c2c6287f-c151-494a-bbe7-8b1bd62daeec"
+      "enabled": false
     },
     "owner": "cjsexecutivetravel"
   }

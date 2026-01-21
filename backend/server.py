@@ -2671,6 +2671,32 @@ async def assign_driver_to_booking(booking_id: str, driver_id: str):
         updated['booking_datetime'] = datetime.fromisoformat(updated['booking_datetime'])
     return updated
 
+@api_router.post("/bookings/{booking_id}/unassign", response_model=BookingResponse)
+async def unassign_driver_from_booking(booking_id: str):
+    """Unassign driver from a booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get current driver to update their status
+    if booking.get("driver_id"):
+        await db.drivers.update_one(
+            {"id": booking["driver_id"]},
+            {"$set": {"status": DriverStatus.AVAILABLE}}
+        )
+    
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {"driver_id": None, "status": BookingStatus.PENDING}}
+    )
+    
+    updated = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    if isinstance(updated.get('booking_datetime'), str):
+        updated['booking_datetime'] = datetime.fromisoformat(updated['booking_datetime'])
+    return updated
+
 # Send push notification to driver via Expo
 async def send_driver_push_notification(push_token: str, title: str, body: str, data: dict = None):
     """Send push notification to driver's mobile app via Expo Push Service"""

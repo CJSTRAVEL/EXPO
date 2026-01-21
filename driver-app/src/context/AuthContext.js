@@ -31,12 +31,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('AuthContext: Attempting login for:', email);
       const response = await loginDriver(email, password);
+      console.log('AuthContext: Login successful, driver:', response.driver);
       setUser(response.driver);
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Login failed';
+      console.error('AuthContext: Login error:', error);
+      console.error('AuthContext: Error response:', error.response?.data);
+      console.error('AuthContext: Error message:', error.message);
+      const message = error.response?.data?.detail || error.message || 'Login failed. Please check your connection.';
       return { success: false, error: message };
     }
   };

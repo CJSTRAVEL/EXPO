@@ -241,6 +241,10 @@ export default function JobsScreen({ navigation }) {
     navigation.navigate('Navigation', { booking, destinationType });
   };
 
+  const handleViewDetail = (booking) => {
+    navigation.navigate('JobDetail', { booking, onRefresh: fetchBookings });
+  };
+
   const handleNotifyArrival = async (bookingId) => {
     try {
       await notifyArrival(bookingId);

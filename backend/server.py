@@ -2157,10 +2157,12 @@ async def resend_booking_email(booking_id: str):
     
     # Get driver name if assigned
     driver_name = None
+    vehicle_type = None
     if booking.get('driver_id'):
         driver = await db.drivers.find_one({"id": booking['driver_id']})
         if driver:
             driver_name = driver.get('name')
+            vehicle_type = driver.get('vehicle_type')
     
     # Send email with short booking ID
     success, message = send_booking_email(
@@ -2172,7 +2174,10 @@ async def resend_booking_email(booking_id: str):
         booking_datetime=booking.get('booking_datetime'),
         short_booking_id=booking.get('booking_id'),
         status=booking.get('status'),
-        driver_name=driver_name
+        driver_name=driver_name,
+        customer_phone=booking.get('customer_phone'),
+        vehicle_type=vehicle_type,
+        additional_stops=booking.get('additional_stops')
     )
     
     # Update email_sent status

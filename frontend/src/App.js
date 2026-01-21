@@ -187,6 +187,7 @@ function App() {
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/passengers" element={<PassengersPage />} />
                 <Route path="/drivers" element={<DriversPage />} />
+                <Route path="/vehicles" element={<VehiclesPage />} />
                 <Route path="/passenger-portal" element={<PassengerPortalAdmin />} />
               </Routes>
             </main>

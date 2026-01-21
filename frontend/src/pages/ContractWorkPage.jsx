@@ -846,6 +846,80 @@ const ContractWorkPage = () => {
                   <p className="text-sm">{viewBooking.notes}</p>
                 </div>
               )}
+
+              {/* SMS Status */}
+              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  {viewBooking.sms_sent ? (
+                    <>
+                      <MessageSquare className="w-4 h-4 text-green-600" />
+                      <span className="text-green-600">SMS confirmation sent</span>
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquareX className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">SMS not sent</span>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleResendSms(viewBooking.id)}
+                  disabled={sendingSms}
+                  className="text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1 disabled:opacity-50 text-xs"
+                  data-testid="contract-resend-sms-link"
+                >
+                  {sendingSms ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-3 h-3" />
+                      {viewBooking.sms_sent ? "Resend SMS" : "Send SMS"}
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Email Status */}
+              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  {viewBooking.email_sent ? (
+                    <>
+                      <Mail className="w-4 h-4 text-green-600" />
+                      <span className="text-green-600">Email confirmation sent</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {viewBooking.customer_email ? "Email not sent" : "No email on file"}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {viewBooking.customer_email && (
+                  <button
+                    onClick={() => handleResendEmail(viewBooking.id)}
+                    disabled={sendingEmail}
+                    className="text-primary hover:text-primary/80 hover:underline font-medium flex items-center gap-1 disabled:opacity-50 text-xs"
+                    data-testid="contract-resend-email-link"
+                  >
+                    {sendingEmail ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-3 h-3" />
+                        {viewBooking.email_sent ? "Resend Email" : "Send Email"}
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           )}
           

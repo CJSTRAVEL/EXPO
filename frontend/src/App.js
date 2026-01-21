@@ -157,13 +157,13 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             end={item.path === "/"}
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""} ${item.highlight ? "bg-green-600 text-white hover:bg-green-700" : ""}`}
+            className={({ isActive }) => `nav-item ${isActive ? "active" : ""} ${item.highlight ? "!bg-[#D4A853] !text-[#1a1a1a] hover:!bg-[#c49843]" : ""}`}
             data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
           >
             <item.icon className="w-5 h-5" />
             {item.label}
             {item.badge > 0 && (
-              <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-amber-500 text-white rounded-full animate-pulse">
+              <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-[#D4A853] text-[#1a1a1a] rounded-full animate-pulse">
                 {item.badge}
               </span>
             )}
@@ -172,20 +172,20 @@ const Sidebar = () => {
       </nav>
       
       {/* User Section at bottom */}
-      <div className="mt-auto border-t border-border p-4">
+      <div className="mt-auto border-t border-[#2d2d2d] p-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-            <UserCircle className="w-5 h-5 text-primary" />
+          <div className="w-9 h-9 rounded-full bg-[#D4A853]/20 flex items-center justify-center">
+            <UserCircle className="w-5 h-5 text-[#D4A853]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <p className="text-sm font-medium truncate text-white">{user?.name}</p>
+            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <NavLink
             to="/settings"
-            className={({ isActive }) => `flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'}`}
+            className={({ isActive }) => `flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${isActive ? 'bg-[#D4A853] text-[#1a1a1a]' : 'bg-[#2d2d2d] text-gray-300 hover:bg-[#3d3d3d]'}`}
             data-testid="nav-settings"
           >
             <Settings className="w-4 h-4" />
@@ -193,7 +193,7 @@ const Sidebar = () => {
           </NavLink>
           <button
             onClick={logout}
-            className="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md bg-muted hover:bg-red-100 hover:text-red-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-md bg-[#2d2d2d] text-gray-300 hover:bg-red-900/50 hover:text-red-400 transition-colors"
             data-testid="logout-btn"
           >
             <LogOut className="w-4 h-4" />

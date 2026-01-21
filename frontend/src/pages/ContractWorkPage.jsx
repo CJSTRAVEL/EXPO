@@ -98,6 +98,32 @@ const ContractWorkPage = () => {
     }
   };
 
+  const handleResendSms = async (bookingId) => {
+    setSendingSms(true);
+    try {
+      await axios.post(`${API}/bookings/${bookingId}/resend-sms`);
+      toast.success("SMS confirmation sent successfully!");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send SMS");
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
+  const handleResendEmail = async (bookingId) => {
+    setSendingEmail(true);
+    try {
+      await axios.post(`${API}/bookings/${bookingId}/resend-email`);
+      toast.success("Email confirmation sent successfully!");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send email");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const handleOpenForm = (booking = null) => {
     if (booking) {
       setEditingBooking(booking);

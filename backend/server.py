@@ -637,7 +637,18 @@ async def lookup_flight(flight_number: str):
 # ========== DRIVER ENDPOINTS ==========
 @api_router.post("/drivers", response_model=Driver)
 async def create_driver(driver: DriverCreate):
-    driver_obj = Driver(**driver.model_dump())
+    driver_dict = driver.model_dump()
+    
+    # Handle password if provided
+    password = driver_dict.pop('password', None)
+    if password:
+        driver_dict['password_hash'] = hashlib.sha256(password.encode()).hexdigest()
+    
+    # Normalize email
+    if driver_dict.get('email'):
+        driver_dict['email'] = driver_dict['email'].lower()
+    
+    driver_obj = Driver(**driver_dict)
     doc = driver_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     await db.drivers.insert_one(doc)

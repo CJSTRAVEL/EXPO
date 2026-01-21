@@ -504,7 +504,7 @@ const NewBookingPage = () => {
               </Label>
               <AddressAutocomplete
                 value={formData.dropoff_location}
-                onChange={(value) => setFormData({ ...formData, dropoff_location: value })}
+                onChange={(value) => setFormData(prev => ({ ...prev, dropoff_location: value }))}
                 placeholder="Enter drop-off address..."
                 data-testid="booking-dropoff"
               />

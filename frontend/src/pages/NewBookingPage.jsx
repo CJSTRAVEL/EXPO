@@ -672,6 +672,7 @@ const NewBookingPage = () => {
                 value={formData.pickup_location}
                 onChange={(value) => setFormData(prev => ({ ...prev, pickup_location: value }))}
                 placeholder="Enter pickup address..."
+                className="bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                 data-testid="booking-pickup"
               />
             </div>
@@ -688,6 +689,7 @@ const NewBookingPage = () => {
                       value={stop}
                       onChange={(value) => updateStop(index, value)}
                       placeholder={`Stop ${index + 1}...`}
+                      className="bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                     />
                   </div>
                   <Button 
@@ -711,6 +713,7 @@ const NewBookingPage = () => {
                 value={formData.dropoff_location}
                 onChange={(value) => setFormData(prev => ({ ...prev, dropoff_location: value }))}
                 placeholder="Enter drop-off address..."
+                className="bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                 data-testid="booking-dropoff"
               />
             </div>

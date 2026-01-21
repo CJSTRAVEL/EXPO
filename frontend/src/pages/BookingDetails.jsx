@@ -243,7 +243,7 @@ const BookingDetails = () => {
     setMetaTag('og:description', 'View your booking details and track your journey in real-time.');
     setMetaTag('og:type', 'website');
     setMetaTag('og:url', window.location.href);
-    setMetaTag('og:image', 'https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png');
+    setMetaTag('og:image', 'https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png');
     setMetaTag('og:site_name', "CJ's Executive Travel");
     
     // Twitter Card meta tags
@@ -318,7 +318,7 @@ const BookingDetails = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <img 
-            src="https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png" 
+            src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" 
             alt="CJ's Executive Travel" 
             className="w-20 h-20 object-contain mx-auto mb-4"
           />

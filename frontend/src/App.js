@@ -141,7 +141,7 @@ const Sidebar = () => {
       <div className="sidebar-header">
         <div className="flex items-center gap-3">
           <img 
-            src="https://customer-assets.emergentagent.com/job_30ae4b98-ebfc-45ee-a35f-fc60498c61c6/artifacts/i2qqz1kf_Logo%20Background.png" 
+            src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" 
             alt="CJ&apos;s Executive Travel" 
             className="w-12 h-12 object-contain"
           />

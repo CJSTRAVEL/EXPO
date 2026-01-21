@@ -702,6 +702,193 @@ async def delete_driver(driver_id: str):
         raise HTTPException(status_code=404, detail="Driver not found")
     return {"message": "Driver deleted successfully"}
 
+# ========== VEHICLE TYPE MODELS ==========
+class VehicleTypeBase(BaseModel):
+    name: str  # e.g. "CJ's Taxi", "CJ's 8 Minibus"
+    capacity: int  # Number of passengers
+    description: Optional[str] = None
+    has_trailer: bool = False
+
+class VehicleTypeCreate(VehicleTypeBase):
+    pass
+
+class VehicleTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    capacity: Optional[int] = None
+    description: Optional[str] = None
+    has_trailer: Optional[bool] = None
+
+class VehicleType(VehicleTypeBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# ========== VEHICLE MODELS ==========
+class VehicleBase(BaseModel):
+    registration: str  # e.g. "AB12 CDE"
+    make: str  # e.g. "Mercedes"
+    model: str  # e.g. "V-Class"
+    color: Optional[str] = None
+    year: Optional[int] = None
+    vehicle_type_id: Optional[str] = None  # Links to VehicleType
+    # Document dates
+    insurance_expiry: Optional[str] = None  # Date string
+    tax_expiry: Optional[str] = None  # Date string (road tax)
+    mot_expiry: Optional[str] = None  # MOT test date
+    # Additional info
+    notes: Optional[str] = None
+    is_active: bool = True
+
+class VehicleCreate(VehicleBase):
+    pass
+
+class VehicleUpdate(BaseModel):
+    registration: Optional[str] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
+    color: Optional[str] = None
+    year: Optional[int] = None
+    vehicle_type_id: Optional[str] = None
+    insurance_expiry: Optional[str] = None
+    tax_expiry: Optional[str] = None
+    mot_expiry: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class Vehicle(VehicleBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# ========== VEHICLE TYPE ENDPOINTS ==========
+@api_router.post("/vehicle-types", response_model=VehicleType)
+async def create_vehicle_type(vehicle_type: VehicleTypeCreate):
+    vt_obj = VehicleType(**vehicle_type.model_dump())
+    doc = vt_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.vehicle_types.insert_one(doc)
+    return vt_obj
+
+@api_router.get("/vehicle-types")
+async def get_vehicle_types():
+    vehicle_types = await db.vehicle_types.find({}, {"_id": 0}).to_list(1000)
+    for vt in vehicle_types:
+        if isinstance(vt.get('created_at'), str):
+            vt['created_at'] = datetime.fromisoformat(vt['created_at'])
+        # Count vehicles in this type
+        vt['vehicle_count'] = await db.vehicles.count_documents({"vehicle_type_id": vt['id']})
+    return vehicle_types
+
+@api_router.get("/vehicle-types/{vehicle_type_id}")
+async def get_vehicle_type(vehicle_type_id: str):
+    vt = await db.vehicle_types.find_one({"id": vehicle_type_id}, {"_id": 0})
+    if not vt:
+        raise HTTPException(status_code=404, detail="Vehicle type not found")
+    if isinstance(vt.get('created_at'), str):
+        vt['created_at'] = datetime.fromisoformat(vt['created_at'])
+    vt['vehicle_count'] = await db.vehicles.count_documents({"vehicle_type_id": vehicle_type_id})
+    return vt
+
+@api_router.put("/vehicle-types/{vehicle_type_id}")
+async def update_vehicle_type(vehicle_type_id: str, vt_update: VehicleTypeUpdate):
+    existing = await db.vehicle_types.find_one({"id": vehicle_type_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Vehicle type not found")
+    
+    update_data = {k: v for k, v in vt_update.model_dump().items() if v is not None}
+    if update_data:
+        await db.vehicle_types.update_one({"id": vehicle_type_id}, {"$set": update_data})
+    
+    updated = await db.vehicle_types.find_one({"id": vehicle_type_id}, {"_id": 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    return updated
+
+@api_router.delete("/vehicle-types/{vehicle_type_id}")
+async def delete_vehicle_type(vehicle_type_id: str):
+    # Check if any vehicles use this type
+    vehicle_count = await db.vehicles.count_documents({"vehicle_type_id": vehicle_type_id})
+    if vehicle_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete: {vehicle_count} vehicles use this type")
+    
+    result = await db.vehicle_types.delete_one({"id": vehicle_type_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vehicle type not found")
+    return {"message": "Vehicle type deleted successfully"}
+
+# ========== VEHICLE ENDPOINTS ==========
+@api_router.post("/vehicles", response_model=Vehicle)
+async def create_vehicle(vehicle: VehicleCreate):
+    # Validate vehicle_type_id if provided
+    if vehicle.vehicle_type_id:
+        vt = await db.vehicle_types.find_one({"id": vehicle.vehicle_type_id})
+        if not vt:
+            raise HTTPException(status_code=400, detail="Invalid vehicle type")
+    
+    vehicle_obj = Vehicle(**vehicle.model_dump())
+    doc = vehicle_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.vehicles.insert_one(doc)
+    return vehicle_obj
+
+@api_router.get("/vehicles")
+async def get_vehicles():
+    vehicles = await db.vehicles.find({}, {"_id": 0}).to_list(1000)
+    # Get all vehicle types for lookup
+    vehicle_types = await db.vehicle_types.find({}, {"_id": 0}).to_list(1000)
+    vt_lookup = {vt['id']: vt for vt in vehicle_types}
+    
+    for v in vehicles:
+        if isinstance(v.get('created_at'), str):
+            v['created_at'] = datetime.fromisoformat(v['created_at'])
+        # Add vehicle type info
+        if v.get('vehicle_type_id') and v['vehicle_type_id'] in vt_lookup:
+            v['vehicle_type'] = vt_lookup[v['vehicle_type_id']]
+    return vehicles
+
+@api_router.get("/vehicles/{vehicle_id}")
+async def get_vehicle(vehicle_id: str):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    if isinstance(vehicle.get('created_at'), str):
+        vehicle['created_at'] = datetime.fromisoformat(vehicle['created_at'])
+    # Add vehicle type info
+    if vehicle.get('vehicle_type_id'):
+        vt = await db.vehicle_types.find_one({"id": vehicle['vehicle_type_id']}, {"_id": 0})
+        if vt:
+            vehicle['vehicle_type'] = vt
+    return vehicle
+
+@api_router.put("/vehicles/{vehicle_id}")
+async def update_vehicle(vehicle_id: str, vehicle_update: VehicleUpdate):
+    existing = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    update_data = {k: v for k, v in vehicle_update.model_dump().items() if v is not None}
+    
+    # Validate vehicle_type_id if being updated
+    if 'vehicle_type_id' in update_data and update_data['vehicle_type_id']:
+        vt = await db.vehicle_types.find_one({"id": update_data['vehicle_type_id']})
+        if not vt:
+            raise HTTPException(status_code=400, detail="Invalid vehicle type")
+    
+    if update_data:
+        await db.vehicles.update_one({"id": vehicle_id}, {"$set": update_data})
+    
+    updated = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if isinstance(updated.get('created_at'), str):
+        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
+    return updated
+
+@api_router.delete("/vehicles/{vehicle_id}")
+async def delete_vehicle(vehicle_id: str):
+    result = await db.vehicles.delete_one({"id": vehicle_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    return {"message": "Vehicle deleted successfully"}
+
 # ========== CLIENT ENDPOINTS ==========
 async def generate_client_account_no():
     """Generate sequential client account number like E001, E002, etc."""

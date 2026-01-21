@@ -8,16 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { parseISO, differenceInDays } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
-const DRIVER_TYPES = [
-  { value: "taxi", label: "Taxi" },
-  { value: "psv", label: "PSV" },
-];
 
 // Document status helper
 const getDocumentStatus = (expiryDate) => {
@@ -79,23 +75,51 @@ const getStatusBadge = (status) => {
   );
 };
 
-const getDriverTypeBadge = (driverType) => {
+// Helper to get driver types array (handles legacy single type)
+const getDriverTypes = (driver) => {
+  if (driver.driver_types && Array.isArray(driver.driver_types)) {
+    return driver.driver_types;
+  }
+  // Legacy support for old driver_type field
+  if (driver.driver_type) {
+    return [driver.driver_type];
+  }
+  return ["taxi"];
+};
+
+const getDriverTypeBadges = (driver) => {
+  const types = getDriverTypes(driver);
   const styles = {
     taxi: "bg-blue-100 text-blue-800 border-blue-200",
     psv: "bg-purple-100 text-purple-800 border-purple-200",
   };
-  return (
-    <Badge variant="outline" className={`${styles[driverType] || "bg-gray-100"} text-xs font-medium uppercase`}>
-      {driverType || "Taxi"}
+  
+  return types.map(type => (
+    <Badge key={type} variant="outline" className={`${styles[type] || "bg-gray-100"} text-xs font-medium uppercase`}>
+      {type}
     </Badge>
-  );
+  ));
 };
 
-// Check if driver has any expiring documents
+// Check if driver has any expiring documents based on their types
 const hasExpiringDocs = (driver) => {
-  const taxiDocs = [driver.taxi_licence_expiry, driver.dbs_expiry, driver.school_badge_expiry, driver.driving_licence_expiry, driver.medical_due];
-  const psvDocs = [driver.cpc_expiry, driver.tacho_card_expiry, driver.dbs_expiry, driver.school_badge_expiry];
-  const docs = driver.driver_type === "psv" ? psvDocs : taxiDocs;
+  const types = getDriverTypes(driver);
+  const docs = [];
+  
+  // Always check shared docs
+  if (types.includes("taxi") || types.includes("psv")) {
+    docs.push(driver.dbs_expiry, driver.school_badge_expiry);
+  }
+  
+  // Taxi specific
+  if (types.includes("taxi")) {
+    docs.push(driver.taxi_licence_expiry, driver.driving_licence_expiry, driver.medical_due);
+  }
+  
+  // PSV specific
+  if (types.includes("psv")) {
+    docs.push(driver.cpc_expiry, driver.tacho_card_expiry);
+  }
   
   return docs.some(d => {
     if (!d) return false;
@@ -106,6 +130,9 @@ const hasExpiringDocs = (driver) => {
 
 const DriverCard = ({ driver, onEdit, onDelete }) => {
   const showExpiringWarning = hasExpiringDocs(driver);
+  const driverTypes = getDriverTypes(driver);
+  const isTaxi = driverTypes.includes("taxi");
+  const isPSV = driverTypes.includes("psv");
   
   return (
     <Card className="driver-card group" data-testid={`driver-card-${driver.id}`}>
@@ -122,9 +149,9 @@ const DriverCard = ({ driver, onEdit, onDelete }) => {
             </div>
             <div>
               <h3 className="font-semibold text-base">{driver.name}</h3>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {getStatusBadge(driver.status)}
-                {getDriverTypeBadge(driver.driver_type)}
+                {getDriverTypeBadges(driver)}
               </div>
             </div>
           </div>
@@ -179,20 +206,25 @@ const DriverCard = ({ driver, onEdit, onDelete }) => {
             <FileText className="w-3 h-3" />
             Documents
           </h4>
-          {driver.driver_type === "psv" ? (
+          
+          {/* Shared documents */}
+          <DocumentBadge label="DBS" date={driver.dbs_expiry} />
+          <DocumentBadge label="School Badge" date={driver.school_badge_expiry} />
+          
+          {/* Taxi specific */}
+          {isTaxi && (
+            <>
+              <DocumentBadge label="Taxi Licence" date={driver.taxi_licence_expiry} />
+              <DocumentBadge label="Driving Licence" date={driver.driving_licence_expiry} />
+              <DocumentBadge label="Medical Due" date={driver.medical_due} />
+            </>
+          )}
+          
+          {/* PSV specific */}
+          {isPSV && (
             <>
               <DocumentBadge label="CPC" date={driver.cpc_expiry} />
               <DocumentBadge label="Tacho Card" date={driver.tacho_card_expiry} />
-              <DocumentBadge label="DBS" date={driver.dbs_expiry} />
-              <DocumentBadge label="School Badge" date={driver.school_badge_expiry} />
-            </>
-          ) : (
-            <>
-              <DocumentBadge label="Taxi Licence" date={driver.taxi_licence_expiry} />
-              <DocumentBadge label="DBS" date={driver.dbs_expiry} />
-              <DocumentBadge label="School Badge" date={driver.school_badge_expiry} />
-              <DocumentBadge label="Driving Licence" date={driver.driving_licence_expiry} />
-              <DocumentBadge label="Medical Due" date={driver.medical_due} />
             </>
           )}
         </div>
@@ -206,12 +238,13 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
     name: "",
     phone: "",
     email: "",
-    driver_type: "taxi",
+    driver_types: ["taxi"],
     password: "",
-    // Taxi docs
-    taxi_licence_expiry: "",
+    // Shared docs
     dbs_expiry: "",
     school_badge_expiry: "",
+    // Taxi docs
+    taxi_licence_expiry: "",
     driving_licence_expiry: "",
     medical_due: "",
     // PSV docs
@@ -222,15 +255,21 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
 
   useEffect(() => {
     if (driver) {
+      // Handle legacy driver_type field
+      let types = driver.driver_types;
+      if (!types || !Array.isArray(types)) {
+        types = driver.driver_type ? [driver.driver_type] : ["taxi"];
+      }
+      
       setFormData({
         name: driver.name || "",
         phone: driver.phone || "",
         email: driver.email || "",
-        driver_type: driver.driver_type || "taxi",
+        driver_types: types,
         password: "",
-        taxi_licence_expiry: driver.taxi_licence_expiry || "",
         dbs_expiry: driver.dbs_expiry || "",
         school_badge_expiry: driver.school_badge_expiry || "",
+        taxi_licence_expiry: driver.taxi_licence_expiry || "",
         driving_licence_expiry: driver.driving_licence_expiry || "",
         medical_due: driver.medical_due || "",
         cpc_expiry: driver.cpc_expiry || "",
@@ -241,11 +280,11 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
         name: "",
         phone: "",
         email: "",
-        driver_type: "taxi",
+        driver_types: ["taxi"],
         password: "",
-        taxi_licence_expiry: "",
         dbs_expiry: "",
         school_badge_expiry: "",
+        taxi_licence_expiry: "",
         driving_licence_expiry: "",
         medical_due: "",
         cpc_expiry: "",
@@ -254,8 +293,24 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
     }
   }, [driver]);
 
+  const toggleDriverType = (type) => {
+    setFormData(prev => {
+      const types = prev.driver_types.includes(type)
+        ? prev.driver_types.filter(t => t !== type)
+        : [...prev.driver_types, type];
+      // Ensure at least one type is selected
+      return { ...prev, driver_types: types.length > 0 ? types : [type] };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (formData.driver_types.length === 0) {
+      toast.error("Please select at least one driver type");
+      return;
+    }
+    
     setSaving(true);
     try {
       const dataToSave = { ...formData };
@@ -278,42 +333,62 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
     }
   };
 
+  const isTaxi = formData.driver_types.includes("taxi");
+  const isPSV = formData.driver_types.includes("psv");
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto" data-testid="driver-form-modal">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" data-testid="driver-form-modal">
         <DialogHeader>
           <DialogTitle>{driver ? "Edit Driver" : "Add New Driver"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             {/* Basic Info */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="John Smith"
-                  required
-                  data-testid="driver-name-input"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="driver_type">Driver Type *</Label>
-                <Select
-                  value={formData.driver_type}
-                  onValueChange={(value) => setFormData({ ...formData, driver_type: value })}
-                >
-                  <SelectTrigger data-testid="driver-type-select">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DRIVER_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="John Smith"
+                required
+                data-testid="driver-name-input"
+              />
+            </div>
+
+            {/* Driver Types - Checkboxes */}
+            <div className="space-y-2">
+              <Label>Driver Type(s) *</Label>
+              <div className="flex gap-6 pt-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="type-taxi"
+                    checked={isTaxi}
+                    onCheckedChange={() => toggleDriverType("taxi")}
+                    data-testid="driver-type-taxi"
+                  />
+                  <label
+                    htmlFor="type-taxi"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Taxi
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="type-psv"
+                    checked={isPSV}
+                    onCheckedChange={() => toggleDriverType("psv")}
+                    data-testid="driver-type-psv"
+                  />
+                  <label
+                    htmlFor="type-psv"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    PSV
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -358,32 +433,13 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
             <div className="pt-4 border-t">
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Document Expiry Dates ({formData.driver_type === "psv" ? "PSV" : "Taxi"})
+                Document Expiry Dates
               </h4>
               
-              {formData.driver_type === "psv" ? (
-                // PSV Driver Documents
+              {/* Shared Documents (DBS & School Badge) */}
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Shared Documents</p>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cpc_expiry">CPC Expiry</Label>
-                    <Input
-                      id="cpc_expiry"
-                      type="date"
-                      value={formData.cpc_expiry}
-                      onChange={(e) => setFormData({ ...formData, cpc_expiry: e.target.value })}
-                      data-testid="driver-cpc-expiry-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tacho_card_expiry">Tacho Card Expiry</Label>
-                    <Input
-                      id="tacho_card_expiry"
-                      type="date"
-                      value={formData.tacho_card_expiry}
-                      onChange={(e) => setFormData({ ...formData, tacho_card_expiry: e.target.value })}
-                      data-testid="driver-tacho-card-expiry-input"
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="dbs_expiry">DBS Expiry</Label>
                     <Input
@@ -405,58 +461,72 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
                     />
                   </div>
                 </div>
-              ) : (
-                // Taxi Driver Documents
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="taxi_licence_expiry">Taxi Licence Expiry</Label>
-                    <Input
-                      id="taxi_licence_expiry"
-                      type="date"
-                      value={formData.taxi_licence_expiry}
-                      onChange={(e) => setFormData({ ...formData, taxi_licence_expiry: e.target.value })}
-                      data-testid="driver-taxi-licence-expiry-input"
-                    />
+              </div>
+              
+              {/* Taxi Documents */}
+              {isTaxi && (
+                <div className="mb-4">
+                  <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Taxi Documents</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="taxi_licence_expiry">Taxi Licence Expiry</Label>
+                      <Input
+                        id="taxi_licence_expiry"
+                        type="date"
+                        value={formData.taxi_licence_expiry}
+                        onChange={(e) => setFormData({ ...formData, taxi_licence_expiry: e.target.value })}
+                        data-testid="driver-taxi-licence-expiry-input"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="driving_licence_expiry">Driving Licence Expiry</Label>
+                      <Input
+                        id="driving_licence_expiry"
+                        type="date"
+                        value={formData.driving_licence_expiry}
+                        onChange={(e) => setFormData({ ...formData, driving_licence_expiry: e.target.value })}
+                        data-testid="driver-driving-licence-expiry-input"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="medical_due">Medical Due</Label>
+                      <Input
+                        id="medical_due"
+                        type="date"
+                        value={formData.medical_due}
+                        onChange={(e) => setFormData({ ...formData, medical_due: e.target.value })}
+                        data-testid="driver-medical-due-input"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dbs_expiry">DBS Expiry</Label>
-                    <Input
-                      id="dbs_expiry"
-                      type="date"
-                      value={formData.dbs_expiry}
-                      onChange={(e) => setFormData({ ...formData, dbs_expiry: e.target.value })}
-                      data-testid="driver-dbs-expiry-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="school_badge_expiry">School Badge Expiry</Label>
-                    <Input
-                      id="school_badge_expiry"
-                      type="date"
-                      value={formData.school_badge_expiry}
-                      onChange={(e) => setFormData({ ...formData, school_badge_expiry: e.target.value })}
-                      data-testid="driver-school-badge-expiry-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="driving_licence_expiry">Driving Licence Expiry</Label>
-                    <Input
-                      id="driving_licence_expiry"
-                      type="date"
-                      value={formData.driving_licence_expiry}
-                      onChange={(e) => setFormData({ ...formData, driving_licence_expiry: e.target.value })}
-                      data-testid="driver-driving-licence-expiry-input"
-                    />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label htmlFor="medical_due">Medical Due</Label>
-                    <Input
-                      id="medical_due"
-                      type="date"
-                      value={formData.medical_due}
-                      onChange={(e) => setFormData({ ...formData, medical_due: e.target.value })}
-                      data-testid="driver-medical-due-input"
-                    />
+                </div>
+              )}
+              
+              {/* PSV Documents */}
+              {isPSV && (
+                <div className="mb-4">
+                  <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">PSV Documents</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cpc_expiry">CPC Expiry</Label>
+                      <Input
+                        id="cpc_expiry"
+                        type="date"
+                        value={formData.cpc_expiry}
+                        onChange={(e) => setFormData({ ...formData, cpc_expiry: e.target.value })}
+                        data-testid="driver-cpc-expiry-input"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tacho_card_expiry">Tacho Card Expiry</Label>
+                      <Input
+                        id="tacho_card_expiry"
+                        type="date"
+                        value={formData.tacho_card_expiry}
+                        onChange={(e) => setFormData({ ...formData, tacho_card_expiry: e.target.value })}
+                        data-testid="driver-tacho-card-expiry-input"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -535,14 +605,20 @@ const DriversPage = () => {
   };
 
   const filteredDrivers = drivers.filter(d => {
+    const types = getDriverTypes(d);
     if (filterType === "all") return true;
     if (filterType === "expiring") return hasExpiringDocs(d);
-    return (d.driver_type || "taxi") === filterType;
+    if (filterType === "both") return types.includes("taxi") && types.includes("psv");
+    return types.includes(filterType);
   });
 
   // Stats
-  const taxiCount = drivers.filter(d => !d.driver_type || d.driver_type === "taxi").length;
-  const psvCount = drivers.filter(d => d.driver_type === "psv").length;
+  const taxiCount = drivers.filter(d => getDriverTypes(d).includes("taxi")).length;
+  const psvCount = drivers.filter(d => getDriverTypes(d).includes("psv")).length;
+  const bothCount = drivers.filter(d => {
+    const types = getDriverTypes(d);
+    return types.includes("taxi") && types.includes("psv");
+  }).length;
   const expiringCount = drivers.filter(d => hasExpiringDocs(d)).length;
 
   if (loading) {
@@ -573,6 +649,12 @@ const DriversPage = () => {
                 <p className="font-bold text-purple-700">{psvCount}</p>
                 <p className="text-xs text-purple-600">PSV</p>
               </div>
+              {bothCount > 0 && (
+                <div className="text-center px-3 py-1 bg-indigo-50 rounded-lg">
+                  <p className="font-bold text-indigo-700">{bothCount}</p>
+                  <p className="text-xs text-indigo-600">Both</p>
+                </div>
+              )}
               {expiringCount > 0 && (
                 <div className="text-center px-3 py-1 bg-amber-50 rounded-lg">
                   <p className="font-bold text-amber-700">{expiringCount}</p>
@@ -597,8 +679,11 @@ const DriversPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Drivers ({drivers.length})</SelectItem>
-              <SelectItem value="taxi">Taxi Only ({taxiCount})</SelectItem>
-              <SelectItem value="psv">PSV Only ({psvCount})</SelectItem>
+              <SelectItem value="taxi">Taxi ({taxiCount})</SelectItem>
+              <SelectItem value="psv">PSV ({psvCount})</SelectItem>
+              {bothCount > 0 && (
+                <SelectItem value="both">Both Types ({bothCount})</SelectItem>
+              )}
               {expiringCount > 0 && (
                 <SelectItem value="expiring">Docs Expiring ({expiringCount})</SelectItem>
               )}

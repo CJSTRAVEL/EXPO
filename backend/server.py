@@ -1342,7 +1342,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                 <tr>
                     <td style="padding: 30px 40px; background-color: #f8f9fa; border-top: 1px solid #eee;">
                         <p style="margin: 0; color: #888; font-size: 11px; text-align: center; line-height: 1.6;">
-                            This is an automated email confirmation from CJs Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 7383 185260.
+                            This is an automated email confirmation from CJs Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 191 722 1223.
                         </p>
                         <p style="margin: 15px 0 0 0; color: #888; font-size: 11px; text-align: center;">
                             CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | <a href="https://cjstravel.uk" style="color: #1a3a5c;">cjstravel.uk</a>
@@ -1382,7 +1382,7 @@ Track your journey: {booking_link}
 Access your bookings: {portal_link}
 
 This is an automated email from CJs Executive Travel Limited.
-If any information is incorrect, please contact us on +44 7383 185260.
+If any information is incorrect, please contact us on +44 191 722 1223.
 
 CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstravel.uk
         """

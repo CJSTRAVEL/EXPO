@@ -124,6 +124,8 @@ class DriverStatus(str, Enum):
     AVAILABLE = "available"
     BUSY = "busy"
     OFFLINE = "offline"
+    BREAK = "break"
+    ON_JOB = "on_job"
 
 class BookingStatus(str, Enum):
     PENDING = "pending"

@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,6 +10,10 @@ import * as Location from 'expo-location';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { COLORS, LOCATION_UPDATE_INTERVAL } from './src/config';
 import { updateLocation } from './src/services/api';
+import {
+  registerForPushNotificationsAsync,
+  addNotificationListeners,
+} from './src/services/notifications';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -18,6 +23,7 @@ import EarningsScreen from './src/screens/EarningsScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ChatScreen from './src/screens/ChatScreen';
+import NavigationScreen from './src/screens/NavigationScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -70,6 +76,63 @@ const useLocationTracking = () => {
       }
     };
   }, [isAuthenticated, user?.is_online]);
+};
+
+// Push notifications hook
+const usePushNotifications = (navigationRef) => {
+  const { isAuthenticated } = useAuth();
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Register for push notifications
+    registerForPushNotificationsAsync();
+
+    // Handle notification received while app is foregrounded
+    const handleNotificationReceived = (notification) => {
+      console.log('Notification received:', notification);
+      const { title, body, data } = notification.request.content;
+      
+      // Show an alert for new booking notifications
+      if (data?.type === 'new_booking') {
+        Alert.alert(
+          title || 'New Booking',
+          body || 'You have a new booking assignment',
+          [
+            { text: 'Later', style: 'cancel' },
+            {
+              text: 'View',
+              onPress: () => {
+                if (navigationRef.current) {
+                  navigationRef.current.navigate('Jobs');
+                }
+              },
+            },
+          ]
+        );
+      }
+    };
+
+    // Handle notification tap
+    const handleNotificationResponse = (response) => {
+      console.log('Notification tapped:', response);
+      const { data } = response.notification.request.content;
+      
+      if (data?.booking_id && navigationRef.current) {
+        navigationRef.current.navigate('Jobs');
+      }
+    };
+
+    // Add listeners
+    const removeListeners = addNotificationListeners(
+      handleNotificationReceived,
+      handleNotificationResponse
+    );
+
+    return removeListeners;
+  }, [isAuthenticated]);
 };
 
 // Tab Navigator for authenticated users
@@ -166,8 +229,9 @@ function MainTabs() {
 }
 
 // Main Stack Navigator
-function AppNavigator() {
+function AppNavigator({ navigationRef }) {
   const { isAuthenticated, loading } = useAuth();
+  usePushNotifications(navigationRef);
 
   if (loading) {
     return null; // Or a splash screen
@@ -205,6 +269,14 @@ function AppNavigator() {
               title: `Chat - ${route.params?.booking?.booking_id || 'Booking'}`,
             })}
           />
+          <Stack.Screen
+            name="Navigation"
+            component={NavigationScreen}
+            options={{
+              headerShown: false,
+              presentation: 'fullScreenModal',
+            }}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -212,11 +284,13 @@ function AppNavigator() {
 }
 
 export default function App() {
+  const navigationRef = useRef();
+
   return (
     <AuthProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <StatusBar style="light" />
-        <AppNavigator />
+        <AppNavigator navigationRef={navigationRef} />
       </NavigationContainer>
     </AuthProvider>
   );

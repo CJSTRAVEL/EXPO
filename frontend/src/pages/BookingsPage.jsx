@@ -1484,6 +1484,25 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
             </div>
           </div>
 
+          {/* Booking Details - PAX, Cases, Vehicle */}
+          <div className="bg-amber-50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-amber-700 mb-3">Booking Details</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Passengers (PAX)</p>
+                <p className="font-medium text-lg">{booking.passenger_count || 1}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Cases (Luggage)</p>
+                <p className="font-medium text-lg">{booking.luggage_count || 0}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Vehicle Type</p>
+                <p className="font-medium">{getVehicleTypeName(booking.vehicle_type)}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Journey Info */}
           <div className="bg-blue-50 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-blue-700 mb-3">Journey Details</h3>

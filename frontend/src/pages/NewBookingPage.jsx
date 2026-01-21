@@ -829,7 +829,8 @@ const NewBookingPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="card">Card (In-Person)</SelectItem>
+                    <SelectItem value="stripe">Card (Online - Stripe)</SelectItem>
                     <SelectItem value="account">Account</SelectItem>
                     <SelectItem value="invoice">Invoice</SelectItem>
                   </SelectContent>
@@ -849,6 +850,27 @@ const NewBookingPage = () => {
                 />
               </div>
             </div>
+
+            {/* Stripe Payment Info */}
+            {formData.payment_method === "stripe" && (
+              <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                <div className="flex items-center gap-2 text-purple-700 mb-2">
+                  <CreditCard className="w-4 h-4" />
+                  <span className="text-sm font-medium">Online Card Payment</span>
+                </div>
+                <p className="text-xs text-purple-600">
+                  After saving the booking, a secure Stripe payment link will be generated. 
+                  {formData.customer_email ? " A payment link can be sent to the customer's email." : " Add customer email to send payment link."}
+                </p>
+                {formData.fare && parseFloat(formData.fare) > 0 && (
+                  <div className="mt-2 pt-2 border-t border-purple-200">
+                    <span className="text-sm text-purple-800 font-semibold">
+                      Amount to charge: £{parseFloat(formData.fare).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </Section>
         </div>
 

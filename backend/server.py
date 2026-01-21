@@ -2189,6 +2189,126 @@ async def booking_preview_page(short_id: str):
     
     return HTMLResponse(content=html_content)
 
+# Privacy Policy and Terms for Driver App
+@api_router.get("/driver-app/privacy", response_class=HTMLResponse)
+async def driver_app_privacy():
+    """Privacy Policy for CJ's Driver App"""
+    html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - CJ's Driver App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        header { background: #1a3a5c; color: white; padding: 30px 20px; text-align: center; }
+        h1 { font-size: 28px; margin-bottom: 10px; }
+        .subtitle { opacity: 0.8; }
+        .content { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: -20px; }
+        h2 { font-size: 20px; color: #1a3a5c; margin: 30px 0 15px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+        h2:first-of-type { margin-top: 0; }
+        p, li { margin-bottom: 12px; color: #475569; }
+        ul { padding-left: 24px; }
+        .updated { text-align: center; color: #64748b; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+        footer { text-align: center; padding: 30px; color: #64748b; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <header><h1>Privacy Policy</h1><p class="subtitle">CJ's Driver App</p></header>
+    <div class="container"><div class="content">
+        <h2>1. Introduction</h2>
+        <p>CJ's Executive Travel Limited operates the CJ's Driver mobile application. This Privacy Policy explains how we collect, use, and safeguard your information.</p>
+        <h2>2. Information We Collect</h2>
+        <ul>
+            <li><strong>Account Information:</strong> Name, email, phone number, login credentials</li>
+            <li><strong>Location Data:</strong> Real-time GPS location when online</li>
+            <li><strong>Device Information:</strong> Device type, OS, push notification tokens</li>
+            <li><strong>Usage Data:</strong> Booking history, earnings, chat messages</li>
+        </ul>
+        <h2>3. How We Use Your Information</h2>
+        <ul>
+            <li>Authenticate your identity and provide App access</li>
+            <li>Assign bookings and manage dispatch operations</li>
+            <li>Share your location with dispatch for operational efficiency</li>
+            <li>Send push notifications for new bookings</li>
+            <li>Calculate and display your earnings</li>
+        </ul>
+        <h2>4. Location Data</h2>
+        <p>Location is collected when you are "Online". Stop sharing by going "Offline" or logging out.</p>
+        <h2>5. Data Security</h2>
+        <p>We use encrypted transmission (HTTPS/TLS) and secure authentication.</p>
+        <h2>6. Contact Us</h2>
+        <p>Email: privacy@cjstravel.uk | Phone: +44 191 722 1223</p>
+        <p class="updated">Last Updated: January 2026</p>
+    </div></div>
+    <footer>&copy; 2026 CJ's Executive Travel Limited</footer>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content)
+
+@api_router.get("/driver-app/terms", response_class=HTMLResponse)
+async def driver_app_terms():
+    """Terms of Service for CJ's Driver App"""
+    html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - CJ's Driver App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        header { background: #1a3a5c; color: white; padding: 30px 20px; text-align: center; }
+        h1 { font-size: 28px; margin-bottom: 10px; }
+        .subtitle { opacity: 0.8; }
+        .content { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: -20px; }
+        h2 { font-size: 20px; color: #1a3a5c; margin: 30px 0 15px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+        h2:first-of-type { margin-top: 0; }
+        p, li { margin-bottom: 12px; color: #475569; }
+        ul { padding-left: 24px; }
+        .updated { text-align: center; color: #64748b; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+        footer { text-align: center; padding: 30px; color: #64748b; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <header><h1>Terms of Service</h1><p class="subtitle">CJ's Driver App</p></header>
+    <div class="container"><div class="content">
+        <h2>1. Acceptance</h2>
+        <p>By using the CJ's Driver App, you agree to these Terms of Service.</p>
+        <h2>2. Eligibility</h2>
+        <ul>
+            <li>Be at least 18 years old</li>
+            <li>Be an authorized CJ's Executive Travel driver</li>
+            <li>Hold valid licenses for private hire driving</li>
+        </ul>
+        <h2>3. Account Security</h2>
+        <p>You are responsible for maintaining the confidentiality of your login credentials.</p>
+        <h2>4. Permitted Use</h2>
+        <p>The App is for managing bookings, navigation, dispatch communication, and earnings tracking.</p>
+        <h2>5. Prohibited Conduct</h2>
+        <ul>
+            <li>Sharing your account credentials</li>
+            <li>Using the App while driving (except hands-free)</li>
+            <li>Falsifying location or status information</li>
+        </ul>
+        <h2>6. Location Services</h2>
+        <p>You consent to location collection when online for dispatch operations.</p>
+        <h2>7. Booking Obligations</h2>
+        <p>When accepting bookings, you commit to completing them professionally.</p>
+        <h2>8. Governing Law</h2>
+        <p>These Terms are governed by the laws of England and Wales.</p>
+        <h2>9. Contact</h2>
+        <p>Email: legal@cjstravel.uk | Phone: +44 191 722 1223</p>
+        <p class="updated">Last Updated: January 2026</p>
+    </div></div>
+    <footer>&copy; 2026 CJ's Executive Travel Limited</footer>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content)
+
 @api_router.put("/bookings/{booking_id}", response_model=BookingResponse)
 async def update_booking(booking_id: str, booking_update: BookingUpdate):
     existing = await db.bookings.find_one({"id": booking_id}, {"_id": 0})

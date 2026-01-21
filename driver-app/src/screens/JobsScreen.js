@@ -28,7 +28,7 @@ const formatDateTime = (dateString) => {
   };
 };
 
-const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat }) => {
+const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onStartNavigation }) => {
   const { date, time } = formatDateTime(booking.booking_datetime);
   const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
   
@@ -54,6 +54,14 @@ const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat }) =>
       in_progress: 'Complete',
     };
     return labels[currentStatus];
+  };
+
+  // Determine which location to navigate to based on status
+  const getNavigationDestination = () => {
+    if (booking.status === 'assigned' || booking.status === 'on_way') {
+      return { destination: booking.pickup_location, type: 'pickup' };
+    }
+    return { destination: booking.dropoff_location, type: 'dropoff' };
   };
 
   return (
@@ -126,8 +134,11 @@ const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat }) =>
             <Ionicons name="call" size={20} color={COLORS.success} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => onNavigate(booking.pickup_location)}
+            style={[styles.iconButton, { backgroundColor: COLORS.info + '20' }]}
+            onPress={() => {
+              const nav = getNavigationDestination();
+              onStartNavigation(booking, nav.type);
+            }}
           >
             <Ionicons name="navigate" size={20} color={COLORS.info} />
           </TouchableOpacity>

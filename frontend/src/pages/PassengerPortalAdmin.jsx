@@ -297,32 +297,6 @@ const PassengerPortalAdmin = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
-      <AlertDialog open={showDeleteModal} onOpenChange={(open) => {
-        setShowDeleteModal(open);
-        if (!open) setSelectedPassenger(null);
-      }}>
-        <AlertDialogContent data-testid="delete-passenger-modal">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Passenger Account</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the account for <strong>{selectedPassenger?.name}</strong>? 
-              This will remove their login access but their booking history will be preserved.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeletePassenger}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              data-testid="confirm-delete-btn"
-            >
-              {saving ? "Deleting..." : "Delete Account"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Create User Modal */}
       <Dialog open={showCreateModal} onOpenChange={(open) => {
         setShowCreateModal(open);

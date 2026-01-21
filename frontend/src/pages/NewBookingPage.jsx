@@ -658,14 +658,14 @@ const NewBookingPage = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={addStop}
-                className="h-7 text-xs gap-1"
+                className="h-7 text-xs gap-1 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
               >
                 <Plus className="w-3 h-3" /> Add Stop
               </Button>
             }
           >
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500 flex items-center gap-1">
+              <Label className="text-xs text-gray-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-green-500"></span> Pickup *
               </Label>
               <AddressAutocomplete
@@ -679,8 +679,8 @@ const NewBookingPage = () => {
             {/* Additional Stops */}
             {formData.additional_stops.map((stop, index) => (
               <div key={index} className="space-y-1.5">
-                <Label className="text-xs text-slate-500 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span> Via {index + 1}
+                <Label className="text-xs text-gray-400 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#D4A853]"></span> Via {index + 1}
                 </Label>
                 <div className="flex gap-2">
                   <div className="flex-1">
@@ -695,7 +695,7 @@ const NewBookingPage = () => {
                     variant="outline" 
                     size="icon"
                     onClick={() => removeStop(index)}
-                    className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="h-9 w-9 text-red-400 border-[#3d3d3d] hover:text-red-300 hover:bg-red-500/10"
                   >
                     <Minus className="w-4 h-4" />
                   </Button>
@@ -704,7 +704,7 @@ const NewBookingPage = () => {
             ))}
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-slate-500 flex items-center gap-1">
+              <Label className="text-xs text-gray-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-red-500"></span> Drop-off *
               </Label>
               <AddressAutocomplete
@@ -720,19 +720,19 @@ const NewBookingPage = () => {
           <Section icon={Calendar} title="Schedule">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Date</Label>
+                <Label className="text-xs text-gray-400">Date</Label>
                 <Popover open={dateOpen} onOpenChange={setDateOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full h-9 justify-start text-left font-normal"
+                      className="w-full h-9 justify-start text-left font-normal bg-[#1a1a1a] border-[#3d3d3d] text-white hover:bg-[#2d2d2d]"
                       data-testid="booking-date-btn"
                     >
-                      <Calendar className="mr-2 h-4 w-4 text-slate-400" />
+                      <Calendar className="mr-2 h-4 w-4 text-[#D4A853]" />
                       {format(formData.booking_datetime, "dd/MM/yyyy")}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 bg-[#252525] border-[#3d3d3d]" align="start">
                     <CalendarComponent
                       mode="single"
                       selected={formData.booking_datetime}
@@ -750,7 +750,7 @@ const NewBookingPage = () => {
                 </Popover>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-slate-500">Time</Label>
+                <Label className="text-xs text-gray-400">Time</Label>
                 <Input
                   type="time"
                   value={format(formData.booking_datetime, "HH:mm")}
@@ -760,14 +760,14 @@ const NewBookingPage = () => {
                     newDate.setHours(parseInt(hours), parseInt(minutes));
                     setFormData({ ...formData, booking_datetime: newDate });
                   }}
-                  className="h-9"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white"
                   data-testid="booking-time"
                 />
               </div>
             </div>
 
             {/* Return Journey Toggle */}
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-[#3d3d3d]">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -783,20 +783,20 @@ const NewBookingPage = () => {
                       return_datetime: isChecked ? new Date(prev.booking_datetime.getTime() + 3600000 * 3) : null
                     }));
                   }}
-                  className="rounded border-slate-300"
+                  className="rounded border-[#3d3d3d] bg-[#1a1a1a]"
                   data-testid="booking-return-toggle"
                 />
-                <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
-                  <ArrowLeftRight className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-medium text-gray-300 flex items-center gap-1">
+                  <ArrowLeftRight className="w-4 h-4 text-[#D4A853]" />
                   Create Return Journey
                 </span>
               </label>
             </div>
 
             {formData.create_return && (
-              <div className="bg-amber-50 rounded-lg p-4 space-y-4 border border-amber-200">
-                <div className="bg-amber-100 -mx-4 -mt-4 px-4 py-2 border-b border-amber-200">
-                  <span className="text-sm font-bold text-amber-800 uppercase tracking-wide">Return Journey Details</span>
+              <div className="bg-[#D4A853]/10 rounded-lg p-4 space-y-4 border border-[#D4A853]/30">
+                <div className="bg-[#D4A853]/20 -mx-4 -mt-4 px-4 py-2 border-b border-[#D4A853]/30">
+                  <span className="text-sm font-bold text-[#D4A853] uppercase tracking-wide">Return Journey Details</span>
                 </div>
 
                 {/* Return Pickup Location */}

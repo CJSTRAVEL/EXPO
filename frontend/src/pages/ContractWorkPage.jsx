@@ -1091,7 +1091,13 @@ const ContractWorkPage = () => {
                     <SelectValue placeholder="Choose a driver..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {drivers.filter(d => d.status === "available").map((driver) => (
+                    <SelectItem value="unassign">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <UserX className="w-4 h-4" />
+                        <span>No Driver (Unassign)</span>
+                      </div>
+                    </SelectItem>
+                    {drivers.filter(d => d.status === "available" || d.id === assignBooking?.driver_id).map((driver) => (
                       <SelectItem key={driver.id} value={driver.id}>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />

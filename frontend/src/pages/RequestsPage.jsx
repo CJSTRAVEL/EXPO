@@ -227,7 +227,7 @@ const RequestsPage = () => {
 
         {/* Timestamp */}
         <p className="text-xs text-muted-foreground mt-3">
-          Requested {format(new Date(request.created_at), "dd MMM yyyy 'at' HH:mm")}
+          Requested {safeFormatDate(request.created_at, "dd MMM yyyy 'at' HH:mm")}
         </p>
       </CardContent>
     </Card>

@@ -334,11 +334,11 @@ const ClientPortal = () => {
                           <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
-                              {format(new Date(booking.booking_datetime), "dd MMM yyyy")}
+                              {safeFormatDate(booking.booking_datetime, "dd MMM yyyy")}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3.5 h-3.5" />
-                              {format(new Date(booking.booking_datetime), "HH:mm")}
+                              {safeFormatDate(booking.booking_datetime, "HH:mm")}
                             </span>
                           </div>
                         </div>

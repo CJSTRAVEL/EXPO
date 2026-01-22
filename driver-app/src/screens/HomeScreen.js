@@ -464,15 +464,16 @@ export default function HomeScreen({ navigation }) {
         showsCompass={false}
         rotateEnabled={true}
         pitchEnabled={true}
+        onPanDrag={handleRegionChange}
       >
         {location && (
           <Marker
             coordinate={location}
-            anchor={{ x: 0.5, y: 1 }}
-            flat={false}
-            rotation={0}
+            anchor={{ x: 0.5, y: 0.5 }}
+            flat={true}
+            rotation={heading}
           >
-            <VehicleMarker theme={theme} />
+            <VehicleMarker rotation={0} />
           </Marker>
         )}
       </MapView>
@@ -486,6 +487,16 @@ export default function HomeScreen({ navigation }) {
         />
       </TouchableOpacity>
 
+      {/* Recenter Button - Show only when map is not centered */}
+      {!isMapCentered && (
+        <TouchableOpacity 
+          style={[styles.recenterButton, { backgroundColor: '#fff' }]} 
+          onPress={handleRecenterMap}
+        >
+          <Ionicons name="locate" size={24} color={theme.primary} />
+        </TouchableOpacity>
+      )}
+
       {/* Shift Timer (when active) */}
       {isShiftActive && (
         <View style={[styles.timerContainer, { backgroundColor: theme.card }]}>
@@ -496,7 +507,7 @@ export default function HomeScreen({ navigation }) {
       )}
 
       {/* Start/Stop Shift Button */}
-      <View style={styles.startButtonContainer}>
+      <View style={[styles.startButtonContainer, activeBooking && { bottom: 90 }]}>
         <TouchableOpacity
           style={[
             styles.startButton,
@@ -521,6 +532,27 @@ export default function HomeScreen({ navigation }) {
           <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
           <Text style={[styles.statusText, { color: theme.success }]}>Online</Text>
         </View>
+      )}
+
+      {/* Journey in Progress Bar - Above footer when there's an active booking */}
+      {activeBooking && (
+        <TouchableOpacity 
+          style={styles.journeyProgressBar}
+          onPress={() => navigation.navigate('Jobs')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.journeyProgressContent}>
+            <View style={styles.journeyPulse} />
+            <Ionicons name="car" size={20} color="#fff" />
+            <View style={styles.journeyTextContainer}>
+              <Text style={styles.journeyTitle}>Journey in Progress</Text>
+              <Text style={styles.journeySubtitle} numberOfLines={1}>
+                {activeBooking.first_name || 'Passenger'} • {activeBooking.dropoff_location?.substring(0, 25)}...
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </View>
+        </TouchableOpacity>
       )}
 
       {/* Vehicle Selection Modal */}

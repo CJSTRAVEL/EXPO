@@ -143,6 +143,13 @@ const NewBookingPage = () => {
   const [returnFlightData, setReturnFlightData] = useState(null);
   const [flightSearchNumber, setFlightSearchNumber] = useState("");
   const [returnFlightSearchNumber, setReturnFlightSearchNumber] = useState("");
+  
+  // Passenger search state
+  const [passengerSearch, setPassengerSearch] = useState({ query: "", field: null });
+  const [matchedPassengers, setMatchedPassengers] = useState([]);
+  const [showPassengerPopup, setShowPassengerPopup] = useState(false);
+  const [selectedPassengerBookings, setSelectedPassengerBookings] = useState([]);
+  const [loadingPassengerHistory, setLoadingPassengerHistory] = useState(false);
 
   // Fetch data
   useEffect(() => {

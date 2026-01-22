@@ -170,6 +170,17 @@ const NewBookingPage = () => {
       }
     };
     fetchData();
+    
+    // Close passenger popup when clicking outside
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('[data-testid="booking-first-name"]') && 
+          !e.target.closest('[data-testid="booking-phone"]') &&
+          !e.target.closest('.passenger-popup')) {
+        setShowPassengerPopup(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   // Calculate route when pickup/dropoff changes

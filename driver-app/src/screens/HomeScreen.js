@@ -99,6 +99,51 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const loadSelectedVehicle = async () => {
+    try {
+      const saved = await SecureStore.getItemAsync('selected_vehicle');
+      if (saved) {
+        setSelectedVehicle(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.log('Error loading selected vehicle:', error);
+    }
+  };
+
+  const loadVehicles = async () => {
+    setLoadingVehicles(true);
+    try {
+      const data = await getVehicles();
+      setVehicles(data || []);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+      Alert.alert('Error', 'Failed to load vehicles. Please try again.');
+    } finally {
+      setLoadingVehicles(false);
+    }
+  };
+
+  const handleSelectVehicle = async (vehicle) => {
+    try {
+      await SecureStore.setItemAsync('selected_vehicle', JSON.stringify(vehicle));
+      setSelectedVehicle(vehicle);
+      setShowVehicleModal(false);
+      // Now start the shift after vehicle selection
+      startShiftAfterVehicleSelection();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save vehicle selection');
+    }
+  };
+
+  const clearSelectedVehicle = async () => {
+    try {
+      await SecureStore.deleteItemAsync('selected_vehicle');
+      setSelectedVehicle(null);
+    } catch (error) {
+      console.log('Error clearing selected vehicle:', error);
+    }
+  };
+
   const formatDuration = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);

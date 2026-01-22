@@ -317,6 +317,9 @@ export default function HomeScreen({ navigation }) {
       await updateStatus({ is_online: true });
       setIsShiftActive(true);
       
+      // Show persistent online notification
+      await showOnlineNotification();
+      
       // Starting shift - save start time
       const startTime = Date.now();
       setShiftStartTime(startTime);

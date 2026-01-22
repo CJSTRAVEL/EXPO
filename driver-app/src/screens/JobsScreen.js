@@ -12,29 +12,43 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, BOOKING_STATUS_LABELS } from '../config';
+import { useTheme } from '../context/ThemeContext';
+import { BOOKING_STATUS_LABELS } from '../config';
 import {
   getBookings,
-  acceptBooking,
-  rejectBooking,
   updateBookingStatus,
   notifyArrival,
 } from '../services/api';
 
 const formatDateTime = (dateString) => {
   const date = new Date(dateString);
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const isToday = date.toDateString() === now.toDateString();
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+  
+  let dateLabel = '';
+  if (isToday) {
+    dateLabel = 'TODAY';
+  } else if (isTomorrow) {
+    dateLabel = 'TOMORROW';
+  } else {
+    dateLabel = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  
   return {
-    date: date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
+    dateLabel,
     time: date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
   };
 };
 
-const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onStartNavigation, onViewDetail }) => {
-  const { date, time } = formatDateTime(booking.booking_datetime);
-  const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
+const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
+  const { dateLabel, time } = formatDateTime(booking.booking_datetime);
   
-  const getStatusColor = (status) => {
-    return COLORS[status] || COLORS.pending;
+  const getVehicleTypeDisplay = () => {
+    return booking.vehicle_type_name || booking.vehicle_type || 'Standard';
   };
 
   const getNextStatus = (currentStatus) => {
@@ -47,146 +61,121 @@ const BookingCard = ({ booking, onStatusUpdate, onNavigate, onCall, onChat, onSt
     return flow[currentStatus];
   };
 
-  const getNextStatusLabel = (currentStatus) => {
+  const getStartButtonLabel = (currentStatus) => {
     const labels = {
-      assigned: 'Start Journey',
+      assigned: 'Start Ride',
       on_way: 'Arrived',
       arrived: 'Start Trip',
       in_progress: 'Complete',
     };
-    return labels[currentStatus];
+    return labels[currentStatus] || 'Start Ride';
   };
 
-  // Determine which location to navigate to based on status
-  const getNavigationDestination = () => {
-    if (booking.status === 'assigned' || booking.status === 'on_way') {
-      return { destination: booking.pickup_location, type: 'pickup' };
+  const handleStartRide = () => {
+    const nextStatus = getNextStatus(booking.status);
+    if (nextStatus) {
+      onStatusUpdate(booking.id, nextStatus);
     }
-    return { destination: booking.dropoff_location, type: 'dropoff' };
   };
 
   return (
     <TouchableOpacity 
-      style={styles.bookingCard}
+      style={[styles.bookingCard, { backgroundColor: theme.card }]}
       onPress={() => onViewDetail(booking)}
       activeOpacity={0.7}
     >
-      {/* Header */}
+      {/* Header Row - Time and Price */}
       <View style={styles.cardHeader}>
-        <View style={styles.bookingIdContainer}>
-          <Text style={styles.bookingId}>{booking.booking_id || 'N/A'}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(booking.status) }]}>
-            <Text style={styles.statusText}>
-              {BOOKING_STATUS_LABELS[booking.status] || booking.status}
-            </Text>
+        <View style={styles.timeContainer}>
+          <Text style={[styles.timeText, { color: theme.text }]}>{time}</Text>
+          <Text style={[styles.dateLabel, { color: theme.textSecondary }]}>{dateLabel}</Text>
+        </View>
+        <Text style={[styles.fareText, { color: theme.text }]}>
+          £{(booking.fare || 0).toFixed(2)}
+        </Text>
+      </View>
+
+      {/* Vehicle Type Badge */}
+      <View style={styles.badgeRow}>
+        <View style={[styles.vehicleBadge, { backgroundColor: theme.primary }]}>
+          <Text style={styles.vehicleBadgeText}>{getVehicleTypeDisplay()}</Text>
+        </View>
+        {booking.passenger_count > 0 && (
+          <View style={[styles.paxBadge, { backgroundColor: theme.info }]}>
+            <Ionicons name="people" size={12} color="#fff" />
+            <Text style={styles.paxText}>{booking.passenger_count}</Text>
           </View>
-        </View>
-        <View style={styles.dateTimeContainer}>
-          <Text style={styles.dateText}>{date}</Text>
-          <Text style={styles.timeText}>{time}</Text>
-        </View>
-      </View>
-
-      {/* Customer Info */}
-      <View style={styles.customerRow}>
-        <Ionicons name="person" size={16} color={COLORS.textSecondary} />
-        <Text style={styles.customerName}>{customerName}</Text>
-        {booking.passenger_count > 1 && (
-          <Text style={styles.paxBadge}>{booking.passenger_count} PAX</Text>
         )}
+        {booking.luggage_count > 0 && (
+          <View style={[styles.luggageBadge, { backgroundColor: theme.warning }]}>
+            <Ionicons name="briefcase" size={12} color="#fff" />
+            <Text style={styles.luggageText}>{booking.luggage_count}</Text>
+          </View>
+        )}
+        {/* Status indicator dot */}
+        <View style={[
+          styles.statusDot, 
+          { backgroundColor: booking.status === 'assigned' ? theme.danger : theme.success }
+        ]} />
       </View>
 
-      {/* Route */}
+      {/* Route Information */}
       <View style={styles.routeContainer}>
-        <View style={styles.routePoint}>
-          <View style={[styles.routeDot, { backgroundColor: COLORS.success }]} />
-          <Text style={styles.routeAddress} numberOfLines={2}>
+        {/* Pickup */}
+        <View style={styles.routeRow}>
+          <View style={styles.routeLineContainer}>
+            <View style={[styles.routeDotStart, { backgroundColor: theme.success }]} />
+            <View style={[styles.routeLine, { backgroundColor: theme.border }]} />
+          </View>
+          <Text style={[styles.routeAddress, { color: theme.text }]} numberOfLines={2}>
             {booking.pickup_location}
           </Text>
         </View>
+
+        {/* Additional Stops */}
         {booking.additional_stops?.length > 0 && (
-          <View style={styles.routePoint}>
-            <View style={[styles.routeDot, { backgroundColor: COLORS.warning }]} />
-            <Text style={styles.routeAddress} numberOfLines={1}>
-              +{booking.additional_stops.length} stop(s)
+          <View style={styles.stopsIndicator}>
+            <Text style={[styles.stopsText, { color: theme.textSecondary }]}>
+              +{booking.additional_stops.length} stop{booking.additional_stops.length > 1 ? 's' : ''}
             </Text>
           </View>
         )}
-        <View style={styles.routePoint}>
-          <View style={[styles.routeDot, { backgroundColor: COLORS.danger }]} />
-          <Text style={styles.routeAddress} numberOfLines={2}>
+
+        {/* Dropoff */}
+        <View style={styles.routeRow}>
+          <View style={styles.routeLineContainer}>
+            <View style={[styles.routeDotEnd, { backgroundColor: theme.danger }]} />
+          </View>
+          <Text style={[styles.routeAddress, { color: theme.text }]} numberOfLines={2}>
             {booking.dropoff_location}
           </Text>
         </View>
       </View>
 
-      {/* Fare */}
-      {booking.fare && (
-        <View style={styles.fareRow}>
-          <Ionicons name="cash" size={16} color={COLORS.success} />
-          <Text style={styles.fareText}>£{booking.fare.toFixed(2)}</Text>
-        </View>
+      {/* Start Ride Button */}
+      {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+        <TouchableOpacity
+          style={[styles.startRideButton, { backgroundColor: theme.primary }]}
+          onPress={handleStartRide}
+        >
+          <Text style={styles.startRideText}>{getStartButtonLabel(booking.status)}</Text>
+        </TouchableOpacity>
       )}
 
-      {/* Actions */}
-      <View style={styles.actionsContainer}>
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => onCall(booking.customer_phone)}
-          >
-            <Ionicons name="call" size={20} color={COLORS.success} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: COLORS.info + '20' }]}
-            onPress={() => {
-              const nav = getNavigationDestination();
-              onStartNavigation(booking, nav.type);
-            }}
-          >
-            <Ionicons name="navigate" size={20} color={COLORS.info} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => onChat(booking)}
-          >
-            <Ionicons name="chatbubble" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
+      {booking.status === 'completed' && (
+        <View style={[styles.completedBadge, { backgroundColor: theme.success + '20' }]}>
+          <Ionicons name="checkmark-circle" size={16} color={theme.success} />
+          <Text style={[styles.completedText, { color: theme.success }]}>Completed</Text>
         </View>
-
-        {/* Status Update Button */}
-        {booking.status !== 'completed' && booking.status !== 'cancelled' && (
-          <TouchableOpacity
-            style={[styles.statusButton, { backgroundColor: getStatusColor(getNextStatus(booking.status)) }]}
-            onPress={() => onStatusUpdate(booking.id, getNextStatus(booking.status))}
-          >
-            <Text style={styles.statusButtonText}>
-              {getNextStatusLabel(booking.status)}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color="#fff" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Notify Arrival Button */}
-      {booking.status === 'arrived' && (
-        <TouchableOpacity
-          style={styles.notifyButton}
-          onPress={() => onNotifyArrival(booking.id)}
-        >
-          <Ionicons name="notifications" size={18} color="#fff" />
-          <Text style={styles.notifyButtonText}>Notify Customer</Text>
-        </TouchableOpacity>
       )}
     </TouchableOpacity>
   );
 };
 
 export default function JobsScreen({ navigation }) {
+  const { theme } = useTheme();
   const [bookings, setBookings] = useState({ today: [], upcoming: [], past: [] });
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('today');
 
   const fetchBookings = async () => {
     try {
@@ -217,106 +206,51 @@ export default function JobsScreen({ navigation }) {
     }
   };
 
-  const handleNavigate = (address) => {
-    const url = Platform.select({
-      ios: `maps://app?daddr=${encodeURIComponent(address)}`,
-      android: `google.navigation:q=${encodeURIComponent(address)}`,
-    });
-    Linking.openURL(url).catch(() => {
-      // Fallback to Google Maps web
-      Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`);
-    });
-  };
-
-  const handleCall = (phone) => {
-    if (phone) {
-      Linking.openURL(`tel:${phone}`);
-    }
-  };
-
-  const handleChat = (booking) => {
-    navigation.navigate('Chat', { booking });
-  };
-
-  const handleStartNavigation = (booking, destinationType) => {
-    navigation.navigate('Navigation', { booking, destinationType });
-  };
-
   const handleViewDetail = (booking) => {
     navigation.navigate('JobDetail', { booking, onRefresh: fetchBookings });
   };
 
-  const handleNotifyArrival = async (bookingId) => {
-    try {
-      await notifyArrival(bookingId);
-      Alert.alert('Success', 'Customer has been notified of your arrival');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send notification');
-    }
-  };
-
-  const getActiveBookings = () => {
-    switch (activeTab) {
-      case 'today':
-        return bookings.today || [];
-      case 'upcoming':
-        return bookings.upcoming || [];
-      default:
-        return [];
-    }
+  // Combine today and upcoming, sort by datetime
+  const getAllBookings = () => {
+    const all = [...(bookings.today || []), ...(bookings.upcoming || [])];
+    return all.sort((a, b) => new Date(a.booking_datetime) - new Date(b.booking_datetime));
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Bookings</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'today' && styles.activeTab]}
-          onPress={() => setActiveTab('today')}
-        >
-          <Text style={[styles.tabText, activeTab === 'today' && styles.activeTabText]}>
-            Today ({bookings.today?.length || 0})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
-          onPress={() => setActiveTab('upcoming')}
-        >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
-            Upcoming ({bookings.upcoming?.length || 0})
-          </Text>
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Upcoming</Text>
       </View>
 
       {/* Bookings List */}
       <FlatList
-        data={getActiveBookings()}
+        data={getAllBookings()}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <BookingCard
             booking={item}
+            theme={theme}
             onStatusUpdate={handleStatusUpdate}
-            onNavigate={handleNavigate}
-            onCall={handleCall}
-            onChat={handleChat}
-            onStartNavigation={handleStartNavigation}
             onViewDetail={handleViewDetail}
-            onNotifyArrival={handleNotifyArrival}
           />
         )}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+          />
         }
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="car-outline" size={64} color={COLORS.textSecondary} />
-            <Text style={styles.emptyText}>No {activeTab} bookings</Text>
+            <Ionicons name="calendar-outline" size={64} color={theme.textSecondary} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No upcoming bookings</Text>
+            <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
+              Your assigned bookings will appear here
+            </Text>
           </View>
         }
       />
@@ -327,51 +261,24 @@ export default function JobsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 8 : 16,
-    paddingBottom: 8,
+    paddingBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.card,
-    padding: 4,
-    margin: 16,
-    borderRadius: 12,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  activeTab: {
-    backgroundColor: COLORS.primary,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
-  activeTabText: {
-    color: '#fff',
   },
   listContent: {
     padding: 16,
     paddingTop: 0,
   },
   bookingCard: {
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -384,146 +291,149 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  bookingIdContainer: {
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  timeText: {
+    fontSize: 28,
+    fontWeight: '300',
+  },
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  fareText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 16,
   },
-  bookingId: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  dateTimeContainer: {
-    alignItems: 'flex-end',
-  },
-  dateText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  timeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  customerRow: {
+  vehicleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 4,
   },
-  customerName: {
-    fontSize: 14,
-    color: COLORS.text,
-    flex: 1,
+  vehicleBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   paxBadge: {
-    backgroundColor: COLORS.info + '20',
-    color: COLORS.info,
-    fontSize: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 4,
+  },
+  paxText: {
+    color: '#fff',
+    fontSize: 12,
     fontWeight: '600',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+  },
+  luggageBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 4,
+  },
+  luggageText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginLeft: 'auto',
   },
   routeContainer: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  routePoint: {
+  routeRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 8,
   },
-  routeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 5,
-    marginRight: 10,
+  routeLineContainer: {
+    width: 20,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  routeDotStart: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  routeLine: {
+    width: 2,
+    height: 30,
+    marginVertical: 4,
+  },
+  routeDotEnd: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   routeAddress: {
     flex: 1,
-    fontSize: 13,
-    color: COLORS.text,
-    lineHeight: 18,
-  },
-  fareRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    marginBottom: 12,
-  },
-  fareText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.success,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  quickActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 4,
-  },
-  statusButtonText: {
-    color: '#fff',
     fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  stopsIndicator: {
+    marginLeft: 32,
+    marginVertical: 4,
+  },
+  stopsText: {
+    fontSize: 12,
+  },
+  startRideButton: {
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  startRideText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
-  notifyButton: {
+  completedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.info,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 12,
-    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
   },
-  notifyButtonText: {
-    color: '#fff',
+  completedText: {
     fontSize: 14,
     fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
   },
   emptyText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    marginTop: 4,
   },
 });

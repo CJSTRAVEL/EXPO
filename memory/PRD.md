@@ -16,47 +16,52 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 22, 2026 (Latest)
 
-#### Forgot Password Flow (NEW)
-1. **SMS-based Password Reset**
-   - Added "Forgot Password?" link on CustomerLogin page
-   - 3-step wizard: Enter Phone → Verify Code → New Password
-   - Backend stores reset codes with 15-minute expiry
-   - Works for both Passengers and Business Clients
-   - Sends 6-digit code via Vonage SMS
+#### Server.py Refactoring (Phase 1)
+Created modular router structure in `/app/backend/routes/`:
+- `shared.py` - Common models, dependencies, utilities
+- `auth.py` - Admin authentication (~150 lines extracted)
+- `drivers.py` - Driver CRUD + mobile app (~350 lines extracted)
+- `vehicles.py` - Vehicle CRUD + types (~200 lines extracted)
+- `passengers.py` - Passenger portal (~150 lines extracted)
+- `client_portal.py` - Client portal + password reset (~350 lines extracted)
+
+**Total extracted**: ~1200 lines into clean, testable modules
+**Documentation**: `/app/docs/REFACTORING_GUIDE.md`
+
+#### Password Reset with SMS/Email Options
+1. **Dual Reset Methods**
+   - User can choose SMS or Email for verification code
+   - Toggle buttons on forgot password dialog
+   - Email sends styled HTML with code via Mailgun
+   - SMS sends via Vonage
 
 2. **Backend Endpoints**
-   - `POST /api/password-reset/request` - Request reset code via SMS
-   - `POST /api/password-reset/verify` - Verify code and set new password
+   - `POST /api/password-reset/request` - Now accepts `method: "sms" | "email"`
+   - `POST /api/password-reset/verify` - Accepts `identifier` (phone or email)
 
-3. **Cron Job Documentation**
-   - Created `/app/docs/CRON_SETUP.md` with setup instructions
+#### Forgot Password Flow
+1. **3-Step Wizard**
+   - Step 1: Choose SMS or Email, enter contact
+   - Step 2: Enter 6-digit verification code
+   - Step 3: Set new password
+   - Works for both Passengers and Business Clients
+
+2. **Cron Job Documentation**
+   - Created `/app/docs/CRON_SETUP.md`
    - Covers Linux cron, Windows Task Scheduler, AWS/GCP schedulers
-   - Instructions for testing the maintenance endpoint
 
 #### Client Portal with Invoices Feature
 1. **Shared Customer Login Page** (`/customer-login`)
-   - Unified login/register page for both passengers and business clients
-   - Toggle between "Passenger" (gold theme) and "Business Client" (blue theme)
-   - Register form shows company name field for business clients
-   - Client registration creates pending request for admin approval
+   - Unified login/register for Passengers (gold) and Clients (blue)
+   - Company name field for business clients
+   - Client registration creates pending request
 
 2. **Client Portal** (`/client-portal`)
-   - Four tabs: Confirmed Bookings, Pending Requests, Invoices, History
-   - Invoice stats dashboard (Total, Paid, Unpaid, Outstanding amounts)
-   - New Booking request dialog with all fields
-   - Invoice list with view details and download PDF buttons
-   - Dark theme consistent with dispatch system
-
-3. **Backend Endpoints**
-   - `POST /api/client-portal/register` - Register new client (pending approval)
-   - `POST /api/client-portal/login` - Login with phone/password
-   - `GET /api/client-portal/bookings` - Get client's bookings
-   - `GET /api/client-portal/booking-requests` - Get pending requests
-   - `POST /api/client-portal/booking-requests` - Submit new booking request
-   - `GET /api/client-portal/invoices` - Get client's invoices
-   - `GET /api/client-portal/invoices/{id}/download` - Download invoice PDF
+   - Tabs: Bookings, Pending Requests, Invoices, History
+   - Invoice stats dashboard with download PDF
 
 ### Session: January 21, 2026
+
 
 #### Booking History & Audit Log Feature
 1. **History Tab in Booking View**

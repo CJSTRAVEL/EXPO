@@ -2644,6 +2644,155 @@ async def get_client_booking_requests(client: dict = Depends(get_current_client)
     return requests
 
 
+@api_router.get("/client-portal/invoices")
+async def get_client_invoices(client: dict = Depends(get_current_client)):
+    """Get all invoices for the logged-in client"""
+    client_id = client["id"]
+    
+    # Get invoices for this client
+    invoices = await db.invoices.find(
+        {"client_id": client_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return invoices
+
+
+@api_router.get("/client-portal/invoices/{invoice_id}")
+async def get_client_invoice_details(invoice_id: str, client: dict = Depends(get_current_client)):
+    """Get specific invoice details for the logged-in client"""
+    invoice = await db.invoices.find_one(
+        {"id": invoice_id, "client_id": client["id"]},
+        {"_id": 0}
+    )
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    return invoice
+
+
+@api_router.get("/client-portal/invoices/{invoice_id}/download")
+async def download_client_invoice(invoice_id: str, client: dict = Depends(get_current_client)):
+    """Download PDF invoice for the logged-in client"""
+    from fastapi.responses import StreamingResponse
+    
+    # Get invoice
+    invoice = await db.invoices.find_one(
+        {"id": invoice_id, "client_id": client["id"]},
+        {"_id": 0}
+    )
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Get client details
+    client_data = await db.clients.find_one({"id": client["id"]}, {"_id": 0})
+    
+    # Get bookings for this invoice period
+    query = {"client_id": client["id"]}
+    if invoice.get("start_date") or invoice.get("end_date"):
+        date_query = {}
+        if invoice.get("start_date"):
+            date_query["$gte"] = invoice["start_date"]
+        if invoice.get("end_date"):
+            date_query["$lte"] = invoice["end_date"] + "T23:59:59"
+        if date_query:
+            query["booking_datetime"] = date_query
+    
+    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    
+    # Calculate totals
+    subtotal = sum(b.get('fare', 0) or 0 for b in bookings)
+    vat_rate = 0.20
+    vat_amount = subtotal * vat_rate
+    total = subtotal + vat_amount
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    company_name_style = ParagraphStyle('company_name', parent=styles['Normal'], fontSize=11, textColor=colors.black, spaceAfter=2)
+    address_style = ParagraphStyle('address', parent=styles['Normal'], fontSize=9, textColor=colors.black, leading=12)
+    
+    # Header
+    invoice_box_data = [
+        ['DATE:', invoice.get("created_at", "")[:10] if invoice.get("created_at") else datetime.now().strftime('%Y-%m-%d')],
+        ['REFERENCE:', invoice.get("invoice_ref", "")],
+        ['ACCOUNT:', client_data.get('account_no', '')],
+    ]
+    invoice_box = Table(invoice_box_data, colWidths=[70, 80])
+    invoice_box.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.grey),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    header_data = [
+        [Paragraph("<b>CJ's Executive Travel Limited</b>", company_name_style), invoice_box],
+    ]
+    header_table = Table(header_data, colWidths=[350, 150])
+    elements.append(header_table)
+    elements.append(Spacer(1, 30))
+    
+    # Title
+    elements.append(Paragraph("<b>INVOICE</b>", ParagraphStyle('title', parent=styles['Heading1'], fontSize=24, alignment=1)))
+    elements.append(Spacer(1, 20))
+    
+    # Bookings table
+    if bookings:
+        table_data = [['Date', 'Reference', 'Journey', 'Amount']]
+        for b in bookings:
+            date_str = b.get('booking_datetime', '')[:10] if b.get('booking_datetime') else ''
+            journey = f"{b.get('pickup_location', '')[:30]} → {b.get('dropoff_location', '')[:30]}"
+            table_data.append([
+                date_str,
+                b.get('booking_id', ''),
+                journey,
+                f"£{b.get('fare', 0):.2f}" if b.get('fare') else "£0.00"
+            ])
+        
+        t = Table(table_data, colWidths=[70, 70, 250, 70])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a1a1a')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 20))
+    
+    # Totals
+    totals_data = [
+        ['Subtotal:', f'£{subtotal:.2f}'],
+        ['VAT (20%):', f'£{vat_amount:.2f}'],
+        ['Total:', f'£{total:.2f}'],
+    ]
+    totals_table = Table(totals_data, colWidths=[100, 70])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 2), (-1, 2), 'Helvetica-Bold'),
+    ]))
+    elements.append(totals_table)
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    filename = f"{invoice.get('invoice_ref', 'invoice')}.pdf"
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 # ========== ADMIN PASSENGER MANAGEMENT ENDPOINTS ==========
 @api_router.get("/admin/passengers")
 async def get_all_passengers():

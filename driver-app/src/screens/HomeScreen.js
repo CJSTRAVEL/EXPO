@@ -113,7 +113,8 @@ export default function HomeScreen({ navigation }) {
   const loadVehicles = async () => {
     setLoadingVehicles(true);
     try {
-      const data = await getVehicles();
+      // Use the new available-vehicles endpoint that includes exclusivity status
+      const data = await getAvailableVehicles();
       setVehicles(data || []);
     } catch (error) {
       console.error('Error loading vehicles:', error);
@@ -124,23 +125,69 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleSelectVehicle = async (vehicle) => {
+    // Check if vehicle is available
+    if (!vehicle.is_available) {
+      Alert.alert(
+        'Vehicle Unavailable', 
+        `This vehicle is currently in use by ${vehicle.in_use_by || 'another driver'}.`
+      );
+      return;
+    }
+
     try {
+      // Call backend to select vehicle (enforces exclusivity)
+      await selectVehicle(vehicle.id);
+      
+      // Save locally
       await SecureStore.setItemAsync('selected_vehicle', JSON.stringify(vehicle));
       setSelectedVehicle(vehicle);
       setShowVehicleModal(false);
+      
       // Now start the shift after vehicle selection
       startShiftAfterVehicleSelection();
     } catch (error) {
-      Alert.alert('Error', 'Failed to save vehicle selection');
+      const errorMessage = error.response?.data?.detail || 'Failed to select vehicle. It may be in use.';
+      Alert.alert('Error', errorMessage);
+      // Refresh vehicle list to get updated availability
+      loadVehicles();
     }
   };
 
   const clearSelectedVehicle = async () => {
     try {
+      // Call backend to release vehicle
+      await releaseVehicle();
+      // Clear local storage
       await SecureStore.deleteItemAsync('selected_vehicle');
       setSelectedVehicle(null);
     } catch (error) {
       console.log('Error clearing selected vehicle:', error);
+      // Still clear locally even if API fails
+      await SecureStore.deleteItemAsync('selected_vehicle');
+      setSelectedVehicle(null);
+    }
+  };
+
+  // Check for document expiry notifications
+  const checkDocumentNotifications = async () => {
+    try {
+      const { notifications } = await getDocumentNotifications();
+      
+      if (notifications && notifications.length > 0) {
+        // Schedule local notifications for expiring documents
+        for (const notif of notifications) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: notif.title,
+              body: notif.body,
+              data: { type: 'document_expiry', document: notif.document },
+            },
+            trigger: null, // Show immediately
+          });
+        }
+      }
+    } catch (error) {
+      console.log('Error checking document notifications:', error);
     }
   };
 

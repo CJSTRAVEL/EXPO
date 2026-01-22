@@ -2440,6 +2440,159 @@ async def cleanup_old_booking_requests():
     }
 
 
+# ========== CLIENT PORTAL ENDPOINTS ==========
+
+async def get_current_client(authorization: str = Header(None)):
+    """Verify JWT token and return current client"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        client_id = payload.get("client_id")
+        if not client_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+        if not client:
+            raise HTTPException(status_code=401, detail="Client not found")
+        
+        return client
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+@api_router.post("/client-portal/register", response_model=ClientPortalResponse)
+async def register_client_portal(data: ClientPortalRegister):
+    """Register a new client portal account - creates a booking request"""
+    # Check if phone already exists
+    existing = await db.clients.find_one({"phone": data.phone})
+    if existing:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+    
+    # Create a booking request for admin approval (type: client)
+    request_id = str(uuid.uuid4())
+    request_doc = {
+        "id": request_id,
+        "type": "client",  # Distinguish from passenger requests
+        "passenger_name": data.name,
+        "passenger_phone": data.phone,
+        "passenger_email": data.email,
+        "company_name": data.company_name,
+        "password_hash": hash_password(data.password),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        # No booking details - just account request
+        "pickup_location": None,
+        "dropoff_location": None,
+    }
+    
+    await db.booking_requests.insert_one(request_doc)
+    
+    # Return a temporary response (they'll need to wait for approval)
+    raise HTTPException(
+        status_code=202, 
+        detail="Registration request submitted. Your account will be activated after admin approval."
+    )
+
+
+@api_router.post("/client-portal/login", response_model=ClientPortalResponse)
+async def login_client_portal(data: ClientPortalLogin):
+    """Login to client portal"""
+    client = await db.clients.find_one({"phone": data.phone}, {"_id": 0})
+    
+    if not client:
+        raise HTTPException(status_code=401, detail="Invalid phone or password")
+    
+    # Check password
+    if not client.get("password_hash"):
+        raise HTTPException(status_code=401, detail="Account not set up for portal access")
+    
+    if not verify_password(data.password, client["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid phone or password")
+    
+    # Generate token
+    token = jwt.encode({
+        "client_id": client["id"],
+        "phone": client["phone"],
+        "exp": datetime.now(timezone.utc) + timedelta(days=30)
+    }, JWT_SECRET, algorithm="HS256")
+    
+    return ClientPortalResponse(
+        id=client["id"],
+        name=client.get("contact_name") or client.get("name", ""),
+        phone=client["phone"],
+        email=client.get("email") or client.get("contact_email"),
+        company_name=client.get("name"),
+        account_no=client.get("account_no"),
+        token=token
+    )
+
+
+@api_router.get("/client-portal/bookings")
+async def get_client_bookings(client: dict = Depends(get_current_client)):
+    """Get all bookings for the logged-in client"""
+    client_id = client["id"]
+    
+    # Find bookings for this client
+    bookings = await db.bookings.find(
+        {"client_id": client_id},
+        {"_id": 0}
+    ).sort("booking_datetime", -1).to_list(100)
+    
+    return bookings
+
+
+@api_router.post("/client-portal/booking-requests")
+async def create_client_booking_request(request: dict, client: dict = Depends(get_current_client)):
+    """Create a new booking request from client portal"""
+    request_id = str(uuid.uuid4())
+    
+    # Build the request document
+    request_doc = {
+        "id": request_id,
+        "type": "client",
+        "client_id": client["id"],
+        "passenger_name": client.get("contact_name") or client.get("name"),
+        "passenger_phone": client["phone"],
+        "passenger_email": client.get("email") or client.get("contact_email"),
+        "company_name": client.get("name"),
+        "pickup_location": request.get("pickup_location"),
+        "dropoff_location": request.get("dropoff_location"),
+        "additional_stops": request.get("additional_stops", []),
+        "pickup_datetime": request.get("pickup_datetime"),
+        "passenger_count": request.get("passenger_count", 1),
+        "luggage_count": request.get("luggage_count", 0),
+        "vehicle_type_id": request.get("vehicle_type_id"),
+        "vehicle_type_name": request.get("vehicle_type_name"),
+        "notes": request.get("notes"),
+        "flight_number": request.get("flight_number"),
+        "airline": request.get("airline"),
+        "flight_type": request.get("flight_type"),
+        "terminal": request.get("terminal"),
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.booking_requests.insert_one(request_doc)
+    
+    return {"message": "Booking request submitted", "request_id": request_id}
+
+
+@api_router.get("/client-portal/booking-requests")
+async def get_client_booking_requests(client: dict = Depends(get_current_client)):
+    """Get booking requests for the logged-in client"""
+    requests = await db.booking_requests.find(
+        {"client_id": client["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return requests
+
+
 # ========== ADMIN PASSENGER MANAGEMENT ENDPOINTS ==========
 @api_router.get("/admin/passengers")
 async def get_all_passengers():

@@ -155,13 +155,6 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
           <Text style={styles.startRideText}>{getStartButtonLabel(booking.status)}</Text>
         </TouchableOpacity>
       )}
-
-      {booking.status === 'completed' && (
-        <View style={[styles.completedBadge, { backgroundColor: theme.success + '20' }]}>
-          <Ionicons name="checkmark-circle" size={16} color={theme.success} />
-          <Text style={[styles.completedText, { color: theme.success }]}>Completed</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 };

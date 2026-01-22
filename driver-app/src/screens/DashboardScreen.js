@@ -132,9 +132,14 @@ export default function DashboardScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header */}
+      <View style={[styles.headerBar, { backgroundColor: theme.headerBg }]}>
+        <Text style={styles.headerTitle}>Dashboard</Text>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Greeting */}
+        <View style={styles.greetingSection}>
           <Text style={[styles.greeting, { color: theme.text }]}>
             Hello, {user?.name?.split(' ')[0] || 'Driver'}!
           </Text>

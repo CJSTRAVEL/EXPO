@@ -1501,9 +1501,19 @@ const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose,
   // Get vehicle type for the booking to determine driver filtering
   const getBookingVehicleCategory = () => {
     if (!booking?.vehicle_type) return null;
-    const vType = booking.vehicle_type.toLowerCase();
     
-    // CJ's 16 Minibus or CJ's 16 Minibus with trailer = PSV
+    // Vehicle type might be an ID, look up the name
+    let vehicleTypeName = booking.vehicle_type;
+    if (vehicleTypes && vehicleTypes.length > 0) {
+      const vt = vehicleTypes.find(v => v.id === booking.vehicle_type);
+      if (vt) {
+        vehicleTypeName = vt.name;
+      }
+    }
+    
+    const vType = vehicleTypeName.toLowerCase();
+    
+    // CJ's 16 Minibus or CJ's 16 with Trailer = PSV
     if (vType.includes('16')) return 'psv';
     
     // CJ's Taxi = Taxi

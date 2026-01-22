@@ -16,16 +16,20 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 22, 2026 (Latest)
 
-#### Server.py Refactoring (Phase 1)
-Created modular router structure in `/app/backend/routes/`:
-- `shared.py` - Common models, dependencies, utilities
-- `auth.py` - Admin authentication (~150 lines extracted)
-- `drivers.py` - Driver CRUD + mobile app (~350 lines extracted)
-- `vehicles.py` - Vehicle CRUD + types (~200 lines extracted)
-- `passengers.py` - Passenger portal (~150 lines extracted)
-- `client_portal.py` - Client portal + password reset (~350 lines extracted)
+#### Server.py Refactoring (Phase 2 Complete)
+Created 10 modular routers in `/app/backend/routes/`:
+- `shared.py` - Base infrastructure, dependencies (~200 lines)
+- `auth.py` - Admin authentication (~150 lines)
+- `drivers.py` - Driver CRUD + mobile app (~400 lines)
+- `vehicles.py` - Vehicle CRUD + types (~200 lines)
+- `passengers.py` - Passenger portal (~150 lines)
+- `client_portal.py` - Client portal + password reset (~400 lines)
+- `external.py` - Google Maps, Postcode, Flight API (~250 lines)
+- `clients.py` - Client management + invoices (~350 lines)
+- `chat.py` - Chat endpoints (~100 lines)
+- `payments.py` - Stripe integration (~200 lines)
 
-**Total extracted**: ~1200 lines into clean, testable modules
+**Total extracted**: ~2200 lines into clean, testable modules
 **Documentation**: `/app/docs/REFACTORING_GUIDE.md`
 
 #### Password Reset with SMS/Email Options

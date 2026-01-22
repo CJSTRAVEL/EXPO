@@ -221,14 +221,19 @@ const PassengerPortalAdmin = () => {
               </thead>
               <tbody>
                 {filteredPassengers.map((passenger) => (
-                  <tr key={passenger.id} className="border-b hover:bg-slate-50" data-testid={`passenger-row-${passenger.id}`}>
+                  <tr key={passenger.id} className={`border-b hover:bg-slate-50 ${passenger.is_blocked ? 'bg-red-50' : ''}`} data-testid={`passenger-row-${passenger.id}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="w-5 h-5 text-primary" />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${passenger.is_blocked ? 'bg-red-100' : 'bg-primary/10'}`}>
+                          <User className={`w-5 h-5 ${passenger.is_blocked ? 'text-red-500' : 'text-primary'}`} />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-800">{passenger.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-slate-800">{passenger.name}</p>
+                            {passenger.is_blocked && (
+                              <Badge variant="destructive" className="text-xs">Blocked</Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">ID: {passenger.id.slice(0, 8)}...</p>
                         </div>
                       </div>

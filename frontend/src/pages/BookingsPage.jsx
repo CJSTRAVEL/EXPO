@@ -1243,10 +1243,19 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                         if (d.status === 'inactive') return false;
                         // Filter by vehicle type if specified
                         if (formData.vehicle_type) {
-                          const vType = formData.vehicle_type.toLowerCase();
+                          // Vehicle type might be an ID, look up the name
+                          let vehicleTypeName = formData.vehicle_type;
+                          if (vehicleTypes && vehicleTypes.length > 0) {
+                            const vt = vehicleTypes.find(v => v.id === formData.vehicle_type);
+                            if (vt) {
+                              vehicleTypeName = vt.name;
+                            }
+                          }
+                          
+                          const vType = vehicleTypeName.toLowerCase();
                           const driverTypes = d.driver_types || [];
                           
-                          // CJ's 16 Minibus or CJ's 16 Minibus with trailer = PSV
+                          // CJ's 16 Minibus or CJ's 16 with Trailer = PSV
                           if (vType.includes('16')) {
                             return driverTypes.includes('psv');
                           }

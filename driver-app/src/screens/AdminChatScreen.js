@@ -159,12 +159,12 @@ export default function AdminChatScreen({ navigation }) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-        <View style={[styles.headerAvatar, { backgroundColor: theme.primary }]}>
+      <View style={[styles.header, { backgroundColor: theme.headerBg }]}>
+        <View style={[styles.headerAvatar, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
           <Ionicons name="headset" size={24} color="#fff" />
         </View>
         <View style={styles.headerInfo}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Dispatch Support</Text>
+          <Text style={styles.headerTitle}>Dispatch Support</Text>
           <Text style={[styles.headerSubtitle, { color: theme.success }]}>Online</Text>
         </View>
       </View>

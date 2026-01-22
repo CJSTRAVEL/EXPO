@@ -494,7 +494,7 @@ class ClientPortalRegister(BaseModel):
     notes: Optional[str] = None
 
 class ClientPortalLogin(BaseModel):
-    phone: str
+    email: str
     password: str
 
 class ClientPortalResponse(BaseModel):

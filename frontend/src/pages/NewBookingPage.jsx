@@ -227,13 +227,13 @@ const NewBookingPage = () => {
     const queryLower = query.toLowerCase().trim();
     const matches = passengers.filter(p => {
       if (field === 'name') {
-        const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
-        return fullName.includes(queryLower) || 
-               (p.first_name && p.first_name.toLowerCase().includes(queryLower)) ||
-               (p.last_name && p.last_name.toLowerCase().includes(queryLower));
+        // Handle both full name (from passengers) and first_name/last_name
+        const fullName = (p.name || `${p.first_name || ''} ${p.last_name || ''}`).toLowerCase();
+        return fullName.includes(queryLower);
       } else if (field === 'phone') {
         const phone = (p.phone || p.customer_phone || '').replace(/\s+/g, '');
-        return phone.includes(query.replace(/\s+/g, ''));
+        const queryPhone = query.replace(/\s+/g, '');
+        return phone.includes(queryPhone);
       }
       return false;
     }).slice(0, 5);

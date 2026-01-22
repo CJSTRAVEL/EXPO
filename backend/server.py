@@ -3119,6 +3119,34 @@ async def delete_passenger(passenger_id: str):
     
     return {"message": "Passenger account deleted successfully"}
 
+@api_router.put("/admin/passengers/{passenger_id}/block")
+async def block_passenger(passenger_id: str):
+    """Block a passenger account (admin only)"""
+    passenger = await db.passengers.find_one({"id": passenger_id})
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    await db.passengers.update_one(
+        {"id": passenger_id},
+        {"$set": {"is_blocked": True, "blocked_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Passenger account blocked"}
+
+@api_router.put("/admin/passengers/{passenger_id}/unblock")
+async def unblock_passenger(passenger_id: str):
+    """Unblock a passenger account (admin only)"""
+    passenger = await db.passengers.find_one({"id": passenger_id})
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    await db.passengers.update_one(
+        {"id": passenger_id},
+        {"$set": {"is_blocked": False}, "$unset": {"blocked_at": ""}}
+    )
+    
+    return {"message": "Passenger account unblocked"}
+
 @api_router.post("/admin/passengers")
 async def create_passenger_admin(data: PassengerRegister):
     """Create a new passenger account (admin only)"""

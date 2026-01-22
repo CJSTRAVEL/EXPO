@@ -1140,7 +1140,7 @@ const NewBookingPage = () => {
                       {format(formData.booking_datetime, "dd/MM/yyyy")}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-[#252525] border-[#3d3d3d]" align="start">
+                  <PopoverContent className="w-auto p-0 bg-white border-[#3d3d3d]" align="start">
                     <CalendarComponent
                       mode="single"
                       selected={formData.booking_datetime}
@@ -1153,6 +1153,7 @@ const NewBookingPage = () => {
                         }
                       }}
                       initialFocus
+                      className="bg-white text-black"
                     />
                   </PopoverContent>
                 </Popover>

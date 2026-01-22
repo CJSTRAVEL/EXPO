@@ -1473,7 +1473,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 phone = '+44' + phone
         
         # Generate booking details link - use SSR preview URL for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://cjbooking.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://travel-booking-hub-19.preview.emergentagent.com')
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags
             booking_link = f"{app_url}/api/preview/{short_booking_id}"
@@ -1589,7 +1589,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
     
     try:
         # Generate booking details link - use SSR preview URL (same as SMS) for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://cjbooking.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://travel-booking-hub-19.preview.emergentagent.com')
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags (same as SMS)
             booking_link = f"{app_url}/api/preview/{short_booking_id}"
@@ -4811,7 +4811,7 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
     )
     
     # Generate booking link
-    app_url = os.environ.get('APP_URL', 'https://cjbooking.preview.emergentagent.com')
+    app_url = os.environ.get('APP_URL', 'https://travel-booking-hub-19.preview.emergentagent.com')
     short_booking_id = booking.get("short_booking_id", booking_id[:8])
     booking_link = f"{app_url}/api/preview/{short_booking_id}"
     

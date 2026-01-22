@@ -33,7 +33,9 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # JWT Secret Key
-JWT_SECRET = os.environ.get('JWT_SECRET', 'cjs-executive-travel-secret-key-2026')
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required")
 JWT_ALGORITHM = "HS256"
 
 # MongoDB connection
@@ -42,7 +44,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Getaddress.io API Key
-GETADDRESS_API_KEY = os.environ.get('GETADDRESS_API_KEY', 'Xl-6H0F3wUiAL_iNCL-_Qw49750')
+GETADDRESS_API_KEY = os.environ.get('GETADDRESS_API_KEY')
 
 # Vonage SMS Configuration
 VONAGE_API_KEY = os.environ.get('VONAGE_API_KEY')

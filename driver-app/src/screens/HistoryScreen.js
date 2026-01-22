@@ -243,7 +243,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     textAlign: 'center',
-    color: COLORS.textSecondary,
     paddingVertical: 16,
   },
 });

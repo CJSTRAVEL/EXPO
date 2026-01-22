@@ -177,11 +177,22 @@ export default function JobsScreen({ navigation }) {
   const { theme } = useTheme();
   const [bookings, setBookings] = useState({ today: [], upcoming: [], past: [] });
   const [refreshing, setRefreshing] = useState(false);
+  const [activeRide, setActiveRide] = useState(null);
+  const [rideMinimized, setRideMinimized] = useState(false);
 
   const fetchBookings = async () => {
     try {
       const data = await getBookings();
       setBookings(data);
+      
+      // Check for active ride (on_way, arrived, or in_progress status)
+      const allBookings = [...(data.today || []), ...(data.upcoming || [])];
+      const activeBooking = allBookings.find(b => 
+        ['on_way', 'arrived', 'in_progress'].includes(b.status)
+      );
+      if (activeBooking && !activeRide) {
+        setActiveRide(activeBooking);
+      }
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
@@ -207,8 +218,39 @@ export default function JobsScreen({ navigation }) {
     }
   };
 
+  const handleStartRide = (booking) => {
+    // Start the ride - set status to on_way
+    updateBookingStatus(booking.id, 'on_way')
+      .then(() => {
+        setActiveRide({...booking, status: 'on_way'});
+        setRideMinimized(false);
+        fetchBookings();
+      })
+      .catch(() => Alert.alert('Error', 'Failed to start ride'));
+  };
+
   const handleViewDetail = (booking) => {
-    navigation.navigate('JobDetail', { booking, onRefresh: fetchBookings });
+    // If booking is already active, show active ride screen
+    if (['on_way', 'arrived', 'in_progress'].includes(booking.status)) {
+      setActiveRide(booking);
+      setRideMinimized(false);
+    } else {
+      // For assigned bookings, offer to start the ride
+      Alert.alert(
+        'Start Ride',
+        `Start ride to ${booking.first_name} ${booking.last_name}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Start', onPress: () => handleStartRide(booking) }
+        ]
+      );
+    }
+  };
+
+  const handleRideComplete = () => {
+    setActiveRide(null);
+    setRideMinimized(false);
+    fetchBookings();
   };
 
   // Combine today and upcoming, sort by datetime
@@ -254,6 +296,16 @@ export default function JobsScreen({ navigation }) {
             </Text>
           </View>
         }
+      />
+
+      {/* Active Ride Screen */}
+      <ActiveRideScreen
+        visible={!!activeRide}
+        booking={activeRide}
+        isMinimized={rideMinimized}
+        onClose={() => { setActiveRide(null); setRideMinimized(false); }}
+        onMinimize={() => setRideMinimized(!rideMinimized)}
+        onComplete={handleRideComplete}
       />
     </SafeAreaView>
   );

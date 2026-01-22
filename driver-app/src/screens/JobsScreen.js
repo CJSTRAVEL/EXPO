@@ -524,6 +524,15 @@ export default function JobsScreen({ navigation }) {
         onMinimize={() => setRideMinimized(!rideMinimized)}
         onComplete={handleRideComplete}
       />
+
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        visible={showDetails}
+        booking={selectedBooking}
+        onClose={() => setShowDetails(false)}
+        onStartRide={handleStartRideFromDetails}
+        theme={theme}
+      />
     </SafeAreaView>
   );
 }

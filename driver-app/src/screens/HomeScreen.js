@@ -52,6 +52,8 @@ export default function HomeScreen({ navigation }) {
     initializeLocation();
     loadShiftState();
     loadSelectedVehicle();
+    // Check document expiry notifications on app load
+    checkDocumentNotifications();
     return () => {
       if (locationSubscription.current) {
         locationSubscription.current.remove();

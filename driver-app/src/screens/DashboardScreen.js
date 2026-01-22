@@ -70,9 +70,65 @@ export default function DashboardScreen({ navigation }) {
     </View>
   );
 
+  const getExpiryColor = (daysUntil) => {
+    if (daysUntil <= 0) return theme.danger;
+    if (daysUntil <= 30) return theme.danger;
+    if (daysUntil <= 60) return theme.warning;
+    if (daysUntil <= 90) return '#facc15';
+    return theme.success;
+  };
+
+  const getExpiryStatusText = (daysUntil) => {
+    if (daysUntil <= 0) return 'EXPIRED';
+    if (daysUntil === 1) return '1 day left';
+    return `${daysUntil} days`;
+  };
+
+  const DocumentCard = ({ document }) => {
+    const color = getExpiryColor(document.days_until_expiry);
+    const statusText = getExpiryStatusText(document.days_until_expiry);
+    const isExpired = document.days_until_expiry <= 0;
+    const isUrgent = document.days_until_expiry <= 30;
+    
+    const formatDate = (dateStr) => {
+      try {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      } catch {
+        return dateStr;
+      }
+    };
+
+    return (
+      <View style={[styles.documentCard, { backgroundColor: theme.card, borderLeftColor: color }]}>
+        <View style={styles.documentInfo}>
+          <View style={styles.documentHeader}>
+            <Ionicons 
+              name={isExpired ? 'alert-circle' : 'document-text-outline'} 
+              size={20} 
+              color={color} 
+            />
+            <Text style={[styles.documentName, { color: theme.text }]}>{document.name}</Text>
+          </View>
+          <Text style={[styles.documentExpiry, { color: theme.textSecondary }]}>
+            Expires: {formatDate(document.expiry_date)}
+          </Text>
+        </View>
+        <View style={[styles.documentBadge, { backgroundColor: color + '20' }]}>
+          <Text style={[styles.documentBadgeText, { color: color }]}>{statusText}</Text>
+        </View>
+      </View>
+    );
+  };
+
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const bookingsData = stats?.weekly_bookings || [0, 0, 1, 0, 0, 0, 0];
   const maxBookings = Math.max(...bookingsData, 1);
+
+  // Sort documents by days until expiry (most urgent first)
+  const sortedDocuments = stats?.documents 
+    ? [...stats.documents].sort((a, b) => a.days_until_expiry - b.days_until_expiry)
+    : [];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -141,7 +197,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.statsGrid}>
             <StatCard 
               label="Bookings" 
-              value={stats?.total_bookings || '1'} 
+              value={stats?.total_bookings || '0'} 
               color={theme.info}
             />
             <StatCard 
@@ -198,19 +254,38 @@ export default function DashboardScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Shift Metrics */}
+        {/* 24hr Shift Metrics */}
         <View style={[styles.section, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Shift Metrics</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Shift Metrics</Text>
+            <View style={[styles.periodBadge, { backgroundColor: theme.primary + '20' }]}>
+              <Ionicons name="time-outline" size={12} color={theme.primary} />
+              <Text style={[styles.periodBadgeText, { color: theme.primary }]}>Last 24hrs</Text>
+            </View>
+          </View>
+          
+          <View style={styles.statsGrid}>
+            <StatCard 
+              label="Bookings" 
+              value={stats?.shift_24hr?.total_bookings || '0'} 
+              color={theme.info}
+            />
+            <StatCard 
+              label="Income" 
+              value={stats?.shift_24hr?.total_income ? `£${stats.shift_24hr.total_income.toFixed(2)}` : '-'} 
+              color={theme.success}
+            />
+          </View>
           
           <View style={styles.statsGrid}>
             <StatCard 
               label="Total Shift Time" 
-              value={stats?.total_shift_time || '01h 9m'} 
+              value={stats?.shift_24hr?.total_shift_time || '-'} 
               color={theme.info}
             />
             <StatCard 
-              label="Active Shift Time" 
-              value={stats?.active_shift_time || '-'} 
+              label="Active Time" 
+              value={stats?.shift_24hr?.active_shift_time || '-'} 
               color="#facc15"
             />
           </View>
@@ -218,83 +293,66 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.statsGrid}>
             <StatCard 
               label="On Job Time" 
-              value={stats?.on_job_time || '01h 9m'} 
+              value={stats?.shift_24hr?.on_job_time || '-'} 
               color={theme.success}
             />
             <StatCard 
               label="On Break Time" 
-              value={stats?.on_break_time || '-'} 
+              value={stats?.shift_24hr?.on_break_time || '-'} 
               color={theme.warning}
             />
           </View>
-
-          {/* Mini chart for shift metrics */}
-          <View style={styles.miniChart}>
-            <View style={styles.chartLegend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: theme.info }]} />
-                <Text style={[styles.legendText, { color: theme.textSecondary }]}>Total Shift Time</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#facc15' }]} />
-                <Text style={[styles.legendText, { color: theme.textSecondary }]}>Active Shift Time</Text>
-              </View>
-            </View>
-            <View style={styles.chartLegend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: theme.success }]} />
-                <Text style={[styles.legendText, { color: theme.textSecondary }]}>On Job Time</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: theme.warning }]} />
-                <Text style={[styles.legendText, { color: theme.textSecondary }]}>On Break Time</Text>
-              </View>
-            </View>
-          </View>
         </View>
 
-        {/* Booking Offers */}
+        {/* Driver Documents Section */}
         <View style={[styles.section, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Booking Offers</Text>
-          
-          <View style={styles.statsGrid}>
-            <StatCard 
-              label="Total" 
-              value={stats?.offers_total || '0'} 
-              color={theme.textSecondary}
-            />
-            <StatCard 
-              label="Read" 
-              value={stats?.offers_read || '0'} 
-              color={theme.info}
-            />
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Document Expiry</Text>
+            <TouchableOpacity style={styles.refreshButton} onPress={loadStats}>
+              <Ionicons name="refresh-outline" size={18} color={theme.textSecondary} />
+            </TouchableOpacity>
           </View>
           
-          <View style={styles.statsGrid}>
-            <StatCard 
-              label="Accepted" 
-              value={stats?.offers_accepted || '0'} 
-              color={theme.success}
-            />
-            <StatCard 
-              label="No Action" 
-              value={stats?.offers_no_action || '0'} 
-              color="#facc15"
-            />
-          </View>
-          
-          <View style={styles.statsGrid}>
-            <StatCard 
-              label="Rejected" 
-              value={stats?.offers_rejected || '0'} 
-              color={theme.danger}
-            />
-            <StatCard 
-              label="Missed Earnings" 
-              value={stats?.missed_earnings ? `£${stats.missed_earnings.toFixed(2)}` : '£0.00'} 
-              color="#f87171"
-            />
-          </View>
+          {sortedDocuments.length > 0 ? (
+            <>
+              {/* Expiry Legend */}
+              <View style={styles.expiryLegend}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: theme.danger }]} />
+                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>≤30 days</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: theme.warning }]} />
+                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>31-60 days</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#facc15' }]} />
+                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>61-90 days</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: theme.success }]} />
+                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>&gt;90 days</Text>
+                </View>
+              </View>
+
+              {/* Document List */}
+              <View style={styles.documentsList}>
+                {sortedDocuments.map((doc, index) => (
+                  <DocumentCard key={index} document={doc} />
+                ))}
+              </View>
+            </>
+          ) : (
+            <View style={styles.noDocuments}>
+              <Ionicons name="document-outline" size={40} color={theme.textSecondary} />
+              <Text style={[styles.noDocumentsText, { color: theme.textSecondary }]}>
+                No document expiry dates on file
+              </Text>
+              <Text style={[styles.noDocumentsSubtext, { color: theme.textSecondary }]}>
+                Contact dispatch to update your documents
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 24 }} />
@@ -384,10 +442,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+  },
+  periodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  periodBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  refreshButton: {
+    padding: 4,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -484,7 +562,64 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -16,
   },
-  miniChart: {
-    marginTop: 8,
+  // Document Expiry Styles
+  expiryLegend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  documentsList: {
+    gap: 10,
+  },
+  documentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    backgroundColor: 'transparent',
+  },
+  documentInfo: {
+    flex: 1,
+  },
+  documentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  documentName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  documentExpiry: {
+    fontSize: 12,
+    marginLeft: 28,
+  },
+  documentBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  documentBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noDocuments: {
+    alignItems: 'center',
+    padding: 32,
+  },
+  noDocumentsText: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginTop: 12,
+  },
+  noDocumentsSubtext: {
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });

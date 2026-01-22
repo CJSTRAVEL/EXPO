@@ -1480,6 +1480,71 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
         return False, str(e)
 
 
+# ========== SMS TEMPLATE FUNCTIONS ==========
+async def get_sms_template(template_type: str):
+    """Get SMS template from database or return default"""
+    template = await db.sms_templates.find_one({"type": template_type})
+    
+    defaults = {
+        "driver_on_route": "Hello {customer_name}, Your driver is on their way!\n\nFollow the link for details and updates:\n{booking_link}",
+        "driver_arrived": "Your vehicle has arrived! {vehicle_make} {vehicle_model} - {vehicle_registration}\n\nCheck where the vehicle is:\n{booking_link}",
+        "booking_review": "Hi {customer_name}, we hope you had a great journey with CJ's Executive Travel!\n\nWe'd love to hear your feedback:\n{review_link}\n\nThank you for choosing us!",
+        "booking_confirmation": "Hello {customer_name}, Your booking is confirmed.\n\n{booking_link}\n\nPlease open the link to check your details.\n\nThank You CJ's Executive Travel Limited.",
+        "passenger_portal_welcome": "Welcome to CJ's Executive Travel! Your account has been created.\n\nLogin to your portal: {portal_link}\n\nThank you for choosing us!",
+        "passenger_booking_confirmed": "Hello {customer_name}, Your booking has been confirmed!\n\nPickup: {pickup_address}\nDate/Time: {booking_datetime}\n\nView details: {booking_link}"
+    }
+    
+    if template and template.get("content"):
+        return template.get("content")
+    return defaults.get(template_type, "")
+
+async def send_templated_sms(phone: str, template_type: str, variables: dict):
+    """Send SMS using a template with variable substitution"""
+    if not vonage_client:
+        logging.warning("Vonage client not initialized, skipping SMS")
+        return False, "SMS service not configured"
+    
+    try:
+        from vonage_sms import SmsMessage
+        
+        # Get template
+        template = await get_sms_template(template_type)
+        if not template:
+            return False, f"Template '{template_type}' not found"
+        
+        # Substitute variables
+        message_text = template
+        for key, value in variables.items():
+            message_text = message_text.replace("{" + key + "}", str(value) if value else "")
+        
+        # Format phone number
+        phone = phone.strip()
+        if not phone.startswith('+'):
+            if phone.startswith('0'):
+                phone = '+44' + phone[1:]
+            else:
+                phone = '+44' + phone
+        
+        response = vonage_client.sms.send(
+            SmsMessage(
+                to=phone,
+                from_=VONAGE_FROM_NUMBER,
+                text=message_text
+            )
+        )
+        
+        if response.messages[0].status == "0":
+            logging.info(f"Templated SMS ({template_type}) sent to {phone}")
+            return True, "SMS sent"
+        else:
+            logging.error(f"SMS failed: {response.messages[0].error_text}")
+            return False, response.messages[0].error_text
+            
+    except Exception as e:
+        logging.error(f"SMS error: {str(e)}")
+        return False, str(e)
+
+
 def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                        pickup: str = None, dropoff: str = None,
                        booking_datetime: str = None, short_booking_id: str = None,

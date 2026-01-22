@@ -2583,6 +2583,162 @@ async def login_client_portal(data: ClientPortalLogin):
     )
 
 
+# ========== PASSWORD RESET ENDPOINTS ==========
+class PasswordResetRequest(BaseModel):
+    phone: str
+    account_type: str  # "passenger" or "client"
+
+class PasswordResetVerify(BaseModel):
+    phone: str
+    code: str
+    new_password: str
+    account_type: str
+
+@api_router.post("/password-reset/request")
+async def request_password_reset(data: PasswordResetRequest):
+    """Request a password reset code via SMS"""
+    import random
+    
+    # Normalize phone number
+    phone = data.phone.strip()
+    if phone.startswith('0'):
+        phone_normalized = '+44' + phone[1:]
+    elif not phone.startswith('+'):
+        phone_normalized = '+44' + phone
+    else:
+        phone_normalized = phone
+    
+    # Find account based on type
+    if data.account_type == "passenger":
+        # Check both formats
+        account = await db.passengers.find_one({
+            "$or": [
+                {"phone": phone},
+                {"phone": phone_normalized},
+                {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone}
+            ]
+        })
+    else:
+        account = await db.clients.find_one({
+            "$or": [
+                {"phone": phone},
+                {"phone": phone_normalized},
+                {"mobile": phone},
+                {"mobile": phone_normalized}
+            ]
+        })
+    
+    if not account:
+        # Don't reveal if account exists for security
+        return {"message": "If an account exists with this phone number, a reset code will be sent"}
+    
+    # Generate 6-digit code
+    reset_code = str(random.randint(100000, 999999))
+    
+    # Store reset code with expiry (15 minutes)
+    await db.password_resets.update_one(
+        {"phone": phone_normalized, "account_type": data.account_type},
+        {
+            "$set": {
+                "phone": phone_normalized,
+                "account_type": data.account_type,
+                "code": reset_code,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat(),
+                "used": False
+            }
+        },
+        upsert=True
+    )
+    
+    # Send SMS with code
+    if vonage_client:
+        try:
+            from vonage_sms import SmsMessage
+            
+            message_text = f"Your CJ's Executive Travel password reset code is: {reset_code}\n\nThis code expires in 15 minutes. If you didn't request this, please ignore."
+            
+            response = vonage_client.sms.send(
+                SmsMessage(
+                    to=phone_normalized,
+                    from_=VONAGE_FROM_NUMBER,
+                    text=message_text
+                )
+            )
+            
+            if response.messages[0].status == "0":
+                logging.info(f"Password reset SMS sent to {phone_normalized}")
+            else:
+                logging.error(f"Password reset SMS failed: {response.messages[0].error_text}")
+        except Exception as e:
+            logging.error(f"Password reset SMS error: {str(e)}")
+    else:
+        logging.warning(f"Vonage not configured. Reset code for {phone_normalized}: {reset_code}")
+    
+    return {"message": "If an account exists with this phone number, a reset code will be sent"}
+
+
+@api_router.post("/password-reset/verify")
+async def verify_password_reset(data: PasswordResetVerify):
+    """Verify reset code and set new password"""
+    # Normalize phone
+    phone = data.phone.strip()
+    if phone.startswith('0'):
+        phone_normalized = '+44' + phone[1:]
+    elif not phone.startswith('+'):
+        phone_normalized = '+44' + phone
+    else:
+        phone_normalized = phone
+    
+    # Find reset request
+    reset_request = await db.password_resets.find_one({
+        "phone": phone_normalized,
+        "account_type": data.account_type,
+        "code": data.code,
+        "used": False
+    })
+    
+    if not reset_request:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset code")
+    
+    # Check expiry
+    expires_at = datetime.fromisoformat(reset_request["expires_at"].replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="Reset code has expired")
+    
+    # Mark code as used
+    await db.password_resets.update_one(
+        {"_id": reset_request["_id"]},
+        {"$set": {"used": True}}
+    )
+    
+    # Update password
+    new_password_hash = hash_password(data.new_password)
+    
+    if data.account_type == "passenger":
+        result = await db.passengers.update_one(
+            {"$or": [
+                {"phone": phone_normalized},
+                {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone_normalized}
+            ]},
+            {"$set": {"password_hash": new_password_hash}}
+        )
+    else:
+        result = await db.clients.update_one(
+            {"$or": [
+                {"phone": phone_normalized},
+                {"mobile": phone_normalized},
+                {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone_normalized}
+            ]},
+            {"$set": {"password_hash": new_password_hash}}
+        )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    return {"message": "Password reset successfully. You can now login with your new password."}
+
+
 @api_router.get("/client-portal/bookings")
 async def get_client_bookings(client: dict = Depends(get_current_client)):
     """Get all bookings for the logged-in client"""

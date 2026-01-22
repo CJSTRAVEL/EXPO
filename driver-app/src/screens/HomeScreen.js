@@ -11,13 +11,14 @@ import {
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
+import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { COLORS } from '../config';
+import { useTheme } from '../context/ThemeContext';
 import { updateStatus, updateLocation } from '../services/api';
 
 // Custom car marker component
-const CarMarker = () => (
+const CarMarker = ({ theme }) => (
   <View style={styles.carMarkerContainer}>
     <Image 
       source={require('../../assets/car-marker.png')} 
@@ -29,19 +30,27 @@ const CarMarker = () => (
 
 export default function HomeScreen({ navigation }) {
   const { user, refreshProfile } = useAuth();
+  const { theme } = useTheme();
   const [location, setLocation] = useState(null);
   const [heading, setHeading] = useState(0);
   const [isShiftActive, setIsShiftActive] = useState(user?.is_online || false);
   const [loading, setLoading] = useState(true);
   const [startingShift, setStartingShift] = useState(false);
+  const [shiftStartTime, setShiftStartTime] = useState(null);
+  const [shiftDuration, setShiftDuration] = useState(0);
   const mapRef = useRef(null);
   const locationSubscription = useRef(null);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     initializeLocation();
+    loadShiftState();
     return () => {
       if (locationSubscription.current) {
         locationSubscription.current.remove();
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     };
   }, []);
@@ -49,6 +58,46 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     setIsShiftActive(user?.is_online || false);
   }, [user]);
+
+  // Shift timer effect
+  useEffect(() => {
+    if (isShiftActive && shiftStartTime) {
+      timerRef.current = setInterval(() => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - shiftStartTime) / 1000);
+        setShiftDuration(elapsed);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      setShiftDuration(0);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isShiftActive, shiftStartTime]);
+
+  const loadShiftState = async () => {
+    try {
+      const savedStartTime = await SecureStore.getItemAsync('shift_start_time');
+      if (savedStartTime && user?.is_online) {
+        setShiftStartTime(parseInt(savedStartTime));
+      }
+    } catch (error) {
+      console.log('Error loading shift state:', error);
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const initializeLocation = async () => {
     try {
@@ -59,7 +108,6 @@ export default function HomeScreen({ navigation }) {
         return;
       }
 
-      // Get initial location
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -71,7 +119,6 @@ export default function HomeScreen({ navigation }) {
       setHeading(currentLocation.coords.heading || 0);
       setLoading(false);
 
-      // Start watching location
       startLocationTracking();
     } catch (error) {
       console.error('Error getting location:', error);
@@ -92,12 +139,10 @@ export default function HomeScreen({ navigation }) {
         setLocation({ latitude, longitude });
         if (newHeading) setHeading(newHeading);
 
-        // Update location on server if shift is active
         if (isShiftActive) {
           updateLocation(latitude, longitude).catch(console.error);
         }
 
-        // Animate map to new position
         if (mapRef.current) {
           mapRef.current.animateToRegion({
             latitude,
@@ -111,9 +156,28 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleStartShift = async () => {
+    // Check if vehicle is selected before starting shift
+    if (!isShiftActive) {
+      try {
+        const selectedVehicle = await SecureStore.getItemAsync('selected_vehicle');
+        if (!selectedVehicle) {
+          Alert.alert(
+            'Vehicle Required',
+            'Please select a vehicle before starting your shift.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Select Vehicle', onPress: () => navigation.navigate('Menu', { screen: 'VehicleSettings' }) }
+            ]
+          );
+          return;
+        }
+      } catch (error) {
+        console.log('Error checking vehicle:', error);
+      }
+    }
+
     setStartingShift(true);
     try {
-      // Request background location permission if not already granted
       const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
       if (bgStatus !== 'granted') {
         Alert.alert(
@@ -126,13 +190,22 @@ export default function HomeScreen({ navigation }) {
       const newStatus = !isShiftActive;
       await updateStatus({ is_online: newStatus });
       setIsShiftActive(newStatus);
-      await refreshProfile();
-
+      
       if (newStatus) {
+        // Starting shift - save start time
+        const startTime = Date.now();
+        setShiftStartTime(startTime);
+        await SecureStore.setItemAsync('shift_start_time', startTime.toString());
         Alert.alert('Shift Started', 'You are now online and available for bookings.');
       } else {
-        Alert.alert('Shift Ended', 'You are now offline.');
+        // Ending shift - clear start time
+        setShiftStartTime(null);
+        setShiftDuration(0);
+        await SecureStore.deleteItemAsync('shift_start_time');
+        Alert.alert('Shift Ended', `You are now offline.\nShift duration: ${formatDuration(shiftDuration)}`);
       }
+      
+      await refreshProfile();
     } catch (error) {
       console.error('Error updating shift status:', error);
       Alert.alert('Error', 'Could not update your status. Please try again.');
@@ -141,25 +214,21 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const openLeftMenu = () => {
-    navigation.openDrawer?.() || navigation.navigate('Profile');
-  };
-
-  const openRightMenu = () => {
-    navigation.navigate('Profile');
+  const openMenu = () => {
+    navigation.navigate('Menu');
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Getting your location...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Getting your location...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Map */}
       <MapView
         ref={mapRef}
@@ -184,31 +253,35 @@ export default function HomeScreen({ navigation }) {
             flat={true}
             rotation={heading}
           >
-            <CarMarker />
+            <CarMarker theme={theme} />
           </Marker>
         )}
       </MapView>
 
-      {/* Top Left Menu Button */}
-      <TouchableOpacity style={styles.menuButtonLeft} onPress={openLeftMenu}>
-        <Ionicons name="menu" size={24} color={COLORS.text} />
-      </TouchableOpacity>
-
       {/* Top Right Logo/Menu Button */}
-      <TouchableOpacity style={styles.menuButtonRight} onPress={openRightMenu}>
+      <TouchableOpacity style={styles.menuButtonRight} onPress={openMenu}>
         <Image
           source={require('../../assets/logo.png')}
           style={styles.logoSmall}
-          resizeMode="contain"
+          resizeMode="cover"
         />
       </TouchableOpacity>
+
+      {/* Shift Timer (when active) */}
+      {isShiftActive && (
+        <View style={[styles.timerContainer, { backgroundColor: theme.card }]}>
+          <View style={[styles.timerDot, { backgroundColor: theme.success }]} />
+          <Text style={[styles.timerLabel, { color: theme.textSecondary }]}>Shift Time</Text>
+          <Text style={[styles.timerValue, { color: theme.text }]}>{formatDuration(shiftDuration)}</Text>
+        </View>
+      )}
 
       {/* Start/Stop Shift Button */}
       <View style={styles.startButtonContainer}>
         <TouchableOpacity
           style={[
             styles.startButton,
-            isShiftActive && styles.stopButton,
+            { backgroundColor: isShiftActive ? theme.danger : theme.primary },
           ]}
           onPress={handleStartShift}
           disabled={startingShift}
@@ -225,9 +298,9 @@ export default function HomeScreen({ navigation }) {
 
       {/* Status Indicator */}
       {isShiftActive && (
-        <View style={styles.statusIndicator}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>Online</Text>
+        <View style={[styles.statusIndicator, { backgroundColor: 'rgba(255,255,255,0.95)' }]}>
+          <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
+          <Text style={[styles.statusText, { color: theme.success }]}>Online</Text>
         </View>
       )}
     </View>
@@ -237,45 +310,26 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: COLORS.textSecondary,
   },
   map: {
     flex: 1,
-  },
-  menuButtonLeft: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 40,
-    left: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
   },
   menuButtonRight: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 60 : 40,
     right: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
@@ -287,8 +341,43 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   logoSmall: {
-    width: 40,
-    height: 40,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  timerContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: 'center',
+  },
+  timerDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  timerLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  timerValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    fontVariant: ['tabular-nums'],
+    marginTop: 2,
   },
   startButtonContainer: {
     position: 'absolute',
@@ -301,18 +390,13 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: COLORS.primary,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
-  },
-  stopButton: {
-    backgroundColor: COLORS.danger,
-    shadowColor: COLORS.danger,
   },
   startButtonText: {
     color: '#fff',
@@ -321,11 +405,10 @@ const styles = StyleSheet.create({
   },
   statusIndicator: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 115 : 95,
+    top: Platform.OS === 'ios' ? 125 : 105,
     left: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -339,13 +422,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.success,
     marginRight: 6,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.success,
   },
   carMarkerContainer: {
     width: 50,

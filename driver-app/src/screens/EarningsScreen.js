@@ -5,12 +5,15 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../config';
+import { useTheme } from '../context/ThemeContext';
 import { getEarnings } from '../services/api';
 
 export default function EarningsScreen() {
+  const { theme } = useTheme();
   const [earnings, setEarnings] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -34,50 +37,56 @@ export default function EarningsScreen() {
   }, []);
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {/* Today's Earnings - Featured */}
-      <View style={styles.featuredCard}>
-        <Text style={styles.featuredLabel}>Today's Earnings</Text>
-        <Text style={styles.featuredValue}>
-          £{earnings?.today?.earnings?.toFixed(2) || '0.00'}
-        </Text>
-        <View style={styles.featuredStats}>
-          <View style={styles.featuredStat}>
-            <Ionicons name="car" size={16} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.featuredStatText}>
-              {earnings?.today?.trips || 0} trips
-            </Text>
-          </View>
-        </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header */}
+      <View style={[styles.headerBar, { backgroundColor: theme.headerBg }]}>
+        <Text style={styles.headerTitle}>Payments</Text>
       </View>
 
-      {/* Period Cards */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Earnings Overview</Text>
-        
-        <View style={styles.periodCard}>
-          <View style={styles.periodHeader}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.info} />
-            <Text style={styles.periodTitle}>This Week</Text>
-          </View>
-          <View style={styles.periodStats}>
-            <View style={styles.periodStat}>
-              <Text style={styles.periodStatValue}>
-                £{earnings?.this_week?.earnings?.toFixed(2) || '0.00'}
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+        }
+      >
+        {/* Today's Earnings - Featured */}
+        <View style={[styles.featuredCard, { backgroundColor: theme.primary }]}>
+          <Text style={styles.featuredLabel}>Today's Earnings</Text>
+          <Text style={styles.featuredValue}>
+            £{earnings?.today?.earnings?.toFixed(2) || '0.00'}
+          </Text>
+          <View style={styles.featuredStats}>
+            <View style={styles.featuredStat}>
+              <Ionicons name="car" size={16} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.featuredStatText}>
+                {earnings?.today?.trips || 0} trips
               </Text>
-              <Text style={styles.periodStatLabel}>Earnings</Text>
             </View>
-            <View style={styles.periodDivider} />
-            <View style={styles.periodStat}>
-              <Text style={styles.periodStatValue}>
-                {earnings?.this_week?.trips || 0}
-              </Text>
-              <Text style={styles.periodStatLabel}>Trips</Text>
+          </View>
+        </View>
+
+        {/* Period Cards */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Earnings Overview</Text>
+          
+          <View style={[styles.periodCard, { backgroundColor: theme.card }]}>
+            <View style={styles.periodHeader}>
+              <Ionicons name="calendar-outline" size={24} color={theme.info} />
+              <Text style={[styles.periodTitle, { color: theme.text }]}>This Week</Text>
+            </View>
+            <View style={styles.periodStats}>
+              <View style={styles.periodStat}>
+                <Text style={[styles.periodStatValue, { color: theme.text }]}>
+                  £{earnings?.this_week?.earnings?.toFixed(2) || '0.00'}
+                </Text>
+                <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Earnings</Text>
+              </View>
+              <View style={[styles.periodDivider, { backgroundColor: theme.border }]} />
+              <View style={styles.periodStat}>
+                <Text style={[styles.periodStatValue, { color: theme.text }]}>
+                  {earnings?.this_week?.trips || 0}
+                </Text>
+                <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Trips</Text>
             </View>
           </View>
         </View>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { COLORS } from './src/config';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -19,6 +19,14 @@ import NavigationScreen from './src/screens/NavigationScreen';
 import JobDetailScreen from './src/screens/JobDetailScreen';
 import EarningsScreen from './src/screens/EarningsScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
+import MenuScreen from './src/screens/MenuScreen';
+import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
+import AccountInfoScreen from './src/screens/AccountInfoScreen';
+import DisplaySettingsScreen from './src/screens/DisplaySettingsScreen';
+import VehicleSettingsScreen from './src/screens/VehicleSettingsScreen';
+import DiagnosticsScreen from './src/screens/DiagnosticsScreen';
+import BiometricSettingsScreen from './src/screens/BiometricSettingsScreen';
+import LogoutScreen from './src/screens/LogoutScreen';
 
 // Configure notifications
 Notifications.setNotificationHandler({
@@ -34,15 +42,17 @@ const Tab = createBottomTabNavigator();
 
 // Chat List Screen (placeholder for bottom tab)
 function ChatListScreen({ navigation }) {
+  const { theme } = useTheme();
+  
   return (
-    <View style={styles.chatListContainer}>
-      <Text style={styles.chatListTitle}>Messages</Text>
-      <Text style={styles.chatListSubtitle}>
+    <View style={[styles.chatListContainer, { backgroundColor: theme.background }]}>
+      <Text style={[styles.chatListTitle, { color: theme.text }]}>Messages</Text>
+      <Text style={[styles.chatListSubtitle, { color: theme.textSecondary }]}>
         Chat messages from dispatch will appear here
       </Text>
       <View style={styles.emptyChat}>
-        <Ionicons name="chatbubbles-outline" size={64} color={COLORS.textSecondary} />
-        <Text style={styles.emptyChatText}>No messages yet</Text>
+        <Ionicons name="chatbubbles-outline" size={64} color={theme.textSecondary} />
+        <Text style={[styles.emptyChatText, { color: theme.textSecondary }]}>No messages yet</Text>
       </View>
     </View>
   );
@@ -50,6 +60,8 @@ function ChatListScreen({ navigation }) {
 
 // Bottom Tab Navigator
 function MainTabs() {
+  const { theme } = useTheme();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -68,12 +80,12 @@ function MainTabs() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: theme.card,
           borderTopWidth: 1,
-          borderTopColor: COLORS.border,
+          borderTopColor: theme.border,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 24 : 8,
           height: Platform.OS === 'ios' ? 88 : 64,
@@ -98,7 +110,6 @@ function MainTabs() {
         component={JobsScreen}
         options={{
           tabBarLabel: 'Bookings',
-          tabBarBadge: undefined, // Can add badge count here
         }}
       />
       <Tab.Screen 
@@ -121,19 +132,17 @@ function MainTabs() {
 
 function AppNavigator() {
   const { user, loading } = useAuth();
+  const { theme } = useTheme();
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    // Listen for incoming notifications
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
     });
 
-    // Listen for notification responses
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification response:', response);
-      // Navigate to relevant screen based on notification data
       const data = response.notification.request.content.data;
       if (data?.booking_id) {
         // Navigate to booking details
@@ -148,10 +157,10 @@ function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
         <View style={styles.loadingContent}>
-          <Ionicons name="car-sport" size={48} color={COLORS.primary} />
-          <Text style={styles.loadingText}>CJ's Driver</Text>
+          <Ionicons name="car-sport" size={48} color={theme.primary} />
+          <Text style={[styles.loadingText, { color: theme.primary }]}>CJ's Driver</Text>
         </View>
       </View>
     );
@@ -161,7 +170,7 @@ function AppNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: COLORS.primary,
+          backgroundColor: theme.primary,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
@@ -182,6 +191,53 @@ function AppNavigator() {
             name="MainTabs"
             component={MainTabs}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Menu"
+            component={MenuScreen}
+            options={{ 
+              headerShown: false,
+              presentation: 'modal',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="PersonalInfo"
+            component={PersonalInfoScreen}
+            options={{ title: 'Personal Info' }}
+          />
+          <Stack.Screen
+            name="AccountInfo"
+            component={AccountInfoScreen}
+            options={{ title: 'Account Info' }}
+          />
+          <Stack.Screen
+            name="DisplaySettings"
+            component={DisplaySettingsScreen}
+            options={{ title: 'Display' }}
+          />
+          <Stack.Screen
+            name="VehicleSettings"
+            component={VehicleSettingsScreen}
+            options={{ title: 'Vehicle' }}
+          />
+          <Stack.Screen
+            name="Diagnostics"
+            component={DiagnosticsScreen}
+            options={{ title: 'Diagnostics' }}
+          />
+          <Stack.Screen
+            name="BiometricSettings"
+            component={BiometricSettingsScreen}
+            options={{ title: 'Biometric Settings' }}
+          />
+          <Stack.Screen
+            name="Logout"
+            component={LogoutScreen}
+            options={{ 
+              title: 'Logout',
+              presentation: 'modal',
+            }}
           />
           <Stack.Screen
             name="JobDetail"
@@ -228,11 +284,13 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
@@ -241,7 +299,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
   },
   loadingContent: {
     alignItems: 'center',
@@ -250,23 +307,19 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.primary,
   },
   chatListContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: 16,
   },
   chatListTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
     marginBottom: 4,
   },
   chatListSubtitle: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginBottom: 24,
   },
   emptyChat: {
@@ -278,6 +331,5 @@ const styles = StyleSheet.create({
   emptyChatText: {
     marginTop: 16,
     fontSize: 16,
-    color: COLORS.textSecondary,
   },
 });

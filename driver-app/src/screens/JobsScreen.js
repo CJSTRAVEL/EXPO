@@ -52,36 +52,29 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
     return booking.vehicle_type_name || booking.vehicle_type || 'Standard';
   };
 
-  const getNextStatus = (currentStatus) => {
-    const flow = {
-      assigned: 'on_way',
-      on_way: 'arrived',
-      arrived: 'in_progress',
-      in_progress: 'completed',
-    };
-    return flow[currentStatus];
-  };
-
   const getStartButtonLabel = (currentStatus) => {
     const labels = {
       assigned: 'Start Ride',
-      on_way: 'Arrived',
-      arrived: 'Start Trip',
-      in_progress: 'Complete',
+      on_way: 'View Ride',
+      arrived: 'View Ride',
+      in_progress: 'View Ride',
     };
     return labels[currentStatus] || 'Start Ride';
   };
 
   const handleStartRide = () => {
-    const nextStatus = getNextStatus(booking.status);
-    if (nextStatus) {
-      onStatusUpdate(booking.id, nextStatus);
-    }
+    onViewDetail(booking);
   };
+
+  const isActiveRide = ['on_way', 'arrived', 'in_progress'].includes(booking.status);
 
   return (
     <TouchableOpacity 
-      style={[styles.bookingCard, { backgroundColor: theme.card }]}
+      style={[
+        styles.bookingCard, 
+        { backgroundColor: theme.card },
+        isActiveRide && { borderColor: theme.primary, borderWidth: 2 }
+      ]}
       onPress={() => onViewDetail(booking)}
       activeOpacity={0.7}
     >

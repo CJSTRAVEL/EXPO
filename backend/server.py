@@ -1844,6 +1844,236 @@ CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstra
         return False, str(e)
 
 
+# ========== DOCUMENT EXPIRY EMAIL REMINDERS ==========
+ADMIN_EMAIL = "admin@cjstravel.uk"
+
+async def send_expiry_reminder_email(
+    subject: str,
+    items: List[dict],
+    item_type: str  # "Driver" or "Vehicle"
+):
+    """Send document expiry reminder email to admin"""
+    if not smtp_configured:
+        logging.warning("SMTP not configured - cannot send expiry reminder")
+        return False, "SMTP not configured"
+    
+    if not items:
+        return True, "No expiring items"
+    
+    try:
+        # Build HTML content
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #1a3a5c; padding: 20px; text-align: center;">
+                <h1 style="color: #D4A853; margin: 0;">CJ's Executive Travel</h1>
+                <p style="color: white; margin: 5px 0 0 0;">Document Expiry Alert</p>
+            </div>
+            
+            <div style="padding: 20px; background-color: #f5f5f5;">
+                <h2 style="color: #1a3a5c; margin-top: 0;">{item_type} Documents Expiring Soon</h2>
+                <p style="color: #666;">The following documents require attention:</p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <tr style="background-color: #1a3a5c; color: white;">
+                        <th style="padding: 10px; text-align: left;">{item_type}</th>
+                        <th style="padding: 10px; text-align: left;">Document</th>
+                        <th style="padding: 10px; text-align: left;">Expiry Date</th>
+                        <th style="padding: 10px; text-align: left;">Days Left</th>
+                    </tr>
+        """
+        
+        for item in items:
+            days_left = item['days_left']
+            color = "#dc2626" if days_left <= 30 else "#f59e0b"
+            html_content += f"""
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 10px;">{item['name']}</td>
+                        <td style="padding: 10px;">{item['document']}</td>
+                        <td style="padding: 10px;">{item['expiry_date']}</td>
+                        <td style="padding: 10px; color: {color}; font-weight: bold;">{days_left} days</td>
+                    </tr>
+            """
+        
+        html_content += """
+                </table>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #fef3c7; border-radius: 8px;">
+                    <p style="margin: 0; color: #92400e;">
+                        <strong>Action Required:</strong> Please ensure these documents are renewed before expiry.
+                    </p>
+                </div>
+            </div>
+            
+            <div style="padding: 15px; text-align: center; color: #666; font-size: 12px;">
+                <p>CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY</p>
+                <p>This is an automated reminder from your dispatch system.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text version
+        text_content = f"{item_type} Documents Expiring Soon\n\n"
+        for item in items:
+            text_content += f"- {item['name']}: {item['document']} expires on {item['expiry_date']} ({item['days_left']} days left)\n"
+        
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"CJ's Executive Travel <{SMTP_FROM_EMAIL}>"
+        msg['To'] = ADMIN_EMAIL
+        
+        msg.attach(MIMEText(text_content, 'plain'))
+        msg.attach(MIMEText(html_content, 'html'))
+        
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, ADMIN_EMAIL, msg.as_string())
+        
+        logging.info(f"Expiry reminder email sent to {ADMIN_EMAIL}")
+        return True, "Email sent"
+        
+    except Exception as e:
+        logging.error(f"Expiry reminder email error: {str(e)}")
+        return False, str(e)
+
+
+@api_router.post("/admin/check-document-expiry")
+async def check_document_expiry(background_tasks: BackgroundTasks):
+    """Check for expiring driver and vehicle documents and send email reminders"""
+    today = datetime.now(timezone.utc).date()
+    
+    driver_docs_60 = []  # Expiring in 60 days
+    driver_docs_30 = []  # Expiring in 30 days
+    vehicle_docs_60 = []
+    vehicle_docs_30 = []
+    
+    # Check driver documents
+    drivers = await db.drivers.find({}).to_list(1000)
+    driver_doc_fields = {
+        'taxi_licence_expiry': 'Taxi Licence',
+        'dbs_expiry': 'DBS',
+        'school_badge_expiry': 'School Badge',
+        'driving_licence_expiry': 'Driving Licence',
+        'medical_due': 'Medical',
+        'cpc_expiry': 'CPC',
+        'tacho_card_expiry': 'Tacho Card'
+    }
+    
+    for driver in drivers:
+        for field, doc_name in driver_doc_fields.items():
+            expiry = driver.get(field)
+            if expiry:
+                try:
+                    expiry_date = datetime.fromisoformat(expiry.replace('Z', '+00:00')).date() if isinstance(expiry, str) else expiry
+                    days_left = (expiry_date - today).days
+                    
+                    if 0 < days_left <= 30:
+                        driver_docs_30.append({
+                            'name': driver.get('name', 'Unknown'),
+                            'document': doc_name,
+                            'expiry_date': expiry_date.strftime('%d/%m/%Y'),
+                            'days_left': days_left
+                        })
+                    elif 30 < days_left <= 60:
+                        driver_docs_60.append({
+                            'name': driver.get('name', 'Unknown'),
+                            'document': doc_name,
+                            'expiry_date': expiry_date.strftime('%d/%m/%Y'),
+                            'days_left': days_left
+                        })
+                except Exception as e:
+                    logging.warning(f"Error parsing date {expiry} for driver {driver.get('name')}: {e}")
+    
+    # Check vehicle documents
+    vehicles = await db.vehicles.find({}).to_list(1000)
+    vehicle_doc_fields = {
+        'mot_expiry': 'MOT',
+        'insurance_expiry': 'Insurance',
+        'tax_expiry': 'Road Tax'
+    }
+    
+    for vehicle in vehicles:
+        for field, doc_name in vehicle_doc_fields.items():
+            expiry = vehicle.get(field)
+            if expiry:
+                try:
+                    expiry_date = datetime.fromisoformat(expiry.replace('Z', '+00:00')).date() if isinstance(expiry, str) else expiry
+                    days_left = (expiry_date - today).days
+                    
+                    vehicle_name = f"{vehicle.get('make', '')} {vehicle.get('model', '')} ({vehicle.get('registration', 'N/A')})"
+                    
+                    if 0 < days_left <= 30:
+                        vehicle_docs_30.append({
+                            'name': vehicle_name.strip(),
+                            'document': doc_name,
+                            'expiry_date': expiry_date.strftime('%d/%m/%Y'),
+                            'days_left': days_left
+                        })
+                    elif 30 < days_left <= 60:
+                        vehicle_docs_60.append({
+                            'name': vehicle_name.strip(),
+                            'document': doc_name,
+                            'expiry_date': expiry_date.strftime('%d/%m/%Y'),
+                            'days_left': days_left
+                        })
+                except Exception as e:
+                    logging.warning(f"Error parsing date {expiry} for vehicle {vehicle.get('registration')}: {e}")
+    
+    # Send emails
+    emails_sent = []
+    
+    if driver_docs_30:
+        background_tasks.add_task(
+            send_expiry_reminder_email,
+            "URGENT: Driver Documents Expiring Within 30 Days",
+            driver_docs_30,
+            "Driver"
+        )
+        emails_sent.append(f"Driver 30-day alert ({len(driver_docs_30)} documents)")
+    
+    if driver_docs_60:
+        background_tasks.add_task(
+            send_expiry_reminder_email,
+            "Reminder: Driver Documents Expiring Within 60 Days",
+            driver_docs_60,
+            "Driver"
+        )
+        emails_sent.append(f"Driver 60-day alert ({len(driver_docs_60)} documents)")
+    
+    if vehicle_docs_30:
+        background_tasks.add_task(
+            send_expiry_reminder_email,
+            "URGENT: Vehicle Documents Expiring Within 30 Days",
+            vehicle_docs_30,
+            "Vehicle"
+        )
+        emails_sent.append(f"Vehicle 30-day alert ({len(vehicle_docs_30)} documents)")
+    
+    if vehicle_docs_60:
+        background_tasks.add_task(
+            send_expiry_reminder_email,
+            "Reminder: Vehicle Documents Expiring Within 60 Days",
+            vehicle_docs_60,
+            "Vehicle"
+        )
+        emails_sent.append(f"Vehicle 60-day alert ({len(vehicle_docs_60)} documents)")
+    
+    return {
+        "status": "success",
+        "emails_queued": emails_sent,
+        "summary": {
+            "driver_docs_30_days": len(driver_docs_30),
+            "driver_docs_60_days": len(driver_docs_60),
+            "vehicle_docs_30_days": len(vehicle_docs_30),
+            "vehicle_docs_60_days": len(vehicle_docs_60)
+        }
+    }
+
+
 # ========== PASSENGER AUTHENTICATION ENDPOINTS ==========
 @api_router.post("/passenger/register", response_model=PassengerResponse)
 async def register_passenger(data: PassengerRegister):

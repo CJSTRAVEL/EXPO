@@ -115,10 +115,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    color: '#fff',
+  },
   header: {
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingTop: Platform.OS === 'ios' ? 20 : 32,
+    paddingVertical: 24,
+    paddingBottom: 32,
   },
   avatar: {
     width: 80,

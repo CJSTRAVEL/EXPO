@@ -246,10 +246,12 @@ export default function JobsScreen({ navigation }) {
     fetchBookings();
   };
 
-  // Combine today and upcoming, sort by datetime
+  // Combine today and upcoming, filter out completed/cancelled, sort by datetime
   const getAllBookings = () => {
     const all = [...(bookings.today || []), ...(bookings.upcoming || [])];
-    return all.sort((a, b) => new Date(a.booking_datetime) - new Date(b.booking_datetime));
+    // Filter out completed and cancelled bookings
+    const activeBookings = all.filter(b => !['completed', 'cancelled'].includes(b.status));
+    return activeBookings.sort((a, b) => new Date(a.booking_datetime) - new Date(b.booking_datetime));
   };
 
   return (

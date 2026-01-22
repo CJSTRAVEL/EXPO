@@ -2721,8 +2721,12 @@ async def request_password_reset(data: PasswordResetRequest):
     
     # Send code via chosen method
     if data.method == "email":
-        # Send email with code
+        # Send email with code using SMTP
         try:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
             subject = "CJ's Executive Travel - Password Reset Code"
             html_content = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -2745,29 +2749,32 @@ async def request_password_reset(data: PasswordResetRequest):
             </div>
             """
             
-            mailgun_api_key = os.environ.get('MAILGUN_API_KEY')
-            mailgun_domain = os.environ.get('MAILGUN_DOMAIN')
+            smtp_server = os.environ.get('SMTP_SERVER')
+            smtp_port = int(os.environ.get('SMTP_PORT', 587))
+            smtp_username = os.environ.get('SMTP_USERNAME')
+            smtp_password = os.environ.get('SMTP_PASSWORD')
+            smtp_from = os.environ.get('SMTP_FROM_EMAIL', smtp_username)
             
-            if mailgun_api_key and mailgun_domain:
-                import requests as http_requests
-                response = http_requests.post(
-                    f"https://api.mailgun.net/v3/{mailgun_domain}/messages",
-                    auth=("api", mailgun_api_key),
-                    data={
-                        "from": f"CJ's Executive Travel <noreply@{mailgun_domain}>",
-                        "to": [identifier],
-                        "subject": subject,
-                        "html": html_content
-                    }
-                )
-                if response.status_code == 200:
-                    logging.info(f"Password reset email sent to {identifier}")
-                else:
-                    logging.error(f"Password reset email failed: {response.text}")
+            if smtp_server and smtp_username and smtp_password:
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = f"CJ's Executive Travel <{smtp_from}>"
+                msg['To'] = identifier
+                
+                html_part = MIMEText(html_content, 'html')
+                msg.attach(html_part)
+                
+                with smtplib.SMTP(smtp_server, smtp_port) as server:
+                    server.starttls()
+                    server.login(smtp_username, smtp_password)
+                    server.sendmail(smtp_from, identifier, msg.as_string())
+                
+                logging.info(f"Password reset email sent to {identifier}")
             else:
-                logging.warning(f"Mailgun not configured. Reset code for {identifier}: {reset_code}")
+                logging.warning(f"SMTP not configured. Reset code for {identifier}: {reset_code}")
         except Exception as e:
             logging.error(f"Password reset email error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
     else:
         # Send SMS with code
         if vonage_client:

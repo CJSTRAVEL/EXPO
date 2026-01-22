@@ -88,11 +88,6 @@ const RideMenu = ({ visible, onClose, booking, onCallPassenger, onTextPassenger,
     { icon: 'call-outline', label: 'Request Call From Office', onPress: () => { onRequestOfficeCall(); onClose(); } },
   ];
 
-  const redItems = [
-    { icon: 'pause-circle-outline', label: 'Pause Follow-on Jobs', onPress: () => { onClose(); } },
-    { icon: 'timer-outline', label: 'Go On Break After Job', onPress: () => { onClose(); } },
-  ];
-
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.menuOverlay}>
@@ -113,18 +108,6 @@ const RideMenu = ({ visible, onClose, booking, onCallPassenger, onTextPassenger,
                 <Ionicons name={item.icon} size={24} color={theme.text} />
                 <Text style={[styles.menuItemText, { color: theme.text }]}>{item.label}</Text>
                 <Ionicons name="arrow-forward" size={20} color={theme.textSecondary} />
-              </TouchableOpacity>
-            ))}
-            
-            {redItems.map((item, index) => (
-              <TouchableOpacity
-                key={`red-${index}`}
-                style={[styles.menuItem, styles.redMenuItem]}
-                onPress={item.onPress}
-              >
-                <Ionicons name={item.icon} size={24} color="#fff" />
-                <Text style={[styles.menuItemText, { color: '#fff' }]}>{item.label}</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" />
               </TouchableOpacity>
             ))}
           </View>

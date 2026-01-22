@@ -1464,7 +1464,7 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
 
 const VEHICLE_TYPES = ["Sedan", "SUV", "MPV", "Executive", "Estate"];
 
-const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded }) => {
+const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose, onDriverAdded }) => {
   const [selectedDriver, setSelectedDriver] = useState("");
   const [showAddDriver, setShowAddDriver] = useState(false);
   const [saving, setSaving] = useState(false);

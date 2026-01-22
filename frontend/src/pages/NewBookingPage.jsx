@@ -282,28 +282,58 @@ const NewBookingPage = () => {
     }
   };
 
-  // Select a passenger and show their history
-  const handleSelectPassenger = async (passenger) => {
+  // Select a passenger or client and show their history
+  const handleSelectPassenger = async (item) => {
     setShowPassengerPopup(false);
-    await fetchPassengerHistory(passenger);
     
-    // Parse name - could be full name or first_name/last_name
-    let firstName = passenger.first_name || '';
-    let lastName = passenger.last_name || '';
-    if (passenger.name && !firstName) {
-      const nameParts = passenger.name.split(' ');
-      firstName = nameParts[0] || '';
-      lastName = nameParts.slice(1).join(' ') || '';
+    if (item.type === 'client') {
+      // Handle client selection
+      const contactName = item.contact_name || item.name || '';
+      const nameParts = contactName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      setFormData(prev => ({
+        ...prev,
+        first_name: firstName || prev.first_name,
+        last_name: lastName || prev.last_name,
+        customer_phone: item.phone || item.contact_phone || prev.customer_phone,
+        customer_email: item.email || item.contact_email || prev.customer_email,
+        client_id: item.id || prev.client_id,
+      }));
+      
+      // Fetch client's booking history
+      try {
+        const response = await axios.get(`${API}/bookings`, {
+          params: { client_id: item.id, limit: 10 }
+        });
+        setSelectedPassengerBookings(response.data.slice(0, 5));
+      } catch (error) {
+        console.error("Error fetching client history:", error);
+        setSelectedPassengerBookings([]);
+      }
+    } else {
+      // Handle passenger selection
+      await fetchPassengerHistory(item);
+      
+      // Parse name - could be full name or first_name/last_name
+      let firstName = item.first_name || '';
+      let lastName = item.last_name || '';
+      if (item.name && !firstName) {
+        const nameParts = item.name.split(' ');
+        firstName = nameParts[0] || '';
+        lastName = nameParts.slice(1).join(' ') || '';
+      }
+      
+      // Auto-fill basic details (NOT date/time or flight data)
+      setFormData(prev => ({
+        ...prev,
+        first_name: firstName || prev.first_name,
+        last_name: lastName || prev.last_name,
+        customer_phone: item.phone || item.customer_phone || prev.customer_phone,
+        customer_email: item.email || item.customer_email || prev.customer_email,
+      }));
     }
-    
-    // Auto-fill basic details (NOT date/time or flight data)
-    setFormData(prev => ({
-      ...prev,
-      first_name: firstName || prev.first_name,
-      last_name: lastName || prev.last_name,
-      customer_phone: passenger.phone || passenger.customer_phone || prev.customer_phone,
-      customer_email: passenger.email || passenger.customer_email || prev.customer_email,
-    }));
   };
 
   // Apply previous booking details (excluding date/time and flight)

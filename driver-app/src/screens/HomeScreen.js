@@ -329,7 +329,8 @@ export default function HomeScreen({ navigation }) {
           updateLocation(latitude, longitude).catch(console.error);
         }
 
-        if (mapRef.current) {
+        // Only auto-animate if map is centered
+        if (isMapCentered && mapRef.current) {
           mapRef.current.animateToRegion({
             latitude,
             longitude,
@@ -339,6 +340,24 @@ export default function HomeScreen({ navigation }) {
         }
       }
     );
+  };
+
+  // Recenter map to driver's current location
+  const handleRecenterMap = () => {
+    if (location && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 500);
+      setIsMapCentered(true);
+    }
+  };
+
+  // Handle map region change to detect if user panned away
+  const handleRegionChange = () => {
+    setIsMapCentered(false);
   };
 
   const handleStartShift = async () => {

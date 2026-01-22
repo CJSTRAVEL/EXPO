@@ -87,6 +87,48 @@ const PassengerPortalAdmin = () => {
     }
   };
 
+  const handleBlockPassenger = async (passenger) => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/passengers/${passenger.id}/block`);
+      toast.success(`${passenger.name} has been blocked`);
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to block passenger");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUnblockPassenger = async (passenger) => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/passengers/${passenger.id}/unblock`);
+      toast.success(`${passenger.name} has been unblocked`);
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to unblock passenger");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePassenger = async () => {
+    if (!selectedPassenger) return;
+    setSaving(true);
+    try {
+      await axios.delete(`${API}/admin/passengers/${selectedPassenger.id}`);
+      toast.success(`${selectedPassenger.name} has been deleted`);
+      setShowDeleteModal(false);
+      setSelectedPassenger(null);
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to delete passenger");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Filter passengers based on search
   const filteredPassengers = passengers.filter(passenger => {
     if (!searchText) return true;

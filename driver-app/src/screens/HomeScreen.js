@@ -570,15 +570,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  carMarkerContainer: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
+  // Vehicle Marker Styles - Minivan style with pointer
+  vehicleMarkerContainer: {
     alignItems: 'center',
   },
-  carMarker: {
-    width: 40,
-    height: 40,
+  vehicleMarkerBackground: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  vehicleMarkerPointer: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    marginTop: -2,
   },
   // Vehicle Selection Modal Styles
   modalOverlay: {

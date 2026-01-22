@@ -44,7 +44,220 @@ const formatDateTime = (dateString) => {
   return {
     dateLabel,
     time: date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    fullDate: date.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }),
   };
+};
+
+// Job Details Modal Component
+const JobDetailsModal = ({ visible, booking, onClose, onStartRide, theme }) => {
+  if (!visible || !booking) return null;
+
+  const { dateLabel, time, fullDate } = formatDateTime(booking.booking_datetime);
+  const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
+  const vehicleType = booking.vehicle_type_name || booking.vehicle_type || booking.vehicleType || 'Not specified';
+  const isActiveRide = ['on_way', 'arrived', 'in_progress'].includes(booking.status);
+
+  const handleCall = () => {
+    if (booking.customer_phone) {
+      Linking.openURL(`tel:${booking.customer_phone}`);
+    } else {
+      Alert.alert('No Phone', 'No phone number available for this booking');
+    }
+  };
+
+  const handleNavigate = (address) => {
+    const encodedAddress = encodeURIComponent(address);
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`);
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.detailsModal, { backgroundColor: theme.background }]}>
+          {/* Header */}
+          <View style={[styles.detailsHeader, { borderBottomColor: theme.border }]}>
+            <TouchableOpacity onPress={onClose} style={styles.detailsCloseBtn}>
+              <Ionicons name="close" size={28} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={[styles.detailsTitle, { color: theme.text }]}>Job Details</Text>
+            <View style={{ width: 28 }} />
+          </View>
+
+          <ScrollView style={styles.detailsContent} showsVerticalScrollIndicator={false}>
+            {/* Date & Time */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={styles.detailsRow}>
+                <Ionicons name="calendar-outline" size={20} color={theme.primary} />
+                <View style={styles.detailsRowContent}>
+                  <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Date & Time</Text>
+                  <Text style={[styles.detailsValue, { color: theme.text }]}>{fullDate}</Text>
+                  <Text style={[styles.detailsValueLarge, { color: theme.text }]}>{time}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Customer Info */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={styles.detailsRow}>
+                <Ionicons name="person-outline" size={20} color={theme.primary} />
+                <View style={styles.detailsRowContent}>
+                  <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Passenger</Text>
+                  <Text style={[styles.detailsValue, { color: theme.text }]}>{customerName}</Text>
+                </View>
+                {booking.customer_phone && (
+                  <TouchableOpacity style={[styles.callButton, { backgroundColor: theme.success }]} onPress={handleCall}>
+                    <Ionicons name="call" size={18} color="#fff" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {booking.customer_phone && (
+                <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>{booking.customer_phone}</Text>
+              )}
+              {booking.customer_email && (
+                <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>{booking.customer_email}</Text>
+              )}
+            </View>
+
+            {/* Vehicle & Passengers */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={styles.detailsRow}>
+                <Ionicons name="car-outline" size={20} color={theme.primary} />
+                <View style={styles.detailsRowContent}>
+                  <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Vehicle Type</Text>
+                  <Text style={[styles.detailsValue, { color: theme.text }]}>{vehicleType}</Text>
+                </View>
+              </View>
+              <View style={styles.detailsInfoRow}>
+                <View style={styles.detailsInfoItem}>
+                  <Ionicons name="people" size={16} color={theme.textSecondary} />
+                  <Text style={[styles.detailsInfoText, { color: theme.text }]}>{booking.passenger_count || 1} passengers</Text>
+                </View>
+                <View style={styles.detailsInfoItem}>
+                  <Ionicons name="briefcase" size={16} color={theme.textSecondary} />
+                  <Text style={[styles.detailsInfoText, { color: theme.text }]}>{booking.luggage_count || 0} luggage</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Pickup Location */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={styles.detailsRow}>
+                <View style={[styles.locationDot, { backgroundColor: theme.success }]} />
+                <View style={styles.detailsRowContent}>
+                  <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Pickup</Text>
+                  <Text style={[styles.detailsAddress, { color: theme.text }]}>{booking.pickup_location}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={[styles.navButton, { backgroundColor: theme.primary }]} 
+                  onPress={() => handleNavigate(booking.pickup_location)}
+                >
+                  <Ionicons name="navigate" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Additional Stops */}
+            {booking.additional_stops?.length > 0 && (
+              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={[styles.detailsLabel, { color: theme.textSecondary, marginBottom: 8 }]}>
+                  Additional Stops ({booking.additional_stops.length})
+                </Text>
+                {booking.additional_stops.map((stop, index) => (
+                  <View key={index} style={styles.stopItem}>
+                    <View style={[styles.locationDot, { backgroundColor: theme.warning }]} />
+                    <Text style={[styles.stopAddress, { color: theme.text }]}>{stop}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Dropoff Location */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={styles.detailsRow}>
+                <View style={[styles.locationDot, { backgroundColor: theme.danger }]} />
+                <View style={styles.detailsRowContent}>
+                  <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Drop-off</Text>
+                  <Text style={[styles.detailsAddress, { color: theme.text }]}>{booking.dropoff_location}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={[styles.navButton, { backgroundColor: theme.primary }]} 
+                  onPress={() => handleNavigate(booking.dropoff_location)}
+                >
+                  <Ionicons name="navigate" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Fare */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={styles.detailsRow}>
+                <Ionicons name="cash-outline" size={20} color={theme.primary} />
+                <View style={styles.detailsRowContent}>
+                  <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Fare</Text>
+                  <Text style={[styles.fareValue, { color: theme.text }]}>£{(booking.fare || 0).toFixed(2)}</Text>
+                </View>
+              </View>
+              {booking.payment_method && (
+                <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>
+                  Payment: {booking.payment_method}
+                </Text>
+              )}
+            </View>
+
+            {/* Notes */}
+            {booking.notes && (
+              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <View style={styles.detailsRow}>
+                  <Ionicons name="document-text-outline" size={20} color={theme.primary} />
+                  <View style={styles.detailsRowContent}>
+                    <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Notes</Text>
+                    <Text style={[styles.detailsValue, { color: theme.text }]}>{booking.notes}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Flight Info */}
+            {booking.flight_number && (
+              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <View style={styles.detailsRow}>
+                  <Ionicons name="airplane-outline" size={20} color={theme.primary} />
+                  <View style={styles.detailsRowContent}>
+                    <Text style={[styles.detailsLabel, { color: theme.textSecondary }]}>Flight</Text>
+                    <Text style={[styles.detailsValue, { color: theme.text }]}>{booking.flight_number}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Start Ride Button */}
+          {!isActiveRide && (
+            <View style={styles.detailsFooter}>
+              <TouchableOpacity 
+                style={[styles.startRideFullBtn, { backgroundColor: theme.primary }]}
+                onPress={onStartRide}
+              >
+                <Ionicons name="car" size={22} color="#fff" />
+                <Text style={styles.startRideBtnText}>Start Ride</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {isActiveRide && (
+            <View style={styles.detailsFooter}>
+              <TouchableOpacity 
+                style={[styles.startRideFullBtn, { backgroundColor: theme.success }]}
+                onPress={onStartRide}
+              >
+                <Ionicons name="eye" size={22} color="#fff" />
+                <Text style={styles.startRideBtnText}>View Active Ride</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
 };
 
 const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {

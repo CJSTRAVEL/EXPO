@@ -110,6 +110,8 @@ export default function HomeScreen({ navigation }) {
     loadSelectedVehicle();
     // Check document expiry notifications on app load
     checkDocumentNotifications();
+    // Check for active bookings
+    checkActiveBookings();
     return () => {
       if (locationSubscription.current) {
         locationSubscription.current.remove();
@@ -119,6 +121,13 @@ export default function HomeScreen({ navigation }) {
       }
     };
   }, []);
+
+  // Check for active bookings when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      checkActiveBookings();
+    }, [])
+  );
 
   useEffect(() => {
     setIsShiftActive(user?.is_online || false);

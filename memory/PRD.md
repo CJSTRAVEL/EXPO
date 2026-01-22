@@ -16,6 +16,26 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 22, 2026 (Latest)
 
+#### Admin Passenger Portal Management
+1. **Passengers Page Reverted to Original Design**
+   - Shows passengers aggregated from booking data (by phone number)
+   - Displays booking count and total fare for each passenger
+   - Passengers with portal accounts show "Portal" badge
+   - Blocked passengers show "Blocked" badge
+
+2. **Portal Account Actions in Detail Modal**
+   - When clicking on a passenger with portal account, modal shows:
+     - Stats: Total Bookings, Total Spent, Total Miles
+     - "Portal Account Actions" section with Block/Delete buttons
+     - Booking History
+   - Non-portal passengers show "No portal account registered" message
+
+3. **Block/Unblock/Delete Functionality**
+   - Block: Prevents passenger from logging into portal (returns 403)
+   - Unblock: Restores portal access
+   - Delete: Permanently removes portal account
+   - All actions tested and verified via testing agent
+
 #### Server.py Refactoring (Phase 2 Complete)
 Created 10 modular routers in `/app/backend/routes/`:
 - `shared.py` - Base infrastructure, dependencies (~200 lines)

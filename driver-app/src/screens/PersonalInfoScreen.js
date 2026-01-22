@@ -6,6 +6,7 @@ import {
   ScrollView,
   SafeAreaView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -29,9 +30,18 @@ export default function PersonalInfoScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header */}
+      <View style={[styles.headerBar, { backgroundColor: theme.headerBg }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Personal Info</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Avatar Header */}
-        <View style={[styles.header, { backgroundColor: theme.primary }]}>
+        <View style={[styles.header, { backgroundColor: theme.headerBg }]}>
           <View style={[styles.avatar, { backgroundColor: theme.secondary }]}>
             <Text style={[styles.avatarText, { color: theme.primary }]}>
               {user?.name?.charAt(0)?.toUpperCase() || 'D'}

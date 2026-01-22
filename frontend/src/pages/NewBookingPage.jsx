@@ -280,8 +280,8 @@ const NewBookingPage = () => {
     }));
   };
 
-  // Use previous booking details (excluding date/time and flight)
-  const usePreviousBookingDetails = (booking) => {
+  // Apply previous booking details (excluding date/time and flight)
+  const applyPreviousBookingDetails = (booking) => {
     setFormData(prev => ({
       ...prev,
       // Customer details

@@ -256,9 +256,9 @@ const NewBookingPage = () => {
     const allMatches = [...passengerMatches, ...clientMatches].slice(0, 8);
     
     setMatchedPassengers(allMatches);
-    setShowPassengerPopup(matches.length > 0);
+    setShowPassengerPopup(allMatches.length > 0);
     setPassengerSearch({ query, field });
-  }, [passengers]);
+  }, [passengers, clients]);
 
   // Fetch passenger's booking history
   const fetchPassengerHistory = async (passenger) => {

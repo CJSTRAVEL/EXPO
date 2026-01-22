@@ -4167,7 +4167,7 @@ class DriverPasswordChange(BaseModel):
 async def change_driver_password(password_data: DriverPasswordChange, driver: dict = Depends(get_current_driver)):
     """Change driver's password"""
     # Verify current password
-    if not verify_password(password_data.current_password, driver.get("password_hash", "")):
+    if driver.get("password_hash", "") != hash_password(password_data.current_password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     
     # Hash new password

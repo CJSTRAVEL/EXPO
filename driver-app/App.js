@@ -298,8 +298,12 @@ const styles = StyleSheet.create({
   loadingContent: {
     alignItems: 'center',
   },
+  loadingLogo: {
+    width: 150,
+    height: 150,
+  },
   loadingText: {
-    marginTop: 12,
+    marginTop: 16,
     fontSize: 18,
     fontWeight: '600',
   },

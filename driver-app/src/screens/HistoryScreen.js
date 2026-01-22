@@ -193,7 +193,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.text,
   },
   routeContainer: {
     marginBottom: 12,
@@ -212,7 +211,6 @@ const styles = StyleSheet.create({
   routeAddress: {
     flex: 1,
     fontSize: 13,
-    color: COLORS.text,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -220,7 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: '#e2e8f0',
   },
   customerInfo: {
     flexDirection: 'row',
@@ -229,12 +227,10 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontSize: 13,
-    color: COLORS.textSecondary,
   },
   fare: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.success,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -243,7 +239,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     marginTop: 12,
   },
   loadingText: {

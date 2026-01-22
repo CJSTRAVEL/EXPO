@@ -3092,6 +3092,15 @@ async def update_driver_app_status(status_update: DriverAppStatus, driver: dict 
             update_data["status"] = DriverStatus.AVAILABLE
         else:
             update_data["status"] = DriverStatus.OFFLINE
+            # When going offline, release the vehicle
+            update_data["selected_vehicle_id"] = None
+            # Also update the vehicle to remove the driver assignment
+            current_vehicle = driver.get("selected_vehicle_id")
+            if current_vehicle:
+                await db.vehicles.update_one(
+                    {"id": current_vehicle},
+                    {"$set": {"current_driver_id": None}}
+                )
     
     if status_update.on_break is not None:
         update_data["on_break"] = status_update.on_break
@@ -3108,6 +3117,114 @@ async def update_driver_app_status(status_update: DriverAppStatus, driver: dict 
         await db.drivers.update_one({"id": driver["id"]}, {"$set": update_data})
     
     return {"message": "Status updated", "updates": update_data}
+
+class VehicleSelection(BaseModel):
+    vehicle_id: str
+
+@api_router.post("/driver/select-vehicle")
+async def select_vehicle(selection: VehicleSelection, driver: dict = Depends(get_current_driver)):
+    """Select a vehicle for the shift - enforces vehicle exclusivity"""
+    vehicle_id = selection.vehicle_id
+    
+    # Check if vehicle exists
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Check if vehicle is already in use by another online driver
+    current_driver_id = vehicle.get("current_driver_id")
+    if current_driver_id and current_driver_id != driver["id"]:
+        # Check if that driver is actually online
+        other_driver = await db.drivers.find_one({"id": current_driver_id})
+        if other_driver and other_driver.get("is_online", False):
+            raise HTTPException(
+                status_code=409, 
+                detail=f"Vehicle is currently in use by {other_driver.get('name', 'another driver')}"
+            )
+    
+    # Release any previously selected vehicle by this driver
+    previous_vehicle_id = driver.get("selected_vehicle_id")
+    if previous_vehicle_id and previous_vehicle_id != vehicle_id:
+        await db.vehicles.update_one(
+            {"id": previous_vehicle_id},
+            {"$set": {"current_driver_id": None}}
+        )
+    
+    # Assign vehicle to driver
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"current_driver_id": driver["id"]}}
+    )
+    
+    # Update driver's selected vehicle
+    await db.drivers.update_one(
+        {"id": driver["id"]},
+        {"$set": {"selected_vehicle_id": vehicle_id}}
+    )
+    
+    return {
+        "message": "Vehicle selected successfully",
+        "vehicle": {
+            "id": vehicle["id"],
+            "registration": vehicle.get("registration"),
+            "vehicle_type_name": vehicle.get("vehicle_type_name")
+        }
+    }
+
+@api_router.post("/driver/release-vehicle")
+async def release_vehicle(driver: dict = Depends(get_current_driver)):
+    """Release the currently selected vehicle"""
+    vehicle_id = driver.get("selected_vehicle_id")
+    
+    if vehicle_id:
+        # Clear vehicle assignment
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {"current_driver_id": None}}
+        )
+    
+    # Clear driver's vehicle selection
+    await db.drivers.update_one(
+        {"id": driver["id"]},
+        {"$set": {"selected_vehicle_id": None}}
+    )
+    
+    return {"message": "Vehicle released successfully"}
+
+@api_router.get("/driver/available-vehicles")
+async def get_available_vehicles(driver: dict = Depends(get_current_driver)):
+    """Get list of vehicles with availability status"""
+    vehicles = await db.vehicles.find({"status": "active"}).to_list(100)
+    
+    result = []
+    for v in vehicles:
+        current_driver_id = v.get("current_driver_id")
+        is_available = True
+        in_use_by = None
+        
+        if current_driver_id:
+            if current_driver_id == driver["id"]:
+                # This driver has the vehicle
+                in_use_by = "you"
+            else:
+                # Check if other driver is online
+                other_driver = await db.drivers.find_one({"id": current_driver_id})
+                if other_driver and other_driver.get("is_online", False):
+                    is_available = False
+                    in_use_by = other_driver.get("name", "Another driver")
+        
+        result.append({
+            "id": v["id"],
+            "registration": v.get("registration"),
+            "vehicle_type_name": v.get("vehicle_type_name"),
+            "make": v.get("make"),
+            "model": v.get("model"),
+            "color": v.get("color"),
+            "is_available": is_available,
+            "in_use_by": in_use_by
+        })
+    
+    return result
 
 @api_router.put("/driver/location")
 async def update_driver_location(location: DriverLocationUpdate, driver: dict = Depends(get_current_driver)):

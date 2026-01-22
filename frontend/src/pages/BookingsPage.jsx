@@ -1236,9 +1236,32 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No driver</SelectItem>
-                      {drivers.filter(d => d.status === 'available' || d.id === formData.driver_id).map((driver) => (
+                      {drivers.filter(d => {
+                        // Always include currently assigned driver
+                        if (d.id === formData.driver_id) return true;
+                        // Include all active drivers (not inactive)
+                        if (d.status === 'inactive') return false;
+                        // Filter by vehicle type if specified
+                        if (formData.vehicle_type) {
+                          const vType = formData.vehicle_type.toLowerCase();
+                          const driverTypes = d.driver_types || [];
+                          if (vType.includes('taxi')) {
+                            return driverTypes.includes('taxi');
+                          }
+                          if (vType.includes('minibus') || vType.includes('bus')) {
+                            return driverTypes.includes('psv');
+                          }
+                          // Check capacity from vehicle types
+                          const vehicleTypeDetails = vehicleTypes?.find(vt => vt.name === formData.vehicle_type);
+                          if (vehicleTypeDetails && vehicleTypeDetails.capacity > 4) {
+                            return driverTypes.includes('psv');
+                          }
+                        }
+                        return true;
+                      }).map((driver) => (
                         <SelectItem key={driver.id} value={driver.id}>
-                          {driver.name} ({driver.vehicle_type})
+                          {driver.name} ({driver.vehicle_type || 'N/A'})
+                          {driver.driver_types?.length > 0 && ` - ${driver.driver_types.map(t => t.toUpperCase()).join('/')}`}
                         </SelectItem>
                       ))}
                     </SelectContent>

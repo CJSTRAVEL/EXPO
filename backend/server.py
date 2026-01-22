@@ -3152,6 +3152,9 @@ async def get_driver_stats(driver: dict = Depends(get_current_driver)):
     week_start = now - timedelta(days=now.weekday())
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
     
+    # 24 hour period for shift metrics
+    day_start = now - timedelta(hours=24)
+    
     # Get weekly bookings
     weekly_bookings = await db.bookings.find({
         "driver_id": driver["id"],
@@ -3159,9 +3162,20 @@ async def get_driver_stats(driver: dict = Depends(get_current_driver)):
         "booking_datetime": {"$gte": week_start.isoformat()}
     }).to_list(100)
     
+    # Get 24hr bookings for shift metrics
+    daily_bookings = await db.bookings.find({
+        "driver_id": driver["id"],
+        "status": "completed",
+        "booking_datetime": {"$gte": day_start.isoformat()}
+    }).to_list(100)
+    
     # Calculate stats
     total_bookings = len(weekly_bookings)
     total_income = sum(b.get("fare", 0) for b in weekly_bookings)
+    
+    # 24hr stats
+    daily_total_bookings = len(daily_bookings)
+    daily_income = sum(b.get("fare", 0) for b in daily_bookings)
     
     # Bookings per day of week
     daily_counts = [0] * 7
@@ -3170,6 +3184,31 @@ async def get_driver_stats(driver: dict = Depends(get_current_driver)):
         day_index = dt.weekday()
         daily_counts[day_index] += 1
     
+    # Document expiry information
+    documents = []
+    doc_fields = [
+        ("taxi_licence_expiry", "Taxi Licence"),
+        ("dbs_expiry", "DBS Certificate"),
+        ("school_badge_expiry", "School Badge"),
+        ("driving_licence_expiry", "Driving Licence"),
+        ("cpc_expiry", "CPC Certificate"),
+        ("tacho_card_expiry", "Tacho Card"),
+    ]
+    
+    for field, name in doc_fields:
+        expiry = driver.get(field)
+        if expiry:
+            try:
+                expiry_date = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
+                days_until = (expiry_date - now).days
+                documents.append({
+                    "name": name,
+                    "expiry_date": expiry,
+                    "days_until_expiry": days_until
+                })
+            except:
+                pass
+    
     return {
         "total_bookings": total_bookings,
         "total_income": total_income,
@@ -3177,16 +3216,17 @@ async def get_driver_stats(driver: dict = Depends(get_current_driver)):
         "cash": "-",
         "card": "-",
         "account": "-",
-        "total_shift_time": "01h 9m",
-        "active_shift_time": "-",
-        "on_job_time": "01h 9m",
-        "on_break_time": "-",
-        "offers_total": "0",
-        "offers_read": "0",
-        "offers_accepted": str(total_bookings),
-        "offers_no_action": "0",
-        "offers_rejected": "0",
-        "missed_earnings": 0
+        # 24hr shift metrics
+        "shift_24hr": {
+            "total_bookings": daily_total_bookings,
+            "total_income": daily_income,
+            "total_shift_time": "-",
+            "active_shift_time": "-",
+            "on_job_time": "-",
+            "on_break_time": "-"
+        },
+        # Document expiry info
+        "documents": documents
     }
 
 class AdminChatMessage(BaseModel):

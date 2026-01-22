@@ -2795,16 +2795,10 @@ async def assign_driver_to_booking(booking_id: str, driver_id: str):
     
     # Send push notification to driver if they have a push token
     if driver.get("push_token"):
-        # Format booking time
-        booking_dt = booking.get('booking_datetime')
-        if isinstance(booking_dt, str):
-            booking_dt = datetime.fromisoformat(booking_dt.replace("Z", "+00:00"))
-        time_str = booking_dt.strftime("%d %b at %H:%M") if booking_dt else "TBC"
-        
         await send_driver_push_notification(
             driver["push_token"],
-            "🚗 New Booking Assigned!",
-            f"📍 {booking.get('pickup_location', 'N/A')[:40]}\n🕐 {time_str}",
+            "🚗 New Booking!",
+            "You have been sent a new booking",
             {"type": "new_booking", "booking_id": booking_id}
         )
     

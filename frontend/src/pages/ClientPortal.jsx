@@ -594,7 +594,7 @@ const ClientPortal = () => {
                             {getStatusBadge(booking.status)}
                           </div>
                           <div className="text-sm text-gray-500 mt-1">
-                            {format(new Date(booking.booking_datetime), "dd MMM yyyy 'at' HH:mm")}
+                            {safeFormatDate(booking.booking_datetime, "dd MMM yyyy 'at' HH:mm")}
                           </div>
                         </div>
                         {booking.fare && (

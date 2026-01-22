@@ -160,7 +160,6 @@ const ActiveRideScreen = ({
     try {
       await updateBookingStatus(booking.id, 'arrived');
       setStage('arrived');
-      Alert.alert('Arrived', 'Arrival notification sent to passenger');
     } catch (error) {
       Alert.alert('Error', 'Failed to update status');
     } finally {

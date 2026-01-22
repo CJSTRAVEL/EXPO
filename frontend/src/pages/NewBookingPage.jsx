@@ -216,7 +216,7 @@ const NewBookingPage = () => {
     return () => clearTimeout(debounce);
   }, [formData.pickup_location, formData.dropoff_location]);
 
-  // Passenger search - find matching passengers when typing name or phone
+  // Passenger and Client search - find matching when typing name or phone
   const searchPassengers = useCallback((query, field) => {
     if (!query || query.length < 2) {
       setMatchedPassengers([]);
@@ -225,9 +225,10 @@ const NewBookingPage = () => {
     }
     
     const queryLower = query.toLowerCase().trim();
-    const matches = passengers.filter(p => {
+    
+    // Search passengers
+    const passengerMatches = passengers.filter(p => {
       if (field === 'name') {
-        // Handle both full name (from passengers) and first_name/last_name
         const fullName = (p.name || `${p.first_name || ''} ${p.last_name || ''}`).toLowerCase();
         return fullName.includes(queryLower);
       } else if (field === 'phone') {
@@ -236,9 +237,25 @@ const NewBookingPage = () => {
         return phone.includes(queryPhone);
       }
       return false;
-    }).slice(0, 5);
+    }).map(p => ({ ...p, type: 'passenger' })).slice(0, 5);
     
-    setMatchedPassengers(matches);
+    // Search clients
+    const clientMatches = clients.filter(c => {
+      if (field === 'name') {
+        const name = (c.name || c.contact_name || '').toLowerCase();
+        return name.includes(queryLower);
+      } else if (field === 'phone') {
+        const phone = (c.phone || c.contact_phone || '').replace(/\s+/g, '');
+        const queryPhone = query.replace(/\s+/g, '');
+        return phone.includes(queryPhone);
+      }
+      return false;
+    }).map(c => ({ ...c, type: 'client' })).slice(0, 5);
+    
+    // Combine results
+    const allMatches = [...passengerMatches, ...clientMatches].slice(0, 8);
+    
+    setMatchedPassengers(allMatches);
     setShowPassengerPopup(matches.length > 0);
     setPassengerSearch({ query, field });
   }, [passengers]);

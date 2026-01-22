@@ -1421,10 +1421,10 @@ const NewBookingPage = () => {
                   <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white" data-testid="booking-driver-select">
                     <SelectValue placeholder="Select driver" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
-                    <SelectItem value="none">Unassigned</SelectItem>
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d] text-white">
+                    <SelectItem value="none" className="text-white focus:bg-[#3d3d3d] focus:text-white">Unassigned</SelectItem>
                     {drivers.filter(d => d.status === "available").map((driver) => (
-                      <SelectItem key={driver.id} value={driver.id}>
+                      <SelectItem key={driver.id} value={driver.id} className="text-white focus:bg-[#3d3d3d] focus:text-white">
                         {driver.name} - {driver.vehicle_type}
                       </SelectItem>
                     ))}

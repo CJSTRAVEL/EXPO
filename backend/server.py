@@ -460,7 +460,7 @@ class PassengerRegister(BaseModel):
     password: str
 
 class PassengerLogin(BaseModel):
-    phone: str
+    identifier: str  # Can be phone or email
     password: str
 
 class Passenger(BaseModel):

@@ -2210,18 +2210,27 @@ async def register_passenger(data: PassengerRegister):
 
 @api_router.post("/passenger/login", response_model=PassengerResponse)
 async def login_passenger(data: PassengerLogin):
-    """Login a passenger"""
-    # Normalize phone number
-    phone = data.phone.strip().replace(" ", "")
-    if phone.startswith("0"):
-        phone = "+44" + phone[1:]
-    elif not phone.startswith("+"):
-        phone = "+44" + phone
+    """Login a passenger using phone or email"""
+    identifier = data.identifier.strip()
+    passenger = None
     
-    # Find passenger
-    passenger = await db.passengers.find_one({"phone": phone}, {"_id": 0})
-    if not passenger:
-        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+    # Check if identifier is an email (contains @)
+    if '@' in identifier:
+        # Login by email
+        passenger = await db.passengers.find_one({"email": identifier.lower()}, {"_id": 0})
+        if not passenger:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+    else:
+        # Login by phone - normalize phone number
+        phone = identifier.replace(" ", "")
+        if phone.startswith("0"):
+            phone = "+44" + phone[1:]
+        elif not phone.startswith("+"):
+            phone = "+44" + phone
+        
+        passenger = await db.passengers.find_one({"phone": phone}, {"_id": 0})
+        if not passenger:
+            raise HTTPException(status_code=401, detail="Invalid phone number or password")
     
     # Check if blocked
     if passenger.get('is_blocked'):
@@ -2229,14 +2238,14 @@ async def login_passenger(data: PassengerLogin):
     
     # Verify password
     if passenger['password_hash'] != hash_password(data.password):
-        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_token(passenger['id'], phone)
+    token = create_token(passenger['id'], passenger['phone'])
     
     return PassengerResponse(
         id=passenger['id'],
         name=passenger['name'],
-        phone=phone,
+        phone=passenger['phone'],
         email=passenger.get('email'),
         token=token
     )

@@ -479,8 +479,8 @@ export default function JobsScreen({ navigation }) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Upcoming</Text>
+      <View style={[styles.headerBar, { backgroundColor: theme.headerBg }]}>
+        <Text style={styles.headerTitle}>Bookings</Text>
       </View>
 
       {/* Bookings List */}

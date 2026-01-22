@@ -2809,6 +2809,15 @@ const BookingsPage = () => {
                                 </div>
                               </div>
                             </div>
+                            {/* Vehicle Type Footer Bar for Return */}
+                            <div className={`px-4 py-2 rounded-b-lg ${getVehicleTypeColor(linkedReturn.vehicle_type)}`}>
+                              <div className="flex items-center justify-center gap-2">
+                                <Car className="w-4 h-4" />
+                                <span className="text-sm font-semibold">
+                                  {linkedReturn.vehicle_type ? getVehicleTypeName(linkedReturn.vehicle_type) : 'Vehicle Not Specified'}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

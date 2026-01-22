@@ -508,12 +508,12 @@ const ClientPortal = () => {
                             <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5" />
-                                {invoice.created_at ? format(new Date(invoice.created_at), "dd MMM yyyy") : 'N/A'}
+                                {safeFormatDate(invoice.created_at, "dd MMM yyyy", 'N/A')}
                               </span>
                               {invoice.due_date && (
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5" />
-                                  Due: {format(new Date(invoice.due_date), "dd MMM yyyy")}
+                                  Due: {safeFormatDate(invoice.due_date, "dd MMM yyyy")}
                                 </span>
                               )}
                               <span>{invoice.journey_count || 0} journeys</span>

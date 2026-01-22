@@ -5,6 +5,7 @@ const ThemeContext = createContext();
 
 export const LIGHT_THEME = {
   primary: '#1a3a5c',
+  primaryDark: '#152d47',
   secondary: '#d4af37',
   success: '#22c55e',
   warning: '#f59e0b',
@@ -28,6 +29,7 @@ export const LIGHT_THEME = {
   textSecondary: '#64748b',
   border: '#e2e8f0',
   inputBg: '#f1f5f9',
+  headerBg: '#1a3a5c',
   isDark: false,
 };
 

@@ -15,6 +15,7 @@ import JobsScreen from './src/screens/JobsScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ChatScreen from './src/screens/ChatScreen';
+import AdminChatScreen from './src/screens/AdminChatScreen';
 import NavigationScreen from './src/screens/NavigationScreen';
 import JobDetailScreen from './src/screens/JobDetailScreen';
 import EarningsScreen from './src/screens/EarningsScreen';

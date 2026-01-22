@@ -6,6 +6,7 @@ Build a private hire booking application for CJ's Executive Travel with features
 ## Core Requirements
 - Dispatch system for booking management
 - Customer-facing passenger portal
+- Client portal for business customers (with invoices)
 - Driver mobile app
 - Fleet management
 - Admin authentication
@@ -13,32 +14,47 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ## What's Been Implemented
 
-### Session: January 21, 2026 (Latest)
+### Session: January 22, 2026 (Latest)
+
+#### Client Portal with Invoices Feature
+1. **Shared Customer Login Page** (`/customer-login`)
+   - Unified login/register page for both passengers and business clients
+   - Toggle between "Passenger" (gold theme) and "Business Client" (blue theme)
+   - Register form shows company name field for business clients
+   - Client registration creates pending request for admin approval
+
+2. **Client Portal** (`/client-portal`)
+   - Four tabs: Confirmed Bookings, Pending Requests, Invoices, History
+   - Invoice stats dashboard (Total, Paid, Unpaid, Outstanding amounts)
+   - New Booking request dialog with all fields
+   - Invoice list with view details and download PDF buttons
+   - Dark theme consistent with dispatch system
+
+3. **Backend Endpoints**
+   - `POST /api/client-portal/register` - Register new client (pending approval)
+   - `POST /api/client-portal/login` - Login with phone/password
+   - `GET /api/client-portal/bookings` - Get client's bookings
+   - `GET /api/client-portal/booking-requests` - Get pending requests
+   - `POST /api/client-portal/booking-requests` - Submit new booking request
+   - `GET /api/client-portal/invoices` - Get client's invoices
+   - `GET /api/client-portal/invoices/{id}/download` - Download invoice PDF
+
+### Session: January 21, 2026
 
 #### Booking History & Audit Log Feature
 1. **History Tab in Booking View**
    - Added "Details" and "History" tabs to the Booking Details modal
    - History tab displays timeline of all booking changes with timestamps
    - Shows who made each change (user name + type badge)
-   - Displays action icons for different event types (created, updated, driver assigned/unassigned, status changed)
-   - Shows field-level changes with old/new values for updates
-   - Timeline-style UI with connection line and event dots
+   - Displays action icons for different event types
 
 2. **Created By Info**
    - Shows "Created by [User Name]" in the Details tab
-   - Displays creation timestamp alongside creator info
    - Backend stores `created_by_id` and `created_by_name` for audit trail
 
 3. **Flight Lookup in Edit Form**
    - Added Flight Information section to the Edit Booking modal
-   - "Lookup Flight" button opens the same popup modal as New Booking page
    - Auto-populates pickup location and booking time from flight data
-   - Shows current flight info if already saved
-   - Purple-themed styling to match existing UI
-
-4. **Backend History Logging**
-   - All booking endpoints (create, update, assign, unassign, status change) now log to history
-   - History entries include: timestamp, action, user_id, user_name, user_type, details, and changes object
 
 ### Previous Session Features
 1. **New Booking Page Enhancements**
@@ -50,30 +66,25 @@ Build a private hire booking application for CJ's Executive Travel with features
 2. **Contract Work Page Parity**
    - Driver assignment/unassignment
    - Status change functionality
-   - Clickable driver names for quick reassignment
-
-3. **UI Updates**
-   - New company logo across all pages
-   - Vehicle type badges with color-coding on booking cards
-   - Journey duration displayed instead of price
 
 ## Architecture
 ```
 /app/
 ├── backend/
-│   └── server.py         # FastAPI backend (~4300 lines - needs refactoring)
+│   └── server.py         # FastAPI backend (~5000 lines - needs refactoring)
 ├── driver-app/           # React Native/Expo mobile app
 └── frontend/
     ├── src/
     │   ├── components/
     │   │   ├── AddressAutocomplete.jsx
-    │   │   └── ui/                      # Shadcn components (incl. tabs)
+    │   │   └── ui/                      # Shadcn components
     │   ├── context/
     │   │   └── AuthContext.jsx
     │   ├── pages/
-    │   │   ├── BookingsPage.jsx         # Updated: History tab, flight lookup in edit form
-    │   │   ├── NewBookingPage.jsx       # Updated: Flight modal, dark theme
-    │   │   ├── ContractWorkPage.jsx     # Updated: Driver assignment, status change
+    │   │   ├── BookingsPage.jsx         # History tab, flight lookup
+    │   │   ├── NewBookingPage.jsx       # Flight modal, dark theme
+    │   │   ├── CustomerLogin.jsx        # NEW: Shared login/register
+    │   │   ├── ClientPortal.jsx         # NEW: Client portal with invoices
     │   │   └── ...
     │   └── App.js
     └── ...

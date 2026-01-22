@@ -227,7 +227,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: COLORS.info + '10',
     margin: 16,
     marginTop: 0,
     padding: 16,
@@ -236,7 +235,6 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: COLORS.info,
     lineHeight: 18,
   },
 });

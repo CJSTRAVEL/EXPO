@@ -493,16 +493,16 @@ const CustomerLogin = () => {
                       </div>
                     </div>
 
-                    {/* Email */}
+                    {/* Mobile Number */}
                     <div className="space-y-2">
-                      <Label className="text-gray-200">Email *</Label>
+                      <Label className="text-gray-200">Mobile Number *</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                         <Input
-                          type="email"
-                          placeholder="john@company.com"
-                          value={corporateData.email}
-                          onChange={(e) => setCorporateData({ ...corporateData, email: e.target.value })}
+                          type="tel"
+                          placeholder="07700 900000"
+                          value={corporateData.mobile}
+                          onChange={(e) => setCorporateData({ ...corporateData, mobile: e.target.value })}
                           className="pl-10 bg-[#2d2d2d] border-blue-500/30 text-white"
                           required
                         />
@@ -592,19 +592,19 @@ const CustomerLogin = () => {
                   </>
                 )}
 
-                {/* Phone (always shown) */}
+                {/* Email (always shown - used for login) */}
                 <div className="space-y-2">
-                  <Label className="text-gray-200">Mobile Number *</Label>
+                  <Label className="text-gray-200">Email *</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                     <Input
-                      type="tel"
-                      placeholder="07700 900000"
-                      value={corporateData.mobile}
-                      onChange={(e) => setCorporateData({ ...corporateData, mobile: e.target.value })}
+                      type="email"
+                      placeholder="john@company.com"
+                      value={corporateData.email}
+                      onChange={(e) => setCorporateData({ ...corporateData, email: e.target.value })}
                       className="pl-10 bg-[#2d2d2d] border-blue-500/30 text-white"
                       required
-                      data-testid="corporate-phone-input"
+                      data-testid="corporate-email-input"
                     />
                   </div>
                 </div>

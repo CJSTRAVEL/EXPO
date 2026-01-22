@@ -2223,6 +2223,10 @@ async def login_passenger(data: PassengerLogin):
     if not passenger:
         raise HTTPException(status_code=401, detail="Invalid phone number or password")
     
+    # Check if blocked
+    if passenger.get('is_blocked'):
+        raise HTTPException(status_code=403, detail="Your account has been blocked. Please contact support.")
+    
     # Verify password
     if passenger['password_hash'] != hash_password(data.password):
         raise HTTPException(status_code=401, detail="Invalid phone number or password")

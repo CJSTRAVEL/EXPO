@@ -161,6 +161,20 @@ export default function HomeScreen({ navigation }) {
     };
   }, [isShiftActive, shiftStartTime]);
 
+  // Check for active bookings (on_way, arrived, in_progress)
+  const checkActiveBookings = async () => {
+    try {
+      const data = await getBookings();
+      const allBookings = [...(data.today || []), ...(data.upcoming || [])];
+      const active = allBookings.find(b => 
+        ['on_way', 'arrived', 'in_progress'].includes(b.status)
+      );
+      setActiveBooking(active || null);
+    } catch (error) {
+      console.log('Error checking active bookings:', error);
+    }
+  };
+
   const loadShiftState = async () => {
     try {
       const savedStartTime = await SecureStore.getItemAsync('shift_start_time');

@@ -196,10 +196,28 @@ const PassengerPortal = () => {
       return;
     }
 
+    // Set initial user from localStorage
     setUser(JSON.parse(userInfo));
+    
+    // Fetch fresh user data from backend
+    fetchUserProfile(token);
     fetchBookings(token);
     fetchVehicleTypes();
   }, [navigate]);
+
+  const fetchUserProfile = async (token) => {
+    try {
+      const response = await axios.get(`${API}/passenger/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const userData = response.data;
+      setUser(userData);
+      // Update localStorage with fresh data
+      localStorage.setItem("passengerInfo", JSON.stringify(userData));
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+    }
+  };
 
   const fetchVehicleTypes = async () => {
     try {

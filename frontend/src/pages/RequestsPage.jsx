@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { Inbox, Plane, Clock, MapPin, User, Phone, CheckCircle, XCircle, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// Safe date formatting helper
+const safeFormatDate = (dateValue, formatStr, fallback = '-') => {
+  if (!dateValue) return fallback;
+  try {
+    const date = typeof dateValue === 'string' ? parseISO(dateValue) : new Date(dateValue);
+    if (!isValid(date)) return fallback;
+    return format(date, formatStr);
+  } catch {
+    return fallback;
+  }
+};
 
 const RequestsPage = () => {
   const [requests, setRequests] = useState([]);

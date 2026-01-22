@@ -363,6 +363,88 @@ export default function HomeScreen({ navigation }) {
           <Text style={[styles.statusText, { color: theme.success }]}>Online</Text>
         </View>
       )}
+
+      {/* Vehicle Selection Modal */}
+      <Modal
+        visible={showVehicleModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowVehicleModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+            {/* Modal Header */}
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Select Vehicle</Text>
+              <TouchableOpacity 
+                style={styles.modalCloseButton}
+                onPress={() => setShowVehicleModal(false)}
+              >
+                <Ionicons name="close" size={24} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Info Banner */}
+            <View style={[styles.vehicleInfoBanner, { backgroundColor: theme.primary + '15' }]}>
+              <Ionicons name="car-sport" size={24} color={theme.primary} />
+              <Text style={[styles.vehicleInfoText, { color: theme.text }]}>
+                Select the vehicle you will be driving for this shift
+              </Text>
+            </View>
+
+            {/* Vehicle List */}
+            {loadingVehicles ? (
+              <View style={styles.vehicleLoadingContainer}>
+                <ActivityIndicator size="large" color={theme.primary} />
+                <Text style={[styles.vehicleLoadingText, { color: theme.textSecondary }]}>
+                  Loading vehicles...
+                </Text>
+              </View>
+            ) : vehicles.length > 0 ? (
+              <ScrollView 
+                style={styles.vehicleList}
+                showsVerticalScrollIndicator={false}
+              >
+                {vehicles.map((vehicle) => (
+                  <TouchableOpacity
+                    key={vehicle.id}
+                    style={[styles.vehicleCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => handleSelectVehicle(vehicle)}
+                  >
+                    <View style={[styles.vehicleIconContainer, { backgroundColor: theme.primary + '15' }]}>
+                      <Ionicons name="car-outline" size={28} color={theme.primary} />
+                    </View>
+                    <View style={styles.vehicleDetails}>
+                      <Text style={[styles.vehicleRegistration, { color: theme.text }]}>
+                        {vehicle.registration || 'No Registration'}
+                      </Text>
+                      <Text style={[styles.vehicleType, { color: theme.textSecondary }]}>
+                        {vehicle.vehicle_type_name || vehicle.type || 'Standard'}
+                      </Text>
+                      {vehicle.make && vehicle.model && (
+                        <Text style={[styles.vehicleModel, { color: theme.textSecondary }]}>
+                          {vehicle.make} {vehicle.model}
+                        </Text>
+                      )}
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.noVehiclesContainer}>
+                <Ionicons name="car-outline" size={48} color={theme.textSecondary} />
+                <Text style={[styles.noVehiclesText, { color: theme.textSecondary }]}>
+                  No vehicles available
+                </Text>
+                <Text style={[styles.noVehiclesSubtext, { color: theme.textSecondary }]}>
+                  Contact dispatch to add vehicles
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

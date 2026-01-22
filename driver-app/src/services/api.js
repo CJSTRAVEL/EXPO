@@ -187,4 +187,21 @@ export const getVehicles = async () => {
   return response.data;
 };
 
+// Driver Stats API
+export const getDriverStats = async () => {
+  const response = await api.get('/driver/stats');
+  return response.data;
+};
+
+// Admin Chat API
+export const sendAdminMessage = async (message) => {
+  const response = await api.post('/driver/admin-chat', { message });
+  return response.data;
+};
+
+export const getAdminMessages = async () => {
+  const response = await api.get('/driver/admin-chat');
+  return response.data;
+};
+
 export default api;

@@ -3194,7 +3194,14 @@ async def release_vehicle(driver: dict = Depends(get_current_driver)):
 @api_router.get("/driver/available-vehicles")
 async def get_available_vehicles(driver: dict = Depends(get_current_driver)):
     """Get list of vehicles with availability status"""
-    vehicles = await db.vehicles.find({"status": "active"}).to_list(100)
+    # Get all vehicles (status can be 'active' or None/missing for older records)
+    vehicles = await db.vehicles.find({
+        "$or": [
+            {"status": "active"},
+            {"status": {"$exists": False}},
+            {"status": None}
+        ]
+    }).to_list(100)
     
     result = []
     for v in vehicles:

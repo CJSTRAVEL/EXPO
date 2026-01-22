@@ -2641,10 +2641,6 @@ const BookingsPage = () => {
                                     {formatDuration(booking.duration_minutes)}
                                   </span>
                                 )}
-                                <span className={`text-xs hidden sm:flex items-center gap-1 px-2 py-0.5 rounded border font-bold ${getVehicleTypeColor(booking.vehicle_type)}`}>
-                                  <Car className="w-3 h-3" />
-                                  {booking.vehicle_type ? getVehicleTypeName(booking.vehicle_type) : 'Not specified'}
-                                </span>
                                 {getStatusBadge(booking.status)}
                                 <div onClick={(e) => e.stopPropagation()}>
                                   <DropdownMenu>
@@ -2683,6 +2679,16 @@ const BookingsPage = () => {
                           </div>
                         </div>
                       </div>
+                      {/* Vehicle Type Footer Bar */}
+                      <div className={`px-4 py-2 ${linkedReturn ? '' : 'rounded-b-lg'} ${getVehicleTypeColor(booking.vehicle_type)}`}>
+                        <div className="flex items-center justify-center gap-2">
+                          <Car className="w-4 h-4" />
+                          <span className="text-sm font-semibold">
+                            {booking.vehicle_type ? getVehicleTypeName(booking.vehicle_type) : 'Vehicle Not Specified'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                         </div>
                         
                         {/* Return Journey Card - Shown directly under parent */}

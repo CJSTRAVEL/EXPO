@@ -1503,13 +1503,14 @@ const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose,
   const getBookingVehicleCategory = () => {
     if (!booking?.vehicle_type) return null;
     const vType = booking.vehicle_type.toLowerCase();
-    // Check if it's a taxi type vehicle
-    if (vType.includes('taxi')) return 'taxi';
-    // Check if it's a PSV/minibus type (capacity > 4 or minibus in name)
-    if (vType.includes('minibus') || vType.includes('bus') || vType.includes('psv')) return 'psv';
-    // Check vehicle type details from the vehicle types list
-    const vehicleTypeDetails = vehicleTypes?.find(vt => vt.name === booking.vehicle_type);
-    if (vehicleTypeDetails && vehicleTypeDetails.capacity > 4) return 'psv';
+    
+    // CJ's 16 Minibus or CJ's 16 Minibus with trailer = PSV
+    if (vType.includes('16')) return 'psv';
+    
+    // CJ's Taxi = Taxi
+    // CJ's 8 Minibus = Taxi
+    if (vType.includes('taxi') || vType.includes('8 minibus') || vType.includes('8minibus')) return 'taxi';
+    
     return null; // No specific requirement
   };
 

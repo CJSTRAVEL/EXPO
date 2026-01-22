@@ -119,9 +119,9 @@ const CustomerLogin = () => {
 
     try {
       if (isLogin) {
-        // Login
+        // Login using email
         const response = await axios.post(`${API}/client-portal/login`, {
-          phone: corporateData.mobile,
+          email: corporateData.email,
           password: corporateData.password
         });
         

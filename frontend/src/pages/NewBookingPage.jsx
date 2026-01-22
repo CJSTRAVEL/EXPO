@@ -1039,7 +1039,7 @@ const NewBookingPage = () => {
                           </div>
                           <Button
                             size="sm"
-                            onClick={() => usePreviousBookingDetails(booking)}
+                            onClick={() => applyPreviousBookingDetails(booking)}
                             className="h-7 text-xs bg-[#D4A853] hover:bg-[#c49743] text-black"
                           >
                             Use Details

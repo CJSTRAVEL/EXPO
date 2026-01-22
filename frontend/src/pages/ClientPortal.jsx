@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import {
   MapPin, Calendar, Clock, User, Phone, Mail, LogOut,
   Building2, Plus, History, FileText, Loader2, CheckCircle,
@@ -17,6 +17,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// Safe date formatting helper
+const safeFormatDate = (dateValue, formatStr, fallback = '-') => {
+  if (!dateValue) return fallback;
+  try {
+    const date = typeof dateValue === 'string' ? parseISO(dateValue) : new Date(dateValue);
+    if (!isValid(date)) return fallback;
+    return format(date, formatStr);
+  } catch {
+    return fallback;
+  }
+};
 
 const ClientPortal = () => {
   const navigate = useNavigate();

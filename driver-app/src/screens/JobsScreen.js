@@ -385,6 +385,8 @@ export default function JobsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [rideMinimized, setRideMinimized] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const fetchBookings = async () => {
     try {
@@ -426,6 +428,7 @@ export default function JobsScreen({ navigation }) {
 
   const handleStartRide = (booking) => {
     // Start the ride - set status to on_way
+    setShowDetails(false);
     updateBookingStatus(booking.id, 'on_way')
       .then(() => {
         setActiveRide({...booking, status: 'on_way'});
@@ -435,21 +438,27 @@ export default function JobsScreen({ navigation }) {
       .catch(() => Alert.alert('Error', 'Failed to start ride'));
   };
 
-  const handleViewDetail = (booking) => {
+  const handleViewDetail = (booking, action) => {
     // If booking is already active, show active ride screen
     if (['on_way', 'arrived', 'in_progress'].includes(booking.status)) {
       setActiveRide(booking);
       setRideMinimized(false);
     } else {
-      // For assigned bookings, offer to start the ride
-      Alert.alert(
-        'Start Ride',
-        `Start ride to ${booking.first_name} ${booking.last_name}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Start', onPress: () => handleStartRide(booking) }
-        ]
-      );
+      // Show job details modal
+      setSelectedBooking(booking);
+      setShowDetails(true);
+    }
+  };
+
+  const handleStartRideFromDetails = () => {
+    if (selectedBooking) {
+      if (['on_way', 'arrived', 'in_progress'].includes(selectedBooking.status)) {
+        setShowDetails(false);
+        setActiveRide(selectedBooking);
+        setRideMinimized(false);
+      } else {
+        handleStartRide(selectedBooking);
+      }
     }
   };
 

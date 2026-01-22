@@ -483,9 +483,15 @@ class PassengerResponse(BaseModel):
 class ClientPortalRegister(BaseModel):
     name: str
     phone: str
-    email: str
+    email: Optional[str] = None
     password: str
-    company_name: str
+    company_name: Optional[str] = None
+    client_type: Optional[str] = "Corporate"
+    payment_method: Optional[str] = "Invoice"
+    address: Optional[str] = None
+    town_city: Optional[str] = None
+    post_code: Optional[str] = None
+    notes: Optional[str] = None
 
 class ClientPortalLogin(BaseModel):
     phone: str

@@ -64,7 +64,7 @@ const NotificationBadge = ({ label, active, onClick }) => (
 // Info Card for Map overlay - Dark Theme
 const InfoCard = ({ label, value, icon: Icon }) => (
   <div className="bg-[#252525] rounded-lg border border-[#3d3d3d] p-3 text-center min-w-[100px]">
-    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mb-1">
+    <div className="flex items-center justify-center gap-1 text-xs text-gray-300 mb-1">
       {Icon && <Icon className="w-3 h-3" />}
       {label}
     </div>
@@ -626,7 +626,7 @@ const NewBookingPage = () => {
                   </div>
                   <div>
                     <div className="font-semibold text-white">{flightData.airline}</div>
-                    <div className="text-xs text-gray-400">{flightData.flight_number}</div>
+                    <div className="text-xs text-gray-300">{flightData.flight_number}</div>
                   </div>
                   <Badge className={cn(
                     "ml-auto",
@@ -754,7 +754,7 @@ const NewBookingPage = () => {
                   </div>
                   <div>
                     <div className="font-semibold text-white">{returnFlightData.airline}</div>
-                    <div className="text-xs text-gray-400">{returnFlightData.flight_number}</div>
+                    <div className="text-xs text-gray-300">{returnFlightData.flight_number}</div>
                   </div>
                   <Badge className={cn(
                     "ml-auto",
@@ -915,7 +915,7 @@ const NewBookingPage = () => {
                         </div>
                         <div>
                           <div className="text-sm text-white font-medium">{p.first_name} {p.last_name}</div>
-                          <div className="text-xs text-gray-400">{p.phone || p.customer_phone}</div>
+                          <div className="text-xs text-gray-300">{p.phone || p.customer_phone}</div>
                         </div>
                       </button>
                     ))}
@@ -967,7 +967,7 @@ const NewBookingPage = () => {
                         </div>
                         <div>
                           <div className="text-sm text-white font-medium">{p.first_name} {p.last_name}</div>
-                          <div className="text-xs text-gray-400">{p.phone || p.customer_phone}</div>
+                          <div className="text-xs text-gray-300">{p.phone || p.customer_phone}</div>
                         </div>
                       </button>
                     ))}
@@ -1011,7 +1011,7 @@ const NewBookingPage = () => {
                       <div key={idx} className="p-3 border-b border-[#3d3d3d] last:border-0 hover:bg-[#252525]">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs text-gray-400 mb-1">
+                            <div className="text-xs text-gray-300 mb-1">
                               {format(new Date(booking.booking_datetime), "dd/MM/yyyy HH:mm")}
                             </div>
                             <div className="flex items-center gap-1 text-xs mb-1">
@@ -1059,7 +1059,7 @@ const NewBookingPage = () => {
             }
           >
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-400 flex items-center gap-1">
+              <Label className="text-xs text-gray-300 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-green-500"></span> Pickup *
               </Label>
               <AddressAutocomplete
@@ -1074,7 +1074,7 @@ const NewBookingPage = () => {
             {/* Additional Stops */}
             {formData.additional_stops.map((stop, index) => (
               <div key={index} className="space-y-1.5">
-                <Label className="text-xs text-gray-400 flex items-center gap-1">
+                <Label className="text-xs text-gray-300 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-[#D4A853]"></span> Via {index + 1}
                 </Label>
                 <div className="flex gap-2">
@@ -1100,7 +1100,7 @@ const NewBookingPage = () => {
             ))}
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-400 flex items-center gap-1">
+              <Label className="text-xs text-gray-300 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-red-500"></span> Drop-off *
               </Label>
               <AddressAutocomplete
@@ -1117,7 +1117,7 @@ const NewBookingPage = () => {
           <Section icon={Calendar} title="Schedule">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Date</Label>
+                <Label className="text-xs text-gray-300">Date</Label>
                 <Popover open={dateOpen} onOpenChange={setDateOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -1147,7 +1147,7 @@ const NewBookingPage = () => {
                 </Popover>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Time</Label>
+                <Label className="text-xs text-gray-300">Time</Label>
                 <Input
                   type="time"
                   value={format(formData.booking_datetime, "HH:mm")}
@@ -1325,7 +1325,7 @@ const NewBookingPage = () => {
                         <div className="flex items-center gap-2">
                           <Plane className="w-4 h-4 text-[#D4A853]" />
                           <span className="text-sm font-medium text-white">{formData.return_flight_number}</span>
-                          {formData.return_airline && <span className="text-xs text-gray-400">({formData.return_airline})</span>}
+                          {formData.return_airline && <span className="text-xs text-gray-300">({formData.return_airline})</span>}
                         </div>
                         <Button
                           size="sm"
@@ -1337,7 +1337,7 @@ const NewBookingPage = () => {
                         </Button>
                       </div>
                       {formData.return_terminal && (
-                        <div className="text-xs text-gray-400 mt-1">Terminal {formData.return_terminal}</div>
+                        <div className="text-xs text-gray-300 mt-1">Terminal {formData.return_terminal}</div>
                       )}
                     </div>
                   ) : (
@@ -1370,7 +1370,7 @@ const NewBookingPage = () => {
           <Section icon={Car} title="Vehicle & Driver">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Vehicle Type</Label>
+                <Label className="text-xs text-gray-300">Vehicle Type</Label>
                 <Select
                   value={formData.vehicle_type || ""}
                   onValueChange={(value) => setFormData({ ...formData, vehicle_type: value })}
@@ -1384,7 +1384,7 @@ const NewBookingPage = () => {
                         <SelectItem key={vt.id} value={vt.id} className="text-white focus:bg-[#3d3d3d] focus:text-white">
                           <div className="flex items-center gap-2">
                             <span className="text-white">{vt.name}</span>
-                            <span className="text-xs text-gray-400">({vt.capacity} seats)</span>
+                            <span className="text-xs text-gray-300">({vt.capacity} seats)</span>
                           </div>
                         </SelectItem>
                       ))
@@ -1400,7 +1400,7 @@ const NewBookingPage = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Select Driver</Label>
+                <Label className="text-xs text-gray-300">Select Driver</Label>
                 <Select
                   value={formData.driver_id || "none"}
                   onValueChange={(value) => setFormData({ ...formData, driver_id: value === "none" ? "" : value })}
@@ -1422,7 +1422,7 @@ const NewBookingPage = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400 flex items-center gap-1">
+                <Label className="text-xs text-gray-300 flex items-center gap-1">
                   <Users className="w-3 h-3" /> PAX (Passengers)
                 </Label>
                 <Input
@@ -1436,7 +1436,7 @@ const NewBookingPage = () => {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400 flex items-center gap-1">
+                <Label className="text-xs text-gray-300 flex items-center gap-1">
                   <Briefcase className="w-3 h-3" /> Cases (Luggage)
                 </Label>
                 <Input
@@ -1456,7 +1456,7 @@ const NewBookingPage = () => {
           <Section icon={CreditCard} title="Payment & Pricing">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Payment Method</Label>
+                <Label className="text-xs text-gray-300">Payment Method</Label>
                 <Select
                   value={formData.payment_method}
                   onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
@@ -1474,7 +1474,7 @@ const NewBookingPage = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Fare (£)</Label>
+                <Label className="text-xs text-gray-300">Fare (£)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1495,7 +1495,7 @@ const NewBookingPage = () => {
                   <CreditCard className="w-4 h-4" />
                   <span className="text-sm font-medium">Online Card Payment</span>
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-300">
                   After saving the booking, a secure Stripe payment link will be generated. 
                   {formData.customer_email ? " A payment link can be sent to the customer's email." : " Add customer email to send payment link."}
                 </p>
@@ -1527,11 +1527,11 @@ const NewBookingPage = () => {
                     <div className="font-medium text-white">
                       {formData.first_name} {formData.last_name}
                     </div>
-                    <div className="text-xs text-gray-400">{formData.customer_phone}</div>
+                    <div className="text-xs text-gray-300">{formData.customer_phone}</div>
                   </div>
                 </div>
                 {formData.customer_email && (
-                  <div className="text-xs text-gray-400 flex items-center gap-1">
+                  <div className="text-xs text-gray-300 flex items-center gap-1">
                     <Mail className="w-3 h-3" /> {formData.customer_email}
                   </div>
                 )}
@@ -1547,7 +1547,7 @@ const NewBookingPage = () => {
           {/* Additional Info Section */}
           <Section icon={FileText} title="Additional Info">
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-400">Driver Notes</Label>
+              <Label className="text-xs text-gray-300">Driver Notes</Label>
               <Textarea
                 value={formData.driver_notes}
                 onChange={(e) => setFormData({ ...formData, driver_notes: e.target.value })}
@@ -1558,7 +1558,7 @@ const NewBookingPage = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-400">Notifications</Label>
+              <Label className="text-xs text-gray-300">Notifications</Label>
               <div className="flex flex-wrap gap-2">
                 <NotificationBadge 
                   label="Text Confirmation" 
@@ -1575,14 +1575,14 @@ const NewBookingPage = () => {
 
             {/* Flight Info Section */}
             <div className="space-y-2">
-              <Label className="text-xs text-gray-400">Flight Information</Label>
+              <Label className="text-xs text-gray-300">Flight Information</Label>
               {formData.flight_number ? (
                 <div className="bg-[#D4A853]/10 rounded-lg p-3 border border-[#D4A853]/30">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Plane className="w-4 h-4 text-[#D4A853]" />
                       <span className="text-sm font-medium text-[#D4A853]">{formData.flight_number}</span>
-                      {formData.airline && <span className="text-xs text-gray-400">({formData.airline})</span>}
+                      {formData.airline && <span className="text-xs text-gray-300">({formData.airline})</span>}
                     </div>
                     <Button
                       size="sm"
@@ -1594,7 +1594,7 @@ const NewBookingPage = () => {
                     </Button>
                   </div>
                   {formData.terminal && (
-                    <div className="text-xs text-gray-400 mt-1">Terminal {formData.terminal}</div>
+                    <div className="text-xs text-gray-300 mt-1">Terminal {formData.terminal}</div>
                   )}
                 </div>
               ) : (
@@ -1611,7 +1611,7 @@ const NewBookingPage = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-gray-400">Internal Notes</Label>
+              <Label className="text-xs text-gray-300">Internal Notes</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}

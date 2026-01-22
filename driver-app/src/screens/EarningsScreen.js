@@ -181,11 +181,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.text,
     marginBottom: 12,
   },
   periodCard: {
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -204,7 +202,6 @@ const styles = StyleSheet.create({
   periodTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
   },
   periodStats: {
     flexDirection: 'row',
@@ -217,17 +214,14 @@ const styles = StyleSheet.create({
   periodStatValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   periodStatLabel: {
     fontSize: 12,
-    color: COLORS.textSecondary,
     marginTop: 4,
   },
   periodDivider: {
     width: 1,
     height: 40,
-    backgroundColor: COLORS.border,
   },
   infoCard: {
     flexDirection: 'row',

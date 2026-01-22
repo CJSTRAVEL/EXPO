@@ -2524,21 +2524,41 @@ async def get_current_client(authorization: str = Header(None)):
 
 @api_router.post("/client-portal/register", response_model=ClientPortalResponse)
 async def register_client_portal(data: ClientPortalRegister):
-    """Register a new client portal account - creates a booking request"""
+    """Register a new client portal account - creates a booking request for admin approval"""
     # Check if phone already exists
     existing = await db.clients.find_one({"phone": data.phone})
     if existing:
-        raise HTTPException(status_code=400, detail="Phone number already registered")
+        raise HTTPException(status_code=400, detail="Phone number already registered. Please login instead.")
+    
+    # Also check existing pending requests
+    existing_request = await db.booking_requests.find_one({
+        "passenger_phone": data.phone, 
+        "type": "client",
+        "status": "pending"
+    })
+    if existing_request:
+        raise HTTPException(status_code=400, detail="A registration request is already pending for this phone number.")
+    
+    # Build full address
+    full_address = data.address or ""
+    if data.town_city:
+        full_address = f"{full_address}, {data.town_city}" if full_address else data.town_city
+    if data.post_code:
+        full_address = f"{full_address}, {data.post_code}" if full_address else data.post_code
     
     # Create a booking request for admin approval (type: client)
     request_id = str(uuid.uuid4())
     request_doc = {
         "id": request_id,
         "type": "client",  # Distinguish from passenger requests
-        "passenger_name": data.name,
+        "passenger_name": data.name,  # Contact name
         "passenger_phone": data.phone,
         "passenger_email": data.email,
         "company_name": data.company_name,
+        "client_type": data.client_type,
+        "payment_method": data.payment_method,
+        "address": full_address,
+        "notes": data.notes,
         "password_hash": hash_password(data.password),
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -2549,10 +2569,10 @@ async def register_client_portal(data: ClientPortalRegister):
     
     await db.booking_requests.insert_one(request_doc)
     
-    # Return a temporary response (they'll need to wait for approval)
+    # Return a 202 Accepted status
     raise HTTPException(
         status_code=202, 
-        detail="Registration request submitted. Your account will be activated after admin approval."
+        detail="Registration request submitted. Your account will be activated after admin approval. We'll contact you once approved."
     )
 
 

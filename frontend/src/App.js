@@ -251,7 +251,6 @@ function AppRoutes() {
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </main>
-            <Toaster position="top-right" richColors />
           </div>
         </ProtectedRoute>
       } />

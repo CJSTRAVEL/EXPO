@@ -295,7 +295,7 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
         { backgroundColor: theme.card },
         isActiveRide && { borderColor: theme.primary, borderWidth: 2 }
       ]}
-      onPress={() => onViewDetail(booking)}
+      onPress={handleCardPress}
       activeOpacity={0.7}
     >
       {/* Header Row - Time and Price */}
@@ -366,11 +366,11 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
         </View>
       </View>
 
-      {/* Start Ride Button */}
+      {/* View Details / View Ride Button */}
       {booking.status !== 'completed' && booking.status !== 'cancelled' && (
         <TouchableOpacity
-          style={[styles.startRideButton, { backgroundColor: theme.primary }]}
-          onPress={handleStartRide}
+          style={[styles.startRideButton, { backgroundColor: isActiveRide ? theme.success : theme.primary }]}
+          onPress={handleButtonPress}
         >
           <Text style={styles.startRideText}>{getStartButtonLabel(booking.status)}</Text>
         </TouchableOpacity>

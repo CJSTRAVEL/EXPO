@@ -2365,7 +2365,7 @@ async def get_all_booking_requests():
 
 @api_router.put("/admin/booking-requests/{request_id}/approve")
 async def approve_booking_request(request_id: str):
-    """Approve a booking request and create the actual booking"""
+    """Approve a booking request and create the actual booking or client account"""
     request_doc = await db.booking_requests.find_one({"id": request_id}, {"_id": 0})
     if not request_doc:
         raise HTTPException(status_code=404, detail="Request not found")
@@ -2373,7 +2373,54 @@ async def approve_booking_request(request_id: str):
     if request_doc['status'] != 'pending':
         raise HTTPException(status_code=400, detail="Request already processed")
     
-    # Generate booking ID
+    request_type = request_doc.get('type', 'passenger')
+    
+    # Handle client account registration request (no booking details)
+    if request_type == 'client' and not request_doc.get('pickup_location'):
+        # Generate account number
+        latest_client = await db.clients.find_one(
+            {"account_no": {"$exists": True}},
+            sort=[("account_no", -1)]
+        )
+        if latest_client and latest_client.get("account_no"):
+            try:
+                last_num = int(latest_client["account_no"].replace("ACC-", ""))
+                account_no = f"ACC-{last_num + 1:04d}"
+            except:
+                account_no = "ACC-0001"
+        else:
+            account_no = "ACC-0001"
+        
+        # Create client account
+        client_doc = {
+            "id": str(uuid.uuid4()),
+            "account_no": account_no,
+            "name": request_doc.get('company_name', request_doc['passenger_name']),
+            "contact_name": request_doc['passenger_name'],
+            "email": request_doc.get('passenger_email'),
+            "contact_email": request_doc.get('passenger_email'),
+            "phone": request_doc['passenger_phone'],
+            "contact_phone": request_doc['passenger_phone'],
+            "address": "",
+            "status": "active",
+            "credit_limit": 0,
+            "current_balance": 0,
+            "password_hash": request_doc.get('password_hash'),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        
+        await db.clients.insert_one(client_doc)
+        
+        # Update request status
+        await db.booking_requests.update_one(
+            {"id": request_id},
+            {"$set": {"status": "approved", "client_id": client_doc["id"], "account_no": account_no}}
+        )
+        
+        logging.info(f"Client account created: {account_no} for {request_doc['passenger_name']}")
+        return {"message": "Client account created", "account_no": account_no}
+    
+    # Handle booking request (both passenger and client)
     readable_id = await generate_booking_id()
     
     # Create the booking
@@ -2394,6 +2441,10 @@ async def approve_booking_request(request_id: str):
     doc['booking_datetime'] = doc['booking_datetime'].isoformat()
     doc['sms_sent'] = False
     doc['customer_name'] = request_doc['passenger_name']
+    
+    # Add client_id if this is a client booking
+    if request_type == 'client' and request_doc.get('client_id'):
+        doc['client_id'] = request_doc['client_id']
     
     await db.bookings.insert_one(doc)
     

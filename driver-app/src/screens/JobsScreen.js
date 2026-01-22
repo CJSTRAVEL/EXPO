@@ -10,6 +10,8 @@ import {
   Linking,
   Platform,
   SafeAreaView,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';

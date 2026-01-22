@@ -205,6 +205,101 @@ const NewBookingPage = () => {
     return () => clearTimeout(debounce);
   }, [formData.pickup_location, formData.dropoff_location]);
 
+  // Passenger search - find matching passengers when typing name or phone
+  const searchPassengers = useCallback((query, field) => {
+    if (!query || query.length < 2) {
+      setMatchedPassengers([]);
+      setShowPassengerPopup(false);
+      return;
+    }
+    
+    const queryLower = query.toLowerCase().trim();
+    const matches = passengers.filter(p => {
+      if (field === 'name') {
+        const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
+        return fullName.includes(queryLower) || 
+               (p.first_name && p.first_name.toLowerCase().includes(queryLower)) ||
+               (p.last_name && p.last_name.toLowerCase().includes(queryLower));
+      } else if (field === 'phone') {
+        const phone = (p.phone || p.customer_phone || '').replace(/\s+/g, '');
+        return phone.includes(query.replace(/\s+/g, ''));
+      }
+      return false;
+    }).slice(0, 5);
+    
+    setMatchedPassengers(matches);
+    setShowPassengerPopup(matches.length > 0);
+    setPassengerSearch({ query, field });
+  }, [passengers]);
+
+  // Fetch passenger's booking history
+  const fetchPassengerHistory = async (passenger) => {
+    setLoadingPassengerHistory(true);
+    try {
+      // Search bookings by phone number or email
+      const phone = passenger.phone || passenger.customer_phone;
+      const response = await axios.get(`${API}/bookings`, {
+        params: { search: phone, limit: 10 }
+      });
+      const bookings = response.data.filter(b => 
+        b.customer_phone === phone || 
+        b.customer_email === passenger.email
+      ).slice(0, 5);
+      setSelectedPassengerBookings(bookings);
+    } catch (error) {
+      console.error("Error fetching passenger history:", error);
+      setSelectedPassengerBookings([]);
+    } finally {
+      setLoadingPassengerHistory(false);
+    }
+  };
+
+  // Select a passenger and show their history
+  const handleSelectPassenger = async (passenger) => {
+    setShowPassengerPopup(false);
+    await fetchPassengerHistory(passenger);
+    
+    // Auto-fill basic details (NOT date/time or flight data)
+    setFormData(prev => ({
+      ...prev,
+      first_name: passenger.first_name || prev.first_name,
+      last_name: passenger.last_name || prev.last_name,
+      customer_phone: passenger.phone || passenger.customer_phone || prev.customer_phone,
+      customer_email: passenger.email || passenger.customer_email || prev.customer_email,
+    }));
+  };
+
+  // Use previous booking details (excluding date/time and flight)
+  const usePreviousBookingDetails = (booking) => {
+    setFormData(prev => ({
+      ...prev,
+      // Customer details
+      first_name: booking.first_name || prev.first_name,
+      last_name: booking.last_name || prev.last_name,
+      customer_phone: booking.customer_phone || prev.customer_phone,
+      customer_email: booking.customer_email || prev.customer_email,
+      // Journey details
+      pickup_location: booking.pickup_location || prev.pickup_location,
+      dropoff_location: booking.dropoff_location || prev.dropoff_location,
+      additional_stops: booking.additional_stops || [],
+      // Vehicle & passengers
+      passenger_count: booking.passenger_count || prev.passenger_count,
+      luggage_count: booking.luggage_count || prev.luggage_count,
+      vehicle_type: booking.vehicle_type || prev.vehicle_type,
+      // Payment
+      fare: booking.fare ? String(booking.fare) : prev.fare,
+      payment_method: booking.payment_method || prev.payment_method,
+      // Notes
+      notes: booking.notes || prev.notes,
+      driver_notes: booking.driver_notes || prev.driver_notes,
+      // Client
+      client_id: booking.client_id || prev.client_id,
+      // DO NOT copy: booking_datetime, flight_number, airline, terminal, flight_type
+    }));
+    setSelectedPassengerBookings([]);
+    toast.success("Previous booking details applied!");
+  };
+
   // Flight lookup - auto-populates pickup location and time
   const handleFlightLookup = async () => {
     const searchNum = flightSearchNumber || formData.flight_number;

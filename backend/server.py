@@ -2330,6 +2330,26 @@ async def reject_booking_request(request_id: str, admin_notes: str = ""):
     
     return {"message": "Request rejected"}
 
+
+@api_router.delete("/admin/booking-requests/cleanup")
+async def cleanup_old_booking_requests():
+    """Delete processed (approved/rejected) booking requests older than 30 days"""
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    
+    # Find and delete processed requests older than 30 days
+    result = await db.booking_requests.delete_many({
+        "status": {"$in": ["approved", "rejected"]},
+        "created_at": {"$lt": thirty_days_ago.isoformat()}
+    })
+    
+    logging.info(f"Cleaned up {result.deleted_count} old booking requests")
+    
+    return {
+        "message": f"Deleted {result.deleted_count} processed booking requests older than 30 days",
+        "deleted_count": result.deleted_count
+    }
+
+
 # ========== ADMIN PASSENGER MANAGEMENT ENDPOINTS ==========
 @api_router.get("/admin/passengers")
 async def get_all_passengers():

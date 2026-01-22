@@ -41,24 +41,6 @@ Notifications.setNotificationHandler({
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Chat List Screen (placeholder for bottom tab)
-function ChatListScreen({ navigation }) {
-  const { theme } = useTheme();
-  
-  return (
-    <View style={[styles.chatListContainer, { backgroundColor: theme.background }]}>
-      <Text style={[styles.chatListTitle, { color: theme.text }]}>Messages</Text>
-      <Text style={[styles.chatListSubtitle, { color: theme.textSecondary }]}>
-        Chat messages from dispatch will appear here
-      </Text>
-      <View style={styles.emptyChat}>
-        <Ionicons name="chatbubbles-outline" size={64} color={theme.textSecondary} />
-        <Text style={[styles.emptyChatText, { color: theme.textSecondary }]}>No messages yet</Text>
-      </View>
-    </View>
-  );
-}
-
 // Bottom Tab Navigator
 function MainTabs() {
   const { theme } = useTheme();
@@ -122,7 +104,7 @@ function MainTabs() {
       />
       <Tab.Screen 
         name="Chat" 
-        component={ChatListScreen}
+        component={AdminChatScreen}
         options={{
           tabBarLabel: 'Chat',
         }}

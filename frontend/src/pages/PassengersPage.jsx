@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { User, Phone, MapPin, Calendar, Clock, Search, ChevronRight, MessageSquare, X, Shield, ShieldOff, Trash2, Loader2, AlertTriangle, UserX } from "lucide-react";
+import { User, Phone, MapPin, Calendar, Clock, Search, ChevronRight, X, Shield, ShieldOff, Trash2, Loader2, AlertTriangle, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,7 @@ const PassengerCard = ({ passenger, onClick }) => {
             <h3 className="font-semibold text-slate-800 truncate">{passenger.name}</h3>
             {passenger.hasPortalAccount && (
               <Badge variant="outline" className={`text-xs ${passenger.isBlocked ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
-                {passenger.isBlocked ? 'Blocked' : 'Portal'}
+                {passenger.isBlocked ? 'Blocked' : 'Portal Account'}
               </Badge>
             )}
           </div>

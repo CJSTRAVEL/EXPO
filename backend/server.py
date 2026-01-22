@@ -3653,8 +3653,62 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
         }
     )
     
-    # Send notification to passenger if they have an account
-    # TODO: Implement push notification to passenger
+    # Generate booking link
+    app_url = os.environ.get('APP_URL', 'https://travel-dispatch.preview.emergentagent.com')
+    short_booking_id = booking.get("short_booking_id", booking_id[:8])
+    booking_link = f"{app_url}/api/preview/{short_booking_id}"
+    
+    # Get vehicle info
+    vehicle = await db.vehicles.find_one({"id": driver.get("selected_vehicle_id")})
+    vehicle_make = vehicle.get("make", "") if vehicle else ""
+    vehicle_model = vehicle.get("model", "") if vehicle else ""
+    vehicle_registration = vehicle.get("registration", driver.get("vehicle_number", "")) if vehicle else driver.get("vehicle_number", "")
+    
+    customer_phone = booking.get("customer_phone")
+    customer_name = booking.get("customer_name", "Customer")
+    
+    # Send SMS notifications based on status
+    if customer_phone:
+        if status == "on_way":
+            # Send 'on route' SMS
+            await send_templated_sms(
+                phone=customer_phone,
+                template_type="driver_on_route",
+                variables={
+                    "customer_name": customer_name,
+                    "booking_link": booking_link
+                }
+            )
+        elif status == "arrived":
+            # Send 'arrived' SMS
+            await send_templated_sms(
+                phone=customer_phone,
+                template_type="driver_arrived",
+                variables={
+                    "customer_name": customer_name,
+                    "vehicle_make": vehicle_make,
+                    "vehicle_model": vehicle_model,
+                    "vehicle_registration": vehicle_registration,
+                    "booking_link": booking_link
+                }
+            )
+        elif status == "completed":
+            # Schedule review SMS 15 minutes after completion
+            review_link = f"{app_url}/review/{short_booking_id}"
+            # Store review SMS to be sent (in production, use a proper task queue)
+            await db.scheduled_sms.insert_one({
+                "id": str(uuid.uuid4()),
+                "booking_id": booking_id,
+                "phone": customer_phone,
+                "template_type": "booking_review",
+                "variables": {
+                    "customer_name": customer_name,
+                    "review_link": review_link
+                },
+                "send_at": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat(),
+                "status": "pending",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
     
     return {"message": f"Booking status updated to {status}"}
 

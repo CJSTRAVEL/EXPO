@@ -187,9 +187,33 @@ export const getVehicles = async () => {
   return response.data;
 };
 
+// Get available vehicles with exclusivity status
+export const getAvailableVehicles = async () => {
+  const response = await api.get('/driver/available-vehicles');
+  return response.data;
+};
+
+// Select a vehicle for the shift
+export const selectVehicle = async (vehicleId) => {
+  const response = await api.post('/driver/select-vehicle', { vehicle_id: vehicleId });
+  return response.data;
+};
+
+// Release the currently selected vehicle
+export const releaseVehicle = async () => {
+  const response = await api.post('/driver/release-vehicle');
+  return response.data;
+};
+
 // Driver Stats API
 export const getDriverStats = async () => {
   const response = await api.get('/driver/stats');
+  return response.data;
+};
+
+// Document Expiry Notifications API
+export const getDocumentNotifications = async () => {
+  const response = await api.get('/driver/document-notifications');
   return response.data;
 };
 

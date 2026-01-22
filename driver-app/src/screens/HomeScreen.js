@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,9 +16,10 @@ import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { updateStatus, updateLocation, getAvailableVehicles, selectVehicle, releaseVehicle, getDocumentNotifications } from '../services/api';
+import { updateStatus, updateLocation, getAvailableVehicles, selectVehicle, releaseVehicle, getDocumentNotifications, getBookings } from '../services/api';
 
 // Online notification identifier
 const ONLINE_NOTIFICATION_ID = 'driver-online-status';

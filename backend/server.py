@@ -3024,6 +3024,158 @@ async def resend_all_notifications(booking_id: str):
     
     return results
 
+# ========== SMS/EMAIL TEMPLATE MANAGEMENT ==========
+class SMSTemplateUpdate(BaseModel):
+    type: str
+    content: str
+    description: Optional[str] = None
+    category: Optional[str] = "general"  # driver_app, passenger_portal, booking
+
+class EmailTemplateUpdate(BaseModel):
+    type: str
+    subject: str
+    content: str
+    description: Optional[str] = None
+    category: Optional[str] = "general"
+
+@api_router.get("/admin/templates/sms")
+async def get_sms_templates():
+    """Get all SMS templates"""
+    templates = await db.sms_templates.find({}, {"_id": 0}).to_list(100)
+    
+    # Include defaults for missing templates
+    defaults = [
+        {"type": "driver_on_route", "category": "driver_app", "description": "Sent when driver starts journey to pickup", 
+         "content": "Hello {customer_name}, Your driver is on their way!\n\nFollow the link for details and updates:\n{booking_link}",
+         "variables": ["customer_name", "booking_link"]},
+        {"type": "driver_arrived", "category": "driver_app", "description": "Sent when driver arrives at pickup",
+         "content": "Your vehicle has arrived! {vehicle_make} {vehicle_model} - {vehicle_registration}\n\nCheck where the vehicle is:\n{booking_link}",
+         "variables": ["customer_name", "vehicle_make", "vehicle_model", "vehicle_registration", "booking_link"]},
+        {"type": "booking_review", "category": "driver_app", "description": "Sent 15 minutes after booking completion",
+         "content": "Hi {customer_name}, we hope you had a great journey with CJ's Executive Travel!\n\nWe'd love to hear your feedback:\n{review_link}\n\nThank you for choosing us!",
+         "variables": ["customer_name", "review_link"]},
+        {"type": "booking_confirmation", "category": "booking", "description": "Sent when a new booking is created",
+         "content": "Hello {customer_name}, Your booking is confirmed.\n\n{booking_link}\n\nPlease open the link to check your details.\n\nThank You CJ's Executive Travel Limited.",
+         "variables": ["customer_name", "booking_link"]},
+        {"type": "passenger_portal_welcome", "category": "passenger_portal", "description": "Sent when passenger creates account",
+         "content": "Welcome to CJ's Executive Travel! Your account has been created.\n\nLogin to your portal: {portal_link}\n\nThank you for choosing us!",
+         "variables": ["portal_link"]},
+        {"type": "passenger_booking_confirmed", "category": "passenger_portal", "description": "Sent when passenger makes booking via portal",
+         "content": "Hello {customer_name}, Your booking has been confirmed!\n\nPickup: {pickup_address}\nDate/Time: {booking_datetime}\n\nView details: {booking_link}",
+         "variables": ["customer_name", "pickup_address", "booking_datetime", "booking_link"]}
+    ]
+    
+    # Merge defaults with saved templates
+    template_dict = {t["type"]: t for t in templates}
+    for default in defaults:
+        if default["type"] not in template_dict:
+            template_dict[default["type"]] = default
+        else:
+            # Keep saved content but add metadata from defaults
+            template_dict[default["type"]]["description"] = default.get("description")
+            template_dict[default["type"]]["category"] = default.get("category")
+            template_dict[default["type"]]["variables"] = default.get("variables")
+    
+    return list(template_dict.values())
+
+@api_router.put("/admin/templates/sms")
+async def update_sms_template(template: SMSTemplateUpdate):
+    """Update or create an SMS template"""
+    await db.sms_templates.update_one(
+        {"type": template.type},
+        {"$set": {
+            "type": template.type,
+            "content": template.content,
+            "description": template.description,
+            "category": template.category,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": f"Template '{template.type}' updated successfully"}
+
+@api_router.delete("/admin/templates/sms/{template_type}")
+async def reset_sms_template(template_type: str):
+    """Reset SMS template to default by deleting custom version"""
+    await db.sms_templates.delete_one({"type": template_type})
+    return {"message": f"Template '{template_type}' reset to default"}
+
+@api_router.get("/admin/templates/email")
+async def get_email_templates():
+    """Get all email templates"""
+    templates = await db.email_templates.find({}, {"_id": 0}).to_list(100)
+    
+    defaults = [
+        {"type": "booking_confirmation", "category": "booking", "description": "Sent when booking is confirmed",
+         "subject": "Booking Confirmation - CJ's Executive Travel",
+         "content": "Your booking has been confirmed. View details at: {booking_link}",
+         "variables": ["customer_name", "booking_link", "pickup_address", "dropoff_address", "booking_datetime"]},
+        {"type": "booking_assigned", "category": "booking", "description": "Sent when driver is assigned",
+         "subject": "Driver Assigned - CJ's Executive Travel",
+         "content": "A driver has been assigned to your booking. Driver: {driver_name}",
+         "variables": ["customer_name", "driver_name", "vehicle_type", "booking_link"]},
+        {"type": "passenger_welcome", "category": "passenger_portal", "description": "Welcome email for new passengers",
+         "subject": "Welcome to CJ's Executive Travel",
+         "content": "Welcome! Your account has been created. Login at: {portal_link}",
+         "variables": ["customer_name", "portal_link"]}
+    ]
+    
+    template_dict = {t["type"]: t for t in templates}
+    for default in defaults:
+        if default["type"] not in template_dict:
+            template_dict[default["type"]] = default
+        else:
+            template_dict[default["type"]]["description"] = default.get("description")
+            template_dict[default["type"]]["category"] = default.get("category")
+            template_dict[default["type"]]["variables"] = default.get("variables")
+    
+    return list(template_dict.values())
+
+@api_router.put("/admin/templates/email")
+async def update_email_template(template: EmailTemplateUpdate):
+    """Update or create an email template"""
+    await db.email_templates.update_one(
+        {"type": template.type},
+        {"$set": {
+            "type": template.type,
+            "subject": template.subject,
+            "content": template.content,
+            "description": template.description,
+            "category": template.category,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": f"Email template '{template.type}' updated successfully"}
+
+@api_router.delete("/admin/templates/email/{template_type}")
+async def reset_email_template(template_type: str):
+    """Reset email template to default"""
+    await db.email_templates.delete_one({"type": template_type})
+    return {"message": f"Email template '{template_type}' reset to default"}
+
+@api_router.post("/admin/templates/sms/test")
+async def test_sms_template(template_type: str, phone: str):
+    """Send a test SMS using the template"""
+    test_variables = {
+        "customer_name": "Test Customer",
+        "booking_link": "https://example.com/booking/test123",
+        "review_link": "https://example.com/review/test123",
+        "portal_link": "https://example.com/portal",
+        "vehicle_make": "Mercedes",
+        "vehicle_model": "V-Class",
+        "vehicle_registration": "AB12 CDE",
+        "pickup_address": "123 Test Street",
+        "dropoff_address": "456 Destination Road",
+        "booking_datetime": "25 Jan 2026 at 14:00"
+    }
+    
+    success, message = await send_templated_sms(phone, template_type, test_variables)
+    if success:
+        return {"message": "Test SMS sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail=f"Failed to send test SMS: {message}")
+
 # ========== STATS ENDPOINT ==========
 @api_router.get("/stats")
 async def get_stats():

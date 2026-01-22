@@ -148,7 +148,11 @@ function AppNavigator() {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
         <View style={styles.loadingContent}>
-          <Ionicons name="car-sport" size={48} color={theme.primary} />
+          <Image 
+            source={require('./assets/logo.png')} 
+            style={styles.loadingLogo}
+            resizeMode="contain"
+          />
           <Text style={[styles.loadingText, { color: theme.primary }]}>CJ's Travel Driver</Text>
         </View>
       </View>

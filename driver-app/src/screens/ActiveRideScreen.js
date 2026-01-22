@@ -629,10 +629,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
   },
-  redMenuItem: {
-    backgroundColor: '#E53935',
-    borderColor: '#E53935',
-  },
 });
 
 export default ActiveRideScreen;

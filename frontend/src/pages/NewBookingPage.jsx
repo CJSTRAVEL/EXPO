@@ -1032,27 +1032,42 @@ const NewBookingPage = () => {
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-phone"
                 />
-                {/* Passenger Search Popup for Phone */}
+                {/* Passenger/Client Search Popup for Phone */}
                 {showPassengerPopup && passengerSearch.field === 'phone' && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#252525] border border-[#D4A853]/50 rounded-lg shadow-xl overflow-hidden">
-                    <div className="px-3 py-2 bg-[#1a1a1a] border-b border-[#3d3d3d]">
-                      <span className="text-xs text-[#D4A853] font-medium">Matching Passengers</span>
+                  <div className="absolute z-50 top-full left-0 mt-1 bg-[#252525] border border-[#D4A853]/50 rounded-lg shadow-xl overflow-hidden min-w-[320px]">
+                    <div className="px-4 py-3 bg-[#1a1a1a] border-b border-[#3d3d3d]">
+                      <span className="text-sm text-[#D4A853] font-semibold">Matching Contacts</span>
+                      <span className="text-xs text-gray-400 ml-2">({matchedPassengers.length} found)</span>
                     </div>
-                    {matchedPassengers.map((p, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSelectPassenger(p)}
-                        className="w-full px-3 py-2 text-left hover:bg-[#D4A853]/20 transition-colors flex items-center gap-2 border-b border-[#3d3d3d] last:border-0"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-[#D4A853]/20 flex items-center justify-center">
-                          <User className="w-4 h-4 text-[#D4A853]" />
-                        </div>
-                        <div>
-                          <div className="text-sm text-white font-medium">{p.name || `${p.first_name || ''} ${p.last_name || ''}`}</div>
-                          <div className="text-xs text-gray-300">{p.phone || p.customer_phone}</div>
-                        </div>
-                      </button>
-                    ))}
+                    <div className="max-h-[300px] overflow-y-auto">
+                      {matchedPassengers.map((p, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSelectPassenger(p)}
+                          className="w-full px-4 py-3 text-left hover:bg-[#D4A853]/20 transition-colors flex items-center gap-3 border-b border-[#3d3d3d] last:border-0"
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${p.type === 'client' ? 'bg-blue-500/20' : 'bg-[#D4A853]/20'}`}>
+                            {p.type === 'client' ? (
+                              <Building2 className="w-5 h-5 text-blue-400" />
+                            ) : (
+                              <User className="w-5 h-5 text-[#D4A853]" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm text-white font-medium">
+                              {p.type === 'client' ? (p.name || p.contact_name) : (p.name || `${p.first_name || ''} ${p.last_name || ''}`)}
+                            </div>
+                            <div className="text-xs text-gray-400">{p.phone || p.customer_phone || p.contact_phone}</div>
+                            {p.type === 'client' && p.account_no && (
+                              <div className="text-xs text-blue-400">Account: {p.account_no}</div>
+                            )}
+                          </div>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.type === 'client' ? 'bg-blue-500/20 text-blue-300' : 'bg-[#D4A853]/20 text-[#D4A853]'}`}>
+                            {p.type === 'client' ? 'Client' : 'Passenger'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

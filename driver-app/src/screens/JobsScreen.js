@@ -541,14 +541,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 20 : 50,
+  headerBar: {
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
     paddingBottom: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    color: '#fff',
   },
   listContent: {
     padding: 16,

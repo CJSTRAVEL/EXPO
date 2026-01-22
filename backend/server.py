@@ -3199,14 +3199,31 @@ async def get_driver_stats(driver: dict = Depends(get_current_driver)):
         expiry = driver.get(field)
         if expiry:
             try:
-                expiry_date = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
-                days_until = (expiry_date - now).days
+                # Handle various date formats
+                if isinstance(expiry, str):
+                    expiry_str = expiry.replace("Z", "+00:00")
+                    # Try parsing with timezone
+                    try:
+                        expiry_date = datetime.fromisoformat(expiry_str)
+                    except:
+                        # Try parsing without timezone
+                        expiry_date = datetime.fromisoformat(expiry.split("+")[0].split("T")[0] + "T00:00:00")
+                        expiry_date = expiry_date.replace(tzinfo=timezone.utc)
+                else:
+                    expiry_date = expiry
+                
+                # Make now timezone aware for comparison
+                now_aware = now if now.tzinfo else now.replace(tzinfo=timezone.utc)
+                expiry_aware = expiry_date if expiry_date.tzinfo else expiry_date.replace(tzinfo=timezone.utc)
+                
+                days_until = (expiry_aware - now_aware).days
                 documents.append({
                     "name": name,
                     "expiry_date": expiry,
                     "days_until_expiry": days_until
                 })
-            except:
+            except Exception as e:
+                print(f"Error parsing {field}: {e}")
                 pass
     
     return {

@@ -239,8 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    paddingTop: Platform.OS === 'ios' ? 20 : 50,
-    borderBottomWidth: 1,
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
   },
   headerAvatar: {
     width: 44,
@@ -256,6 +255,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '600',
+    color: '#fff',
   },
   headerSubtitle: {
     fontSize: 12,

@@ -995,44 +995,7 @@ const NewBookingPage = () => {
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-phone"
                 />
-                {/* Passenger/Client Search Popup for Phone */}
-                {showPassengerPopup && passengerSearch.field === 'phone' && (
-                  <div className="absolute z-50 top-full left-0 mt-1 bg-[#252525] border border-[#D4A853]/50 rounded-lg shadow-xl overflow-hidden min-w-[320px]">
-                    <div className="px-4 py-3 bg-[#1a1a1a] border-b border-[#3d3d3d]">
-                      <span className="text-sm text-[#D4A853] font-semibold">Matching Contacts</span>
-                      <span className="text-xs text-gray-400 ml-2">({matchedPassengers.length} found)</span>
-                    </div>
-                    <div className="max-h-[300px] overflow-y-auto">
-                      {matchedPassengers.map((p, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSelectPassenger(p)}
-                          className="w-full px-4 py-3 text-left hover:bg-[#D4A853]/20 transition-colors flex items-center gap-3 border-b border-[#3d3d3d] last:border-0"
-                        >
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${p.type === 'client' ? 'bg-blue-500/20' : 'bg-[#D4A853]/20'}`}>
-                            {p.type === 'client' ? (
-                              <Building2 className="w-5 h-5 text-blue-400" />
-                            ) : (
-                              <User className="w-5 h-5 text-[#D4A853]" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm text-white font-medium">
-                              {p.type === 'client' ? (p.name || p.contact_name) : (p.name || `${p.first_name || ''} ${p.last_name || ''}`)}
-                            </div>
-                            <div className="text-xs text-gray-400">{p.phone || p.customer_phone || p.contact_phone}</div>
-                            {p.type === 'client' && p.account_no && (
-                              <div className="text-xs text-blue-400">Account: {p.account_no}</div>
-                            )}
-                          </div>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.type === 'client' ? 'bg-blue-500/20 text-blue-300' : 'bg-[#D4A853]/20 text-[#D4A853]'}`}>
-                            {p.type === 'client' ? 'Client' : 'Passenger'}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Popup is now rendered as a fixed modal below */}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-gray-300 flex items-center gap-1">
@@ -1048,6 +1011,70 @@ const NewBookingPage = () => {
                 />
               </div>
             </div>
+
+            {/* Floating Contact Search Modal */}
+            {showPassengerPopup && matchedPassengers.length > 0 && (
+              <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20" onClick={() => setShowPassengerPopup(false)}>
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                <div 
+                  className="relative bg-[#1a1a1a] border-2 border-[#D4A853] rounded-xl shadow-2xl w-[450px] max-h-[500px] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="px-5 py-4 bg-gradient-to-r from-[#D4A853]/20 to-transparent border-b border-[#D4A853]/30 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#D4A853]/20 flex items-center justify-center">
+                        <Search className="w-5 h-5 text-[#D4A853]" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Matching Contacts</h3>
+                        <p className="text-sm text-gray-400">{matchedPassengers.length} result{matchedPassengers.length !== 1 ? 's' : ''} found</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setShowPassengerPopup(false)}
+                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                  
+                  {/* Results List */}
+                  <div className="max-h-[380px] overflow-y-auto">
+                    {matchedPassengers.map((p, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectPassenger(p)}
+                        className="w-full px-5 py-4 text-left hover:bg-[#D4A853]/10 transition-colors flex items-center gap-4 border-b border-[#2d2d2d] last:border-0"
+                      >
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${p.type === 'client' ? 'bg-blue-500/20' : 'bg-[#D4A853]/20'}`}>
+                          {p.type === 'client' ? (
+                            <Building2 className="w-6 h-6 text-blue-400" />
+                          ) : (
+                            <User className="w-6 h-6 text-[#D4A853]" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base text-white font-medium">
+                            {p.type === 'client' ? (p.name || p.contact_name) : (p.name || `${p.first_name || ''} ${p.last_name || ''}`)}
+                          </div>
+                          <div className="text-sm text-gray-400 mt-0.5">{p.phone || p.customer_phone || p.contact_phone}</div>
+                          {p.type === 'client' && p.account_no && (
+                            <div className="text-xs text-blue-400 mt-0.5">Account: {p.account_no}</div>
+                          )}
+                          {p.email && (
+                            <div className="text-xs text-gray-500 mt-0.5">{p.email}</div>
+                          )}
+                        </div>
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${p.type === 'client' ? 'bg-blue-500/20 text-blue-300' : 'bg-[#D4A853]/20 text-[#D4A853]'}`}>
+                          {p.type === 'client' ? 'Client' : 'Passenger'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Previous Bookings Popup */}
             {selectedPassengerBookings.length > 0 && (

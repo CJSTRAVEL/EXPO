@@ -264,21 +264,26 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
   const { dateLabel, time } = formatDateTime(booking.booking_datetime);
   
   const getVehicleTypeDisplay = () => {
-    return booking.vehicle_type_name || booking.vehicle_type || 'Standard';
+    // Check all possible fields for vehicle type
+    return booking.vehicle_type_name || booking.vehicle_type || booking.vehicleType || 'Unknown';
   };
 
   const getStartButtonLabel = (currentStatus) => {
     const labels = {
-      assigned: 'Start Ride',
+      assigned: 'View Details',
       on_way: 'View Ride',
       arrived: 'View Ride',
       in_progress: 'View Ride',
     };
-    return labels[currentStatus] || 'Start Ride';
+    return labels[currentStatus] || 'View Details';
   };
 
-  const handleStartRide = () => {
-    onViewDetail(booking);
+  const handleCardPress = () => {
+    onViewDetail(booking, 'details');
+  };
+
+  const handleButtonPress = () => {
+    onViewDetail(booking, 'action');
   };
 
   const isActiveRide = ['on_way', 'arrived', 'in_progress'].includes(booking.status);

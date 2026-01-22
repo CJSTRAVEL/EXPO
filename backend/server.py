@@ -3069,7 +3069,14 @@ async def get_driver_profile(driver: dict = Depends(get_current_driver)):
         "status": driver["status"],
         "is_online": driver.get("is_online", False),
         "on_break": driver.get("on_break", False),
-        "current_location": driver.get("current_location")
+        "current_location": driver.get("current_location"),
+        # Document expiry dates
+        "taxi_licence_expiry": driver.get("taxi_licence_expiry"),
+        "dbs_expiry": driver.get("dbs_expiry"),
+        "school_badge_expiry": driver.get("school_badge_expiry"),
+        "driving_licence_expiry": driver.get("driving_licence_expiry"),
+        "cpc_expiry": driver.get("cpc_expiry"),
+        "tacho_card_expiry": driver.get("tacho_card_expiry"),
     }
 
 @api_router.put("/driver/status")

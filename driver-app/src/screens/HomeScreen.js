@@ -19,14 +19,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { updateStatus, updateLocation, getVehicles } from '../services/api';
 
-// Custom car marker component
-const CarMarker = ({ theme }) => (
-  <View style={styles.carMarkerContainer}>
-    <Image 
-      source={require('../../assets/car-marker.png')} 
-      style={styles.carMarker}
-      resizeMode="contain"
-    />
+// Custom vehicle marker component - Minivan style
+const VehicleMarker = ({ theme }) => (
+  <View style={styles.vehicleMarkerContainer}>
+    <View style={[styles.vehicleMarkerBackground, { backgroundColor: theme.primary }]}>
+      <Ionicons name="bus" size={28} color="#fff" />
+    </View>
+    <View style={[styles.vehicleMarkerPointer, { borderTopColor: theme.primary }]} />
   </View>
 );
 

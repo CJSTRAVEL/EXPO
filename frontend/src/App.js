@@ -19,7 +19,6 @@ import RequestsPage from "@/pages/RequestsPage";
 import VehiclesPage from "@/pages/VehiclesPage";
 import AdminLogin from "@/pages/AdminLogin";
 import SettingsPage from "@/pages/SettingsPage";
-import MessageTemplatesPage from "@/pages/MessageTemplatesPage";
 import "@/App.css";
 
 const API = process.env.REACT_APP_BACKEND_URL;

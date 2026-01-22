@@ -1298,7 +1298,7 @@ const NewBookingPage = () => {
                             : "Select date & time"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-[#252525] border-[#3d3d3d]" align="start">
+                      <PopoverContent className="w-auto p-0 bg-white border-[#3d3d3d]" align="start">
                         <CalendarComponent
                           mode="single"
                           selected={formData.return_datetime}
@@ -1311,6 +1311,7 @@ const NewBookingPage = () => {
                             }
                           }}
                           disabled={(date) => date < formData.booking_datetime}
+                          className="bg-white text-black"
                         />
                       </PopoverContent>
                     </Popover>

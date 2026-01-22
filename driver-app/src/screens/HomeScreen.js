@@ -51,6 +51,7 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     initializeLocation();
     loadShiftState();
+    loadSelectedVehicle();
     return () => {
       if (locationSubscription.current) {
         locationSubscription.current.remove();

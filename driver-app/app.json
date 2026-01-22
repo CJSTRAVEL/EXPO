@@ -13,11 +13,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#1a3a5c"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "uk.co.cjstravel.driver",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "config": {
         "googleMapsApiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
       },
@@ -25,7 +27,11 @@
         "NSLocationWhenInUseUsageDescription": "CJ's Driver needs your location to navigate to pickup and dropoff locations.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "CJ's Driver needs your location to track your position and provide accurate ETAs.",
         "NSLocationAlwaysUsageDescription": "CJ's Driver needs background location access to update dispatch with your position.",
-        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -34,7 +40,7 @@
         "backgroundColor": "#1a3a5c"
       },
       "package": "uk.co.cjstravel.driver",
-      "versionCode": 2,
+      "versionCode": 3,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
@@ -52,15 +58,21 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      ["expo-location", {
-        "locationAlwaysAndWhenInUsePermission": "CJ's Driver needs your location to navigate to customers.",
-        "isAndroidBackgroundLocationEnabled": true,
-        "isAndroidForegroundServiceEnabled": true
-      }],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "CJ's Driver needs your location to navigate to customers.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
       "expo-secure-store",
-      ["expo-local-authentication", {
-        "faceIDPermission": "Allow CJ's Driver to use Face ID for biometric login."
-      }]
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow CJ's Driver to use Face ID for biometric login."
+        }
+      ]
     ],
     "extra": {
       "eas": {

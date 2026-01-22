@@ -157,12 +157,6 @@ export default function DashboardScreen({ navigation }) {
             onPress={() => navigation.navigate('Earnings')}
             color={theme.success}
           />
-          <QuickActionButton 
-            icon="card-outline" 
-            label="Cards" 
-            onPress={() => {}}
-            color={theme.warning}
-          />
         </View>
 
         {/* Date Range Selector */}

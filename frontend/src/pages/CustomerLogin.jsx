@@ -371,7 +371,21 @@ const CustomerLogin = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-200">Email</Label>
+                      <Label className="text-gray-200">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Input
+                          type="tel"
+                          placeholder="07700 900000"
+                          value={passengerData.phone}
+                          onChange={(e) => setPassengerData({ ...passengerData, phone: e.target.value })}
+                          className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-200">Email (optional)</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                         <Input
@@ -386,21 +400,23 @@ const CustomerLogin = () => {
                   </>
                 )}
 
-                <div className="space-y-2">
-                  <Label className="text-gray-200">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <Input
-                      type="tel"
-                      placeholder="07700 900000"
-                      value={passengerData.phone}
-                      onChange={(e) => setPassengerData({ ...passengerData, phone: e.target.value })}
-                      className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white"
-                      required
-                      data-testid="login-phone-input"
-                    />
+                {isLogin && (
+                  <div className="space-y-2">
+                    <Label className="text-gray-200">Phone or Email</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <Input
+                        type="text"
+                        placeholder="07700 900000 or john@example.com"
+                        value={passengerData.phone}
+                        onChange={(e) => setPassengerData({ ...passengerData, phone: e.target.value })}
+                        className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white"
+                        required
+                        data-testid="login-identifier-input"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-2">
                   <Label className="text-gray-200">Password</Label>

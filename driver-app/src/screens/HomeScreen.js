@@ -20,6 +20,41 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { updateStatus, updateLocation, getAvailableVehicles, selectVehicle, releaseVehicle, getDocumentNotifications } from '../services/api';
 
+// Online notification identifier
+const ONLINE_NOTIFICATION_ID = 'driver-online-status';
+
+// Show persistent online notification
+const showOnlineNotification = async () => {
+  try {
+    // First dismiss any existing notification
+    await Notifications.dismissNotificationAsync(ONLINE_NOTIFICATION_ID);
+    
+    // Schedule a persistent notification
+    await Notifications.scheduleNotificationAsync({
+      identifier: ONLINE_NOTIFICATION_ID,
+      content: {
+        title: "🟢 You're Online",
+        body: "CJ's Travel - Ready for bookings",
+        data: { type: 'online_status' },
+        sticky: true,
+        autoDismiss: false,
+      },
+      trigger: null, // Show immediately
+    });
+  } catch (error) {
+    console.log('Error showing online notification:', error);
+  }
+};
+
+// Remove online notification
+const hideOnlineNotification = async () => {
+  try {
+    await Notifications.dismissNotificationAsync(ONLINE_NOTIFICATION_ID);
+  } catch (error) {
+    console.log('Error hiding online notification:', error);
+  }
+};
+
 // Custom vehicle marker component - Minivan style
 const VehicleMarker = ({ theme }) => (
   <View style={styles.vehicleMarkerContainer}>

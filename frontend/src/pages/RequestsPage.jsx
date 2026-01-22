@@ -135,10 +135,10 @@ const RequestsPage = () => {
               <span className="text-xs">Pickup Time</span>
             </div>
             <p className="font-medium text-slate-800">
-              {format(new Date(request.pickup_datetime), "EEE, dd MMM")}
+              {safeFormatDate(request.pickup_datetime, "EEE, dd MMM")}
             </p>
             <p className="text-xl font-bold text-primary">
-              {format(new Date(request.pickup_datetime), "HH:mm")}
+              {safeFormatDate(request.pickup_datetime, "HH:mm")}
             </p>
           </div>
 

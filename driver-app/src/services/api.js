@@ -172,4 +172,19 @@ export const getChatMessages = async (bookingId) => {
   return response.data;
 };
 
+// Password API
+export const changePassword = async (currentPassword, newPassword) => {
+  const response = await api.put('/driver/change-password', {
+    current_password: currentPassword,
+    new_password: newPassword
+  });
+  return response.data;
+};
+
+// Vehicles API
+export const getVehicles = async () => {
+  const response = await api.get('/vehicles');
+  return response.data;
+};
+
 export default api;

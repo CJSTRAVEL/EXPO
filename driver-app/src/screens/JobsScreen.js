@@ -19,6 +19,7 @@ import {
   updateBookingStatus,
   notifyArrival,
 } from '../services/api';
+import ActiveRideScreen from './ActiveRideScreen';
 
 const formatDateTime = (dateString) => {
   const date = new Date(dateString);

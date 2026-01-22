@@ -2591,30 +2591,38 @@ async def register_client_portal(data: ClientPortalRegister):
 
 @api_router.post("/client-portal/login", response_model=ClientPortalResponse)
 async def login_client_portal(data: ClientPortalLogin):
-    """Login to client portal"""
-    client = await db.clients.find_one({"phone": data.phone}, {"_id": 0})
+    """Login to client portal using email"""
+    email = data.email.strip().lower()
+    
+    # Find client by email (check both email and contact_email fields)
+    client = await db.clients.find_one({
+        "$or": [
+            {"email": email},
+            {"contact_email": email}
+        ]
+    }, {"_id": 0})
     
     if not client:
-        raise HTTPException(status_code=401, detail="Invalid phone or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Check password
     if not client.get("password_hash"):
         raise HTTPException(status_code=401, detail="Account not set up for portal access")
     
     if client["password_hash"] != hash_password(data.password):
-        raise HTTPException(status_code=401, detail="Invalid phone or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Generate token
     token = jwt.encode({
         "client_id": client["id"],
-        "phone": client["phone"],
+        "phone": client.get("phone", ""),
         "exp": datetime.now(timezone.utc) + timedelta(days=30)
     }, JWT_SECRET, algorithm="HS256")
     
     return ClientPortalResponse(
         id=client["id"],
         name=client.get("contact_name") or client.get("name", ""),
-        phone=client["phone"],
+        phone=client.get("phone", ""),
         email=client.get("email") or client.get("contact_email"),
         company_name=client.get("name"),
         account_no=client.get("account_no"),

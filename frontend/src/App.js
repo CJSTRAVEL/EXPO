@@ -250,6 +250,7 @@ function AppRoutes() {
                 <Route path="/vehicles" element={<VehiclesPage />} />
                 <Route path="/passenger-portal" element={<PassengerPortalAdmin />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/message-templates" element={<MessageTemplatesPage />} />
               </Routes>
             </main>
             <Toaster position="top-right" richColors />

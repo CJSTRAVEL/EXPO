@@ -34,7 +34,7 @@ const showOnlineNotification = async () => {
       identifier: ONLINE_NOTIFICATION_ID,
       content: {
         title: "🟢 You're Online",
-        body: "CJ's Travel - Ready for bookings",
+        body: "CJ's Travel - Online",
         data: { type: 'online_status' },
         sticky: true,
         autoDismiss: false,

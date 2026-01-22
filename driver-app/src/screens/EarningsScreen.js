@@ -91,47 +91,61 @@ export default function EarningsScreen() {
           </View>
         </View>
 
-        <View style={styles.periodCard}>
+        <View style={[styles.periodCard, { backgroundColor: theme.card }]}>
           <View style={styles.periodHeader}>
-            <Ionicons name="stats-chart-outline" size={24} color={COLORS.success} />
-            <Text style={styles.periodTitle}>All Time</Text>
+            <Ionicons name="stats-chart-outline" size={24} color={theme.success} />
+            <Text style={[styles.periodTitle, { color: theme.text }]}>All Time</Text>
           </View>
           <View style={styles.periodStats}>
             <View style={styles.periodStat}>
-              <Text style={styles.periodStatValue}>
+              <Text style={[styles.periodStatValue, { color: theme.text }]}>
                 £{earnings?.all_time?.earnings?.toFixed(2) || '0.00'}
               </Text>
-              <Text style={styles.periodStatLabel}>Total Earnings</Text>
+              <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Total Earnings</Text>
             </View>
-            <View style={styles.periodDivider} />
+            <View style={[styles.periodDivider, { backgroundColor: theme.border }]} />
             <View style={styles.periodStat}>
-              <Text style={styles.periodStatValue}>
+              <Text style={[styles.periodStatValue, { color: theme.text }]}>
                 {earnings?.all_time?.trips || 0}
               </Text>
-              <Text style={styles.periodStatLabel}>Total Trips</Text>
+              <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Total Trips</Text>
             </View>
           </View>
         </View>
       </View>
 
       {/* Info */}
-      <View style={styles.infoCard}>
-        <Ionicons name="information-circle" size={20} color={COLORS.info} />
-        <Text style={styles.infoText}>
+      <View style={[styles.infoCard, { backgroundColor: theme.card }]}>
+        <Ionicons name="information-circle" size={20} color={theme.info} />
+        <Text style={[styles.infoText, { color: theme.textSecondary }]}>
           Earnings are calculated from completed trips. Contact dispatch for any discrepancies.
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  headerBar: {
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    color: '#fff',
+  },
+  scrollView: {
+    flex: 1,
   },
   featuredCard: {
-    backgroundColor: COLORS.primary,
     padding: 24,
     margin: 16,
     borderRadius: 20,

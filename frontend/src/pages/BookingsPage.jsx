@@ -1476,7 +1476,46 @@ const AssignDriverDialog = ({ booking, drivers, onAssign, onClose, onDriverAdded
     status: "available",
   });
 
-  const availableDrivers = drivers.filter(d => d.status === 'available');
+  // Get vehicle type for the booking to determine driver filtering
+  const getBookingVehicleCategory = () => {
+    if (!booking?.vehicle_type) return null;
+    const vType = booking.vehicle_type.toLowerCase();
+    // Check if it's a taxi type vehicle
+    if (vType.includes('taxi')) return 'taxi';
+    // Check if it's a PSV/minibus type (capacity > 4 or minibus in name)
+    if (vType.includes('minibus') || vType.includes('bus') || vType.includes('psv')) return 'psv';
+    // Check vehicle type details from the vehicle types list
+    const vehicleTypeDetails = vehicleTypes?.find(vt => vt.name === booking.vehicle_type);
+    if (vehicleTypeDetails && vehicleTypeDetails.capacity > 4) return 'psv';
+    return null; // No specific requirement
+  };
+
+  // Filter drivers based on booking vehicle type
+  const getFilteredDrivers = () => {
+    // Get all active drivers (any status except explicitly inactive)
+    const activeDrivers = drivers.filter(d => d.status !== 'inactive');
+    
+    const vehicleCategory = getBookingVehicleCategory();
+    
+    if (!vehicleCategory) {
+      // No specific filter, show all active drivers
+      return activeDrivers;
+    }
+    
+    // Filter by driver types
+    return activeDrivers.filter(driver => {
+      const driverTypes = driver.driver_types || [];
+      if (vehicleCategory === 'taxi') {
+        return driverTypes.includes('taxi');
+      }
+      if (vehicleCategory === 'psv') {
+        return driverTypes.includes('psv');
+      }
+      return true;
+    });
+  };
+
+  const filteredDrivers = getFilteredDrivers();
 
   const handleAssign = (e) => {
     e.preventDefault();

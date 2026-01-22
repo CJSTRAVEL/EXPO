@@ -273,6 +273,36 @@ const PassengerPortalAdmin = () => {
                             <Key className="w-4 h-4 mr-2" />
                             Change Password
                           </DropdownMenuItem>
+                          {passenger.is_blocked ? (
+                            <DropdownMenuItem 
+                              onClick={() => handleUnblockPassenger(passenger)}
+                              className="text-green-600"
+                              data-testid={`unblock-${passenger.id}`}
+                            >
+                              <ShieldOff className="w-4 h-4 mr-2" />
+                              Unblock Account
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem 
+                              onClick={() => handleBlockPassenger(passenger)}
+                              className="text-yellow-600"
+                              data-testid={`block-${passenger.id}`}
+                            >
+                              <Shield className="w-4 h-4 mr-2" />
+                              Block Account
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedPassenger(passenger);
+                              setShowDeleteModal(true);
+                            }}
+                            className="text-red-600"
+                            data-testid={`delete-${passenger.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Account
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>

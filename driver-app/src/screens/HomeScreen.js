@@ -101,6 +101,12 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     setIsShiftActive(user?.is_online || false);
+    // Show/hide notification based on online status
+    if (user?.is_online) {
+      showOnlineNotification();
+    } else {
+      hideOnlineNotification();
+    }
   }, [user]);
 
   // Shift timer effect

@@ -398,7 +398,7 @@ const ClientPortal = () => {
                           <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
-                              {request.pickup_datetime && format(new Date(request.pickup_datetime), "dd MMM yyyy HH:mm")}
+                              {safeFormatDate(request.pickup_datetime, "dd MMM yyyy HH:mm")}
                             </span>
                           </div>
                         </div>
@@ -414,7 +414,7 @@ const ClientPortal = () => {
                         </div>
                       </div>
                       <p className="text-xs text-gray-500 mt-3">
-                        Submitted {format(new Date(request.created_at), "dd MMM yyyy 'at' HH:mm")}
+                        Submitted {safeFormatDate(request.created_at, "dd MMM yyyy 'at' HH:mm")}
                       </p>
                     </div>
                   ))}

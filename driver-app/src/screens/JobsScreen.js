@@ -703,4 +703,140 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
+  // Job Details Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  detailsModal: {
+    flex: 1,
+    marginTop: 60,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  detailsCloseBtn: {
+    padding: 4,
+  },
+  detailsTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  detailsContent: {
+    flex: 1,
+    padding: 16,
+  },
+  detailsSection: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  detailsRowContent: {
+    flex: 1,
+  },
+  detailsLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  detailsValue: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  detailsValueLarge: {
+    fontSize: 28,
+    fontWeight: '300',
+    marginTop: 2,
+  },
+  detailsSubValue: {
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 32,
+  },
+  detailsAddress: {
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
+  fareValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  detailsInfoRow: {
+    flexDirection: 'row',
+    gap: 20,
+    marginTop: 12,
+    marginLeft: 32,
+  },
+  detailsInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  detailsInfoText: {
+    fontSize: 14,
+  },
+  locationDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  callButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stopItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 8,
+  },
+  stopAddress: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  detailsFooter: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  startRideFullBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 10,
+  },
+  startRideBtnText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
 });

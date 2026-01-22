@@ -208,26 +208,17 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleStartShift = async () => {
-    // Check if vehicle is selected before starting shift
-    if (!isShiftActive) {
-      try {
-        const selectedVehicle = await SecureStore.getItemAsync('selected_vehicle');
-        if (!selectedVehicle) {
-          Alert.alert(
-            'Vehicle Required',
-            'Please select a vehicle before starting your shift.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Select Vehicle', onPress: () => navigation.navigate('Menu', { screen: 'VehicleSettings' }) }
-            ]
-          );
-          return;
-        }
-      } catch (error) {
-        console.log('Error checking vehicle:', error);
-      }
+    // If shift is active, we're stopping - end the shift
+    if (isShiftActive) {
+      await stopShift();
+    } else {
+      // Starting shift - show vehicle selection popup
+      loadVehicles();
+      setShowVehicleModal(true);
     }
+  };
 
+  const startShiftAfterVehicleSelection = async () => {
     setStartingShift(true);
     try {
       const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
@@ -239,28 +230,45 @@ export default function HomeScreen({ navigation }) {
         );
       }
 
-      const newStatus = !isShiftActive;
-      await updateStatus({ is_online: newStatus });
-      setIsShiftActive(newStatus);
+      await updateStatus({ is_online: true });
+      setIsShiftActive(true);
       
-      if (newStatus) {
-        // Starting shift - save start time
-        const startTime = Date.now();
-        setShiftStartTime(startTime);
-        await SecureStore.setItemAsync('shift_start_time', startTime.toString());
-        Alert.alert('Shift Started', 'You are now online and available for bookings.');
-      } else {
-        // Ending shift - clear start time
-        setShiftStartTime(null);
-        setShiftDuration(0);
-        await SecureStore.deleteItemAsync('shift_start_time');
-        Alert.alert('Shift Ended', `You are now offline.\nShift duration: ${formatDuration(shiftDuration)}`);
-      }
+      // Starting shift - save start time
+      const startTime = Date.now();
+      setShiftStartTime(startTime);
+      await SecureStore.setItemAsync('shift_start_time', startTime.toString());
+      Alert.alert('Shift Started', `You are now online and available for bookings.\n\nVehicle: ${selectedVehicle?.registration || 'Selected'}`);
       
       await refreshProfile();
     } catch (error) {
-      console.error('Error updating shift status:', error);
-      Alert.alert('Error', 'Could not update your status. Please try again.');
+      console.error('Error starting shift:', error);
+      Alert.alert('Error', 'Could not start your shift. Please try again.');
+    } finally {
+      setStartingShift(false);
+    }
+  };
+
+  const stopShift = async () => {
+    setStartingShift(true);
+    try {
+      await updateStatus({ is_online: false });
+      setIsShiftActive(false);
+      
+      // Ending shift - clear start time and vehicle
+      const finalDuration = shiftDuration;
+      setShiftStartTime(null);
+      setShiftDuration(0);
+      await SecureStore.deleteItemAsync('shift_start_time');
+      
+      // Clear selected vehicle
+      await clearSelectedVehicle();
+      
+      Alert.alert('Shift Ended', `You are now offline.\nShift duration: ${formatDuration(finalDuration)}\n\nVehicle has been reset. Please select a vehicle when starting your next shift.`);
+      
+      await refreshProfile();
+    } catch (error) {
+      console.error('Error stopping shift:', error);
+      Alert.alert('Error', 'Could not end your shift. Please try again.');
     } finally {
       setStartingShift(false);
     }

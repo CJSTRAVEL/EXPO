@@ -291,28 +291,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  chatListContainer: {
-    flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 16,
-  },
-  chatListTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  chatListSubtitle: {
-    fontSize: 14,
-    marginBottom: 24,
-  },
-  emptyChat: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -80,
-  },
-  emptyChatText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
 });

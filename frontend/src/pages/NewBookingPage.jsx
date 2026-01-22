@@ -1319,7 +1319,7 @@ const NewBookingPage = () => {
                             : "Select date & time"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-white border-[#3d3d3d]" align="start">
+                      <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg" align="start">
                         <CalendarComponent
                           mode="single"
                           selected={formData.return_datetime}
@@ -1332,7 +1332,28 @@ const NewBookingPage = () => {
                             }
                           }}
                           disabled={(date) => date < formData.booking_datetime}
-                          className="bg-white text-black"
+                          className="bg-white rounded-md"
+                          classNames={{
+                            months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                            month: "space-y-4",
+                            caption: "flex justify-center pt-1 relative items-center",
+                            caption_label: "text-sm font-medium text-gray-900",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border border-gray-300 rounded-md hover:bg-gray-100",
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex",
+                            head_cell: "text-gray-500 rounded-md w-8 font-normal text-[0.8rem]",
+                            row: "flex w-full mt-2",
+                            cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-[#D4A853] rounded-md",
+                            day: "h-8 w-8 p-0 font-normal text-gray-900 hover:bg-gray-100 rounded-md",
+                            day_selected: "bg-[#D4A853] text-black hover:bg-[#c49743] focus:bg-[#D4A853]",
+                            day_today: "bg-gray-100 text-gray-900",
+                            day_outside: "text-gray-400",
+                            day_disabled: "text-gray-300",
+                            day_hidden: "invisible",
+                          }}
                         />
                       </PopoverContent>
                     </Popover>

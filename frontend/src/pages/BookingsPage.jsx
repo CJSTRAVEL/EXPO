@@ -1577,16 +1577,21 @@ const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose,
                       </div>
                     </SelectItem>
                   )}
-                  {availableDrivers.length === 0 && !booking?.driver_id ? (
+                  {filteredDrivers.length === 0 && !booking?.driver_id ? (
                     <div className="p-2 text-sm text-muted-foreground text-center">
-                      No available drivers
+                      No matching drivers available
                     </div>
                   ) : (
-                    availableDrivers.map((driver) => (
+                    filteredDrivers.map((driver) => (
                       <SelectItem key={driver.id} value={driver.id}>
                         <div className="flex items-center gap-2">
                           <UserCheck className="w-4 h-4" />
-                          {driver.name} - {driver.vehicle_type} ({driver.vehicle_number})
+                          {driver.name} - {driver.vehicle_type || 'N/A'} 
+                          {driver.driver_types?.length > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              ({driver.driver_types.map(t => t.toUpperCase()).join(', ')})
+                            </span>
+                          )}
                         </div>
                       </SelectItem>
                     ))

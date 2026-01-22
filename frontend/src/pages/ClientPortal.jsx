@@ -5,7 +5,8 @@ import { format } from "date-fns";
 import {
   MapPin, Calendar, Clock, User, Phone, Mail, LogOut,
   Building2, Plus, History, FileText, Loader2, CheckCircle,
-  XCircle, Clock3, Car, Users, Briefcase, ChevronRight
+  XCircle, Clock3, Car, Users, Briefcase, ChevronRight,
+  Download, Receipt, Eye, CreditCard, Banknote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +25,12 @@ const ClientPortal = () => {
   const [activeTab, setActiveTab] = useState("bookings");
   const [bookings, setBookings] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [showNewBooking, setShowNewBooking] = useState(false);
+  const [showInvoiceDetails, setShowInvoiceDetails] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(null);
 
   const [newBooking, setNewBooking] = useState({
     pickup_location: "",
@@ -53,14 +57,16 @@ const ClientPortal = () => {
     }
 
     try {
-      const [bookingsRes, requestsRes, vehicleTypesRes] = await Promise.all([
+      const [bookingsRes, requestsRes, invoicesRes, vehicleTypesRes] = await Promise.all([
         axios.get(`${API}/client-portal/bookings`, { headers: getAuthHeaders() }),
         axios.get(`${API}/client-portal/booking-requests`, { headers: getAuthHeaders() }),
+        axios.get(`${API}/client-portal/invoices`, { headers: getAuthHeaders() }).catch(() => ({ data: [] })),
         axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
       ]);
 
       setBookings(bookingsRes.data);
       setRequests(requestsRes.data);
+      setInvoices(invoicesRes.data);
       setVehicleTypes(vehicleTypesRes.data);
     } catch (error) {
       if (error.response?.status === 401) {
@@ -120,6 +126,33 @@ const ClientPortal = () => {
     }
   };
 
+  const handleDownloadInvoice = async (invoice) => {
+    setDownloadingInvoice(invoice.id);
+    try {
+      const response = await axios.get(
+        `${API}/client-portal/invoices/${invoice.id}/download`,
+        {
+          headers: getAuthHeaders(),
+          responseType: 'blob'
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${invoice.invoice_ref || 'invoice'}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Invoice downloaded successfully");
+    } catch (error) {
+      toast.error("Failed to download invoice");
+    } finally {
+      setDownloadingInvoice(null);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -129,6 +162,9 @@ const ClientPortal = () => {
       completed: "bg-gray-500/20 text-gray-400 border-gray-500/30",
       cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
       rejected: "bg-red-500/20 text-red-400 border-red-500/30",
+      paid: "bg-green-500/20 text-green-400 border-green-500/30",
+      unpaid: "bg-red-500/20 text-red-400 border-red-500/30",
+      overdue: "bg-orange-500/20 text-orange-400 border-orange-500/30",
     };
     const icons = {
       pending: Clock3,
@@ -138,6 +174,9 @@ const ClientPortal = () => {
       completed: CheckCircle,
       cancelled: XCircle,
       rejected: XCircle,
+      paid: CheckCircle,
+      unpaid: Clock3,
+      overdue: XCircle,
     };
     const Icon = icons[status] || Clock3;
     return (
@@ -146,6 +185,15 @@ const ClientPortal = () => {
         {status?.charAt(0).toUpperCase() + status?.slice(1)}
       </span>
     );
+  };
+
+  // Calculate invoice stats
+  const invoiceStats = {
+    total: invoices.length,
+    paid: invoices.filter(i => i.status === 'paid').length,
+    unpaid: invoices.filter(i => i.status !== 'paid').length,
+    totalAmount: invoices.reduce((sum, i) => sum + (i.total || 0), 0),
+    outstandingAmount: invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + (i.total || 0), 0),
   };
 
   if (loading) {
@@ -209,6 +257,7 @@ const ClientPortal = () => {
             {[
               { id: "bookings", label: "Confirmed Bookings", icon: Car },
               { id: "requests", label: "Pending Requests", icon: Clock3 },
+              { id: "invoices", label: "Invoices", icon: Receipt },
               { id: "history", label: "History", icon: History },
             ].map((tab) => (
               <button
@@ -223,6 +272,11 @@ const ClientPortal = () => {
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
+                {tab.id === "invoices" && invoiceStats.unpaid > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+                    {invoiceStats.unpaid}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -354,6 +408,149 @@ const ClientPortal = () => {
                   ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Invoices */}
+        {activeTab === "invoices" && (
+          <div className="space-y-6">
+            {/* Invoice Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/20">
+                    <Receipt className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white">{invoiceStats.total}</p>
+                    <p className="text-xs text-gray-400">Total Invoices</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/20">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white">{invoiceStats.paid}</p>
+                    <p className="text-xs text-gray-400">Paid</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-red-500/20">
+                    <Clock3 className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white">{invoiceStats.unpaid}</p>
+                    <p className="text-xs text-gray-400">Unpaid</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-yellow-500/20">
+                    <Banknote className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white">£{invoiceStats.outstandingAmount.toFixed(2)}</p>
+                    <p className="text-xs text-gray-400">Outstanding</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Invoice List */}
+            <div>
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
+                <Receipt className="w-5 h-5 text-blue-400" />
+                Your Invoices
+              </h2>
+              {invoices.length === 0 ? (
+                <div className="text-center py-12 bg-[#1a1a1a] rounded-xl border border-[#2d2d2d]">
+                  <Receipt className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">No invoices yet</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Invoices will appear here after your bookings are completed
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {invoices.map((invoice) => (
+                    <div
+                      key={invoice.id}
+                      className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4 hover:border-blue-500/30 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-blue-500/10">
+                            <FileText className="w-6 h-6 text-blue-400" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-semibold">{invoice.invoice_ref}</span>
+                              {getStatusBadge(invoice.status || 'unpaid')}
+                            </div>
+                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {invoice.created_at ? format(new Date(invoice.created_at), "dd MMM yyyy") : 'N/A'}
+                              </span>
+                              {invoice.due_date && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  Due: {format(new Date(invoice.due_date), "dd MMM yyyy")}
+                                </span>
+                              )}
+                              <span>{invoice.journey_count || 0} journeys</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-white">
+                              £{(invoice.total || 0).toFixed(2)}
+                            </p>
+                            {invoice.vat_amount && (
+                              <p className="text-xs text-gray-500">
+                                Inc. VAT £{invoice.vat_amount.toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowInvoiceDetails(invoice)}
+                              className="text-gray-400 hover:text-white"
+                              data-testid={`view-invoice-${invoice.id}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadInvoice(invoice)}
+                              disabled={downloadingInvoice === invoice.id}
+                              className="text-blue-400 hover:text-blue-300"
+                              data-testid={`download-invoice-${invoice.id}`}
+                            >
+                              {downloadingInvoice === invoice.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Download className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -559,6 +756,95 @@ const ClientPortal = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Details Dialog */}
+      <Dialog open={!!showInvoiceDetails} onOpenChange={() => setShowInvoiceDetails(null)}>
+        <DialogContent className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-400" />
+              Invoice {showInvoiceDetails?.invoice_ref}
+            </DialogTitle>
+          </DialogHeader>
+          {showInvoiceDetails && (
+            <div className="space-y-6">
+              {/* Invoice Header */}
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-400">Invoice Date</p>
+                  <p className="text-white font-medium">
+                    {showInvoiceDetails.created_at ? format(new Date(showInvoiceDetails.created_at), "dd MMM yyyy") : 'N/A'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Status</p>
+                  {getStatusBadge(showInvoiceDetails.status || 'unpaid')}
+                </div>
+              </div>
+
+              {/* Period */}
+              {(showInvoiceDetails.start_date || showInvoiceDetails.end_date) && (
+                <div className="bg-[#2d2d2d] rounded-lg p-4">
+                  <p className="text-sm text-gray-400 mb-1">Billing Period</p>
+                  <p className="text-white">
+                    {showInvoiceDetails.start_date && format(new Date(showInvoiceDetails.start_date), "dd MMM yyyy")}
+                    {' - '}
+                    {showInvoiceDetails.end_date && format(new Date(showInvoiceDetails.end_date), "dd MMM yyyy")}
+                  </p>
+                </div>
+              )}
+
+              {/* Summary */}
+              <div className="bg-[#2d2d2d] rounded-lg p-4 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Journeys</span>
+                  <span className="text-white">{showInvoiceDetails.journey_count || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Subtotal</span>
+                  <span className="text-white">£{(showInvoiceDetails.subtotal || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">VAT (20%)</span>
+                  <span className="text-white">£{(showInvoiceDetails.vat_amount || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold border-t border-[#3d3d3d] pt-3">
+                  <span className="text-white">Total</span>
+                  <span className="text-blue-400">£{(showInvoiceDetails.total || 0).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => handleDownloadInvoice(showInvoiceDetails)}
+                  disabled={downloadingInvoice === showInvoiceDetails.id}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  {downloadingInvoice === showInvoiceDetails.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download PDF
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowInvoiceDetails(null)}
+                  className="border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

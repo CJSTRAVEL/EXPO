@@ -2689,7 +2689,6 @@ const BookingsPage = () => {
                         </div>
                       </div>
                     </div>
-                        </div>
                         
                         {/* Return Journey Card - Shown directly under parent */}
                         {linkedReturn && (

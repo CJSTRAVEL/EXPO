@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from enum import Enum
 from datetime import datetime, timezone, timedelta
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import hashlib
 import jwt
@@ -18,12 +17,28 @@ load_dotenv(ROOT_DIR / '.env')
 
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required")
 JWT_ALGORITHM = "HS256"
 
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'cjbooking')]
+# Database connection - lazy loaded to avoid circular imports
+_db = None
+
+def get_db():
+    global _db
+    if _db is None:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        mongo_url = os.environ.get('MONGO_URL')
+        client = AsyncIOMotorClient(mongo_url)
+        _db = client[os.environ.get('DB_NAME', 'cjbooking')]
+    return _db
+
+# Property-like access for backward compatibility
+class DBProxy:
+    def __getattr__(self, name):
+        return getattr(get_db(), name)
+
+db = DBProxy()
 
 # Security
 security = HTTPBearer(auto_error=False)

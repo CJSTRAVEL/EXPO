@@ -35,6 +35,7 @@ export const LIGHT_THEME = {
 
 export const DARK_THEME = {
   primary: '#d4af37',
+  primaryDark: '#b8962f',
   secondary: '#1a3a5c',
   success: '#22c55e',
   warning: '#f59e0b',
@@ -58,6 +59,7 @@ export const DARK_THEME = {
   textSecondary: '#a0a0a0',
   border: '#333333',
   inputBg: '#2d2d2d',
+  headerBg: '#1a1a1a',
   isDark: true,
 };
 

@@ -1245,16 +1245,15 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                         if (formData.vehicle_type) {
                           const vType = formData.vehicle_type.toLowerCase();
                           const driverTypes = d.driver_types || [];
-                          if (vType.includes('taxi')) {
+                          
+                          // CJ's 16 Minibus or CJ's 16 Minibus with trailer = PSV
+                          if (vType.includes('16')) {
+                            return driverTypes.includes('psv');
+                          }
+                          
+                          // CJ's Taxi = Taxi, CJ's 8 Minibus = Taxi
+                          if (vType.includes('taxi') || vType.includes('8 minibus') || vType.includes('8minibus')) {
                             return driverTypes.includes('taxi');
-                          }
-                          if (vType.includes('minibus') || vType.includes('bus')) {
-                            return driverTypes.includes('psv');
-                          }
-                          // Check capacity from vehicle types
-                          const vehicleTypeDetails = vehicleTypes?.find(vt => vt.name === formData.vehicle_type);
-                          if (vehicleTypeDetails && vehicleTypeDetails.capacity > 4) {
-                            return driverTypes.includes('psv');
                           }
                         }
                         return true;

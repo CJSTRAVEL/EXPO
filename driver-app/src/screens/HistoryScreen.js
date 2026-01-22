@@ -104,53 +104,67 @@ export default function HistoryScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header */}
+      <View style={[styles.headerBar, { backgroundColor: theme.headerBg }]}>
+        <Text style={styles.headerTitle}>History</Text>
+      </View>
+
       <FlatList
         data={history.bookings}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <HistoryCard booking={item} />}
+        renderItem={({ item }) => <HistoryCard booking={item} theme={theme} />}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
         }
         contentContainerStyle={styles.listContent}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={
-          <Text style={styles.headerText}>
+          <Text style={[styles.headerText, { color: theme.textSecondary }]}>
             {history.total} completed trip{history.total !== 1 ? 's' : ''}
           </Text>
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={64} color={COLORS.textSecondary} />
-            <Text style={styles.emptyText}>No completed trips yet</Text>
+            <Ionicons name="time-outline" size={64} color={theme.textSecondary} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No completed trips yet</Text>
           </View>
         }
         ListFooterComponent={
           loading ? (
-            <Text style={styles.loadingText}>Loading more...</Text>
+            <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading more...</Text>
           ) : null
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  headerBar: {
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    color: '#fff',
   },
   listContent: {
     padding: 16,
   },
   headerText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: COLORS.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -169,14 +183,12 @@ const styles = StyleSheet.create({
   bookingId: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: COLORS.primary,
   },
   dateContainer: {
     alignItems: 'flex-end',
   },
   dateText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
   },
   timeText: {
     fontSize: 14,

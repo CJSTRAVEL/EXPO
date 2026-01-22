@@ -771,6 +771,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
+  vehicleInUse: {
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: '500',
+  },
   noVehiclesContainer: {
     flex: 1,
     justifyContent: 'center',

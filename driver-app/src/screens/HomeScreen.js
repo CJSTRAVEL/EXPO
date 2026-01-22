@@ -56,13 +56,31 @@ const hideOnlineNotification = async () => {
   }
 };
 
-// Custom vehicle marker component - Minivan style
-const VehicleMarker = ({ theme }) => (
+// Custom vehicle marker component - White Minibus top-down view
+const VehicleMarker = ({ rotation = 0 }) => (
   <View style={styles.vehicleMarkerContainer}>
-    <View style={[styles.vehicleMarkerBackground, { backgroundColor: theme.primary }]}>
-      <Ionicons name="bus" size={28} color="#fff" />
+    <View style={[styles.minibusShadow, { transform: [{ rotate: `${rotation}deg` }] }]} />
+    <View style={[styles.minibusBody, { transform: [{ rotate: `${rotation}deg` }] }]}>
+      {/* Rear of minibus */}
+      <View style={styles.minibusRear} />
+      {/* Main body */}
+      <View style={styles.minibusMainBody}>
+        {/* Roof rack lines */}
+        <View style={styles.roofLine} />
+        <View style={styles.roofLine} />
+        <View style={styles.roofLine} />
+        <View style={styles.roofLine} />
+        <View style={styles.roofLine} />
+        <View style={styles.roofLine} />
+      </View>
+      {/* Windshield */}
+      <View style={styles.minibusWindshield} />
+      {/* Front bumper */}
+      <View style={styles.minibusFront} />
+      {/* Side mirrors */}
+      <View style={[styles.sideMirror, styles.leftMirror]} />
+      <View style={[styles.sideMirror, styles.rightMirror]} />
     </View>
-    <View style={[styles.vehicleMarkerPointer, { borderTopColor: theme.primary }]} />
   </View>
 );
 

@@ -787,7 +787,7 @@ const ClientPortal = () => {
                 <div>
                   <p className="text-sm text-gray-400">Invoice Date</p>
                   <p className="text-white font-medium">
-                    {showInvoiceDetails.created_at ? format(new Date(showInvoiceDetails.created_at), "dd MMM yyyy") : 'N/A'}
+                    {safeFormatDate(showInvoiceDetails.created_at, "dd MMM yyyy", 'N/A')}
                   </p>
                 </div>
                 <div className="text-right">
@@ -801,9 +801,9 @@ const ClientPortal = () => {
                 <div className="bg-[#2d2d2d] rounded-lg p-4">
                   <p className="text-sm text-gray-400 mb-1">Billing Period</p>
                   <p className="text-white">
-                    {showInvoiceDetails.start_date && format(new Date(showInvoiceDetails.start_date), "dd MMM yyyy")}
+                    {safeFormatDate(showInvoiceDetails.start_date, "dd MMM yyyy")}
                     {' - '}
-                    {showInvoiceDetails.end_date && format(new Date(showInvoiceDetails.end_date), "dd MMM yyyy")}
+                    {safeFormatDate(showInvoiceDetails.end_date, "dd MMM yyyy")}
                   </p>
                 </div>
               )}

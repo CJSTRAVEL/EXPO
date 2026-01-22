@@ -13,6 +13,8 @@ import PassengersPage from "@/pages/PassengersPage";
 import PassengerLogin from "@/pages/PassengerLogin";
 import PassengerPortal from "@/pages/PassengerPortal";
 import PassengerPortalAdmin from "@/pages/PassengerPortalAdmin";
+import CustomerLogin from "@/pages/CustomerLogin";
+import ClientPortal from "@/pages/ClientPortal";
 import ClientsPage from "@/pages/ClientsPage";
 import ContractWorkPage from "@/pages/ContractWorkPage";
 import RequestsPage from "@/pages/RequestsPage";
@@ -224,9 +226,11 @@ function AppRoutes() {
       {/* Short URL for booking details - uses booking_id like CJ-001 */}
       <Route path="/b/:shortId" element={<ShortUrlBooking />} />
       
-      {/* Passenger Login and Portal */}
+      {/* Customer Login and Portals */}
       <Route path="/login" element={<PassengerLogin />} />
       <Route path="/portal" element={<PassengerPortal />} />
+      <Route path="/customer-login" element={<CustomerLogin />} />
+      <Route path="/client-portal" element={<ClientPortal />} />
       
       {/* Admin Login */}
       <Route path="/admin/login" element={<AdminLogin />} />

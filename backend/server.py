@@ -2562,7 +2562,7 @@ async def login_client_portal(data: ClientPortalLogin):
     if not client.get("password_hash"):
         raise HTTPException(status_code=401, detail="Account not set up for portal access")
     
-    if not verify_password(data.password, client["password_hash"]):
+    if client["password_hash"] != hash_password(data.password):
         raise HTTPException(status_code=401, detail="Invalid phone or password")
     
     # Generate token

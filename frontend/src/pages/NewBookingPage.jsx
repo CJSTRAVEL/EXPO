@@ -864,7 +864,7 @@ const NewBookingPage = () => {
             {/* Client/Account Selection */}
             {clients.length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Account</Label>
+                <Label className="text-xs text-gray-300">Account</Label>
                 <Select
                   value={formData.client_id || "none"}
                   onValueChange={(value) => setFormData({ ...formData, client_id: value === "none" ? "" : value })}
@@ -873,9 +873,9 @@ const NewBookingPage = () => {
                     <SelectValue placeholder="Select account..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#252525] border-[#3d3d3d]">
-                    <SelectItem value="none">No Account (Direct)</SelectItem>
+                    <SelectItem value="none" className="text-white">No Account (Direct)</SelectItem>
                     {clients.filter(c => c.status === "active").map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
+                      <SelectItem key={client.id} value={client.id} className="text-white">
                         {client.account_no} - {client.name}
                       </SelectItem>
                     ))}
@@ -885,18 +885,45 @@ const NewBookingPage = () => {
             )}
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">First Name *</Label>
+              <div className="space-y-1.5 relative">
+                <Label className="text-xs text-gray-300">First Name *</Label>
                 <Input
                   value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, first_name: e.target.value });
+                    searchPassengers(e.target.value, 'name');
+                  }}
+                  onFocus={() => formData.first_name && searchPassengers(formData.first_name, 'name')}
                   placeholder="John"
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-first-name"
                 />
+                {/* Passenger Search Popup */}
+                {showPassengerPopup && passengerSearch.field === 'name' && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#252525] border border-[#D4A853]/50 rounded-lg shadow-xl overflow-hidden">
+                    <div className="px-3 py-2 bg-[#1a1a1a] border-b border-[#3d3d3d]">
+                      <span className="text-xs text-[#D4A853] font-medium">Matching Passengers</span>
+                    </div>
+                    {matchedPassengers.map((p, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectPassenger(p)}
+                        className="w-full px-3 py-2 text-left hover:bg-[#D4A853]/20 transition-colors flex items-center gap-2 border-b border-[#3d3d3d] last:border-0"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#D4A853]/20 flex items-center justify-center">
+                          <User className="w-4 h-4 text-[#D4A853]" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-white font-medium">{p.first_name} {p.last_name}</div>
+                          <div className="text-xs text-gray-400">{p.phone || p.customer_phone}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400">Last Name</Label>
+                <Label className="text-xs text-gray-300">Last Name</Label>
                 <Input
                   value={formData.last_name}
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
@@ -908,20 +935,47 @@ const NewBookingPage = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400 flex items-center gap-1">
+              <div className="space-y-1.5 relative">
+                <Label className="text-xs text-gray-300 flex items-center gap-1">
                   <Phone className="w-3 h-3" /> Mobile *
                 </Label>
                 <Input
                   value={formData.customer_phone}
-                  onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, customer_phone: e.target.value });
+                    searchPassengers(e.target.value, 'phone');
+                  }}
+                  onFocus={() => formData.customer_phone && searchPassengers(formData.customer_phone, 'phone')}
                   placeholder="+44 7700 900123"
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-phone"
                 />
+                {/* Passenger Search Popup for Phone */}
+                {showPassengerPopup && passengerSearch.field === 'phone' && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#252525] border border-[#D4A853]/50 rounded-lg shadow-xl overflow-hidden">
+                    <div className="px-3 py-2 bg-[#1a1a1a] border-b border-[#3d3d3d]">
+                      <span className="text-xs text-[#D4A853] font-medium">Matching Passengers</span>
+                    </div>
+                    {matchedPassengers.map((p, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectPassenger(p)}
+                        className="w-full px-3 py-2 text-left hover:bg-[#D4A853]/20 transition-colors flex items-center gap-2 border-b border-[#3d3d3d] last:border-0"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#D4A853]/20 flex items-center justify-center">
+                          <User className="w-4 h-4 text-[#D4A853]" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-white font-medium">{p.first_name} {p.last_name}</div>
+                          <div className="text-xs text-gray-400">{p.phone || p.customer_phone}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-400 flex items-center gap-1">
+                <Label className="text-xs text-gray-300 flex items-center gap-1">
                   <Mail className="w-3 h-3" /> Email
                 </Label>
                 <Input
@@ -934,6 +988,58 @@ const NewBookingPage = () => {
                 />
               </div>
             </div>
+
+            {/* Previous Bookings Popup */}
+            {selectedPassengerBookings.length > 0 && (
+              <div className="bg-[#1a1a1a] border border-[#D4A853]/50 rounded-lg overflow-hidden">
+                <div className="px-3 py-2 bg-[#D4A853]/20 border-b border-[#D4A853]/30 flex items-center justify-between">
+                  <span className="text-sm text-[#D4A853] font-medium">Previous Journeys</span>
+                  <button 
+                    onClick={() => setSelectedPassengerBookings([])}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="max-h-48 overflow-y-auto">
+                  {loadingPassengerHistory ? (
+                    <div className="p-4 text-center text-gray-400">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                    </div>
+                  ) : (
+                    selectedPassengerBookings.map((booking, idx) => (
+                      <div key={idx} className="p-3 border-b border-[#3d3d3d] last:border-0 hover:bg-[#252525]">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-gray-400 mb-1">
+                              {format(new Date(booking.booking_datetime), "dd/MM/yyyy HH:mm")}
+                            </div>
+                            <div className="flex items-center gap-1 text-xs mb-1">
+                              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                              <span className="text-white truncate">{booking.pickup_location}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs">
+                              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                              <span className="text-white truncate">{booking.dropoff_location}</span>
+                            </div>
+                            {booking.fare && (
+                              <div className="text-xs text-[#D4A853] mt-1">£{booking.fare.toFixed(2)}</div>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => usePreviousBookingDetails(booking)}
+                            className="h-7 text-xs bg-[#D4A853] hover:bg-[#c49743] text-black"
+                          >
+                            Use Details
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </Section>
 
           {/* WHERE Section */}

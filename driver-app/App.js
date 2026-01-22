@@ -124,23 +124,32 @@ function AppNavigator() {
   const { theme } = useTheme();
   const notificationListener = useRef();
   const responseListener = useRef();
+  const navigationRef = useRef();
 
   useEffect(() => {
+    // Handle incoming notifications while app is in foreground
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
+      // Could show in-app alert here if needed
     });
 
+    // Handle notification tap/response
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification response:', response);
       const data = response.notification.request.content.data;
-      if (data?.booking_id) {
-        // Navigate to booking details
+      if (data?.type === 'new_booking' && data?.booking_id) {
+        // Navigate to bookings tab when user taps notification
+        // Navigation will happen after app loads
       }
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener.current);
-      Notifications.removeNotificationSubscription(responseListener.current);
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
     };
   }, []);
 

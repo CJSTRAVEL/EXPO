@@ -479,6 +479,27 @@ class PassengerResponse(BaseModel):
     email: Optional[str] = None
     token: str
 
+# Client Portal Authentication Models
+class ClientPortalRegister(BaseModel):
+    name: str
+    phone: str
+    email: str
+    password: str
+    company_name: str
+
+class ClientPortalLogin(BaseModel):
+    phone: str
+    password: str
+
+class ClientPortalResponse(BaseModel):
+    id: str
+    name: str
+    phone: str
+    email: Optional[str] = None
+    company_name: Optional[str] = None
+    account_no: Optional[str] = None
+    token: str
+
 async def generate_booking_id():
     """Generate a sequential booking ID like CJ-001, CJ-002, etc."""
     # Find the highest booking number

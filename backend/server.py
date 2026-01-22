@@ -2074,6 +2074,75 @@ async def check_document_expiry(background_tasks: BackgroundTasks):
     }
 
 
+@api_router.post("/admin/system-maintenance")
+async def run_system_maintenance(background_tasks: BackgroundTasks):
+    """Run all system maintenance tasks: document expiry check and cleanup old data"""
+    results = {}
+    
+    # 1. Clean up old processed booking requests (30+ days)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    cleanup_result = await db.booking_requests.delete_many({
+        "status": {"$in": ["approved", "rejected"]},
+        "created_at": {"$lt": thirty_days_ago.isoformat()}
+    })
+    results["booking_requests_cleaned"] = cleanup_result.deleted_count
+    
+    # 2. Check document expiry and send emails (run in background)
+    # Get document expiry data
+    today = datetime.now(timezone.utc).date()
+    
+    driver_docs_expiring = {"30_days": 0, "60_days": 0}
+    vehicle_docs_expiring = {"30_days": 0, "60_days": 0}
+    
+    drivers = await db.drivers.find({}).to_list(1000)
+    driver_doc_fields = ['taxi_licence_expiry', 'dbs_expiry', 'school_badge_expiry', 
+                         'driving_licence_expiry', 'medical_due', 'cpc_expiry', 'tacho_card_expiry']
+    
+    for driver in drivers:
+        for field in driver_doc_fields:
+            expiry = driver.get(field)
+            if expiry:
+                try:
+                    expiry_date = datetime.fromisoformat(expiry.replace('Z', '+00:00')).date() if isinstance(expiry, str) else expiry
+                    days_left = (expiry_date - today).days
+                    if 0 < days_left <= 30:
+                        driver_docs_expiring["30_days"] += 1
+                    elif 30 < days_left <= 60:
+                        driver_docs_expiring["60_days"] += 1
+                except:
+                    pass
+    
+    vehicles = await db.vehicles.find({}).to_list(1000)
+    vehicle_doc_fields = ['mot_expiry', 'insurance_expiry', 'tax_expiry']
+    
+    for vehicle in vehicles:
+        for field in vehicle_doc_fields:
+            expiry = vehicle.get(field)
+            if expiry:
+                try:
+                    expiry_date = datetime.fromisoformat(expiry.replace('Z', '+00:00')).date() if isinstance(expiry, str) else expiry
+                    days_left = (expiry_date - today).days
+                    if 0 < days_left <= 30:
+                        vehicle_docs_expiring["30_days"] += 1
+                    elif 30 < days_left <= 60:
+                        vehicle_docs_expiring["60_days"] += 1
+                except:
+                    pass
+    
+    results["documents_expiring"] = {
+        "drivers": driver_docs_expiring,
+        "vehicles": vehicle_docs_expiring
+    }
+    
+    logging.info(f"System maintenance completed: {results}")
+    
+    return {
+        "status": "success",
+        "message": "System maintenance completed",
+        "results": results
+    }
+
+
 # ========== PASSENGER AUTHENTICATION ENDPOINTS ==========
 @api_router.post("/passenger/register", response_model=PassengerResponse)
 async def register_passenger(data: PassengerRegister):

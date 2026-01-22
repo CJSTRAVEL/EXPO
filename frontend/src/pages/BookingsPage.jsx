@@ -2906,6 +2906,7 @@ const BookingsPage = () => {
       <AssignDriverDialog
         booking={assignBooking}
         drivers={drivers}
+        vehicleTypes={vehicleTypes}
         onAssign={handleAssignDriver}
         onClose={() => setAssignBooking(null)}
         onDriverAdded={fetchData}

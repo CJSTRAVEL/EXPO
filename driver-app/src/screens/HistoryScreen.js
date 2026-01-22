@@ -5,9 +5,12 @@ import {
   StyleSheet,
   FlatList,
   RefreshControl,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, BOOKING_STATUS_LABELS } from '../config';
+import { useTheme } from '../context/ThemeContext';
+import { BOOKING_STATUS_LABELS } from '../config';
 import { getHistory } from '../services/api';
 
 const formatDateTime = (dateString) => {
@@ -19,30 +22,30 @@ const formatDateTime = (dateString) => {
   };
 };
 
-const HistoryCard = ({ booking }) => {
+const HistoryCard = ({ booking, theme }) => {
   const { date, time } = formatDateTime(booking.completed_at || booking.booking_datetime);
   const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: theme.card }]}>
       <View style={styles.cardHeader}>
-        <Text style={styles.bookingId}>{booking.booking_id}</Text>
+        <Text style={[styles.bookingId, { color: theme.textSecondary }]}>{booking.booking_id}</Text>
         <View style={styles.dateContainer}>
-          <Text style={styles.dateText}>{date}</Text>
-          <Text style={styles.timeText}>{time}</Text>
+          <Text style={[styles.dateText, { color: theme.text }]}>{date}</Text>
+          <Text style={[styles.timeText, { color: theme.textSecondary }]}>{time}</Text>
         </View>
       </View>
 
       <View style={styles.routeContainer}>
         <View style={styles.routePoint}>
-          <View style={[styles.routeDot, { backgroundColor: COLORS.success }]} />
-          <Text style={styles.routeAddress} numberOfLines={1}>
+          <View style={[styles.routeDot, { backgroundColor: theme.success }]} />
+          <Text style={[styles.routeAddress, { color: theme.text }]} numberOfLines={1}>
             {booking.pickup_location}
           </Text>
         </View>
         <View style={styles.routePoint}>
-          <View style={[styles.routeDot, { backgroundColor: COLORS.danger }]} />
-          <Text style={styles.routeAddress} numberOfLines={1}>
+          <View style={[styles.routeDot, { backgroundColor: theme.danger }]} />
+          <Text style={[styles.routeAddress, { color: theme.text }]} numberOfLines={1}>
             {booking.dropoff_location}
           </Text>
         </View>
@@ -50,11 +53,11 @@ const HistoryCard = ({ booking }) => {
 
       <View style={styles.cardFooter}>
         <View style={styles.customerInfo}>
-          <Ionicons name="person-outline" size={14} color={COLORS.textSecondary} />
-          <Text style={styles.customerName}>{customerName}</Text>
+          <Ionicons name="person-outline" size={14} color={theme.textSecondary} />
+          <Text style={[styles.customerName, { color: theme.textSecondary }]}>{customerName}</Text>
         </View>
         {booking.fare && (
-          <Text style={styles.fare}>£{booking.fare.toFixed(2)}</Text>
+          <Text style={[styles.fare, { color: theme.success }]}>£{booking.fare.toFixed(2)}</Text>
         )}
       </View>
     </View>
@@ -62,6 +65,7 @@ const HistoryCard = ({ booking }) => {
 };
 
 export default function HistoryScreen() {
+  const { theme } = useTheme();
   const [history, setHistory] = useState({ bookings: [], total: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);

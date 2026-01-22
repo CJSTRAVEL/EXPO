@@ -463,6 +463,58 @@ const PassengerPortalAdmin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={(open) => {
+        setShowDeleteModal(open);
+        if (!open) {
+          setSelectedPassenger(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="delete-user-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Passenger Account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedPassenger && (
+              <>
+                <p className="text-slate-700">
+                  Are you sure you want to permanently delete <strong>{selectedPassenger.name}</strong>'s account?
+                </p>
+                <p className="text-sm text-slate-500 mt-2">
+                  This action cannot be undone. The passenger will no longer be able to log in to the portal.
+                </p>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeletePassenger} 
+              disabled={saving}
+              data-testid="confirm-delete-btn"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Account
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

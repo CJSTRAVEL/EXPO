@@ -341,6 +341,9 @@ export default function HomeScreen({ navigation }) {
       await updateStatus({ is_online: false });
       setIsShiftActive(false);
       
+      // Hide persistent online notification
+      await hideOnlineNotification();
+      
       // Ending shift - clear start time and vehicle
       const finalDuration = shiftDuration;
       setShiftStartTime(null);

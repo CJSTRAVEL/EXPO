@@ -60,7 +60,7 @@ export default function LoginScreen() {
   const handleBiometricLogin = async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Login to CJ\'s Driver',
+        promptMessage: 'Login to CJ\'s Travel Driver',
         subtitle: 'Use your fingerprint or face to login',
         cancelLabel: 'Cancel',
         fallbackLabel: 'Use Password',

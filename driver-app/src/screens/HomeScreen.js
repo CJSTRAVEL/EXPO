@@ -454,31 +454,69 @@ export default function HomeScreen({ navigation }) {
                 style={styles.vehicleList}
                 showsVerticalScrollIndicator={false}
               >
-                {vehicles.map((vehicle) => (
-                  <TouchableOpacity
-                    key={vehicle.id}
-                    style={[styles.vehicleCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    onPress={() => handleSelectVehicle(vehicle)}
-                  >
-                    <View style={[styles.vehicleIconContainer, { backgroundColor: theme.primary + '15' }]}>
-                      <Ionicons name="car-outline" size={28} color={theme.primary} />
-                    </View>
-                    <View style={styles.vehicleDetails}>
-                      <Text style={[styles.vehicleRegistration, { color: theme.text }]}>
-                        {vehicle.registration || 'No Registration'}
-                      </Text>
-                      <Text style={[styles.vehicleType, { color: theme.textSecondary }]}>
-                        {vehicle.vehicle_type_name || vehicle.type || 'Standard'}
-                      </Text>
-                      {vehicle.make && vehicle.model && (
-                        <Text style={[styles.vehicleModel, { color: theme.textSecondary }]}>
-                          {vehicle.make} {vehicle.model}
+                {vehicles.map((vehicle) => {
+                  const isAvailable = vehicle.is_available;
+                  const isYours = vehicle.in_use_by === 'you';
+                  
+                  return (
+                    <TouchableOpacity
+                      key={vehicle.id}
+                      style={[
+                        styles.vehicleCard, 
+                        { 
+                          backgroundColor: theme.card, 
+                          borderColor: isYours ? theme.success : (!isAvailable ? theme.danger + '50' : theme.border),
+                          opacity: isAvailable ? 1 : 0.6
+                        }
+                      ]}
+                      onPress={() => handleSelectVehicle(vehicle)}
+                      disabled={!isAvailable && !isYours}
+                    >
+                      <View style={[
+                        styles.vehicleIconContainer, 
+                        { backgroundColor: isYours ? theme.success + '15' : (!isAvailable ? theme.danger + '15' : theme.primary + '15') }
+                      ]}>
+                        <Ionicons 
+                          name={isYours ? 'checkmark-circle' : (!isAvailable ? 'lock-closed' : 'car-outline')} 
+                          size={28} 
+                          color={isYours ? theme.success : (!isAvailable ? theme.danger : theme.primary)} 
+                        />
+                      </View>
+                      <View style={styles.vehicleDetails}>
+                        <Text style={[styles.vehicleRegistration, { color: theme.text }]}>
+                          {vehicle.registration || 'No Registration'}
                         </Text>
+                        <Text style={[styles.vehicleType, { color: theme.textSecondary }]}>
+                          {vehicle.vehicle_type_name || vehicle.type || 'Standard'}
+                        </Text>
+                        {vehicle.make && vehicle.model && (
+                          <Text style={[styles.vehicleModel, { color: theme.textSecondary }]}>
+                            {vehicle.make} {vehicle.model}
+                          </Text>
+                        )}
+                        {!isAvailable && !isYours && (
+                          <Text style={[styles.vehicleInUse, { color: theme.danger }]}>
+                            In use by: {vehicle.in_use_by}
+                          </Text>
+                        )}
+                        {isYours && (
+                          <Text style={[styles.vehicleInUse, { color: theme.success }]}>
+                            Currently selected by you
+                          </Text>
+                        )}
+                      </View>
+                      {isAvailable && !isYours && (
+                        <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
                       )}
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
-                  </TouchableOpacity>
-                ))}
+                      {isYours && (
+                        <Ionicons name="checkmark-circle" size={24} color={theme.success} />
+                      )}
+                      {!isAvailable && !isYours && (
+                        <Ionicons name="lock-closed" size={20} color={theme.danger} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
             ) : (
               <View style={styles.noVehiclesContainer}>

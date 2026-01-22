@@ -150,7 +150,6 @@ const DriverCard = ({ driver, onEdit, onDelete }) => {
             <div>
               <h3 className="font-semibold text-base">{driver.name}</h3>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {getStatusBadge(driver.status)}
                 {getDriverTypeBadges(driver)}
               </div>
             </div>

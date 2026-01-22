@@ -38,7 +38,7 @@ export default function MenuScreen({ navigation }) {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header with Logo */}
-        <View style={[styles.header, { backgroundColor: '#000000' }]}>
+        <View style={[styles.header, { backgroundColor: theme.headerBg }]}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}

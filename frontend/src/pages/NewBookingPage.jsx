@@ -5,7 +5,7 @@ import {
   User, MapPin, Calendar, Car, CreditCard, FileText, 
   Plus, Minus, Save, RotateCcw, Check, Clock, Navigation,
   Phone, Mail, Users, Briefcase, Plane, ArrowLeftRight,
-  MessageSquare, Bell, Loader2, ChevronRight, X, Search
+  MessageSquare, Bell, Loader2, ChevronRight, X, Search, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

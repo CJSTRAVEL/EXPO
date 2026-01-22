@@ -98,6 +98,8 @@ export default function HomeScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [activeBooking, setActiveBooking] = useState(null);
+  const [isMapCentered, setIsMapCentered] = useState(true);
   const mapRef = useRef(null);
   const locationSubscription = useRef(null);
   const timerRef = useRef(null);

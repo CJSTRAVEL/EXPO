@@ -40,6 +40,10 @@ export default function HomeScreen({ navigation }) {
   const [startingShift, setStartingShift] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState(null);
   const [shiftDuration, setShiftDuration] = useState(0);
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [vehicles, setVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const mapRef = useRef(null);
   const locationSubscription = useRef(null);
   const timerRef = useRef(null);

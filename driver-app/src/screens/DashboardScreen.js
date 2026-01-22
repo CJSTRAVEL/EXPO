@@ -364,9 +364,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  headerBar: {
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingBottom: 16,
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 20 : 50,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    color: '#fff',
+  },
+  greetingSection: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 16,
   },
   greeting: {

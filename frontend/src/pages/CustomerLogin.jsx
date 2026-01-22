@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { User, Phone, Lock, Eye, EyeOff, Loader2, Mail, Building2, Users, KeyRound, ArrowLeft, CheckCircle } from "lucide-react";
+import { User, Phone, Lock, Eye, EyeOff, Loader2, Mail, Building2, Users, KeyRound, ArrowLeft, CheckCircle, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,8 +26,10 @@ const CustomerLogin = () => {
 
   // Forgot Password State
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1); // 1: enter phone, 2: enter code, 3: new password
+  const [forgotStep, setForgotStep] = useState(1);
+  const [resetMethod, setResetMethod] = useState("sms"); // "sms" or "email"
   const [forgotPhone, setForgotPhone] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -89,18 +91,24 @@ const CustomerLogin = () => {
   };
 
   const handleRequestCode = async () => {
-    if (!forgotPhone) {
+    if (resetMethod === "sms" && !forgotPhone) {
       toast.error("Please enter your phone number");
+      return;
+    }
+    if (resetMethod === "email" && !forgotEmail) {
+      toast.error("Please enter your email address");
       return;
     }
     
     setForgotLoading(true);
     try {
       await axios.post(`${API}/password-reset/request`, {
-        phone: forgotPhone,
+        phone: resetMethod === "sms" ? forgotPhone : null,
+        email: resetMethod === "email" ? forgotEmail : null,
+        method: resetMethod,
         account_type: customerType
       });
-      toast.success("If an account exists, a reset code has been sent to your phone");
+      toast.success(`If an account exists, a reset code has been sent via ${resetMethod.toUpperCase()}`);
       setForgotStep(2);
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to send reset code");
@@ -138,10 +146,11 @@ const CustomerLogin = () => {
     setForgotLoading(true);
     try {
       await axios.post(`${API}/password-reset/verify`, {
-        phone: forgotPhone,
+        identifier: resetMethod === "sms" ? forgotPhone : forgotEmail,
         code: resetCode,
         new_password: newPassword,
-        account_type: customerType
+        account_type: customerType,
+        method: resetMethod
       });
       toast.success("Password reset successfully! You can now login.");
       closeForgotPassword();
@@ -155,11 +164,18 @@ const CustomerLogin = () => {
   const closeForgotPassword = () => {
     setShowForgotPassword(false);
     setForgotStep(1);
+    setResetMethod("sms");
     setForgotPhone("");
+    setForgotEmail("");
     setResetCode("");
     setNewPassword("");
     setConfirmPassword("");
   };
+
+  const accentColor = customerType === "passenger" ? "#D4A853" : "#3b82f6";
+  const accentClass = customerType === "passenger" ? "bg-[#D4A853] text-[#1a1a1a]" : "bg-blue-500 text-white";
+  const accentHover = customerType === "passenger" ? "hover:bg-[#c49843]" : "hover:bg-blue-600";
+  const textAccent = customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400";
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)' }}>
@@ -215,9 +231,7 @@ const CustomerLogin = () => {
             <button
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                isLogin 
-                  ? (customerType === "passenger" ? "bg-[#D4A853] text-[#1a1a1a]" : "bg-blue-500 text-white")
-                  : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d]"
+                isLogin ? accentClass : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d]"
               }`}
               data-testid="login-tab"
             >
@@ -226,9 +240,7 @@ const CustomerLogin = () => {
             <button
               onClick={() => setIsLogin(false)}
               className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                !isLogin 
-                  ? (customerType === "passenger" ? "bg-[#D4A853] text-[#1a1a1a]" : "bg-blue-500 text-white")
-                  : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d]"
+                !isLogin ? accentClass : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d]"
               }`}
               data-testid="register-tab"
             >
@@ -251,7 +263,7 @@ const CustomerLogin = () => {
                       placeholder="John Smith"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853]"
+                      className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500"
                       required={!isLogin}
                       data-testid="register-name-input"
                     />
@@ -269,7 +281,7 @@ const CustomerLogin = () => {
                         placeholder="ABC Company Ltd"
                         value={formData.company_name}
                         onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                        className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853]"
+                        className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500"
                         required={customerType === "client" && !isLogin}
                         data-testid="register-company-input"
                       />
@@ -289,7 +301,7 @@ const CustomerLogin = () => {
                   placeholder="07700 900000"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853]"
+                  className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500"
                   required
                   data-testid="login-phone-input"
                 />
@@ -307,7 +319,7 @@ const CustomerLogin = () => {
                     placeholder="john@example.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853]"
+                    className="pl-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500"
                     required={customerType === "client" && !isLogin}
                     data-testid="register-email-input"
                   />
@@ -325,7 +337,7 @@ const CustomerLogin = () => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pl-10 pr-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500 focus:border-[#D4A853] focus:ring-[#D4A853]"
+                  className="pl-10 pr-10 bg-[#2d2d2d] border-[#D4A853]/30 text-white placeholder:text-gray-500"
                   required
                   data-testid="login-password-input"
                 />
@@ -339,13 +351,12 @@ const CustomerLogin = () => {
               </div>
             </div>
 
-            {/* Forgot Password Link */}
             {isLogin && (
               <div className="text-right">
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className={`text-sm hover:underline ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"}`}
+                  className={`text-sm hover:underline ${textAccent}`}
                   data-testid="forgot-password-link"
                 >
                   Forgot Password?
@@ -355,11 +366,7 @@ const CustomerLogin = () => {
 
             <Button 
               type="submit" 
-              className={`w-full font-semibold ${
-                customerType === "passenger" 
-                  ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
-              }`}
+              className={`w-full font-semibold ${accentClass} ${accentHover}`}
               disabled={loading}
               data-testid="login-submit-btn"
             >
@@ -378,7 +385,7 @@ const CustomerLogin = () => {
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button 
               onClick={() => setIsLogin(!isLogin)}
-              className={`hover:underline font-medium ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"}`}
+              className={`hover:underline font-medium ${textAccent}`}
             >
               {isLogin ? "Register" : "Login"}
             </button>
@@ -395,7 +402,7 @@ const CustomerLogin = () => {
         <DialogContent className="bg-[#1a1a1a] border-[#D4A853]/30 text-white max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
-              <KeyRound className={`w-5 h-5 ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"}`} />
+              <KeyRound className="w-5 h-5" style={{ color: accentColor }} />
               Reset Password
             </DialogTitle>
           </DialogHeader>
@@ -404,44 +411,97 @@ const CustomerLogin = () => {
           <div className="flex items-center justify-center gap-2 py-4">
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  forgotStep >= step 
-                    ? (customerType === "passenger" ? "bg-[#D4A853] text-[#1a1a1a]" : "bg-blue-500 text-white")
-                    : "bg-[#2d2d2d] text-gray-500"
-                }`}>
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    forgotStep >= step ? accentClass : "bg-[#2d2d2d] text-gray-500"
+                  }`}
+                >
                   {forgotStep > step ? <CheckCircle className="w-4 h-4" /> : step}
                 </div>
                 {step < 3 && (
-                  <div className={`w-12 h-0.5 ${forgotStep > step ? (customerType === "passenger" ? "bg-[#D4A853]" : "bg-blue-500") : "bg-[#2d2d2d]"}`} />
+                  <div 
+                    className="w-12 h-0.5 transition-colors"
+                    style={{ backgroundColor: forgotStep > step ? accentColor : '#2d2d2d' }}
+                  />
                 )}
               </div>
             ))}
           </div>
 
-          {/* Step 1: Enter Phone */}
+          {/* Step 1: Choose Method & Enter Phone/Email */}
           {forgotStep === 1 && (
             <div className="space-y-4">
               <p className="text-gray-400 text-sm">
-                Enter your phone number and we'll send you a verification code to reset your password.
+                Choose how you'd like to receive your verification code.
               </p>
-              <div className="space-y-2">
-                <Label className="text-gray-200">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <Input
-                    type="tel"
-                    placeholder="07700 900000"
-                    value={forgotPhone}
-                    onChange={(e) => setForgotPhone(e.target.value)}
-                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                    data-testid="forgot-phone-input"
-                  />
-                </div>
+              
+              {/* Method Toggle */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setResetMethod("sms")}
+                  className={`flex-1 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    resetMethod === "sms"
+                      ? accentClass
+                      : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d] border border-[#3d3d3d]"
+                  }`}
+                  data-testid="reset-method-sms"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  SMS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetMethod("email")}
+                  className={`flex-1 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    resetMethod === "email"
+                      ? accentClass
+                      : "bg-[#2d2d2d] text-gray-400 hover:bg-[#3d3d3d] border border-[#3d3d3d]"
+                  }`}
+                  data-testid="reset-method-email"
+                >
+                  <Mail className="w-4 h-4" />
+                  Email
+                </button>
               </div>
+
+              {/* Phone or Email Input */}
+              {resetMethod === "sms" ? (
+                <div className="space-y-2">
+                  <Label className="text-gray-200">Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Input
+                      type="tel"
+                      placeholder="07700 900000"
+                      value={forgotPhone}
+                      onChange={(e) => setForgotPhone(e.target.value)}
+                      className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                      data-testid="forgot-phone-input"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label className="text-gray-200">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Input
+                      type="email"
+                      placeholder="john@example.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                      data-testid="forgot-email-input"
+                    />
+                  </div>
+                </div>
+              )}
+
               <Button
                 onClick={handleRequestCode}
                 disabled={forgotLoading}
-                className={`w-full ${customerType === "passenger" ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]" : "bg-blue-500 hover:bg-blue-600"}`}
+                className={`w-full ${accentClass} ${accentHover}`}
                 data-testid="forgot-send-code-btn"
               >
                 {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -454,7 +514,10 @@ const CustomerLogin = () => {
           {forgotStep === 2 && (
             <div className="space-y-4">
               <p className="text-gray-400 text-sm">
-                Enter the 6-digit code sent to <span className="text-white font-medium">{forgotPhone}</span>
+                Enter the 6-digit code sent to{" "}
+                <span className="text-white font-medium">
+                  {resetMethod === "sms" ? forgotPhone : forgotEmail}
+                </span>
               </p>
               <div className="space-y-2">
                 <Label className="text-gray-200">Verification Code</Label>
@@ -479,7 +542,7 @@ const CustomerLogin = () => {
                 </Button>
                 <Button
                   onClick={handleVerifyCode}
-                  className={`flex-1 ${customerType === "passenger" ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]" : "bg-blue-500 hover:bg-blue-600"}`}
+                  className={`flex-1 ${accentClass} ${accentHover}`}
                   data-testid="forgot-verify-btn"
                 >
                   Verify Code
@@ -487,7 +550,7 @@ const CustomerLogin = () => {
               </div>
               <button
                 onClick={handleRequestCode}
-                className={`text-sm w-full text-center ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"} hover:underline`}
+                className={`text-sm w-full text-center ${textAccent} hover:underline`}
               >
                 Didn't receive code? Resend
               </button>
@@ -540,7 +603,7 @@ const CustomerLogin = () => {
                 <Button
                   onClick={handleResetPassword}
                   disabled={forgotLoading}
-                  className={`flex-1 ${customerType === "passenger" ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]" : "bg-blue-500 hover:bg-blue-600"}`}
+                  className={`flex-1 ${accentClass} ${accentHover}`}
                   data-testid="forgot-reset-btn"
                 >
                   {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}

@@ -16,6 +16,23 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 22, 2026 (Latest)
 
+#### Forgot Password Flow (NEW)
+1. **SMS-based Password Reset**
+   - Added "Forgot Password?" link on CustomerLogin page
+   - 3-step wizard: Enter Phone → Verify Code → New Password
+   - Backend stores reset codes with 15-minute expiry
+   - Works for both Passengers and Business Clients
+   - Sends 6-digit code via Vonage SMS
+
+2. **Backend Endpoints**
+   - `POST /api/password-reset/request` - Request reset code via SMS
+   - `POST /api/password-reset/verify` - Verify code and set new password
+
+3. **Cron Job Documentation**
+   - Created `/app/docs/CRON_SETUP.md` with setup instructions
+   - Covers Linux cron, Windows Task Scheduler, AWS/GCP schedulers
+   - Instructions for testing the maintenance endpoint
+
 #### Client Portal with Invoices Feature
 1. **Shared Customer Login Page** (`/customer-login`)
    - Unified login/register page for both passengers and business clients

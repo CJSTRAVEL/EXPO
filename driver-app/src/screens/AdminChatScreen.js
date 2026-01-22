@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+    paddingTop: Platform.OS === 'ios' ? 20 : 50,
     borderBottomWidth: 1,
   },
   headerAvatar: {

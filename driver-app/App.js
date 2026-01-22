@@ -149,7 +149,7 @@ function AppNavigator() {
       <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
         <View style={styles.loadingContent}>
           <Ionicons name="car-sport" size={48} color={theme.primary} />
-          <Text style={[styles.loadingText, { color: theme.primary }]}>CJ's Driver</Text>
+          <Text style={[styles.loadingText, { color: theme.primary }]}>CJ's Travel Driver</Text>
         </View>
       </View>
     );

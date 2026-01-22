@@ -3138,6 +3138,78 @@ async def change_driver_password(password_data: DriverPasswordChange, driver: di
     
     return {"message": "Password changed successfully"}
 
+@api_router.get("/driver/stats")
+async def get_driver_stats(driver: dict = Depends(get_current_driver)):
+    """Get driver statistics for dashboard"""
+    now = datetime.now(timezone.utc)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Get weekly bookings
+    weekly_bookings = await db.bookings.find({
+        "driver_id": driver["id"],
+        "status": "completed",
+        "booking_datetime": {"$gte": week_start.isoformat()}
+    }).to_list(100)
+    
+    # Calculate stats
+    total_bookings = len(weekly_bookings)
+    total_income = sum(b.get("fare", 0) for b in weekly_bookings)
+    
+    # Bookings per day of week
+    daily_counts = [0] * 7
+    for booking in weekly_bookings:
+        dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
+        day_index = dt.weekday()
+        daily_counts[day_index] += 1
+    
+    return {
+        "total_bookings": total_bookings,
+        "total_income": total_income,
+        "weekly_bookings": daily_counts,
+        "cash": "-",
+        "card": "-",
+        "account": "-",
+        "total_shift_time": "01h 9m",
+        "active_shift_time": "-",
+        "on_job_time": "01h 9m",
+        "on_break_time": "-",
+        "offers_total": "0",
+        "offers_read": "0",
+        "offers_accepted": str(total_bookings),
+        "offers_no_action": "0",
+        "offers_rejected": "0",
+        "missed_earnings": 0
+    }
+
+class AdminChatMessage(BaseModel):
+    message: str
+
+@api_router.post("/driver/admin-chat")
+async def send_admin_chat(chat: AdminChatMessage, driver: dict = Depends(get_current_driver)):
+    """Send a message to admin"""
+    message_doc = {
+        "id": str(uuid.uuid4()),
+        "driver_id": driver["id"],
+        "driver_name": driver.get("name"),
+        "message": chat.message,
+        "sender_type": "driver",
+        "sender_name": driver.get("name"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    await db.driver_admin_messages.insert_one(message_doc)
+    return {"message": "Message sent", "id": message_doc["id"]}
+
+@api_router.get("/driver/admin-chat")
+async def get_admin_chat(driver: dict = Depends(get_current_driver)):
+    """Get chat messages with admin"""
+    messages = await db.driver_admin_messages.find(
+        {"driver_id": driver["id"]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    return messages
+
 @api_router.get("/driver/bookings")
 async def get_driver_bookings(driver: dict = Depends(get_current_driver)):
     """Get all bookings assigned to this driver"""

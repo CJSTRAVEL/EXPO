@@ -113,7 +113,7 @@ export default function MenuScreen({ navigation }) {
 
         {/* App Version */}
         <Text style={[styles.versionText, { color: theme.textSecondary }]}>
-          CJ's Driver v1.0.0
+          CJ's Travel Driver v1.0.0
         </Text>
       </ScrollView>
     </SafeAreaView>

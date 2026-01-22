@@ -125,14 +125,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? 10 : 40,
+    paddingTop: Platform.OS === 'ios' ? 20 : 50,
     paddingBottom: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   backButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 10 : 40,
+    top: Platform.OS === 'ios' ? 20 : 50,
     right: 16,
     width: 40,
     height: 40,
@@ -140,10 +140,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 12,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 16,
   },
   driverInfo: {
     alignItems: 'center',

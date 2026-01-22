@@ -934,7 +934,7 @@ const NewBookingPage = () => {
                           <User className="w-4 h-4 text-[#D4A853]" />
                         </div>
                         <div>
-                          <div className="text-sm text-white font-medium">{p.first_name} {p.last_name}</div>
+                          <div className="text-sm text-white font-medium">{p.name || `${p.first_name || ''} ${p.last_name || ''}`}</div>
                           <div className="text-xs text-gray-300">{p.phone || p.customer_phone}</div>
                         </div>
                       </button>

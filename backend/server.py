@@ -2585,63 +2585,84 @@ async def login_client_portal(data: ClientPortalLogin):
 
 # ========== PASSWORD RESET ENDPOINTS ==========
 class PasswordResetRequest(BaseModel):
-    phone: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    method: str = "sms"  # "sms" or "email"
     account_type: str  # "passenger" or "client"
 
 class PasswordResetVerify(BaseModel):
-    phone: str
+    identifier: str  # phone or email
     code: str
     new_password: str
     account_type: str
+    method: str = "sms"
 
 @api_router.post("/password-reset/request")
 async def request_password_reset(data: PasswordResetRequest):
-    """Request a password reset code via SMS"""
+    """Request a password reset code via SMS or Email"""
     import random
     
-    # Normalize phone number
-    phone = data.phone.strip()
-    if phone.startswith('0'):
-        phone_normalized = '+44' + phone[1:]
-    elif not phone.startswith('+'):
-        phone_normalized = '+44' + phone
-    else:
-        phone_normalized = phone
+    identifier = None
+    account = None
     
-    # Find account based on type
-    if data.account_type == "passenger":
-        # Check both formats
-        account = await db.passengers.find_one({
-            "$or": [
-                {"phone": phone},
-                {"phone": phone_normalized},
-                {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone}
-            ]
-        })
+    if data.method == "email" and data.email:
+        # Email-based reset
+        email = data.email.strip().lower()
+        identifier = email
+        
+        if data.account_type == "passenger":
+            account = await db.passengers.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}})
+        else:
+            account = await db.clients.find_one({
+                "$or": [
+                    {"email": {"$regex": f"^{email}$", "$options": "i"}},
+                    {"contact_email": {"$regex": f"^{email}$", "$options": "i"}}
+                ]
+            })
     else:
-        account = await db.clients.find_one({
-            "$or": [
-                {"phone": phone},
-                {"phone": phone_normalized},
-                {"mobile": phone},
-                {"mobile": phone_normalized}
-            ]
-        })
+        # SMS-based reset (default)
+        phone = (data.phone or "").strip()
+        if phone.startswith('0'):
+            phone_normalized = '+44' + phone[1:]
+        elif not phone.startswith('+'):
+            phone_normalized = '+44' + phone
+        else:
+            phone_normalized = phone
+        identifier = phone_normalized
+        
+        if data.account_type == "passenger":
+            account = await db.passengers.find_one({
+                "$or": [
+                    {"phone": phone},
+                    {"phone": phone_normalized},
+                    {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone}
+                ]
+            })
+        else:
+            account = await db.clients.find_one({
+                "$or": [
+                    {"phone": phone},
+                    {"phone": phone_normalized},
+                    {"mobile": phone},
+                    {"mobile": phone_normalized}
+                ]
+            })
     
     if not account:
         # Don't reveal if account exists for security
-        return {"message": "If an account exists with this phone number, a reset code will be sent"}
+        return {"message": f"If an account exists, a reset code will be sent via {data.method.upper()}"}
     
     # Generate 6-digit code
     reset_code = str(random.randint(100000, 999999))
     
     # Store reset code with expiry (15 minutes)
     await db.password_resets.update_one(
-        {"phone": phone_normalized, "account_type": data.account_type},
+        {"identifier": identifier, "account_type": data.account_type, "method": data.method},
         {
             "$set": {
-                "phone": phone_normalized,
+                "identifier": identifier,
                 "account_type": data.account_type,
+                "method": data.method,
                 "code": reset_code,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat(),
@@ -2651,52 +2672,114 @@ async def request_password_reset(data: PasswordResetRequest):
         upsert=True
     )
     
-    # Send SMS with code
-    if vonage_client:
+    # Send code via chosen method
+    if data.method == "email":
+        # Send email with code
         try:
-            from vonage_sms import SmsMessage
+            subject = "CJ's Executive Travel - Password Reset Code"
+            html_content = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #1a1a1a; padding: 20px; text-align: center;">
+                    <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" style="width: 80px; height: 80px;">
+                    <h1 style="color: #D4A853; margin: 10px 0;">CJ's Executive Travel</h1>
+                </div>
+                <div style="padding: 30px; background: #f5f5f5;">
+                    <h2 style="color: #333;">Password Reset Code</h2>
+                    <p style="color: #666;">You requested to reset your password. Use the code below:</p>
+                    <div style="background: #1a1a1a; color: #D4A853; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0;">
+                        {reset_code}
+                    </div>
+                    <p style="color: #666;">This code expires in <strong>15 minutes</strong>.</p>
+                    <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+                </div>
+                <div style="background: #1a1a1a; padding: 15px; text-align: center;">
+                    <p style="color: #666; font-size: 12px; margin: 0;">© 2026 CJ's Executive Travel Limited</p>
+                </div>
+            </div>
+            """
             
-            message_text = f"Your CJ's Executive Travel password reset code is: {reset_code}\n\nThis code expires in 15 minutes. If you didn't request this, please ignore."
+            mailgun_api_key = os.environ.get('MAILGUN_API_KEY')
+            mailgun_domain = os.environ.get('MAILGUN_DOMAIN')
             
-            response = vonage_client.sms.send(
-                SmsMessage(
-                    to=phone_normalized,
-                    from_=VONAGE_FROM_NUMBER,
-                    text=message_text
+            if mailgun_api_key and mailgun_domain:
+                import requests as http_requests
+                response = http_requests.post(
+                    f"https://api.mailgun.net/v3/{mailgun_domain}/messages",
+                    auth=("api", mailgun_api_key),
+                    data={
+                        "from": f"CJ's Executive Travel <noreply@{mailgun_domain}>",
+                        "to": [identifier],
+                        "subject": subject,
+                        "html": html_content
+                    }
                 )
-            )
-            
-            if response.messages[0].status == "0":
-                logging.info(f"Password reset SMS sent to {phone_normalized}")
+                if response.status_code == 200:
+                    logging.info(f"Password reset email sent to {identifier}")
+                else:
+                    logging.error(f"Password reset email failed: {response.text}")
             else:
-                logging.error(f"Password reset SMS failed: {response.messages[0].error_text}")
+                logging.warning(f"Mailgun not configured. Reset code for {identifier}: {reset_code}")
         except Exception as e:
-            logging.error(f"Password reset SMS error: {str(e)}")
+            logging.error(f"Password reset email error: {str(e)}")
     else:
-        logging.warning(f"Vonage not configured. Reset code for {phone_normalized}: {reset_code}")
+        # Send SMS with code
+        if vonage_client:
+            try:
+                from vonage_sms import SmsMessage
+                
+                message_text = f"Your CJ's Executive Travel password reset code is: {reset_code}\n\nThis code expires in 15 minutes. If you didn't request this, please ignore."
+                
+                response = vonage_client.sms.send(
+                    SmsMessage(
+                        to=identifier,
+                        from_=VONAGE_FROM_NUMBER,
+                        text=message_text
+                    )
+                )
+                
+                if response.messages[0].status == "0":
+                    logging.info(f"Password reset SMS sent to {identifier}")
+                else:
+                    logging.error(f"Password reset SMS failed: {response.messages[0].error_text}")
+            except Exception as e:
+                logging.error(f"Password reset SMS error: {str(e)}")
+        else:
+            logging.warning(f"Vonage not configured. Reset code for {identifier}: {reset_code}")
     
-    return {"message": "If an account exists with this phone number, a reset code will be sent"}
+    return {"message": f"If an account exists, a reset code will be sent via {data.method.upper()}"}
 
 
 @api_router.post("/password-reset/verify")
 async def verify_password_reset(data: PasswordResetVerify):
     """Verify reset code and set new password"""
-    # Normalize phone
-    phone = data.phone.strip()
-    if phone.startswith('0'):
-        phone_normalized = '+44' + phone[1:]
-    elif not phone.startswith('+'):
-        phone_normalized = '+44' + phone
+    identifier = data.identifier.strip()
+    
+    # Normalize if phone
+    if data.method == "sms":
+        if identifier.startswith('0'):
+            identifier = '+44' + identifier[1:]
+        elif not identifier.startswith('+') and not '@' in identifier:
+            identifier = '+44' + identifier
     else:
-        phone_normalized = phone
+        identifier = identifier.lower()
     
     # Find reset request
     reset_request = await db.password_resets.find_one({
-        "phone": phone_normalized,
+        "identifier": identifier,
         "account_type": data.account_type,
+        "method": data.method,
         "code": data.code,
         "used": False
     })
+    
+    # Also check legacy format (phone field)
+    if not reset_request and data.method == "sms":
+        reset_request = await db.password_resets.find_one({
+            "phone": identifier,
+            "account_type": data.account_type,
+            "code": data.code,
+            "used": False
+        })
     
     if not reset_request:
         raise HTTPException(status_code=400, detail="Invalid or expired reset code")
@@ -2716,22 +2799,37 @@ async def verify_password_reset(data: PasswordResetVerify):
     new_password_hash = hash_password(data.new_password)
     
     if data.account_type == "passenger":
-        result = await db.passengers.update_one(
-            {"$or": [
-                {"phone": phone_normalized},
-                {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone_normalized}
-            ]},
-            {"$set": {"password_hash": new_password_hash}}
-        )
+        if data.method == "email":
+            result = await db.passengers.update_one(
+                {"email": {"$regex": f"^{identifier}$", "$options": "i"}},
+                {"$set": {"password_hash": new_password_hash}}
+            )
+        else:
+            result = await db.passengers.update_one(
+                {"$or": [
+                    {"phone": identifier},
+                    {"phone": "0" + identifier[3:] if identifier.startswith("+44") else identifier}
+                ]},
+                {"$set": {"password_hash": new_password_hash}}
+            )
     else:
-        result = await db.clients.update_one(
-            {"$or": [
-                {"phone": phone_normalized},
-                {"mobile": phone_normalized},
-                {"phone": "0" + phone_normalized[3:] if phone_normalized.startswith("+44") else phone_normalized}
-            ]},
-            {"$set": {"password_hash": new_password_hash}}
-        )
+        if data.method == "email":
+            result = await db.clients.update_one(
+                {"$or": [
+                    {"email": {"$regex": f"^{identifier}$", "$options": "i"}},
+                    {"contact_email": {"$regex": f"^{identifier}$", "$options": "i"}}
+                ]},
+                {"$set": {"password_hash": new_password_hash}}
+            )
+        else:
+            result = await db.clients.update_one(
+                {"$or": [
+                    {"phone": identifier},
+                    {"mobile": identifier},
+                    {"phone": "0" + identifier[3:] if identifier.startswith("+44") else identifier}
+                ]},
+                {"$set": {"password_hash": new_password_hash}}
+            )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Account not found")

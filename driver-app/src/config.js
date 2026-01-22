@@ -1,5 +1,5 @@
 // API Configuration
-export const API_URL = 'https://cjtravel-booking.preview.emergentagent.com/api';
+export const API_URL = 'https://travel-dispatch.preview.emergentagent.com/api';
 
 // App Configuration
 export const APP_CONFIG = {

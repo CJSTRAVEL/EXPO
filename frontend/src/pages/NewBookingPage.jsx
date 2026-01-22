@@ -1477,12 +1477,12 @@ const NewBookingPage = () => {
                   <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#252525] border-[#3d3d3d]">
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card (In-Person)</SelectItem>
-                    <SelectItem value="stripe">Card (Online - Stripe)</SelectItem>
-                    <SelectItem value="account">Account</SelectItem>
-                    <SelectItem value="invoice">Invoice</SelectItem>
+                  <SelectContent className="bg-[#252525] border-[#3d3d3d] text-white">
+                    <SelectItem value="cash" className="text-white focus:bg-[#3d3d3d] focus:text-white">Cash</SelectItem>
+                    <SelectItem value="card" className="text-white focus:bg-[#3d3d3d] focus:text-white">Card (In-Person)</SelectItem>
+                    <SelectItem value="stripe" className="text-white focus:bg-[#3d3d3d] focus:text-white">Card (Online - Stripe)</SelectItem>
+                    <SelectItem value="account" className="text-white focus:bg-[#3d3d3d] focus:text-white">Account</SelectItem>
+                    <SelectItem value="invoice" className="text-white focus:bg-[#3d3d3d] focus:text-white">Invoice</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

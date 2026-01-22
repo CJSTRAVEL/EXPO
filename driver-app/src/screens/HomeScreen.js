@@ -580,4 +580,106 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
+  // Vehicle Selection Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+    minHeight: '50%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  vehicleInfoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  vehicleInfoText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  vehicleLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  vehicleLoadingText: {
+    marginTop: 12,
+    fontSize: 14,
+  },
+  vehicleList: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  vehicleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  vehicleIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  vehicleDetails: {
+    flex: 1,
+  },
+  vehicleRegistration: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  vehicleType: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  vehicleModel: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  noVehiclesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noVehiclesText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 12,
+  },
+  noVehiclesSubtext: {
+    fontSize: 13,
+    marginTop: 4,
+  },
 });

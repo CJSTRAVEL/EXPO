@@ -270,11 +270,20 @@ const NewBookingPage = () => {
     setShowPassengerPopup(false);
     await fetchPassengerHistory(passenger);
     
+    // Parse name - could be full name or first_name/last_name
+    let firstName = passenger.first_name || '';
+    let lastName = passenger.last_name || '';
+    if (passenger.name && !firstName) {
+      const nameParts = passenger.name.split(' ');
+      firstName = nameParts[0] || '';
+      lastName = nameParts.slice(1).join(' ') || '';
+    }
+    
     // Auto-fill basic details (NOT date/time or flight data)
     setFormData(prev => ({
       ...prev,
-      first_name: passenger.first_name || prev.first_name,
-      last_name: passenger.last_name || prev.last_name,
+      first_name: firstName || prev.first_name,
+      last_name: lastName || prev.last_name,
       customer_phone: passenger.phone || passenger.customer_phone || prev.customer_phone,
       customer_email: passenger.email || passenger.customer_email || prev.customer_email,
     }));

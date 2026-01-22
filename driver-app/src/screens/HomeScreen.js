@@ -14,10 +14,11 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
+import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { updateStatus, updateLocation, getVehicles } from '../services/api';
+import { updateStatus, updateLocation, getAvailableVehicles, selectVehicle, releaseVehicle, getDocumentNotifications } from '../services/api';
 
 // Custom vehicle marker component - Minivan style
 const VehicleMarker = ({ theme }) => (

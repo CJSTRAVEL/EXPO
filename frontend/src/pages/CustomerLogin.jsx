@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { User, Phone, Lock, Eye, EyeOff, Loader2, Mail, Building2, Users } from "lucide-react";
+import { User, Phone, Lock, Eye, EyeOff, Loader2, Mail, Building2, Users, KeyRound, ArrowLeft, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -12,7 +13,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CustomerLogin = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [customerType, setCustomerType] = useState("passenger"); // "passenger" or "client"
+  const [customerType, setCustomerType] = useState("passenger");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,8 +21,17 @@ const CustomerLogin = () => {
     phone: "",
     email: "",
     password: "",
-    company_name: "", // For clients
+    company_name: "",
   });
+
+  // Forgot Password State
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: enter phone, 2: enter code, 3: new password
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +60,6 @@ const CustomerLogin = () => {
 
       const response = await axios.post(`${API}${endpoint}`, payload);
       
-      // Store token and user info
       const tokenKey = customerType === "passenger" ? "passengerToken" : "clientToken";
       const infoKey = customerType === "passenger" ? "passengerInfo" : "clientInfo";
       
@@ -67,7 +76,6 @@ const CustomerLogin = () => {
 
       toast.success(isLogin ? "Welcome back!" : "Account created successfully!");
       
-      // Navigate to appropriate portal
       if (customerType === "passenger") {
         navigate("/portal");
       } else {
@@ -78,6 +86,79 @@ const CustomerLogin = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRequestCode = async () => {
+    if (!forgotPhone) {
+      toast.error("Please enter your phone number");
+      return;
+    }
+    
+    setForgotLoading(true);
+    try {
+      await axios.post(`${API}/password-reset/request`, {
+        phone: forgotPhone,
+        account_type: customerType
+      });
+      toast.success("If an account exists, a reset code has been sent to your phone");
+      setForgotStep(2);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send reset code");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!resetCode) {
+      toast.error("Please enter the verification code");
+      return;
+    }
+    if (resetCode.length !== 6) {
+      toast.error("Code must be 6 digits");
+      return;
+    }
+    setForgotStep(3);
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error("Please fill in both password fields");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      await axios.post(`${API}/password-reset/verify`, {
+        phone: forgotPhone,
+        code: resetCode,
+        new_password: newPassword,
+        account_type: customerType
+      });
+      toast.success("Password reset successfully! You can now login.");
+      closeForgotPassword();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to reset password");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+    setForgotStep(1);
+    setForgotPhone("");
+    setResetCode("");
+    setNewPassword("");
+    setConfirmPassword("");
   };
 
   return (
@@ -258,6 +339,20 @@ const CustomerLogin = () => {
               </div>
             </div>
 
+            {/* Forgot Password Link */}
+            {isLogin && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className={`text-sm hover:underline ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"}`}
+                  data-testid="forgot-password-link"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+
             <Button 
               type="submit" 
               className={`w-full font-semibold ${
@@ -294,6 +389,168 @@ const CustomerLogin = () => {
           © 2026 CJ's Executive Travel Limited
         </p>
       </div>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPassword} onOpenChange={closeForgotPassword}>
+        <DialogContent className="bg-[#1a1a1a] border-[#D4A853]/30 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <KeyRound className={`w-5 h-5 ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"}`} />
+              Reset Password
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center gap-2 py-4">
+            {[1, 2, 3].map((step) => (
+              <div key={step} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  forgotStep >= step 
+                    ? (customerType === "passenger" ? "bg-[#D4A853] text-[#1a1a1a]" : "bg-blue-500 text-white")
+                    : "bg-[#2d2d2d] text-gray-500"
+                }`}>
+                  {forgotStep > step ? <CheckCircle className="w-4 h-4" /> : step}
+                </div>
+                {step < 3 && (
+                  <div className={`w-12 h-0.5 ${forgotStep > step ? (customerType === "passenger" ? "bg-[#D4A853]" : "bg-blue-500") : "bg-[#2d2d2d]"}`} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Step 1: Enter Phone */}
+          {forgotStep === 1 && (
+            <div className="space-y-4">
+              <p className="text-gray-400 text-sm">
+                Enter your phone number and we'll send you a verification code to reset your password.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-gray-200">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input
+                    type="tel"
+                    placeholder="07700 900000"
+                    value={forgotPhone}
+                    onChange={(e) => setForgotPhone(e.target.value)}
+                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                    data-testid="forgot-phone-input"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleRequestCode}
+                disabled={forgotLoading}
+                className={`w-full ${customerType === "passenger" ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]" : "bg-blue-500 hover:bg-blue-600"}`}
+                data-testid="forgot-send-code-btn"
+              >
+                {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Send Verification Code
+              </Button>
+            </div>
+          )}
+
+          {/* Step 2: Enter Code */}
+          {forgotStep === 2 && (
+            <div className="space-y-4">
+              <p className="text-gray-400 text-sm">
+                Enter the 6-digit code sent to <span className="text-white font-medium">{forgotPhone}</span>
+              </p>
+              <div className="space-y-2">
+                <Label className="text-gray-200">Verification Code</Label>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value.replace(/\D/g, ''))}
+                  className="bg-[#2d2d2d] border-[#3d3d3d] text-white text-center text-2xl tracking-widest"
+                  data-testid="forgot-code-input"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setForgotStep(1)}
+                  className="flex-1 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleVerifyCode}
+                  className={`flex-1 ${customerType === "passenger" ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]" : "bg-blue-500 hover:bg-blue-600"}`}
+                  data-testid="forgot-verify-btn"
+                >
+                  Verify Code
+                </Button>
+              </div>
+              <button
+                onClick={handleRequestCode}
+                className={`text-sm w-full text-center ${customerType === "passenger" ? "text-[#D4A853]" : "text-blue-400"} hover:underline`}
+              >
+                Didn't receive code? Resend
+              </button>
+            </div>
+          )}
+
+          {/* Step 3: New Password */}
+          {forgotStep === 3 && (
+            <div className="space-y-4">
+              <p className="text-gray-400 text-sm">
+                Create a new password for your account.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-gray-200">New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                    data-testid="forgot-new-password-input"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-200">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                    data-testid="forgot-confirm-password-input"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setForgotStep(2)}
+                  className="flex-1 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleResetPassword}
+                  disabled={forgotLoading}
+                  className={`flex-1 ${customerType === "passenger" ? "bg-[#D4A853] hover:bg-[#c49843] text-[#1a1a1a]" : "bg-blue-500 hover:bg-blue-600"}`}
+                  data-testid="forgot-reset-btn"
+                >
+                  {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Reset Password
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

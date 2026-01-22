@@ -7,3 +7,14 @@ from .shared import (
     FlightInfo, BookingHistoryEntry, generate_booking_id, generate_client_account_no,
     JWT_SECRET, JWT_ALGORITHM
 )
+
+# Import all routers
+from .auth import router as auth_router
+from .drivers import router as drivers_router
+from .vehicles import router as vehicles_router
+from .passengers import router as passengers_router
+from .client_portal import router as client_portal_router
+from .external import router as external_router
+from .clients import router as clients_router
+from .chat import router as chat_router
+from .payments import router as payments_router

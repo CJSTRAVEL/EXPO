@@ -308,11 +308,11 @@ export default function HomeScreen({ navigation }) {
         {location && (
           <Marker
             coordinate={location}
-            anchor={{ x: 0.5, y: 0.5 }}
-            flat={true}
-            rotation={heading}
+            anchor={{ x: 0.5, y: 1 }}
+            flat={false}
+            rotation={0}
           >
-            <CarMarker theme={theme} />
+            <VehicleMarker theme={theme} />
           </Marker>
         )}
       </MapView>
@@ -322,7 +322,7 @@ export default function HomeScreen({ navigation }) {
         <Image
           source={require('../../assets/logo.png')}
           style={styles.logoSmall}
-          resizeMode="cover"
+          resizeMode="contain"
         />
       </TouchableOpacity>
 

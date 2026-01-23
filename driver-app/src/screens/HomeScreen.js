@@ -472,8 +472,12 @@ export default function HomeScreen({ navigation }) {
             anchor={{ x: 0.5, y: 0.5 }}
             flat={true}
             rotation={heading}
+            tracksViewChanges={false}
+            style={{ zIndex: 999 }}
           >
-            <VehicleMarker rotation={0} />
+            <View style={{ width: 100, height: 140, overflow: 'visible' }}>
+              <VehicleMarker rotation={0} />
+            </View>
           </Marker>
         )}
       </MapView>

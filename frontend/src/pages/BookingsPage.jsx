@@ -2795,13 +2795,13 @@ const BookingsPage = () => {
                             data-testid={`booking-row-${linkedReturn.id}`}
                             onClick={() => setViewBooking(linkedReturn)}
                           >
-                            <div className="px-4 pt-2 pb-0">
+                            <div className="px-3 pt-2 pb-0">
                               <span className="text-xs font-semibold text-amber-700 bg-amber-200 px-2 py-0.5 rounded">
                                 RETURN
                               </span>
                             </div>
-                            <div className="p-4 pt-2">
-                              <div className="grid grid-cols-12 gap-4 items-center">
+                            <div className="p-3">
+                              <div className="grid grid-cols-12 gap-3 items-center">
                                 {/* Time & Booking ID */}
                                 <div className="col-span-2 lg:col-span-1">
                                   <p className="text-lg font-bold text-slate-800">

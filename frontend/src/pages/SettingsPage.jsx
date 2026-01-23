@@ -1080,8 +1080,7 @@ const FareSettingsSection = () => {
       toast.error("Please set a fare for at least one vehicle type");
       return;
     }
-      return;
-    }
+    
     // Validate: need either boundary, postcodes, or areas
     const hasPostcodes = zoneForm.postcodes && zoneForm.postcodes.trim().length > 0;
     const hasAreas = zoneForm.areas && zoneForm.areas.trim().length > 0;
@@ -1094,9 +1093,19 @@ const FareSettingsSection = () => {
 
     setSaving(true);
     try {
+      // Convert vehicle_fares values to floats and filter out empty/zero values
+      const vehicleFares = {};
+      Object.entries(zoneForm.vehicle_fares).forEach(([id, fare]) => {
+        if (fare && parseFloat(fare) > 0) {
+          vehicleFares[id] = parseFloat(fare);
+        }
+      });
+
       const payload = {
-        ...zoneForm,
-        fixed_fare: parseFloat(zoneForm.fixed_fare),
+        name: zoneForm.name,
+        zone_type: zoneForm.zone_type,
+        description: zoneForm.description,
+        vehicle_fares: vehicleFares,
         postcodes: hasPostcodes ? zoneForm.postcodes.split(",").map(p => p.trim().toUpperCase()).filter(Boolean) : [],
         areas: hasAreas ? zoneForm.areas.split(",").map(a => a.trim()).filter(Boolean) : [],
         boundary: hasBoundary ? zoneForm.boundary : null,

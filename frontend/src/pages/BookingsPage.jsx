@@ -2396,8 +2396,25 @@ const BookingsPage = () => {
     setShowForm(true);
   };
 
+  // Get today's date string for comparisons
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const todayStart = startOfDay(new Date());
+
+  // Check if user is actively searching/filtering (to show past bookings)
+  const isSearchingPast = searchText || filterDate || (filterDriver && filterDriver !== "all");
+
   // Filter bookings based on search criteria
   const filteredBookings = bookings.filter(booking => {
+    const bookingDate = new Date(booking.booking_datetime);
+    const bookingDateStr = format(bookingDate, "yyyy-MM-dd");
+    
+    // By default (no filters), hide past bookings (before today)
+    if (!isSearchingPast) {
+      if (isBefore(startOfDay(bookingDate), todayStart)) {
+        return false;
+      }
+    }
+    
     // Text search (customer name, phone, booking ID)
     if (searchText) {
       const search = searchText.toLowerCase();
@@ -2415,9 +2432,8 @@ const BookingsPage = () => {
     
     // Date filter
     if (filterDate) {
-      const bookingDate = format(new Date(booking.booking_datetime), "yyyy-MM-dd");
       const selectedDate = format(filterDate, "yyyy-MM-dd");
-      if (bookingDate !== selectedDate) {
+      if (bookingDateStr !== selectedDate) {
         return false;
       }
     }
@@ -2443,6 +2459,11 @@ const BookingsPage = () => {
     groups[date].push(booking);
     return groups;
   }, {});
+
+  // Always include today in the grouped bookings (even if empty) when not searching past
+  if (!isSearchingPast && !groupedBookings[todayStr]) {
+    groupedBookings[todayStr] = [];
+  }
 
   // Sort dates and bookings within each date by time
   const sortedDates = Object.keys(groupedBookings).sort((a, b) => new Date(a) - new Date(b));

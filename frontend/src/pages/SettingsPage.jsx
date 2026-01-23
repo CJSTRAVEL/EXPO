@@ -493,6 +493,7 @@ const UsersManagementCard = () => {
 const CATEGORY_INFO = {
   driver_app: { label: "Driver App", icon: Car, color: "bg-blue-100 text-blue-800" },
   passenger_portal: { label: "Passenger Portal", icon: Users, color: "bg-green-100 text-green-800" },
+  corporate_portal: { label: "Corporate Portal", icon: Building2, color: "bg-indigo-100 text-indigo-800" },
   booking: { label: "New Bookings", icon: Calendar, color: "bg-purple-100 text-purple-800" },
   general: { label: "General", icon: MessageSquare, color: "bg-gray-100 text-gray-800" }
 };

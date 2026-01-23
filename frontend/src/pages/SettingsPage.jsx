@@ -1006,6 +1006,613 @@ const MessageTemplatesSection = () => {
   );
 };
 
+// Fare Settings Section with Zone Fares and Mile Rates
+const FareSettingsSection = () => {
+  const [fareTab, setFareTab] = useState("zones");
+  const [zones, setZones] = useState([]);
+  const [mileRates, setMileRates] = useState({
+    base_fare: 3.50,
+    price_per_mile: 2.00,
+    minimum_fare: 5.00,
+    waiting_rate_per_min: 0.50,
+    night_multiplier: 1.5,
+    night_start: "22:00",
+    night_end: "06:00",
+    airport_surcharge: 5.00,
+  });
+  const [loading, setLoading] = useState(true);
+  const [showZoneDialog, setShowZoneDialog] = useState(false);
+  const [editingZone, setEditingZone] = useState(null);
+  const [zoneForm, setZoneForm] = useState({
+    name: "",
+    zone_type: "dropoff",
+    postcodes: "",
+    areas: "",
+    fixed_fare: "",
+    description: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  // Fare calculator state
+  const [calcDistance, setCalcDistance] = useState("");
+  const [calcWaitTime, setCalcWaitTime] = useState("");
+  const [calcIsNight, setCalcIsNight] = useState(false);
+  const [calcIsAirport, setCalcIsAirport] = useState(false);
+  const [calculatedFare, setCalculatedFare] = useState(null);
+
+  useEffect(() => {
+    fetchFareSettings();
+  }, []);
+
+  const fetchFareSettings = async () => {
+    try {
+      const [zonesRes, ratesRes] = await Promise.all([
+        axios.get(`${API}/settings/fare-zones`).catch(() => ({ data: [] })),
+        axios.get(`${API}/settings/mile-rates`).catch(() => ({ data: null })),
+      ]);
+      setZones(zonesRes.data || []);
+      if (ratesRes.data) {
+        setMileRates(prev => ({ ...prev, ...ratesRes.data }));
+      }
+    } catch (error) {
+      console.error("Error fetching fare settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveZone = async () => {
+    if (!zoneForm.name || !zoneForm.fixed_fare) {
+      toast.error("Please enter zone name and fixed fare");
+      return;
+    }
+    if (!zoneForm.postcodes && !zoneForm.areas) {
+      toast.error("Please enter postcodes or area names");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        ...zoneForm,
+        fixed_fare: parseFloat(zoneForm.fixed_fare),
+        postcodes: zoneForm.postcodes.split(",").map(p => p.trim().toUpperCase()).filter(Boolean),
+        areas: zoneForm.areas.split(",").map(a => a.trim()).filter(Boolean),
+      };
+
+      if (editingZone) {
+        await axios.put(`${API}/settings/fare-zones/${editingZone.id}`, payload);
+        toast.success("Zone updated");
+      } else {
+        await axios.post(`${API}/settings/fare-zones`, payload);
+        toast.success("Zone created");
+      }
+      fetchFareSettings();
+      setShowZoneDialog(false);
+      resetZoneForm();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save zone");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteZone = async (zoneId) => {
+    try {
+      await axios.delete(`${API}/settings/fare-zones/${zoneId}`);
+      toast.success("Zone deleted");
+      fetchFareSettings();
+    } catch (error) {
+      toast.error("Failed to delete zone");
+    }
+    setDeleteConfirm(null);
+  };
+
+  const handleSaveMileRates = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/settings/mile-rates`, mileRates);
+      toast.success("Mile rates saved");
+    } catch (error) {
+      toast.error("Failed to save mile rates");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const calculateFare = () => {
+    const distance = parseFloat(calcDistance) || 0;
+    const waitTime = parseFloat(calcWaitTime) || 0;
+    
+    let fare = mileRates.base_fare + (distance * mileRates.price_per_mile);
+    fare += waitTime * mileRates.waiting_rate_per_min;
+    
+    if (calcIsNight) {
+      fare *= mileRates.night_multiplier;
+    }
+    
+    if (calcIsAirport) {
+      fare += mileRates.airport_surcharge;
+    }
+    
+    fare = Math.max(fare, mileRates.minimum_fare);
+    setCalculatedFare(fare);
+  };
+
+  const resetZoneForm = () => {
+    setZoneForm({
+      name: "",
+      zone_type: "dropoff",
+      postcodes: "",
+      areas: "",
+      fixed_fare: "",
+      description: "",
+    });
+    setEditingZone(null);
+  };
+
+  const openEditZone = (zone) => {
+    setEditingZone(zone);
+    setZoneForm({
+      name: zone.name,
+      zone_type: zone.zone_type || "dropoff",
+      postcodes: (zone.postcodes || []).join(", "),
+      areas: (zone.areas || []).join(", "),
+      fixed_fare: zone.fixed_fare?.toString() || "",
+      description: zone.description || "",
+    });
+    setShowZoneDialog(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Tabs value={fareTab} onValueChange={setFareTab}>
+        <TabsList>
+          <TabsTrigger value="zones">
+            <MapPin className="w-4 h-4 mr-2" />
+            Zone Fares
+          </TabsTrigger>
+          <TabsTrigger value="miles">
+            <Route className="w-4 h-4 mr-2" />
+            Mile Rates
+          </TabsTrigger>
+          <TabsTrigger value="calculator">
+            <Calculator className="w-4 h-4 mr-2" />
+            Fare Calculator
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Zone Fares Tab */}
+        <TabsContent value="zones" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Boundary Zone Fares
+                  </CardTitle>
+                  <CardDescription>
+                    Define fixed fares for specific areas based on postcodes or location names
+                  </CardDescription>
+                </div>
+                <Button onClick={() => { resetZoneForm(); setShowZoneDialog(true); }} data-testid="add-zone-btn">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Zone
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <p className="text-muted-foreground">Loading zones...</p>
+              ) : zones.length === 0 ? (
+                <div className="text-center py-8 border rounded-lg border-dashed">
+                  <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No fare zones defined yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Create zones to set fixed fares for specific areas
+                  </p>
+                  <Button className="mt-4" onClick={() => setShowZoneDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create First Zone
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Zone Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Postcodes / Areas</TableHead>
+                      <TableHead className="text-right">Fixed Fare</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {zones.map((zone) => (
+                      <TableRow key={zone.id}>
+                        <TableCell className="font-medium">{zone.name}</TableCell>
+                        <TableCell>
+                          <Badge variant={zone.zone_type === "pickup" ? "default" : "secondary"}>
+                            {zone.zone_type === "pickup" ? "Pickup" : "Drop-off"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {(zone.postcodes || []).slice(0, 3).map((pc, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">{pc}</Badge>
+                            ))}
+                            {(zone.areas || []).slice(0, 2).map((area, i) => (
+                              <Badge key={`a-${i}`} variant="outline" className="text-xs bg-blue-50">{area}</Badge>
+                            ))}
+                            {((zone.postcodes?.length || 0) + (zone.areas?.length || 0)) > 5 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{(zone.postcodes?.length || 0) + (zone.areas?.length || 0) - 5} more
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-primary">
+                          £{zone.fixed_fare?.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEditZone(zone)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(zone)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Mile Rates Tab */}
+        <TabsContent value="miles" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Route className="w-5 h-5" />
+                Mile-Based Pricing
+              </CardTitle>
+              <CardDescription>
+                Configure standard taxi meter rates for distance-based fare calculation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Base Fare (£)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={mileRates.base_fare}
+                    onChange={(e) => setMileRates({ ...mileRates, base_fare: parseFloat(e.target.value) || 0 })}
+                    data-testid="base-fare-input"
+                  />
+                  <p className="text-xs text-muted-foreground">Initial charge when meter starts</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Price Per Mile (£)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={mileRates.price_per_mile}
+                    onChange={(e) => setMileRates({ ...mileRates, price_per_mile: parseFloat(e.target.value) || 0 })}
+                    data-testid="price-per-mile-input"
+                  />
+                  <p className="text-xs text-muted-foreground">Charge per mile traveled</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Minimum Fare (£)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={mileRates.minimum_fare}
+                    onChange={(e) => setMileRates({ ...mileRates, minimum_fare: parseFloat(e.target.value) || 0 })}
+                    data-testid="minimum-fare-input"
+                  />
+                  <p className="text-xs text-muted-foreground">Minimum charge for any journey</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Waiting Rate (£/min)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={mileRates.waiting_rate_per_min}
+                    onChange={(e) => setMileRates({ ...mileRates, waiting_rate_per_min: parseFloat(e.target.value) || 0 })}
+                  />
+                  <p className="text-xs text-muted-foreground">Charge per minute of waiting time</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Airport Surcharge (£)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={mileRates.airport_surcharge}
+                    onChange={(e) => setMileRates({ ...mileRates, airport_surcharge: parseFloat(e.target.value) || 0 })}
+                  />
+                  <p className="text-xs text-muted-foreground">Additional charge for airport pickups/dropoffs</p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Night Rate Settings
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Night Multiplier</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={mileRates.night_multiplier}
+                      onChange={(e) => setMileRates({ ...mileRates, night_multiplier: parseFloat(e.target.value) || 1 })}
+                    />
+                    <p className="text-xs text-muted-foreground">e.g. 1.5 = 50% extra</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Night Start Time</Label>
+                    <Input
+                      type="time"
+                      value={mileRates.night_start}
+                      onChange={(e) => setMileRates({ ...mileRates, night_start: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Night End Time</Label>
+                    <Input
+                      type="time"
+                      value={mileRates.night_end}
+                      onChange={(e) => setMileRates({ ...mileRates, night_end: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSaveMileRates} disabled={saving}>
+                  {saving ? "Saving..." : "Save Mile Rates"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Fare Calculator Tab */}
+        <TabsContent value="calculator" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="w-5 h-5" />
+                Fare Calculator
+              </CardTitle>
+              <CardDescription>
+                Calculate fares based on your current mile rate settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Distance (miles)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Enter distance"
+                      value={calcDistance}
+                      onChange={(e) => setCalcDistance(e.target.value)}
+                      data-testid="calc-distance-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Waiting Time (minutes)</Label>
+                    <Input
+                      type="number"
+                      placeholder="Enter waiting time"
+                      value={calcWaitTime}
+                      onChange={(e) => setCalcWaitTime(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Night Rate</Label>
+                    <Switch
+                      checked={calcIsNight}
+                      onCheckedChange={setCalcIsNight}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Airport Journey</Label>
+                    <Switch
+                      checked={calcIsAirport}
+                      onCheckedChange={setCalcIsAirport}
+                    />
+                  </div>
+                  <Button className="w-full" onClick={calculateFare}>
+                    <Calculator className="w-4 h-4 mr-2" />
+                    Calculate Fare
+                  </Button>
+                </div>
+                
+                <div className="border rounded-lg p-6 bg-muted/30">
+                  <h4 className="font-medium mb-4">Fare Breakdown</h4>
+                  {calculatedFare !== null ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>Base Fare:</span>
+                        <span>£{mileRates.base_fare.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Distance ({calcDistance || 0} miles × £{mileRates.price_per_mile.toFixed(2)}):</span>
+                        <span>£{((parseFloat(calcDistance) || 0) * mileRates.price_per_mile).toFixed(2)}</span>
+                      </div>
+                      {calcWaitTime && parseFloat(calcWaitTime) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span>Waiting ({calcWaitTime} mins × £{mileRates.waiting_rate_per_min.toFixed(2)}):</span>
+                          <span>£{((parseFloat(calcWaitTime) || 0) * mileRates.waiting_rate_per_min).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {calcIsNight && (
+                        <div className="flex justify-between text-sm text-amber-600">
+                          <span>Night Rate ({mileRates.night_multiplier}x):</span>
+                          <span>Applied</span>
+                        </div>
+                      )}
+                      {calcIsAirport && (
+                        <div className="flex justify-between text-sm">
+                          <span>Airport Surcharge:</span>
+                          <span>£{mileRates.airport_surcharge.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="border-t pt-3 mt-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold">Total Fare:</span>
+                          <span className="text-2xl font-bold text-primary">£{calculatedFare.toFixed(2)}</span>
+                        </div>
+                        {calculatedFare < mileRates.minimum_fare && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            (Minimum fare of £{mileRates.minimum_fare.toFixed(2)} applied)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <Calculator className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p>Enter journey details and click Calculate</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Zone Dialog */}
+      <Dialog open={showZoneDialog} onOpenChange={setShowZoneDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingZone ? "Edit Zone" : "Create Fare Zone"}</DialogTitle>
+            <DialogDescription>
+              Define a geographic boundary with a fixed fare
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Zone Name *</Label>
+              <Input
+                placeholder="e.g. Newcastle Airport, City Centre"
+                value={zoneForm.name}
+                onChange={(e) => setZoneForm({ ...zoneForm, name: e.target.value })}
+                data-testid="zone-name-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Zone Type</Label>
+              <Select
+                value={zoneForm.zone_type}
+                onValueChange={(value) => setZoneForm({ ...zoneForm, zone_type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dropoff">Drop-off Zone</SelectItem>
+                  <SelectItem value="pickup">Pickup Zone</SelectItem>
+                  <SelectItem value="both">Both Pickup & Drop-off</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Determines when the fixed fare applies
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Postcodes</Label>
+              <Textarea
+                placeholder="NE1, NE2, NE3, NE13 8BZ..."
+                value={zoneForm.postcodes}
+                onChange={(e) => setZoneForm({ ...zoneForm, postcodes: e.target.value })}
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground">
+                Comma-separated postcode prefixes or full postcodes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Area Names</Label>
+              <Textarea
+                placeholder="Newcastle Airport, Central Station, Metro Centre..."
+                value={zoneForm.areas}
+                onChange={(e) => setZoneForm({ ...zoneForm, areas: e.target.value })}
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground">
+                Comma-separated location names to match in addresses
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Fixed Fare (£) *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="35.00"
+                value={zoneForm.fixed_fare}
+                onChange={(e) => setZoneForm({ ...zoneForm, fixed_fare: e.target.value })}
+                data-testid="zone-fare-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description (optional)</Label>
+              <Input
+                placeholder="Additional notes about this zone"
+                value={zoneForm.description}
+                onChange={(e) => setZoneForm({ ...zoneForm, description: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowZoneDialog(false)}>Cancel</Button>
+            <Button onClick={handleSaveZone} disabled={saving}>
+              {saving ? "Saving..." : editingZone ? "Update Zone" : "Create Zone"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Zone</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteConfirm?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleDeleteZone(deleteConfirm?.id)} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
 // Main Settings Page
 const SettingsPage = () => {
   const { user, updateProfile, isSuperAdmin } = useAuth();

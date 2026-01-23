@@ -520,6 +520,57 @@ class ClientPortalResponse(BaseModel):
     account_no: Optional[str] = None
     token: str
 
+# ========== WALKAROUND CHECK MODELS ==========
+class WalkaroundCheckCreate(BaseModel):
+    driver_name: str
+    vehicle_reg: str
+    check_type: str = "daily"  # daily or weekly
+    checklist: Dict[str, bool]  # All checklist items with pass/fail status
+    defects: Optional[str] = None
+    agreement: bool
+    
+class WalkaroundCheckResponse(BaseModel):
+    id: str
+    check_number: str
+    driver_id: str
+    driver_name: str
+    vehicle_id: str
+    vehicle_reg: str
+    check_type: str
+    checklist: Dict[str, bool]
+    defects: Optional[str] = None
+    agreement: bool
+    submitted_at: datetime
+    pdf_url: Optional[str] = None
+
+WALKAROUND_CHECKLIST_ITEMS = [
+    "Tyres, Wheel and Wheel Nuts",
+    "Bodywork Damages",
+    "Door Security",
+    "Oil, Fluid or Coolant Leaks",
+    "Tow Bar Security & Connections",
+    "Lights & Reflectors",
+    "Exhaust Security and Emissions",
+    "Battery Security",
+    "Horn & Dashboard Lights",
+    "Mirrors & Indicators",
+    "Washers & Wipers",
+    "Seats & Seatbelts",
+    "Brakes & Steering",
+    "Registration Plates & Taxi Plate and Roundels",
+    "Windscreen & Glass Windows",
+    "Spare Wheel",
+    "Tachograph",
+    "Saloon Lighting",
+    "Saloon Floor Covering",
+    "Heating & Ventilation",
+    "Exits, Locks and Handles",
+    "First Aid Kit & First Aid Sticker",
+    "Fire Extinguisher & Fire Extinguisher Sticker",
+    "Emergency Hammer",
+    "Are you fit to drive?"
+]
+
 async def generate_booking_id():
     """Generate a sequential booking ID like CJ-001, CJ-002, etc."""
     # Find the highest booking number

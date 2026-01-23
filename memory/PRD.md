@@ -1,5 +1,13 @@
 # CJ's Executive Travel - Product Requirements Document
 
+## Latest Updates (January 23, 2026)
+
+### Bookings Page Enhancement
+- First date shown is always Today with highlighted header
+- Past bookings hidden by default, searchable via filters
+- Empty day shows "No bookings for [Day Name]" message
+- Hint text guides users to use filters for past bookings
+
 ## Original Problem Statement
 Build a private hire booking application for CJ's Executive Travel with features for managing bookings, drivers, clients, passengers, and integrations for payments, maps, flight data, and communications.
 

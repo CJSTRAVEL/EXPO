@@ -313,13 +313,23 @@ async def select_vehicle(request: VehicleSelectionRequest, driver: dict = Depend
 @router.post("/driver/release-vehicle")
 async def release_vehicle(driver: dict = Depends(get_current_driver)):
     """Release the currently selected vehicle"""
+    vehicle_id = driver.get("current_vehicle_id") or driver.get("selected_vehicle_id")
+    
+    if vehicle_id:
+        # Clear vehicle assignment
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {"current_driver_id": None}}
+        )
+    
+    # Clear driver's vehicle selection
     await db.drivers.update_one(
         {"id": driver["id"]},
-        {"$set": {"current_vehicle_id": None}}
+        {"$set": {"current_vehicle_id": None, "selected_vehicle_id": None}}
     )
     
     updated_driver = await db.drivers.find_one({"id": driver["id"]}, {"_id": 0, "password_hash": 0})
-    return {"driver": updated_driver, "vehicle": None}
+    return {"driver": updated_driver, "vehicle": None, "message": "Vehicle released successfully"}
 
 
 @router.get("/driver/available-vehicles")

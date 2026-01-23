@@ -4779,6 +4779,15 @@ async def change_driver_password(password_data: DriverPasswordChange, driver: di
     
     return {"message": "Password changed successfully"}
 
+@api_router.get("/driver/walkaround-history")
+async def get_driver_walkaround_history(driver: dict = Depends(get_current_driver)):
+    """Get walkaround check history for the current driver"""
+    checks = await db.walkaround_checks.find(
+        {"driver_id": driver["id"]},
+        {"_id": 0}
+    ).sort("submitted_at", -1).to_list(100)
+    return checks
+
 @api_router.get("/driver/document-notifications")
 async def check_document_notifications(driver: dict = Depends(get_current_driver)):
     """Check for document expiry notifications (60 days and 30 days)"""

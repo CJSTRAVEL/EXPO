@@ -2978,9 +2978,11 @@ const BookingsPage = () => {
                       </div>
                     );
                   })}
-                </div>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -118,7 +118,7 @@ export default function WalkaroundHistoryScreen({ navigation }) {
             {item.check_number || `WO-${item.id?.slice(0, 6)}`}
           </Text>
           <Text style={[styles.checkDate, { color: theme.textSecondary }]}>
-            {item.submitted_at ? format(new Date(item.submitted_at), 'dd MMM yyyy, HH:mm') : 'N/A'}
+            {formatDate(item.submitted_at)}
           </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.overall_status) + '20' }]}>

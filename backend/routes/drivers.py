@@ -264,16 +264,22 @@ async def change_driver_password(password_data: DriverPasswordChange, driver: di
     return {"message": "Password changed successfully"}
 
 
+class VehicleSelectionRequest(BaseModel):
+    vehicle_id: str
+
 @router.post("/driver/select-vehicle")
-async def select_vehicle(vehicle_id: str, driver: dict = Depends(get_current_driver)):
+async def select_vehicle(request: VehicleSelectionRequest, driver: dict = Depends(get_current_driver)):
     """Select a vehicle for the driver"""
+    vehicle_id = request.vehicle_id
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
+    # Check if vehicle is already in use by another online driver
     existing = await db.drivers.find_one({
         "current_vehicle_id": vehicle_id,
-        "id": {"$ne": driver["id"]}
+        "id": {"$ne": driver["id"]},
+        "is_online": True
     })
     if existing:
         raise HTTPException(
@@ -281,9 +287,23 @@ async def select_vehicle(vehicle_id: str, driver: dict = Depends(get_current_dri
             detail=f"Vehicle is already assigned to {existing['name']}"
         )
     
+    # Release any previously selected vehicle by this driver
+    if driver.get("current_vehicle_id") and driver.get("current_vehicle_id") != vehicle_id:
+        await db.vehicles.update_one(
+            {"id": driver["current_vehicle_id"]},
+            {"$set": {"current_driver_id": None}}
+        )
+    
+    # Update driver's current vehicle
     await db.drivers.update_one(
         {"id": driver["id"]},
-        {"$set": {"current_vehicle_id": vehicle_id}}
+        {"$set": {"current_vehicle_id": vehicle_id, "selected_vehicle_id": vehicle_id}}
+    )
+    
+    # Update vehicle's current driver
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"current_driver_id": driver["id"]}}
     )
     
     updated_driver = await db.drivers.find_one({"id": driver["id"]}, {"_id": 0, "password_hash": 0})

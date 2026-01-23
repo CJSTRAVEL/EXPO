@@ -1296,6 +1296,319 @@ async def delete_vehicle(vehicle_id: str):
         raise HTTPException(status_code=404, detail="Vehicle not found")
     return {"message": "Vehicle deleted successfully"}
 
+# ========== WALKAROUND CHECK ENDPOINTS ==========
+async def generate_walkaround_number():
+    """Generate sequential walkaround check number like WO-001, WO-002, etc."""
+    latest = await db.walkaround_checks.find_one(
+        {"check_number": {"$exists": True, "$ne": None}},
+        sort=[("check_number", -1)]
+    )
+    
+    if latest and latest.get("check_number"):
+        try:
+            current_num = int(latest["check_number"].split("-")[1])
+            next_num = current_num + 1
+        except (ValueError, IndexError):
+            next_num = 1
+    else:
+        next_num = 1
+    
+    return f"WO-{next_num:03d}"
+
+def generate_walkaround_pdf(check_data: dict) -> bytes:
+    """Generate a PDF certificate for the walkaround check"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                           leftMargin=20*mm, rightMargin=20*mm,
+                           topMargin=15*mm, bottomMargin=15*mm)
+    
+    styles = getSampleStyleSheet()
+    elements = []
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#1e3a5f'),
+        alignment=TA_CENTER,
+        spaceAfter=10
+    )
+    
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1e3a5f'),
+        spaceAfter=5
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=3
+    )
+    
+    # Title
+    elements.append(Paragraph("CJ's Executive Travel", title_style))
+    elements.append(Paragraph("Walk Around Check Certificate", header_style))
+    elements.append(Spacer(1, 10))
+    
+    # Info section
+    submitted_at = check_data.get('submitted_at', datetime.now(timezone.utc))
+    if isinstance(submitted_at, str):
+        submitted_at = datetime.fromisoformat(submitted_at.replace('Z', '+00:00'))
+    
+    info_data = [
+        ['Check Number:', check_data.get('check_number', 'N/A'), 'Date:', submitted_at.strftime('%d/%m/%Y')],
+        ['Vehicle:', check_data.get('vehicle_reg', 'N/A'), 'Time:', submitted_at.strftime('%H:%M')],
+        ['Driver:', check_data.get('driver_name', 'N/A'), 'Type:', check_data.get('check_type', 'Daily').title()],
+    ]
+    
+    info_table = Table(info_data, colWidths=[70, 150, 50, 100])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1e3a5f')),
+        ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#1e3a5f')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 15))
+    
+    # Checklist Section Header
+    elements.append(Paragraph("Checklist Items", header_style))
+    elements.append(Spacer(1, 5))
+    
+    # Build checklist table - 2 columns
+    checklist = check_data.get('checklist', {})
+    items = list(checklist.items())
+    
+    # Split into two columns
+    half = (len(items) + 1) // 2
+    col1_items = items[:half]
+    col2_items = items[half:]
+    
+    checklist_data = []
+    for i in range(max(len(col1_items), len(col2_items))):
+        row = []
+        if i < len(col1_items):
+            item, passed = col1_items[i]
+            status = '✓' if passed else '✗'
+            row.extend([status, item])
+        else:
+            row.extend(['', ''])
+        
+        if i < len(col2_items):
+            item, passed = col2_items[i]
+            status = '✓' if passed else '✗'
+            row.extend([status, item])
+        else:
+            row.extend(['', ''])
+        
+        checklist_data.append(row)
+    
+    checklist_table = Table(checklist_data, colWidths=[20, 160, 20, 160])
+    checklist_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.green),
+        ('TEXTCOLOR', (2, 0), (2, -1), colors.green),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    elements.append(checklist_table)
+    elements.append(Spacer(1, 15))
+    
+    # Defects Section
+    elements.append(Paragraph("Defects Reported", header_style))
+    defects = check_data.get('defects', '').strip()
+    if defects:
+        elements.append(Paragraph(defects, normal_style))
+    else:
+        elements.append(Paragraph("Nil", ParagraphStyle('Green', parent=normal_style, textColor=colors.green)))
+    elements.append(Spacer(1, 15))
+    
+    # Agreement Section
+    elements.append(Paragraph("Declaration", header_style))
+    elements.append(Paragraph(
+        "I confirm that I have checked these items against company Daily Check policy.",
+        normal_style
+    ))
+    elements.append(Spacer(1, 20))
+    
+    # Signature line
+    sig_data = [
+        ['Driver Signature:', '_' * 30, 'Date:', submitted_at.strftime('%d/%m/%Y')],
+    ]
+    sig_table = Table(sig_data, colWidths=[100, 150, 40, 80])
+    sig_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(sig_table)
+    elements.append(Spacer(1, 30))
+    
+    # Footer
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.gray,
+        alignment=TA_CENTER
+    )
+    elements.append(Paragraph("CJ's Executive Travel Limited", footer_style))
+    elements.append(Paragraph("Portacabin 5, 3 Cook Way, Peterlee, SR8 2HY", footer_style))
+    elements.append(Paragraph("Tel: 0191 722 1223 | Email: admin@cjstravel.uk | Web: cjstravel.uk", footer_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+@api_router.get("/walkaround-checks")
+async def get_walkaround_checks(vehicle_id: Optional[str] = None, driver_id: Optional[str] = None):
+    """Get all walkaround checks, optionally filtered by vehicle or driver"""
+    query = {}
+    if vehicle_id:
+        query["vehicle_id"] = vehicle_id
+    if driver_id:
+        query["driver_id"] = driver_id
+    
+    checks = await db.walkaround_checks.find(query, {"_id": 0}).sort("submitted_at", -1).to_list(1000)
+    return checks
+
+@api_router.get("/walkaround-checks/{check_id}")
+async def get_walkaround_check(check_id: str):
+    """Get a specific walkaround check by ID"""
+    check = await db.walkaround_checks.find_one({"id": check_id}, {"_id": 0})
+    if not check:
+        raise HTTPException(status_code=404, detail="Walkaround check not found")
+    return check
+
+@api_router.get("/walkaround-checks/{check_id}/pdf")
+async def get_walkaround_pdf(check_id: str):
+    """Generate and download PDF certificate for a walkaround check"""
+    check = await db.walkaround_checks.find_one({"id": check_id}, {"_id": 0})
+    if not check:
+        raise HTTPException(status_code=404, detail="Walkaround check not found")
+    
+    pdf_bytes = generate_walkaround_pdf(check)
+    
+    filename = f"{check.get('check_number', 'WO')}-{check.get('vehicle_reg', 'Unknown')}-{check.get('submitted_at', '')[:10]}.pdf"
+    
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@api_router.post("/walkaround-checks")
+async def create_walkaround_check(check: WalkaroundCheckCreate, authorization: str = Header(None)):
+    """Submit a new walkaround check (from driver app)"""
+    # Verify driver token
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization required")
+    
+    token = authorization.replace("Bearer ", "")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        driver_id = payload.get("driver_id")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Get driver info
+    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
+    if not driver:
+        raise HTTPException(status_code=404, detail="Driver not found")
+    
+    # Find vehicle by registration
+    vehicle = await db.vehicles.find_one({"registration": check.vehicle_reg.upper()}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail=f"Vehicle with registration {check.vehicle_reg} not found")
+    
+    # Check if all items are checked
+    if not check.agreement:
+        raise HTTPException(status_code=400, detail="You must agree to the declaration")
+    
+    all_passed = all(check.checklist.values())
+    has_defects = bool(check.defects and check.defects.strip())
+    
+    # Generate check number
+    check_number = await generate_walkaround_number()
+    
+    check_doc = {
+        "id": str(uuid.uuid4()),
+        "check_number": check_number,
+        "driver_id": driver_id,
+        "driver_name": driver.get("name", check.driver_name),
+        "vehicle_id": vehicle["id"],
+        "vehicle_reg": vehicle["registration"],
+        "check_type": check.check_type,
+        "checklist": check.checklist,
+        "all_passed": all_passed,
+        "defects": check.defects,
+        "has_defects": has_defects,
+        "agreement": check.agreement,
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.walkaround_checks.insert_one(check_doc)
+    
+    # Remove _id before returning
+    check_doc.pop("_id", None)
+    
+    logging.info(f"Walkaround check {check_number} submitted by driver {driver.get('name')} for vehicle {vehicle['registration']}")
+    
+    return check_doc
+
+@api_router.get("/vehicles/{vehicle_id}/walkaround-checks")
+async def get_vehicle_walkaround_checks(vehicle_id: str):
+    """Get all walkaround checks for a specific vehicle"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    checks = await db.walkaround_checks.find(
+        {"vehicle_id": vehicle_id}, 
+        {"_id": 0}
+    ).sort("submitted_at", -1).to_list(100)
+    
+    return checks
+
+@api_router.get("/driver/walkaround-checks")
+async def get_driver_walkaround_checks(authorization: str = Header(None)):
+    """Get walkaround checks submitted by the authenticated driver"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization required")
+    
+    token = authorization.replace("Bearer ", "")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        driver_id = payload.get("driver_id")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    checks = await db.walkaround_checks.find(
+        {"driver_id": driver_id}, 
+        {"_id": 0}
+    ).sort("submitted_at", -1).to_list(100)
+    
+    return checks
+
+@api_router.get("/checklist-items")
+async def get_checklist_items():
+    """Get the list of walkaround checklist items"""
+    return {"items": WALKAROUND_CHECKLIST_ITEMS}
+
 # ========== CLIENT ENDPOINTS ==========
 async def generate_client_account_no():
     """Generate sequential client account number like E001, E002, etc."""

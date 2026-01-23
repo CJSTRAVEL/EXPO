@@ -713,6 +713,15 @@ async def lookup_flight(flight_number: str):
     # Clean flight number (remove spaces, uppercase)
     flight_number = flight_number.strip().upper().replace(" ", "")
     
+    # Extract airline code (first 2-3 letters) from flight number
+    import re
+    match = re.match(r'^([A-Z]{2,3})(\d+)$', flight_number)
+    if not match:
+        return {"error": "Invalid flight number format. Use format like BA123 or EZY456", "flight_number": flight_number}
+    
+    airline_code = match.group(1)
+    flight_num = match.group(2)
+    
     # Check cache first (store in MongoDB for 30 mins)
     cached = await db.flight_cache.find_one({
         "flight_number": flight_number,
@@ -728,12 +737,14 @@ async def lookup_flight(flight_number: str):
     
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
+            # Search by airline IATA code instead of specific flight number
+            # (free tier doesn't support flight_iata parameter)
             response = await client.get(
                 "http://api.aviationstack.com/v1/flights",
                 params={
                     "access_key": AVIATIONSTACK_API_KEY,
-                    "flight_iata": flight_number,
-                    "limit": 1
+                    "airline_iata": airline_code,
+                    "limit": 100  # Get more results to find the specific flight
                 }
             )
             
@@ -748,9 +759,25 @@ async def lookup_flight(flight_number: str):
                 return {"error": data["error"].get("message", "API error"), "flight_number": flight_number}
             
             if not data.get("data") or len(data["data"]) == 0:
-                return {"error": "Flight not found", "flight_number": flight_number}
+                return {"error": f"No flights found for airline {airline_code}", "flight_number": flight_number}
             
-            flight = data["data"][0]
+            # Find the specific flight by number
+            flight = None
+            for f in data["data"]:
+                f_iata = f.get("flight", {}).get("iata", "")
+                f_number = f.get("flight", {}).get("number", "")
+                if f_iata == flight_number or f_number == flight_num:
+                    flight = f
+                    break
+            
+            if not flight:
+                # Flight not found in current results - return a helpful message
+                available_flights = [f.get("flight", {}).get("iata", "") for f in data["data"][:10]]
+                return {
+                    "error": f"Flight {flight_number} not found in current schedule",
+                    "flight_number": flight_number,
+                    "hint": f"Try one of these {airline_code} flights: {', '.join(filter(None, available_flights[:5]))}"
+                }
             
             # Parse the response
             result = {

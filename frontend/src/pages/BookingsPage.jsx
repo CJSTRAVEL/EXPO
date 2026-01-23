@@ -2719,26 +2719,25 @@ const BookingsPage = () => {
                                 )}
                               </div>
 
-                              {/* Journey Info (Miles & Duration) */}
-                              {(booking.distance_miles || booking.duration_minutes) && (
-                                <div className="hidden lg:flex flex-col items-end gap-0.5 text-xs text-slate-600">
-                                  {booking.distance_miles && (
-                                    <span className="flex items-center gap-1 font-medium">
-                                      <MapPin className="w-3 h-3 text-blue-500" />
-                                      {booking.distance_miles} mi
-                                    </span>
-                                  )}
-                                  {booking.duration_minutes && (
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3 text-amber-500" />
-                                      {formatDuration(booking.duration_minutes)}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-
                               {/* Status & Actions */}
                               <div className="col-span-2 lg:col-span-3 flex items-center justify-end gap-3">
+                                {/* Journey Info (Miles & Duration) */}
+                                {(booking.distance_miles || booking.duration_minutes) && (
+                                  <div className="hidden lg:flex items-center gap-3 text-xs text-slate-500 mr-2">
+                                    {booking.distance_miles && (
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-blue-500" />
+                                        {booking.distance_miles} mi
+                                      </span>
+                                    )}
+                                    {booking.duration_minutes && (
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3 text-amber-500" />
+                                        {formatDuration(booking.duration_minutes)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                                 {getStatusBadge(booking.status)}
                                 <div onClick={(e) => e.stopPropagation()}>
                                   <DropdownMenu>

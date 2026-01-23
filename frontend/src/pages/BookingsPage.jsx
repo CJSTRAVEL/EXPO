@@ -658,6 +658,34 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
               </div>
             </div>
 
+            {/* Deposit Paid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="deposit_paid">Deposit Paid (£)</Label>
+                <Input
+                  id="deposit_paid"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.deposit_paid || ""}
+                  onChange={(e) => setFormData({ ...formData, deposit_paid: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="booking-deposit-input"
+                />
+              </div>
+              {/* Balance Due Display */}
+              {formData.fare && parseFloat(formData.fare) > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Balance Due</Label>
+                  <div className="h-10 px-3 py-2 rounded-md border bg-muted flex items-center">
+                    <span className="font-bold text-primary">
+                      £{Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Return Booking Option (only for new bookings) */}
             {!booking && (
               <div className="space-y-3 border-2 border-amber-300 rounded-lg p-3 bg-amber-50/50">

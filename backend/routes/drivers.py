@@ -86,8 +86,10 @@ class DriverLocationUpdate(BaseModel):
     longitude: float
 
 class DriverAppStatus(BaseModel):
-    status: DriverStatus
-    current_vehicle_id: Optional[str] = None
+    is_online: Optional[bool] = None
+    on_break: Optional[bool] = None
+    selected_vehicle_id: Optional[str] = None
+    push_token: Optional[str] = None
 
 class DriverPasswordChange(BaseModel):
     current_password: str

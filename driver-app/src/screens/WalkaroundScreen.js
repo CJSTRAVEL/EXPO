@@ -662,6 +662,13 @@ const styles = StyleSheet.create({
   textArea: {
     fontSize: 14,
   },
+  textAreaInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 100,
+    fontSize: 14,
+  },
   agreementContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',

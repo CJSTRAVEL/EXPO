@@ -720,6 +720,14 @@ const CustomerLogin = () => {
           {forgotStep === 2 && (
             <div className="space-y-4">
               <p className="text-gray-400 text-sm">Enter the 6-digit code sent to <span className="text-white">{resetMethod === "sms" ? forgotPhone : forgotEmail}</span></p>
+              {resetMethod === "email" && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                  <p className="text-yellow-400 text-sm flex items-center gap-2">
+                    <Mail className="w-4 h-4 flex-shrink-0" />
+                    <span>Can't find the email? Please check your <strong>Junk/Spam</strong> folder.</span>
+                  </p>
+                </div>
+              )}
               <Input type="text" placeholder="000000" maxLength={6} value={resetCode} onChange={(e) => setResetCode(e.target.value.replace(/\D/g, ''))} className="bg-[#2d2d2d] border-[#3d3d3d] text-white text-center text-2xl tracking-widest" />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setForgotStep(1)} className="flex-1 border-[#3d3d3d] text-gray-300"><ArrowLeft className="w-4 h-4 mr-2" /> Back</Button>

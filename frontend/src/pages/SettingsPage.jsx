@@ -1157,7 +1157,13 @@ const FareSettingsSection = () => {
     const distance = parseFloat(calcDistance) || 0;
     const waitTime = parseFloat(calcWaitTime) || 0;
     
-    let fare = mileRates.base_fare + (distance * mileRates.price_per_mile);
+    // Get rates for selected vehicle type, or use defaults
+    const vehicleRates = calcVehicleType && mileRates.vehicle_rates?.[calcVehicleType];
+    const baseFare = vehicleRates?.base_fare ?? mileRates.base_fare;
+    const pricePerMile = vehicleRates?.price_per_mile ?? mileRates.price_per_mile;
+    const minimumFare = vehicleRates?.minimum_fare ?? mileRates.minimum_fare;
+    
+    let fare = baseFare + (distance * pricePerMile);
     fare += waitTime * mileRates.waiting_rate_per_min;
     
     if (calcIsNight) {
@@ -1168,7 +1174,7 @@ const FareSettingsSection = () => {
       fare += mileRates.airport_surcharge;
     }
     
-    fare = Math.max(fare, mileRates.minimum_fare);
+    fare = Math.max(fare, minimumFare);
     setCalculatedFare(fare);
   };
 

@@ -704,6 +704,11 @@ class FlightInfoResponse(BaseModel):
     flight_date: Optional[str] = None
     error: Optional[str] = None
 
+@api_router.get("/flight-lookup")
+async def flight_lookup_query(flight_number: str):
+    """Flight lookup endpoint using query parameter"""
+    return await lookup_flight(flight_number)
+
 @api_router.get("/flight/{flight_number}")
 async def lookup_flight(flight_number: str):
     """Look up live flight data from AviationStack API"""

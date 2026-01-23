@@ -1011,6 +1011,7 @@ const MessageTemplatesSection = () => {
 const FareSettingsSection = () => {
   const [fareTab, setFareTab] = useState("zones");
   const [zones, setZones] = useState([]);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [mileRates, setMileRates] = useState({
     base_fare: 3.50,
     price_per_mile: 2.00,
@@ -1029,7 +1030,7 @@ const FareSettingsSection = () => {
     zone_type: "dropoff",
     postcodes: "",
     areas: "",
-    fixed_fare: "",
+    vehicle_fares: {}, // Map of vehicle_type_id -> price
     description: "",
     boundary: null,
   });
@@ -1050,11 +1051,13 @@ const FareSettingsSection = () => {
 
   const fetchFareSettings = async () => {
     try {
-      const [zonesRes, ratesRes] = await Promise.all([
+      const [zonesRes, ratesRes, vehicleTypesRes] = await Promise.all([
         axios.get(`${API}/settings/fare-zones`).catch(() => ({ data: [] })),
         axios.get(`${API}/settings/mile-rates`).catch(() => ({ data: null })),
+        axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
       ]);
       setZones(zonesRes.data || []);
+      setVehicleTypes(vehicleTypesRes.data || []);
       if (ratesRes.data) {
         setMileRates(prev => ({ ...prev, ...ratesRes.data }));
       }
@@ -1066,8 +1069,17 @@ const FareSettingsSection = () => {
   };
 
   const handleSaveZone = async () => {
-    if (!zoneForm.name || !zoneForm.fixed_fare) {
-      toast.error("Please enter zone name and fixed fare");
+    if (!zoneForm.name) {
+      toast.error("Please enter zone name");
+      return;
+    }
+    
+    // Check if at least one vehicle fare is set
+    const hasVehicleFares = Object.values(zoneForm.vehicle_fares).some(fare => fare && parseFloat(fare) > 0);
+    if (!hasVehicleFares) {
+      toast.error("Please set a fare for at least one vehicle type");
+      return;
+    }
       return;
     }
     // Validate: need either boundary, postcodes, or areas

@@ -2758,7 +2758,10 @@ async def request_password_reset(data: PasswordResetRequest):
             smtp_password = os.environ.get('SMTP_PASSWORD')
             smtp_from = os.environ.get('SMTP_FROM_EMAIL', smtp_username)
             
+            print(f"DEBUG: SMTP config - server={smtp_server}, port={smtp_port}, username={smtp_username}, from={smtp_from}")
+            
             if smtp_server and smtp_username and smtp_password:
+                print(f"DEBUG: Sending email to {identifier}")
                 msg = MIMEMultipart('alternative')
                 msg['Subject'] = subject
                 msg['From'] = f"CJ's Executive Travel <{smtp_from}>"
@@ -2772,8 +2775,10 @@ async def request_password_reset(data: PasswordResetRequest):
                     server.login(smtp_username, smtp_password)
                     server.sendmail(smtp_from, identifier, msg.as_string())
                 
+                print(f"DEBUG: Email sent successfully to {identifier}")
                 logging.info(f"Password reset email sent to {identifier}")
             else:
+                print(f"DEBUG: SMTP not configured")
                 logging.warning(f"SMTP not configured. Reset code for {identifier}: {reset_code}")
         except Exception as e:
             logging.error(f"Password reset email error: {str(e)}")

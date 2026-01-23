@@ -251,6 +251,13 @@ function AppNavigator() {
             }}
           />
           <Stack.Screen
+            name="WalkaroundHistory"
+            component={WalkaroundHistoryScreen}
+            options={{ 
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
             name="JobDetail"
             component={JobDetailScreen}
             options={({ route }) => ({

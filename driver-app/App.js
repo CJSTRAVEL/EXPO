@@ -30,6 +30,7 @@ import VehicleSettingsScreen from './src/screens/VehicleSettingsScreen';
 import DiagnosticsScreen from './src/screens/DiagnosticsScreen';
 import BiometricSettingsScreen from './src/screens/BiometricSettingsScreen';
 import LogoutScreen from './src/screens/LogoutScreen';
+import WalkaroundScreen from './src/screens/WalkaroundScreen';
 
 // Configure notifications
 Notifications.setNotificationHandler({

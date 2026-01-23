@@ -696,22 +696,97 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                   step="0.01"
                   min="0"
                   value={formData.deposit_paid || ""}
-                  onChange={(e) => setFormData({ ...formData, deposit_paid: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      deposit_paid: value,
+                      // Auto-set deposit date to today if deposit is entered and date not set
+                      deposit_date: value && parseFloat(value) > 0 && !formData.deposit_date 
+                        ? new Date() 
+                        : formData.deposit_date
+                    });
+                  }}
                   placeholder="0.00"
                   data-testid="booking-deposit-input"
                 />
               </div>
-              {/* Balance Due Display */}
-              {formData.fare && parseFloat(formData.fare) > 0 && (
+              {/* Deposit Date */}
+              {formData.deposit_paid && parseFloat(formData.deposit_paid) > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Balance Due</Label>
-                  <div className="h-10 px-3 py-2 rounded-md border bg-muted flex items-center">
-                    <span className="font-bold text-primary">
-                      £{Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0)).toFixed(2)}
-                    </span>
-                  </div>
+                  <Label>Deposit Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.deposit_date && "text-muted-foreground"
+                        )}
+                        data-testid="deposit-date-picker"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {formData.deposit_date 
+                          ? format(formData.deposit_date, "dd/MM/yyyy")
+                          : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={formData.deposit_date}
+                        onSelect={(date) => setFormData({ ...formData, deposit_date: date })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
+            </div>
+
+            {/* Balance Due Display */}
+            {formData.fare && parseFloat(formData.fare) > 0 && (
+              <div className="p-3 rounded-md border bg-muted">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Total Fare:</span>
+                  <span className="font-medium">£{parseFloat(formData.fare).toFixed(2)}</span>
+                </div>
+                {formData.deposit_paid && parseFloat(formData.deposit_paid) > 0 && (
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-muted-foreground">
+                      Deposit Paid {formData.deposit_date ? `(${format(formData.deposit_date, "dd/MM/yyyy")})` : ''}:
+                    </span>
+                    <span className="font-medium text-green-600">-£{parseFloat(formData.deposit_paid).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                  <span className="font-semibold">Balance Due:</span>
+                  <span className="font-bold text-primary text-lg">
+                    £{Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0)).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Booking Source */}
+            <div className="space-y-2">
+              <Label htmlFor="booking_source">Booking Source</Label>
+              <Select
+                value={formData.booking_source || "none"}
+                onValueChange={(value) => setFormData({ ...formData, booking_source: value === "none" ? "" : value })}
+              >
+                <SelectTrigger data-testid="booking-source-select">
+                  <SelectValue placeholder="Select source..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not Specified</SelectItem>
+                  {bookingSources.map((source) => (
+                    <SelectItem key={source.value} value={source.value}>
+                      {source.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Return Booking Option (only for new bookings) */}

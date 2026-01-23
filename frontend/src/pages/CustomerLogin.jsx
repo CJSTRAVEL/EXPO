@@ -709,6 +709,12 @@ const CustomerLogin = () => {
                 <div className="space-y-2">
                   <Label className="text-gray-200">Email Address</Label>
                   <Input type="email" placeholder="john@example.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="bg-[#2d2d2d] border-[#3d3d3d] text-white" />
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-2">
+                    <p className="text-yellow-400 text-xs flex items-center gap-2">
+                      <Mail className="w-3 h-3 flex-shrink-0" />
+                      <span>Please check your <strong>Junk/Spam</strong> folder if you don't receive the code.</span>
+                    </p>
+                  </div>
                 </div>
               )}
               <Button onClick={handleRequestCode} disabled={forgotLoading} className={`w-full ${accentClass} ${accentHover}`}>

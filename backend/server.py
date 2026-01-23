@@ -1607,6 +1607,7 @@ async def create_walkaround_check(check: WalkaroundCheckCreate, authorization: s
         "defects": check.defects,
         "has_defects": has_defects,
         "agreement": check.agreement,
+        "signature": check.signature,
         "submitted_at": datetime.now(timezone.utc).isoformat(),
     }
     

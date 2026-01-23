@@ -124,12 +124,20 @@ const ClientPortal = () => {
       return;
     }
 
+    // Validate return journey fields if enabled
+    if (newBooking.create_return) {
+      if (!newBooking.return_pickup_location || !newBooking.return_dropoff_location || !newBooking.return_datetime) {
+        toast.error("Please fill in all return journey fields");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       await axios.post(`${API}/client-portal/booking-requests`, newBooking, {
         headers: getAuthHeaders(),
       });
-      toast.success("Booking request submitted! We'll confirm shortly.");
+      toast.success(newBooking.create_return ? "Booking requests submitted (outbound + return)!" : "Booking request submitted! We'll confirm shortly.");
       setShowNewBooking(false);
       setNewBooking({
         pickup_location: "",
@@ -141,7 +149,14 @@ const ClientPortal = () => {
         vehicle_type_name: "",
         notes: "",
         flight_number: "",
+        create_return: false,
+        return_pickup_location: "",
+        return_dropoff_location: "",
+        return_datetime: "",
+        return_flight_number: "",
       });
+      setFlightData(null);
+      setReturnFlightData(null);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to submit booking");

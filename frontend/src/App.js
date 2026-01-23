@@ -252,6 +252,7 @@ function AppRoutes() {
                 <Route path="/passengers" element={<PassengersPage />} />
                 <Route path="/drivers" element={<DriversPage />} />
                 <Route path="/vehicles" element={<VehiclesPage />} />
+                <Route path="/walkaround-certificates" element={<WalkaroundCertificatesPage />} />
                 <Route path="/passenger-portal" element={<PassengerPortalAdmin />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>

@@ -789,13 +789,81 @@ const ClientPortal = () => {
 
             <div className="space-y-2">
               <Label className="text-gray-300">Flight Number (if applicable)</Label>
-              <Input
-                value={newBooking.flight_number}
-                onChange={(e) => setNewBooking({ ...newBooking, flight_number: e.target.value })}
-                placeholder="e.g., BA1234"
-                className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={newBooking.flight_number}
+                  onChange={(e) => {
+                    setNewBooking({ ...newBooking, flight_number: e.target.value.toUpperCase() });
+                    setFlightData(null);
+                    setFlightError(null);
+                  }}
+                  placeholder="e.g., BA1234"
+                  className="bg-[#2d2d2d] border-[#3d3d3d] text-white flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleFlightLookup}
+                  disabled={loadingFlight || !newBooking.flight_number}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  {loadingFlight ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4 mr-1" />
+                      Look Up
+                    </>
+                  )}
+                </Button>
+              </div>
+              {flightError && (
+                <p className="text-red-400 text-xs">{flightError}</p>
+              )}
             </div>
+
+            {/* Flight Data Display */}
+            {flightData && !flightError && (
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-400 text-sm font-medium flex items-center gap-1">
+                    <Plane className="w-4 h-4" />
+                    Live Flight Data {flightData.is_cached && "(cached)"}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    flightData.flight_status === 'landed' ? 'bg-green-500/20 text-green-400' :
+                    flightData.flight_status === 'active' ? 'bg-blue-500/20 text-blue-400' :
+                    flightData.flight_status === 'scheduled' ? 'bg-gray-500/20 text-gray-400' :
+                    flightData.flight_status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {flightData.flight_status?.toUpperCase() || 'UNKNOWN'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500 text-xs">From</p>
+                    <p className="font-medium text-white">{flightData.departure_airport}</p>
+                  </div>
+                  <Plane className="w-4 h-4 text-blue-400" />
+                  <div>
+                    <p className="text-gray-500 text-xs">To</p>
+                    <p className="font-medium text-white">{flightData.arrival_airport}</p>
+                  </div>
+                </div>
+                {flightData.arrival_scheduled && (
+                  <div className="text-xs text-gray-400">
+                    <span className="font-medium">Arrival:</span>{' '}
+                    {new Date(flightData.arrival_scheduled).toLocaleString()}
+                    {flightData.arrival_terminal && ` - Terminal ${flightData.arrival_terminal}`}
+                  </div>
+                )}
+                {flightData.airline && (
+                  <div className="text-xs text-gray-400">
+                    <span className="font-medium">Airline:</span> {flightData.airline}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label className="text-gray-300">Notes</Label>

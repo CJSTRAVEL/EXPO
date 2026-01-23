@@ -5617,31 +5617,51 @@ async def update_mile_rates(rates: MileRates):
     return {"message": "Mile rates updated"}
 
 @api_router.post("/settings/calculate-fare")
-async def calculate_fare_from_locations(pickup: str, dropoff: str):
-    """Calculate fare based on locations - check zones first, then use mile rates"""
+async def calculate_fare_from_locations(pickup: str, dropoff: str, vehicle_type_id: Optional[str] = None):
+    """Calculate fare based on locations and vehicle type - check zones first, then use mile rates"""
     # Check if dropoff matches any zone
     zones = await db.fare_zones.find({}, {"_id": 0}).to_list(100)
     
     for zone in zones:
         if zone.get("zone_type") in ["dropoff", "both"]:
+            zone_matches = False
+            
             # Check postcodes
             for postcode in zone.get("postcodes", []):
                 if postcode.upper() in dropoff.upper():
-                    return {
-                        "fare": zone["fixed_fare"],
-                        "type": "zone",
-                        "zone_name": zone["name"],
-                        "message": f"Fixed fare for {zone['name']}"
-                    }
-            # Check area names
-            for area in zone.get("areas", []):
-                if area.lower() in dropoff.lower():
-                    return {
-                        "fare": zone["fixed_fare"],
-                        "type": "zone",
-                        "zone_name": zone["name"],
-                        "message": f"Fixed fare for {zone['name']}"
-                    }
+                    zone_matches = True
+                    break
+            
+            # Check area names if no postcode match
+            if not zone_matches:
+                for area in zone.get("areas", []):
+                    if area.lower() in dropoff.lower():
+                        zone_matches = True
+                        break
+            
+            # Check boundary (point-in-polygon) if available
+            # TODO: Implement boundary check with lat/lng
+            
+            if zone_matches:
+                # Get fare for the specific vehicle type
+                vehicle_fares = zone.get("vehicle_fares", {})
+                
+                if vehicle_type_id and vehicle_type_id in vehicle_fares:
+                    fare = vehicle_fares[vehicle_type_id]
+                elif vehicle_fares:
+                    # Return first available fare or average as fallback
+                    fare = list(vehicle_fares.values())[0]
+                else:
+                    # Legacy support for old fixed_fare field
+                    fare = zone.get("fixed_fare", 0)
+                
+                return {
+                    "fare": fare,
+                    "type": "zone",
+                    "zone_name": zone["name"],
+                    "vehicle_fares": vehicle_fares,
+                    "message": f"Fixed fare for {zone['name']}"
+                }
     
     # No zone match - would need to calculate based on distance
     return {

@@ -6,7 +6,8 @@ import {
   MapPin, Calendar, Clock, User, Phone, Mail, LogOut,
   Building2, Plus, History, FileText, Loader2, CheckCircle,
   XCircle, Clock3, Car, Users, Briefcase, ChevronRight,
-  Download, Receipt, Eye, CreditCard, Banknote, Plane, Search
+  Download, Receipt, Eye, CreditCard, Banknote, Plane, Search,
+  ArrowLeftRight, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

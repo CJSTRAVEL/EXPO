@@ -387,7 +387,9 @@ class BookingBase(BaseModel):
     additional_stops: Optional[List[str]] = None  # Multiple drop-off locations
     booking_datetime: datetime
     notes: Optional[str] = None
+    driver_notes: Optional[str] = None  # Notes visible to driver
     fare: Optional[float] = None
+    deposit_paid: Optional[float] = None  # Deposit amount paid
     client_id: Optional[str] = None  # Link to client account for invoicing
     flight_info: Optional[FlightInfo] = None  # Flight tracking info
     is_return: Optional[bool] = False  # Is this a return leg

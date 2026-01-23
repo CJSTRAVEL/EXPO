@@ -2570,6 +2570,12 @@ async def approve_booking_request(request_id: str):
 @api_router.put("/admin/booking-requests/{request_id}/reject")
 async def reject_booking_request(request_id: str, admin_notes: str = ""):
     """Reject a booking request"""
+    # Get the request first to send email
+    request_doc = await db.booking_requests.find_one({"id": request_id, "status": "pending"}, {"_id": 0})
+    
+    if not request_doc:
+        raise HTTPException(status_code=404, detail="Request not found or already processed")
+    
     result = await db.booking_requests.update_one(
         {"id": request_id, "status": "pending"},
         {"$set": {"status": "rejected", "admin_notes": admin_notes}}
@@ -2577,6 +2583,33 @@ async def reject_booking_request(request_id: str, admin_notes: str = ""):
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Request not found or already processed")
+    
+    # Send rejection email
+    passenger_email = request_doc.get('passenger_email')
+    if passenger_email:
+        try:
+            request_type = request_doc.get('type', 'passenger')
+            reason = admin_notes if admin_notes else None
+            
+            if request_type == 'client':
+                company_name = request_doc.get('company_name', '')
+                if not company_name and request_doc.get('client_id'):
+                    client = await db.clients.find_one({"id": request_doc['client_id']})
+                    company_name = client.get('name', '') if client else ''
+                send_corporate_request_rejected_email(
+                    passenger_email,
+                    request_doc['passenger_name'],
+                    company_name,
+                    reason
+                )
+            else:
+                send_passenger_request_rejected_email(
+                    passenger_email,
+                    request_doc['passenger_name'],
+                    reason
+                )
+        except Exception as e:
+            logging.error(f"Failed to send rejection email: {str(e)}")
     
     return {"message": "Request rejected"}
 

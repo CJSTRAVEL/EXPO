@@ -16,43 +16,91 @@ load_dotenv()
 def get_base_template(content: str) -> str:
     return f"""
     <!DOCTYPE html>
-    <html>
+    <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="x-apple-disable-message-reformatting">
+        <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+        <title>CJ's Executive Travel</title>
+        <!--[if mso]>
+        <noscript>
+            <xml>
+                <o:OfficeDocumentSettings>
+                    <o:PixelsPerInch>96</o:PixelsPerInch>
+                </o:OfficeDocumentSettings>
+            </xml>
+        </noscript>
+        <![endif]-->
+        <style type="text/css">
+            body, table, td, a {{ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }}
+            table, td {{ mso-table-lspace: 0pt; mso-table-rspace: 0pt; }}
+            img {{ -ms-interpolation-mode: bicubic; }}
+            img {{ border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }}
+            table {{ border-collapse: collapse !important; }}
+            body {{ height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }}
+            a[x-apple-data-detectors] {{ color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }}
+            @media only screen and (max-width: 620px) {{
+                .email-container {{ width: 100% !important; }}
+            }}
+        </style>
     </head>
-    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; text-align: center;">
-                <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" style="width: 80px; height: 80px; margin-bottom: 15px;">
-                <h1 style="color: #D4A853; margin: 0; font-size: 24px; font-weight: bold;">CJ's Executive Travel</h1>
-                <p style="color: #888888; margin: 5px 0 0 0; font-size: 14px;">Executive Chauffeur Services</p>
-            </div>
-            
-            <!-- Content -->
-            <div style="padding: 30px;">
-                {content}
-            </div>
-            
-            <!-- Footer -->
-            <div style="background-color: #1a1a1a; padding: 25px; text-align: center;">
-                <p style="color: #D4A853; margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">CJ's Executive Travel Limited</p>
-                <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px;">Premium Chauffeur & Executive Travel Services</p>
-                <p style="color: #666666; margin: 15px 0 0 0; font-size: 11px;">
-                    This email was sent from CJ's Executive Travel booking system.<br>
-                    Please do not reply directly to this email.
-                </p>
-                <p style="color: #555555; margin: 15px 0 0 0; font-size: 11px;">© 2026 CJ's Executive Travel Limited. All rights reserved.</p>
-            </div>
-        </div>
-        
-        <!-- Junk folder notice -->
-        <div style="max-width: 600px; margin: 20px auto; text-align: center;">
-            <p style="color: #999999; font-size: 11px;">
-                If this email landed in your Junk/Spam folder, please mark it as "Not Spam" to ensure you receive future communications.
-            </p>
-        </div>
+    <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f5f5;">
+            <tr>
+                <td align="center" style="padding: 20px 10px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; text-align: center;">
+                                <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" width="80" height="80" style="width: 80px; height: 80px; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto;">
+                                <h1 style="color: #D4A853; margin: 0; font-size: 24px; font-weight: bold; font-family: Arial, Helvetica, sans-serif;">CJ's Executive Travel</h1>
+                                <p style="color: #888888; margin: 5px 0 0 0; font-size: 14px; font-family: Arial, Helvetica, sans-serif;">Executive Chauffeur Services</p>
+                            </td>
+                        </tr>
+                        
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px; font-family: Arial, Helvetica, sans-serif;">
+                                {content}
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #1a1a1a; padding: 25px; text-align: center;">
+                                <p style="color: #D4A853; margin: 0 0 10px 0; font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif;">CJ's Executive Travel Limited</p>
+                                <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">Premium Chauffeur & Executive Travel Services</p>
+                                <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">County Durham, United Kingdom</p>
+                                <p style="color: #888888; margin: 0 0 15px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">
+                                    <a href="mailto:bookings@cjstravel.uk" style="color: #D4A853; text-decoration: none;">bookings@cjstravel.uk</a>
+                                </p>
+                                <p style="color: #666666; margin: 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
+                                    This email was sent from our automated booking system.<br>
+                                    If you did not expect this email, please contact us.
+                                </p>
+                                <p style="color: #555555; margin: 15px 0 0 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
+                                    &copy; 2026 CJ's Executive Travel Limited. All rights reserved.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- Post-footer notice -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container">
+                        <tr>
+                            <td style="padding: 20px; text-align: center;">
+                                <p style="color: #999999; font-size: 11px; margin: 0; font-family: Arial, Helvetica, sans-serif;">
+                                    If this email landed in your Junk/Spam folder, please mark it as "Not Spam"<br>
+                                    to ensure you receive important booking updates.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </body>
     </html>
     """

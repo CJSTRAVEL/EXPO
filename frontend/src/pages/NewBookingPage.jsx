@@ -343,24 +343,44 @@ const NewBookingPage = () => {
       
       // No zone match - try to calculate based on miles if we have route distance
       if (routeInfo && mileRates && mileRates.price_per_mile) {
-        const distanceMiles = routeInfo.distance; // Already in miles from the route calculation
-        let fare = (mileRates.base_fare || 0) + (distanceMiles * mileRates.price_per_mile);
-        
-        // Apply minimum fare
-        if (mileRates.minimum_fare && fare < mileRates.minimum_fare) {
-          fare = mileRates.minimum_fare;
+        // Extract numeric distance from routeInfo
+        let distanceMiles = 0;
+        if (routeInfo.distance) {
+          if (typeof routeInfo.distance === 'number') {
+            distanceMiles = routeInfo.distance;
+          } else if (routeInfo.distance.miles) {
+            distanceMiles = parseFloat(routeInfo.distance.miles) || 0;
+          } else if (routeInfo.distance.value) {
+            // Google API returns meters, convert to miles
+            distanceMiles = (parseFloat(routeInfo.distance.value) || 0) / 1609.34;
+          } else if (routeInfo.distance.text) {
+            // Try to parse from text like "25.3 mi" or "25.3 miles"
+            const match = routeInfo.distance.text.match(/[\d.]+/);
+            if (match) {
+              distanceMiles = parseFloat(match[0]) || 0;
+            }
+          }
         }
         
-        // Double for return journey
-        if (isReturn) {
-          fare = fare * 2;
+        if (distanceMiles > 0) {
+          let fare = (parseFloat(mileRates.base_fare) || 0) + (distanceMiles * parseFloat(mileRates.price_per_mile));
+          
+          // Apply minimum fare
+          if (mileRates.minimum_fare && fare < parseFloat(mileRates.minimum_fare)) {
+            fare = parseFloat(mileRates.minimum_fare);
+          }
+          
+          // Double for return journey
+          if (isReturn) {
+            fare = fare * 2;
+          }
+          
+          setFormData(prev => ({
+            ...prev,
+            fare: fare.toFixed(2)
+          }));
+          toast.success(`Fare calculated: £${fare.toFixed(2)} (${distanceMiles.toFixed(1)} miles${isReturn ? ' x2 return' : ''})`);
         }
-        
-        setFormData(prev => ({
-          ...prev,
-          fare: fare.toFixed(2)
-        }));
-        toast.success(`Fare calculated: £${fare.toFixed(2)} (${distanceMiles.toFixed(1)} miles${isReturn ? ' x2 return' : ''})`);
       }
     };
 

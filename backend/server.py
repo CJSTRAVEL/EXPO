@@ -456,7 +456,9 @@ class BookingResponse(BaseModel):
     additional_stops: Optional[List[str]] = None
     booking_datetime: datetime
     notes: Optional[str] = None
+    driver_notes: Optional[str] = None
     fare: Optional[float] = None
+    deposit_paid: Optional[float] = None
     status: BookingStatus = BookingStatus.PENDING
     driver_id: Optional[str] = None
     created_at: datetime

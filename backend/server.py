@@ -4266,18 +4266,51 @@ async def get_email_templates():
     templates = await db.email_templates.find({}, {"_id": 0}).to_list(100)
     
     defaults = [
-        {"type": "booking_confirmation", "category": "booking", "description": "Sent when booking is confirmed",
+        # Passenger Portal Templates
+        {"type": "passenger_welcome", "category": "passenger_portal", "description": "Welcome email for new passenger accounts",
+         "subject": "Welcome to CJ's Executive Travel!",
+         "content": "Dear {customer_name},\n\nThank you for creating your passenger account with CJ's Executive Travel. We're delighted to have you on board!\n\nYour account is now active and you can book executive travel services through our portal.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["customer_name", "portal_link"]},
+        {"type": "passenger_request_submitted", "category": "passenger_portal", "description": "Sent when passenger submits a booking request",
+         "subject": "Booking Request Received - CJ's Executive Travel",
+         "content": "Dear {customer_name},\n\nThank you for your booking request. We have received your request and our team is reviewing it now.\n\nBooking Details:\nDate: {booking_date}\nTime: {booking_time}\nPickup: {pickup_address}\nDrop-off: {dropoff_address}\n\nWe will review your request and send you a confirmation email with the final fare and booking details shortly.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["customer_name", "booking_date", "booking_time", "pickup_address", "dropoff_address", "passengers", "vehicle_type"]},
+        {"type": "passenger_request_accepted", "category": "passenger_portal", "description": "Sent when passenger booking is confirmed",
+         "subject": "Booking Confirmed #{booking_id} - CJ's Executive Travel",
+         "content": "Dear {customer_name},\n\nGreat news! Your booking request has been accepted and confirmed.\n\nBooking Reference: {booking_id}\n\nJourney Details:\nDate: {booking_date}\nPickup Time: {booking_time}\nPickup: {pickup_address}\nDrop-off: {dropoff_address}\nVehicle: {vehicle_type}\nDriver: {driver_name}\nFare: £{fare}\n\nPlease be ready at the pickup location 5 minutes before the scheduled time.\n\nThank you for choosing CJ's Executive Travel.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["customer_name", "booking_id", "booking_date", "booking_time", "pickup_address", "dropoff_address", "vehicle_type", "driver_name", "fare"]},
+        {"type": "passenger_request_rejected", "category": "passenger_portal", "description": "Sent when passenger booking cannot be accommodated",
+         "subject": "Booking Request Update - CJ's Executive Travel",
+         "content": "Dear {customer_name},\n\nThank you for your recent booking request with CJ's Executive Travel.\n\nWe regret to inform you that we are unable to confirm your booking.\n\nReason: {rejection_reason}\n\nWe sincerely apologize for any inconvenience this may cause. We would be happy to assist you with an alternative date or time if that would be helpful.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["customer_name", "rejection_reason"]},
+        
+        # Corporate Portal Templates
+        {"type": "corporate_welcome", "category": "corporate_portal", "description": "Welcome email for new corporate accounts",
+         "subject": "Welcome to CJ's Executive Travel - Corporate Account",
+         "content": "Dear {contact_name},\n\nThank you for registering {company_name} with CJ's Executive Travel Corporate Services. We're pleased to welcome you as a corporate partner!\n\nYour Account Number: {account_no}\n\nAs a corporate client, you have access to:\n- Priority booking for executive travel\n- Dedicated account management\n- Monthly invoicing options\n- Detailed journey reports\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["contact_name", "company_name", "account_no", "portal_link"]},
+        {"type": "corporate_request_submitted", "category": "corporate_portal", "description": "Sent when corporate client submits a booking request",
+         "subject": "Booking Request Received - CJ's Executive Travel",
+         "content": "Dear {contact_name},\n\nWe have received a booking request from {company_name}. Our team is reviewing it now.\n\nBooking Details:\nPassenger: {passenger_name}\nDate: {booking_date}\nTime: {booking_time}\nPickup: {pickup_address}\nDrop-off: {dropoff_address}\n\nWe will confirm availability and send you a booking confirmation shortly.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["contact_name", "company_name", "passenger_name", "booking_date", "booking_time", "pickup_address", "dropoff_address"]},
+        {"type": "corporate_request_accepted", "category": "corporate_portal", "description": "Sent when corporate booking is confirmed",
+         "subject": "Booking Confirmed #{booking_id} - CJ's Executive Travel",
+         "content": "Dear {contact_name},\n\nGreat news! The booking request for {company_name} has been confirmed.\n\nBooking Reference: {booking_id}\n\nJourney Details:\nPassenger: {passenger_name}\nDate: {booking_date}\nPickup Time: {booking_time}\nPickup: {pickup_address}\nDrop-off: {dropoff_address}\nVehicle: {vehicle_type}\nDriver: {driver_name}\nFare: £{fare}\n\nThis journey will be added to your monthly invoice.\n\nThank you for choosing CJ's Executive Travel.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["contact_name", "company_name", "passenger_name", "booking_id", "booking_date", "booking_time", "pickup_address", "dropoff_address", "vehicle_type", "driver_name", "fare"]},
+        {"type": "corporate_request_rejected", "category": "corporate_portal", "description": "Sent when corporate booking cannot be accommodated",
+         "subject": "Booking Request Update - CJ's Executive Travel",
+         "content": "Dear {contact_name},\n\nThank you for the recent booking request from {company_name}.\n\nWe regret to inform you that we are unable to confirm this booking.\n\nReason: {rejection_reason}\n\nWe sincerely apologize for any inconvenience. Please contact us if you would like to arrange an alternative booking.\n\nKind regards,\nThe CJ's Executive Travel Team",
+         "variables": ["contact_name", "company_name", "rejection_reason"]},
+        
+        # Legacy/General Templates
+        {"type": "booking_confirmation", "category": "booking", "description": "General booking confirmation",
          "subject": "Booking Confirmation - CJ's Executive Travel",
-         "content": "Your booking has been confirmed. View details at: {booking_link}",
-         "variables": ["customer_name", "booking_link", "pickup_address", "dropoff_address", "booking_datetime"]},
-        {"type": "booking_assigned", "category": "booking", "description": "Sent when driver is assigned",
+         "content": "Your booking has been confirmed.\n\nBooking ID: {booking_id}\nPickup: {pickup_address}\nDrop-off: {dropoff_address}\nDate/Time: {booking_datetime}\n\nThank you for choosing CJ's Executive Travel.",
+         "variables": ["customer_name", "booking_id", "pickup_address", "dropoff_address", "booking_datetime"]},
+        {"type": "booking_assigned", "category": "booking", "description": "Sent when driver is assigned to booking",
          "subject": "Driver Assigned - CJ's Executive Travel",
-         "content": "A driver has been assigned to your booking. Driver: {driver_name}",
-         "variables": ["customer_name", "driver_name", "vehicle_type", "booking_link"]},
-        {"type": "passenger_welcome", "category": "passenger_portal", "description": "Welcome email for new passengers",
-         "subject": "Welcome to CJ's Executive Travel",
-         "content": "Welcome! Your account has been created. Login at: {portal_link}",
-         "variables": ["customer_name", "portal_link"]}
+         "content": "A driver has been assigned to your booking.\n\nDriver: {driver_name}\nVehicle: {vehicle_type}\n\nYour driver will contact you upon arrival.",
+         "variables": ["customer_name", "driver_name", "vehicle_type", "booking_id"]}
     ]
     
     template_dict = {t["type"]: t for t in templates}

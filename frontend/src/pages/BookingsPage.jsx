@@ -62,6 +62,8 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
     driver_notes: "",
     fare: "",
     deposit_paid: "",
+    deposit_date: null,
+    booking_source: "",
     status: "pending",
     driver_id: "",
     client_id: "",
@@ -83,6 +85,18 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
     return_flight_type: "",
     return_terminal: "",
   });
+
+  // Booking source options
+  const bookingSources = [
+    { value: "phone", label: "Phone Line" },
+    { value: "sms", label: "SMS" },
+    { value: "whatsapp", label: "WhatsApp" },
+    { value: "email", label: "Email" },
+    { value: "facebook", label: "Facebook" },
+    { value: "mobile", label: "Mobile App" },
+    { value: "portal", label: "Customer Portal" },
+  ];
+
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);

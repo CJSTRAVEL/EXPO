@@ -1070,8 +1070,13 @@ const FareSettingsSection = () => {
       toast.error("Please enter zone name and fixed fare");
       return;
     }
-    if (!zoneForm.postcodes && !zoneForm.areas) {
-      toast.error("Please enter postcodes or area names");
+    // Validate: need either boundary, postcodes, or areas
+    const hasPostcodes = zoneForm.postcodes && zoneForm.postcodes.trim().length > 0;
+    const hasAreas = zoneForm.areas && zoneForm.areas.trim().length > 0;
+    const hasBoundary = zoneForm.boundary && zoneForm.boundary.length >= 3;
+    
+    if (!hasPostcodes && !hasAreas && !hasBoundary) {
+      toast.error("Please draw a boundary on the map, or enter postcodes/area names");
       return;
     }
 
@@ -1080,8 +1085,9 @@ const FareSettingsSection = () => {
       const payload = {
         ...zoneForm,
         fixed_fare: parseFloat(zoneForm.fixed_fare),
-        postcodes: zoneForm.postcodes.split(",").map(p => p.trim().toUpperCase()).filter(Boolean),
-        areas: zoneForm.areas.split(",").map(a => a.trim()).filter(Boolean),
+        postcodes: hasPostcodes ? zoneForm.postcodes.split(",").map(p => p.trim().toUpperCase()).filter(Boolean) : [],
+        areas: hasAreas ? zoneForm.areas.split(",").map(a => a.trim()).filter(Boolean) : [],
+        boundary: hasBoundary ? zoneForm.boundary : null,
       };
 
       if (editingZone) {

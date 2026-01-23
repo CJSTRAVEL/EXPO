@@ -713,34 +713,16 @@ async def flight_lookup_query(flight_number: str):
 
 @api_router.get("/flight/{flight_number}")
 async def lookup_flight(flight_number: str):
-    """Look up live flight data from AviationStack API"""
-    if not AVIATIONSTACK_API_KEY:
-        return {"error": "Flight tracking not configured"}
+    """Look up flight data from FlightRadar24 API (primary) or AviationStack (fallback)"""
     
     # Clean flight number (remove spaces, uppercase)
     flight_number = flight_number.strip().upper().replace(" ", "")
     
-    # Common airline code mappings (ICAO to IATA)
-    airline_mappings = {
-        "EZY": "U2",  # EasyJet
-        "RYR": "FR",  # Ryanair
-        "BAW": "BA",  # British Airways
-        "TOM": "BY",  # TUI Airways
-        "EXS": "LS",  # Jet2
-    }
-    
-    # Extract airline code (2-3 characters, may include digits like U2, 6E) from flight number
+    # Validate flight number format
     import re
-    # Match: 2-3 letter/number code followed by flight number (digits, optionally with letter suffix)
     match = re.match(r'^([A-Z]{2}|[A-Z]\d|\d[A-Z]|[A-Z]{3})(\d+[A-Z]?)$', flight_number)
     if not match:
-        return {"error": "Invalid flight number format. Use format like BA123, U2456, or FR789", "flight_number": flight_number}
-    
-    airline_code = match.group(1)
-    flight_num = match.group(2)
-    
-    # Map common ICAO codes to IATA
-    search_airline_code = airline_mappings.get(airline_code, airline_code)
+        return {"error": "Invalid flight number format. Use format like BA123, LS546, or FR789", "flight_number": flight_number}
     
     # Check cache first (store in MongoDB for 30 mins)
     cached = await db.flight_cache.find_one({
@@ -755,33 +737,201 @@ async def lookup_flight(flight_number: str):
         cached["is_cached"] = True
         return cached
     
+    # Try FlightRadar24 first (better coverage including NCL)
+    if FLIGHTRADAR24_API_KEY:
+        result = await lookup_flight_flightradar24(flight_number)
+        if result and not result.get("error"):
+            return result
+        logging.info(f"FlightRadar24 lookup failed for {flight_number}, trying fallback...")
+    
+    # Fallback to AviationStack
+    if AVIATIONSTACK_API_KEY:
+        return await lookup_flight_aviationstack(flight_number)
+    
+    return {"error": "Flight tracking not configured", "flight_number": flight_number}
+
+async def lookup_flight_flightradar24(flight_number: str):
+    """Look up flight data from FlightRadar24 API"""
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            # Search by airline IATA code instead of specific flight number
-            # (free tier doesn't support flight_iata parameter)
+            # Calculate date range (today and next 7 days for scheduled flights, last 7 days for recent)
+            now = datetime.now(timezone.utc)
+            date_from = (now - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00")
+            date_to = (now + timedelta(days=1)).strftime("%Y-%m-%dT23:59:59")
+            
+            response = await client.get(
+                f"https://fr24api.flightradar24.com/api/flight-summary/light",
+                params={
+                    "flights": flight_number,
+                    "flight_datetime_from": date_from,
+                    "flight_datetime_to": date_to,
+                },
+                headers={
+                    "Authorization": f"Bearer {FLIGHTRADAR24_API_KEY}",
+                    "Accept": "application/json",
+                    "Accept-Version": "v1"
+                }
+            )
+            
+            if response.status_code != 200:
+                logging.error(f"FlightRadar24 API error: {response.status_code} - {response.text}")
+                return {"error": "Flight lookup failed", "flight_number": flight_number}
+            
+            data = response.json()
+            flights = data.get("data", [])
+            
+            if not flights:
+                return {"error": f"Flight {flight_number} not found", "flight_number": flight_number}
+            
+            # Get the most recent flight
+            flight = flights[-1]  # Last one is most recent
+            
+            # Get airport details for ICAO codes
+            orig_icao = flight.get("orig_icao", "")
+            dest_icao = flight.get("dest_icao", "")
+            
+            # Map ICAO to airport names (common UK airports)
+            airport_names = {
+                "EGNT": "Newcastle International",
+                "EGCC": "Manchester",
+                "EGLL": "London Heathrow",
+                "EGKK": "London Gatwick",
+                "EGSS": "London Stansted",
+                "EGGD": "Bristol",
+                "EGPH": "Edinburgh",
+                "EGPF": "Glasgow",
+                "EGBB": "Birmingham",
+                "EGNX": "East Midlands",
+                "EGAA": "Belfast International",
+                "EGAC": "Belfast City",
+                "EGGW": "London Luton",
+                "EGCN": "Doncaster Sheffield",
+                "EGNM": "Leeds Bradford",
+                "EGNH": "Blackpool",
+                "EGNJ": "Humberside",
+                "EGNV": "Durham Tees Valley",
+                "EGNS": "Isle of Man",
+                "EGPD": "Aberdeen",
+                "EGPE": "Inverness",
+                "GCRR": "Lanzarote",
+                "GCTS": "Tenerife South",
+                "GCXO": "Tenerife North",
+                "GCLP": "Gran Canaria",
+                "GCFV": "Fuerteventura",
+                "LEPA": "Palma de Mallorca",
+                "LEBL": "Barcelona",
+                "LEMD": "Madrid",
+                "LEMG": "Malaga",
+                "LEAL": "Alicante",
+                "LFPG": "Paris Charles de Gaulle",
+                "EHAM": "Amsterdam Schiphol",
+                "EDDF": "Frankfurt",
+                "LIRF": "Rome Fiumicino",
+            }
+            
+            departure_airport = airport_names.get(orig_icao, orig_icao)
+            arrival_airport = airport_names.get(dest_icao, dest_icao)
+            
+            # Determine flight status
+            flight_ended = flight.get("flight_ended", False)
+            datetime_landed = flight.get("datetime_landed")
+            datetime_takeoff = flight.get("datetime_takeoff")
+            
+            if flight_ended and datetime_landed:
+                flight_status = "landed"
+            elif datetime_takeoff and not datetime_landed:
+                flight_status = "active"
+            else:
+                flight_status = "scheduled"
+            
+            # Parse result
+            result = {
+                "flight_number": flight.get("flight", flight_number),
+                "airline": flight.get("operating_as", ""),
+                "airline_iata": flight.get("painted_as", ""),
+                "departure_airport": departure_airport,
+                "departure_iata": orig_icao,
+                "arrival_airport": arrival_airport,
+                "arrival_iata": dest_icao,
+                "departure_scheduled": datetime_takeoff,
+                "departure_actual": datetime_takeoff if flight_status in ["active", "landed"] else None,
+                "departure_estimated": datetime_takeoff,
+                "arrival_scheduled": datetime_landed if datetime_landed else None,
+                "arrival_actual": datetime_landed if flight_ended else None,
+                "arrival_estimated": datetime_landed,
+                "departure_terminal": None,
+                "arrival_terminal": None,
+                "departure_gate": None,
+                "arrival_gate": None,
+                "flight_status": flight_status,
+                "flight_date": datetime_takeoff[:10] if datetime_takeoff else None,
+                "aircraft_type": flight.get("type"),
+                "registration": flight.get("reg"),
+                "is_cached": False,
+                "source": "flightradar24"
+            }
+            
+            # Cache the result
+            cache_doc = {**result, "cached_at": datetime.now(timezone.utc)}
+            await db.flight_cache.update_one(
+                {"flight_number": flight_number},
+                {"$set": cache_doc},
+                upsert=True
+            )
+            
+            logging.info(f"Flight {flight_number} fetched from FlightRadar24: {result.get('flight_status')}")
+            return result
+            
+    except httpx.TimeoutException:
+        logging.error(f"FlightRadar24 lookup timeout for {flight_number}")
+        return {"error": "Flight lookup timed out", "flight_number": flight_number}
+    except Exception as e:
+        logging.error(f"FlightRadar24 lookup error: {e}")
+        return {"error": str(e), "flight_number": flight_number}
+
+async def lookup_flight_aviationstack(flight_number: str):
+    """Look up flight data from AviationStack API (fallback)"""
+    import re
+    match = re.match(r'^([A-Z]{2}|[A-Z]\d|\d[A-Z]|[A-Z]{3})(\d+[A-Z]?)$', flight_number)
+    if not match:
+        return {"error": "Invalid flight number format", "flight_number": flight_number}
+    
+    airline_code = match.group(1)
+    flight_num = match.group(2)
+    
+    # Common airline code mappings (ICAO to IATA)
+    airline_mappings = {
+        "EZY": "U2",  # EasyJet
+        "RYR": "FR",  # Ryanair
+        "BAW": "BA",  # British Airways
+        "TOM": "BY",  # TUI Airways
+        "EXS": "LS",  # Jet2
+    }
+    search_airline_code = airline_mappings.get(airline_code, airline_code)
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get(
                 "http://api.aviationstack.com/v1/flights",
                 params={
                     "access_key": AVIATIONSTACK_API_KEY,
                     "airline_iata": search_airline_code,
-                    "limit": 100  # Get more results to find the specific flight
+                    "limit": 100
                 }
             )
             
             if response.status_code != 200:
-                logging.error(f"AviationStack API error: {response.status_code}")
                 return {"error": "Flight lookup failed", "flight_number": flight_number}
             
             data = response.json()
             
             if data.get("error"):
-                logging.error(f"AviationStack error: {data['error']}")
                 return {"error": data["error"].get("message", "API error"), "flight_number": flight_number}
             
-            if not data.get("data") or len(data["data"]) == 0:
+            if not data.get("data"):
                 return {"error": f"No flights found for airline {airline_code}", "flight_number": flight_number}
             
-            # Find the specific flight by number
+            # Find the specific flight
             flight = None
             search_iata = search_airline_code + flight_num
             for f in data["data"]:
@@ -792,7 +942,6 @@ async def lookup_flight(flight_number: str):
                     break
             
             if not flight:
-                # Flight not found in current results - return a helpful message
                 available_flights = [f.get("flight", {}).get("iata", "") for f in data["data"][:10]]
                 return {
                     "error": f"Flight {flight_number} not found in current schedule",
@@ -800,7 +949,6 @@ async def lookup_flight(flight_number: str):
                     "hint": f"Try one of these {search_airline_code} flights: {', '.join(filter(None, available_flights[:5]))}"
                 }
             
-            # Parse the response
             result = {
                 "flight_number": flight.get("flight", {}).get("iata", flight_number),
                 "airline": flight.get("airline", {}).get("name"),
@@ -821,7 +969,8 @@ async def lookup_flight(flight_number: str):
                 "arrival_gate": flight.get("arrival", {}).get("gate"),
                 "flight_status": flight.get("flight_status"),
                 "flight_date": flight.get("flight_date"),
-                "is_cached": False
+                "is_cached": False,
+                "source": "aviationstack"
             }
             
             # Cache the result
@@ -832,14 +981,10 @@ async def lookup_flight(flight_number: str):
                 upsert=True
             )
             
-            logging.info(f"Flight {flight_number} fetched from API: {result.get('flight_status')}")
             return result
             
-    except httpx.TimeoutException:
-        logging.error(f"Flight lookup timeout for {flight_number}")
-        return {"error": "Flight lookup timed out", "flight_number": flight_number}
     except Exception as e:
-        logging.error(f"Flight lookup error: {e}")
+        logging.error(f"AviationStack lookup error: {e}")
         return {"error": str(e), "flight_number": flight_number}
 
 # ========== DRIVER ENDPOINTS ==========

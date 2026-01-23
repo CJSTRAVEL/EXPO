@@ -405,9 +405,13 @@ export default function HomeScreen({ navigation }) {
   };
 
   const stopShift = async () => {
+    console.log('stopShift called');
     setStartingShift(true);
     try {
-      await updateStatus({ is_online: false });
+      console.log('Updating status to offline...');
+      const response = await updateStatus({ is_online: false });
+      console.log('Status update response:', response);
+      
       setIsShiftActive(false);
       
       // Hide persistent online notification
@@ -425,9 +429,13 @@ export default function HomeScreen({ navigation }) {
       Alert.alert('Shift Ended', `You are now offline.\nShift duration: ${formatDuration(finalDuration)}\n\nVehicle has been reset. Please select a vehicle when starting your next shift.`);
       
       await refreshProfile();
+      console.log('Shift ended successfully');
     } catch (error) {
       console.error('Error stopping shift:', error);
-      Alert.alert('Error', 'Could not end your shift. Please try again.');
+      console.error('Error details:', error.response?.data || error.message);
+      Alert.alert('Error', `Could not end your shift: ${error.response?.data?.detail || error.message}`);
+      // Still try to reset local state
+      setIsShiftActive(false);
     } finally {
       setStartingShift(false);
     }

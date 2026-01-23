@@ -2515,8 +2515,36 @@ const BookingsPage = () => {
   // Clear all filters
   const clearFilters = () => {
     setSearchText("");
-    setFilterDate(null);
+    setFilterDateFrom(null);
+    setFilterDateTo(null);
     setFilterDriver("all");
+  };
+
+  // Quick date filter presets
+  const setTodayFilter = () => {
+    setFilterDateFrom(todayStart);
+    setFilterDateTo(todayStart);
+    setDateFilterOpen(false);
+  };
+
+  const setThisWeekFilter = () => {
+    setFilterDateFrom(todayStart);
+    setFilterDateTo(addDays(todayStart, 6));
+    setDateFilterOpen(false);
+  };
+
+  const setThisMonthFilter = () => {
+    setFilterDateFrom(startOfMonth(todayStart));
+    setFilterDateTo(endOfMonth(todayStart));
+    setDateFilterOpen(false);
+  };
+
+  const setLastMonthFilter = () => {
+    const lastMonthStart = startOfMonth(addDays(startOfMonth(todayStart), -1));
+    const lastMonthEnd = endOfMonth(lastMonthStart);
+    setFilterDateFrom(lastMonthStart);
+    setFilterDateTo(lastMonthEnd);
+    setDateFilterOpen(false);
   };
 
   const hasActiveFilters = searchText || filterDate || (filterDriver && filterDriver !== "all");

@@ -491,6 +491,27 @@ const NewBookingPage = () => {
       return;
     }
 
+    // Validate booking date is not in the past
+    const now = new Date();
+    const bookingDate = new Date(formData.booking_datetime);
+    if (bookingDate < now) {
+      toast.error("Cannot create a booking in the past. Please select a future date and time.");
+      return;
+    }
+
+    // Validate return date if creating return journey
+    if (formData.create_return && formData.return_datetime) {
+      const returnDate = new Date(formData.return_datetime);
+      if (returnDate < now) {
+        toast.error("Return journey date cannot be in the past.");
+        return;
+      }
+      if (returnDate < bookingDate) {
+        toast.error("Return journey must be after the outbound journey.");
+        return;
+      }
+    }
+
     // Validate fare if Stripe payment is selected
     if (formData.payment_method === "stripe") {
       if (!formData.fare || parseFloat(formData.fare) <= 0) {

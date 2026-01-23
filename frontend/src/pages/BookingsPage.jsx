@@ -2613,18 +2613,103 @@ const BookingsPage = () => {
           {/* Date Filter */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal bg-white", !filterDate && "text-muted-foreground")}>
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "w-[200px] justify-start text-left font-normal bg-white", 
+                  !hasDateFilter && "text-muted-foreground"
+                )}
+                data-testid="date-filter-btn"
+              >
                 <Calendar className="mr-2 h-4 w-4" />
-                {filterDate ? format(filterDate, "dd/MM/yyyy") : "Filter by date"}
+                {getDateFilterText()}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 z-50" align="start">
-              <CalendarComponent
-                mode="single"
-                selected={filterDate}
-                onSelect={setFilterDate}
-                initialFocus
-              />
+              {/* Quick Filter Presets */}
+              <div className="p-2 border-b grid grid-cols-2 gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start text-xs h-8"
+                  onClick={setTodayFilter}
+                  data-testid="filter-today"
+                >
+                  Today
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start text-xs h-8"
+                  onClick={setThisWeekFilter}
+                  data-testid="filter-this-week"
+                >
+                  This Week
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start text-xs h-8"
+                  onClick={setThisMonthFilter}
+                  data-testid="filter-this-month"
+                >
+                  This Month
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start text-xs h-8"
+                  onClick={setLastMonthFilter}
+                  data-testid="filter-last-month"
+                >
+                  Last Month
+                </Button>
+              </div>
+              
+              {/* Date Range Labels */}
+              <div className="p-2 border-b">
+                <div className="flex gap-2 text-xs">
+                  <div className="flex-1">
+                    <span className="text-muted-foreground">From:</span>
+                    <span className="ml-1 font-medium">
+                      {filterDateFrom ? format(filterDateFrom, "dd/MM/yyyy") : "Select"}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-muted-foreground">To:</span>
+                    <span className="ml-1 font-medium">
+                      {filterDateTo ? format(filterDateTo, "dd/MM/yyyy") : "Select"}
+                    </span>
+                  </div>
+                  {hasDateFilter && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-5 px-1 text-xs text-muted-foreground"
+                      onClick={() => {
+                        setFilterDateFrom(null);
+                        setFilterDateTo(null);
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Calendar for Range Selection */}
+              <div className="p-2">
+                <CalendarComponent
+                  mode="range"
+                  selected={{ from: filterDateFrom, to: filterDateTo }}
+                  onSelect={(range) => {
+                    setFilterDateFrom(range?.from || null);
+                    setFilterDateTo(range?.to || null);
+                  }}
+                  numberOfMonths={1}
+                  initialFocus
+                />
+              </div>
             </PopoverContent>
           </Popover>
           
@@ -2657,7 +2742,7 @@ const BookingsPage = () => {
         {hasActiveFilters ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Showing {filteredBookings.length} of {bookings.length} bookings</span>
-            {filterDate && (
+            {hasDateFilter && (
               <Badge variant="secondary" className="gap-1">
                 {format(filterDate, "dd/MM/yyyy")}
                 <button onClick={() => setFilterDate(null)} className="ml-1 hover:text-foreground">

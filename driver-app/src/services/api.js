@@ -217,6 +217,12 @@ export const getDocumentNotifications = async () => {
   return response.data;
 };
 
+// Walkaround History API
+export const getWalkaroundHistory = async () => {
+  const response = await api.get('/driver/walkaround-history');
+  return response.data;
+};
+
 // Admin Chat API
 export const sendAdminMessage = async (message) => {
   const response = await api.post('/driver/admin-chat', { message });

@@ -91,6 +91,13 @@ export default function MenuScreen({ navigation }) {
               onPress={() => navigation.navigate('Walkaround')}
               color="#10b981"
             />
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <MenuItem
+              icon="document-text-outline"
+              label="Walkaround History"
+              onPress={() => navigation.navigate('WalkaroundHistory')}
+              color="#6366f1"
+            />
           </View>
         </View>
 

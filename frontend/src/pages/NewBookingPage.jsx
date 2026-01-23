@@ -145,6 +145,9 @@ const NewBookingPage = () => {
 
   // Vehicle types from database
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  
+  // Fare zones for auto-calculation
+  const [fareZones, setFareZones] = useState([]);
 
   // UI state
   const [dateOpen, setDateOpen] = useState(false);

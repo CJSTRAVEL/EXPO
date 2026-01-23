@@ -1185,6 +1185,10 @@ const VehiclesPage = () => {
               <Truck className="w-4 h-4" />
               Vehicle Types ({vehicleTypes.length})
             </TabsTrigger>
+            <TabsTrigger value="walkaround" className="gap-2" data-testid="walkaround-tab">
+              <ClipboardCheck className="w-4 h-4" />
+              Walkaround Checks
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="vehicles">
@@ -1200,6 +1204,10 @@ const VehiclesPage = () => {
               vehicleTypes={vehicleTypes} 
               onRefresh={fetchData} 
             />
+          </TabsContent>
+
+          <TabsContent value="walkaround">
+            <WalkaroundTab vehicles={vehicles} />
           </TabsContent>
         </Tabs>
       </div>

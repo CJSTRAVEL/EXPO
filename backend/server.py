@@ -1442,20 +1442,68 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
         "I confirm that I have checked these items against company Daily Check policy.",
         normal_style
     ))
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
     
-    # Signature line
-    sig_data = [
-        ['Driver Signature:', '_' * 30, 'Date:', submitted_at.strftime('%d/%m/%Y')],
-    ]
-    sig_table = Table(sig_data, colWidths=[100, 150, 40, 80])
-    sig_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-    ]))
-    elements.append(sig_table)
-    elements.append(Spacer(1, 30))
+    # Signature Section
+    elements.append(Paragraph("Driver Signature", header_style))
+    
+    signature_data = check_data.get('signature')
+    if signature_data:
+        try:
+            # Remove data URL prefix if present (e.g., "data:image/png;base64,")
+            if ',' in signature_data:
+                signature_data = signature_data.split(',')[1]
+            
+            # Decode base64 signature to image
+            sig_bytes = base64.b64decode(signature_data)
+            sig_buffer = io.BytesIO(sig_bytes)
+            
+            # Create signature image for PDF
+            sig_image = Image(sig_buffer, width=150, height=60)
+            
+            # Create table with signature image and date
+            sig_table_data = [
+                [sig_image, '', 'Date:', submitted_at.strftime('%d/%m/%Y')],
+                [check_data.get('driver_name', ''), '', '', ''],
+            ]
+            sig_table = Table(sig_table_data, colWidths=[160, 50, 40, 100])
+            sig_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 1), (0, 1), 9),
+                ('TEXTCOLOR', (0, 1), (0, 1), colors.gray),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ]))
+            elements.append(sig_table)
+        except Exception as e:
+            logging.error(f"Error adding signature to PDF: {e}")
+            # Fallback to placeholder
+            sig_data = [
+                ['Driver Signature:', '_' * 30, 'Date:', submitted_at.strftime('%d/%m/%Y')],
+            ]
+            sig_table = Table(sig_data, colWidths=[100, 150, 40, 80])
+            sig_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            elements.append(sig_table)
+    else:
+        # No signature - show placeholder line
+        sig_data = [
+            ['Driver Signature:', '_' * 30, 'Date:', submitted_at.strftime('%d/%m/%Y')],
+        ]
+        sig_table = Table(sig_data, colWidths=[100, 150, 40, 80])
+        sig_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        elements.append(sig_table)
+    
+    elements.append(Spacer(1, 20))
     
     # Footer
     footer_style = ParagraphStyle(

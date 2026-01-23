@@ -194,33 +194,43 @@ async def get_driver_profile(driver: dict = Depends(get_current_driver)):
 
 @router.put("/driver/status")
 async def update_driver_status(status_update: DriverAppStatus, driver: dict = Depends(get_current_driver)):
-    """Update driver status"""
-    update_data = {"status": status_update.status.value}
+    """Update driver online/break status"""
+    update_data = {}
     
-    if status_update.current_vehicle_id is not None:
-        if status_update.current_vehicle_id:
-            vehicle = await db.vehicles.find_one({"id": status_update.current_vehicle_id})
-            if not vehicle:
-                raise HTTPException(status_code=404, detail="Vehicle not found")
-            
-            existing_driver = await db.drivers.find_one({
-                "current_vehicle_id": status_update.current_vehicle_id,
-                "id": {"$ne": driver["id"]}
-            })
-            if existing_driver:
-                raise HTTPException(
-                    status_code=400, 
-                    detail=f"Vehicle already assigned to {existing_driver['name']}"
+    if status_update.is_online is not None:
+        update_data["is_online"] = status_update.is_online
+        if status_update.is_online:
+            update_data["status"] = DriverStatus.AVAILABLE.value
+        else:
+            update_data["status"] = DriverStatus.OFFLINE.value
+            # When going offline, release the vehicle
+            update_data["selected_vehicle_id"] = None
+            update_data["current_vehicle_id"] = None
+            # Also update the vehicle to remove the driver assignment
+            current_vehicle = driver.get("selected_vehicle_id") or driver.get("current_vehicle_id")
+            if current_vehicle:
+                await db.vehicles.update_one(
+                    {"id": current_vehicle},
+                    {"$set": {"current_driver_id": None}}
                 )
-        update_data["current_vehicle_id"] = status_update.current_vehicle_id
     
-    await db.drivers.update_one(
-        {"id": driver["id"]},
-        {"$set": update_data}
-    )
+    if status_update.on_break is not None:
+        update_data["on_break"] = status_update.on_break
+        if status_update.on_break:
+            update_data["status"] = DriverStatus.BREAK.value
+    
+    if status_update.selected_vehicle_id is not None:
+        update_data["selected_vehicle_id"] = status_update.selected_vehicle_id
+        update_data["current_vehicle_id"] = status_update.selected_vehicle_id
+    
+    if status_update.push_token is not None:
+        update_data["push_token"] = status_update.push_token
+    
+    if update_data:
+        await db.drivers.update_one({"id": driver["id"]}, {"$set": update_data})
     
     updated_driver = await db.drivers.find_one({"id": driver["id"]}, {"_id": 0, "password_hash": 0})
-    return updated_driver
+    return {"message": "Status updated", "driver": updated_driver}
 
 
 @router.put("/driver/location")

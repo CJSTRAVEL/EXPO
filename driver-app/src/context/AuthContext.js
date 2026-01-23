@@ -134,8 +134,10 @@ export const AuthProvider = ({ children }) => {
 
   const refreshProfile = async () => {
     try {
-      const profile = await getProfile();
-      setUser(profile);
+      const profileResponse = await getProfile();
+      // Handle both old format (direct driver object) and new format ({driver, vehicle})
+      const driverData = profileResponse.driver || profileResponse;
+      setUser(driverData);
     } catch (error) {
       console.error('Failed to refresh profile:', error);
     }

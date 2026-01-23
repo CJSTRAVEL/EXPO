@@ -1259,7 +1259,7 @@ const FareSettingsSection = () => {
                   <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-muted-foreground">No fare zones defined yet</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Create zones to set fixed fares for specific areas
+                    Create zones to set fares per vehicle type for specific areas
                   </p>
                   <Button className="mt-4" onClick={() => setShowZoneDialog(true)}>
                     <Plus className="w-4 h-4 mr-2" />
@@ -1273,7 +1273,7 @@ const FareSettingsSection = () => {
                       <TableHead>Zone Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Postcodes / Areas</TableHead>
-                      <TableHead className="text-right">Fixed Fare</TableHead>
+                      <TableHead>Vehicle Fares</TableHead>
                       <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1301,8 +1301,28 @@ const FareSettingsSection = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-bold text-primary">
-                          £{zone.fixed_fare?.toFixed(2)}
+                        <TableCell>
+                          {zone.vehicle_fares && Object.keys(zone.vehicle_fares).length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(zone.vehicle_fares).slice(0, 3).map(([vtId, fare]) => {
+                                const vt = vehicleTypes.find(v => v.id === vtId);
+                                return (
+                                  <Badge key={vtId} variant="outline" className="text-xs bg-green-50 text-green-800">
+                                    {vt?.name?.replace("CJ's ", "") || 'Vehicle'}: £{fare?.toFixed(2)}
+                                  </Badge>
+                                );
+                              })}
+                              {Object.keys(zone.vehicle_fares).length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{Object.keys(zone.vehicle_fares).length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          ) : zone.fixed_fare ? (
+                            <span className="font-bold text-primary">£{zone.fixed_fare?.toFixed(2)}</span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">No fares set</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">

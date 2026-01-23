@@ -588,6 +588,8 @@ const NewBookingPage = () => {
         driver_notes: formData.driver_notes,
         fare: formData.fare ? parseFloat(formData.fare) : null,
         deposit_paid: formData.deposit_paid ? parseFloat(formData.deposit_paid) : null,
+        deposit_date: formData.deposit_date ? formData.deposit_date.toISOString() : null,
+        booking_source: formData.booking_source || null,
         status: "pending",
         payment_method: formData.payment_method,
         driver_id: formData.driver_id || null,

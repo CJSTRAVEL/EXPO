@@ -411,37 +411,64 @@ async def get_driver_history(driver: dict = Depends(get_current_driver)):
 
 @router.get("/driver/document-notifications")
 async def check_document_notifications(driver: dict = Depends(get_current_driver)):
-    """Check for document expiry notifications"""
+    """Check for document expiry notifications (60 days and 30 days)"""
+    now = datetime.now(timezone.utc)
     notifications = []
-    today = datetime.now(timezone.utc)
     
-    docs_to_check = [
-        ("license_expiry", "Driving License"),
-        ("dbs_expiry", "DBS Certificate")
+    doc_fields = [
+        ("taxi_licence_expiry", "Taxi Licence"),
+        ("dbs_expiry", "DBS Certificate"),
+        ("school_badge_expiry", "School Badge"),
+        ("driving_licence_expiry", "Driving Licence"),
+        ("cpc_expiry", "CPC Certificate"),
+        ("tacho_card_expiry", "Tacho Card"),
     ]
     
-    for field, doc_name in docs_to_check:
-        expiry_str = driver.get(field)
-        if expiry_str:
+    for field, name in doc_fields:
+        expiry = driver.get(field)
+        if expiry:
             try:
-                expiry_date = datetime.fromisoformat(expiry_str.replace("Z", "+00:00"))
-                days_until = (expiry_date - today).days
+                if isinstance(expiry, str):
+                    expiry_str = expiry.replace("Z", "+00:00")
+                    try:
+                        expiry_date = datetime.fromisoformat(expiry_str)
+                    except:
+                        expiry_date = datetime.fromisoformat(expiry.split("+")[0].split("T")[0] + "T00:00:00")
+                        expiry_date = expiry_date.replace(tzinfo=timezone.utc)
+                else:
+                    expiry_date = expiry
                 
+                now_aware = now if now.tzinfo else now.replace(tzinfo=timezone.utc)
+                expiry_aware = expiry_date if expiry_date.tzinfo else expiry_date.replace(tzinfo=timezone.utc)
+                
+                days_until = (expiry_aware - now_aware).days
+                
+                # Check for 60 day and 30 day notifications
                 if days_until <= 0:
                     notifications.append({
-                        "type": "expired",
-                        "document": doc_name,
-                        "message": f"Your {doc_name} has expired",
-                        "severity": "critical"
+                        "document": name,
+                        "days_until_expiry": days_until,
+                        "severity": "expired",
+                        "title": f"{name} Expired!",
+                        "body": f"Your {name} has expired. Please renew immediately."
                     })
                 elif days_until <= 30:
                     notifications.append({
-                        "type": "expiring_soon",
-                        "document": doc_name,
-                        "message": f"Your {doc_name} expires in {days_until} days",
-                        "severity": "warning" if days_until > 7 else "critical"
+                        "document": name,
+                        "days_until_expiry": days_until,
+                        "severity": "urgent",
+                        "title": f"{name} Expiring Soon!",
+                        "body": f"Your {name} expires in {days_until} days. Please renew urgently."
                     })
-            except Exception:
-                pass
+                elif days_until <= 60:
+                    notifications.append({
+                        "document": name,
+                        "days_until_expiry": days_until,
+                        "severity": "warning",
+                        "title": f"{name} Expiring",
+                        "body": f"Your {name} expires in {days_until} days. Please plan to renew."
+                    })
+            except Exception as e:
+                print(f"Error parsing {field}: {e}")
     
-    return notifications
+    return {"notifications": notifications, "count": len(notifications)}

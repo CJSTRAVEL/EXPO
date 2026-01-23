@@ -396,14 +396,55 @@ export default function WalkaroundScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
         
+        {/* Signature Section */}
+        <View style={[styles.section, { backgroundColor: theme.card }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Driver Signature *</Text>
+          
+          {signature ? (
+            <View style={styles.signaturePreviewContainer}>
+              <Image 
+                source={{ uri: signature }} 
+                style={styles.signaturePreview}
+                resizeMode="contain"
+              />
+              <View style={styles.signatureActions}>
+                <TouchableOpacity 
+                  style={[styles.signatureActionButton, { backgroundColor: theme.primary + '15' }]}
+                  onPress={() => setShowSignaturePad(true)}
+                >
+                  <Ionicons name="create-outline" size={18} color={theme.primary} />
+                  <Text style={[styles.signatureActionText, { color: theme.primary }]}>Re-sign</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.signatureActionButton, { backgroundColor: theme.danger + '15' }]}
+                  onPress={handleClearSignature}
+                >
+                  <Ionicons name="trash-outline" size={18} color={theme.danger} />
+                  <Text style={[styles.signatureActionText, { color: theme.danger }]}>Clear</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.signaturePlaceholder, { borderColor: theme.border }]}
+              onPress={() => setShowSignaturePad(true)}
+            >
+              <Ionicons name="create-outline" size={32} color={theme.textSecondary} />
+              <Text style={[styles.signaturePlaceholderText, { color: theme.textSecondary }]}>
+                Tap to add your signature
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
         {/* Submit Button */}
         <TouchableOpacity
           style={[
             styles.submitButton,
-            { backgroundColor: allItemsChecked() && agreement && selectedVehicle ? theme.primary : theme.border }
+            { backgroundColor: allItemsChecked() && agreement && selectedVehicle && signature ? theme.primary : theme.border }
           ]}
           onPress={handleSubmit}
-          disabled={loading || !allItemsChecked() || !agreement || !selectedVehicle}
+          disabled={loading || !allItemsChecked() || !agreement || !selectedVehicle || !signature}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -417,6 +458,72 @@ export default function WalkaroundScreen({ navigation }) {
         
         <View style={{ height: 40 }} />
       </ScrollView>
+      
+      {/* Signature Pad Modal */}
+      <Modal
+        visible={showSignaturePad}
+        animationType="slide"
+        transparent={false}
+      >
+        <SafeAreaView style={[styles.signatureModalContainer, { backgroundColor: theme.background }]}>
+          <View style={[styles.signatureModalHeader, { backgroundColor: theme.headerBg }]}>
+            <TouchableOpacity onPress={() => setShowSignaturePad(false)}>
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.signatureModalTitle}>Sign Here</Text>
+            <TouchableOpacity onPress={() => signatureRef.current?.clearSignature()}>
+              <Text style={styles.clearSignatureText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.signatureCanvasContainer}>
+            <SignatureCanvas
+              ref={signatureRef}
+              onOK={handleSignature}
+              onEmpty={() => Alert.alert('Error', 'Please provide a signature')}
+              descriptionText=""
+              clearText="Clear"
+              confirmText="Save Signature"
+              webStyle={`
+                .m-signature-pad {
+                  box-shadow: none;
+                  border: none;
+                  margin: 0;
+                }
+                .m-signature-pad--body {
+                  border: 2px dashed #ccc;
+                  border-radius: 12px;
+                }
+                .m-signature-pad--footer {
+                  display: none;
+                }
+                body, html {
+                  background-color: ${theme.card};
+                }
+              `}
+              backgroundColor={theme.card}
+              penColor={theme.text}
+              style={styles.signatureCanvas}
+            />
+          </View>
+          
+          <View style={styles.signatureModalFooter}>
+            <TouchableOpacity
+              style={[styles.signatureCancelButton, { borderColor: theme.border }]}
+              onPress={() => setShowSignaturePad(false)}
+            >
+              <Text style={[styles.signatureCancelText, { color: theme.text }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.signatureSaveButton, { backgroundColor: theme.primary }]}
+              onPress={() => signatureRef.current?.readSignature()}
+            >
+              <Ionicons name="checkmark" size={20} color="#fff" />
+              <Text style={styles.signatureSaveText}>Save Signature</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

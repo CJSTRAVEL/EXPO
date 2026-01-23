@@ -173,17 +173,19 @@ const NewBookingPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [driversRes, clientsRes, passengersRes, vehicleTypesRes, bookingsRes, fareZonesRes] = await Promise.all([
+        const [driversRes, clientsRes, passengersRes, vehicleTypesRes, bookingsRes, fareZonesRes, mileRatesRes] = await Promise.all([
           axios.get(`${API}/drivers`),
           axios.get(`${API}/clients`),
           axios.get(`${API}/admin/passengers`).catch(() => ({ data: [] })),
           axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
           axios.get(`${API}/bookings`).catch(() => ({ data: [] })),
-          axios.get(`${API}/settings/fare-zones`).catch(() => ({ data: [] }))
+          axios.get(`${API}/settings/fare-zones`).catch(() => ({ data: [] })),
+          axios.get(`${API}/settings/mile-rates`).catch(() => ({ data: null }))
         ]);
         setDrivers(driversRes.data);
         setClients(clientsRes.data);
         setFareZones(fareZonesRes.data || []);
+        setMileRates(mileRatesRes.data);
         
         // Extract unique passengers from bookings
         const bookingPassengers = [];

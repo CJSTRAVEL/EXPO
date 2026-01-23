@@ -58,6 +58,10 @@ A private hire booking application with three main components:
 - [x] Frontend: Updated zone dialog with vehicle-specific price inputs
 - [x] Zone table now displays fares per vehicle type (e.g., "Taxi: £25.00", "8 Minibus: £45.00")
 - [x] Legacy `fixed_fare` field supported for backward compatibility
+- [x] **Auto-fare calculation in New Booking Page** - fare is automatically populated when:
+  - Drop-off location matches a zone (by postcode or area name)
+  - Vehicle type is selected
+  - Shows toast notification: "Fare auto-set from [Zone Name]: £XX.XX"
 
 ### Previous Sessions
 - Booking page: 14-day default view, date range filter with presets

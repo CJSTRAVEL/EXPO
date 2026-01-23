@@ -1016,6 +1016,7 @@ const FareSettingsSection = () => {
     base_fare: 3.50,
     price_per_mile: 2.00,
     minimum_fare: 5.00,
+    vehicle_rates: {}, // Per-vehicle rates: {vehicle_id: {base_fare, price_per_mile, minimum_fare}}
     waiting_rate_per_min: 0.50,
     night_multiplier: 1.5,
     night_start: "22:00",
@@ -1044,6 +1045,7 @@ const FareSettingsSection = () => {
   const [calcIsNight, setCalcIsNight] = useState(false);
   const [calcIsAirport, setCalcIsAirport] = useState(false);
   const [calculatedFare, setCalculatedFare] = useState(null);
+  const [calcVehicleType, setCalcVehicleType] = useState("");
 
   useEffect(() => {
     fetchFareSettings();

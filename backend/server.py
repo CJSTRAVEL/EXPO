@@ -528,6 +528,7 @@ class WalkaroundCheckCreate(BaseModel):
     checklist: Dict[str, bool]  # All checklist items with pass/fail status
     defects: Optional[str] = None
     agreement: bool
+    signature: Optional[str] = None  # Base64 encoded signature image
     
 class WalkaroundCheckResponse(BaseModel):
     id: str
@@ -541,6 +542,7 @@ class WalkaroundCheckResponse(BaseModel):
     defects: Optional[str] = None
     agreement: bool
     submitted_at: datetime
+    signature: Optional[str] = None
     pdf_url: Optional[str] = None
 
 WALKAROUND_CHECKLIST_ITEMS = [

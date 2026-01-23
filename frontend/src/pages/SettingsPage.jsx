@@ -1031,9 +1031,11 @@ const FareSettingsSection = () => {
     areas: "",
     fixed_fare: "",
     description: "",
+    boundary: null,
   });
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [zoneDefineMode, setZoneDefineMode] = useState("map"); // "map" or "text"
 
   // Fare calculator state
   const [calcDistance, setCalcDistance] = useState("");

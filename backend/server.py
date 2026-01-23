@@ -88,7 +88,9 @@ if smtp_configured:
 else:
     logging.warning("SMTP email not configured - email notifications disabled")
 
-# AviationStack API Key for flight tracking
+# FlightRadar24 API Key for flight tracking (primary)
+FLIGHTRADAR24_API_KEY = os.environ.get('FLIGHTRADAR24_API_KEY')
+# AviationStack API Key for flight tracking (fallback)
 AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
 
 # Stripe Configuration

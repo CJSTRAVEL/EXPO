@@ -1476,7 +1476,7 @@ async def get_driver_walkaround_checks(authorization: str = Header(None)):
     token = authorization.replace("Bearer ", "")
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        driver_id = payload.get("driver_id")
+        driver_id = payload.get("driver_id") or payload.get("sub")
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:

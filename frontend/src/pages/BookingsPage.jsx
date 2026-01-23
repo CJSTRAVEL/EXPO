@@ -2624,18 +2624,39 @@ const BookingsPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedDates.map((date) => (
+            {sortedDates.map((date) => {
+              const dateBookings = groupedBookings[date];
+              const isDateToday = date === todayStr;
+              const dayName = format(new Date(date), "EEEE");
+              
+              return (
               <div key={date} className="space-y-2">
                 {/* Date Header */}
-                <div className="sticky top-0 z-10 bg-slate-100 rounded-lg px-4 py-2 shadow-sm">
-                  <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
-                    {format(new Date(date), "EEEE dd/MM/yyyy")}
+                <div className={`sticky top-0 z-10 rounded-lg px-4 py-2 shadow-sm ${isDateToday ? 'bg-primary/10' : 'bg-slate-100'}`}>
+                  <h2 className={`text-sm font-bold uppercase tracking-wide ${isDateToday ? 'text-primary' : 'text-slate-700'}`}>
+                    {isDateToday ? 'Today - ' : ''}{format(new Date(date), "EEEE dd/MM/yyyy")}
                   </h2>
                 </div>
                 
-                {/* Bookings for this date */}
-                <div className="space-y-1.5">
-                  {groupedBookings[date].map((booking) => {
+                {/* No bookings message for empty days */}
+                {dateBookings.length === 0 ? (
+                  <div className="bg-white rounded-lg border border-dashed border-slate-300 p-6 text-center">
+                    <Calendar className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                    <p className="text-slate-500 font-medium">No bookings for {dayName}</p>
+                    <Button 
+                      variant="link" 
+                      className="mt-2 text-primary"
+                      onClick={() => handleNewBooking()}
+                      data-testid="add-booking-empty-day"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add a booking
+                    </Button>
+                  </div>
+                ) : (
+                  /* Bookings for this date */
+                  <div className="space-y-1.5">
+                  {dateBookings.map((booking) => {
                     // Skip return bookings as they'll be shown under their parent
                     if (booking.is_return) {
                       // Check if parent is in the same date group - if so, skip (shown with parent)

@@ -936,6 +936,154 @@ const ClientPortal = () => {
               </div>
             )}
 
+            {/* Return Journey Toggle */}
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newBooking.create_return}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    setNewBooking({
+                      ...newBooking,
+                      create_return: isChecked,
+                      return_pickup_location: isChecked ? newBooking.dropoff_location : "",
+                      return_dropoff_location: isChecked ? newBooking.pickup_location : "",
+                      return_datetime: "",
+                      return_flight_number: ""
+                    });
+                    setReturnFlightData(null);
+                    setReturnFlightError(null);
+                  }}
+                  className="rounded"
+                  data-testid="create-return-toggle"
+                />
+                <span className="text-sm font-semibold text-blue-400 flex items-center gap-2">
+                  <ArrowLeftRight className="w-4 h-4" />
+                  Create Return Journey
+                </span>
+              </label>
+              
+              {newBooking.create_return && (
+                <div className="mt-4 pt-4 border-t border-blue-500/30 space-y-4">
+                  <div className="bg-blue-500/20 rounded px-2 py-1">
+                    <p className="text-xs font-semibold text-blue-400">RETURN JOURNEY DETAILS</p>
+                  </div>
+                  
+                  {/* Return Pickup Location */}
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Return Pickup Location</Label>
+                    <Input
+                      value={newBooking.return_pickup_location}
+                      onChange={(e) => setNewBooking({ ...newBooking, return_pickup_location: e.target.value })}
+                      placeholder="Where to pick up for return..."
+                      className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                      data-testid="return-pickup-input"
+                    />
+                  </div>
+
+                  {/* Return Dropoff Location */}
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Return Drop-off Location</Label>
+                    <Input
+                      value={newBooking.return_dropoff_location}
+                      onChange={(e) => setNewBooking({ ...newBooking, return_dropoff_location: e.target.value })}
+                      placeholder="Where to drop off on return..."
+                      className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                      data-testid="return-dropoff-input"
+                    />
+                  </div>
+
+                  {/* Return Date & Time */}
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Return Date & Time</Label>
+                    <Input
+                      type="datetime-local"
+                      value={newBooking.return_datetime}
+                      onChange={(e) => setNewBooking({ ...newBooking, return_datetime: e.target.value })}
+                      className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                      data-testid="return-datetime-input"
+                    />
+                  </div>
+
+                  {/* Return Flight Number */}
+                  <div className="space-y-2">
+                    <Label className="text-gray-300">Return Flight Number (if applicable)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newBooking.return_flight_number}
+                        onChange={(e) => {
+                          setNewBooking({ ...newBooking, return_flight_number: e.target.value.toUpperCase() });
+                          setReturnFlightData(null);
+                          setReturnFlightError(null);
+                        }}
+                        placeholder="e.g., BA1234"
+                        className="bg-[#2d2d2d] border-[#3d3d3d] text-white flex-1"
+                        data-testid="return-flight-input"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleReturnFlightLookup}
+                        disabled={loadingReturnFlight || !newBooking.return_flight_number}
+                        className="bg-blue-500 hover:bg-blue-600"
+                      >
+                        {loadingReturnFlight ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Search className="w-4 h-4 mr-1" />
+                            Look Up
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    {returnFlightError && (
+                      <p className="text-red-400 text-xs">{returnFlightError}</p>
+                    )}
+                  </div>
+
+                  {/* Return Flight Data Display */}
+                  {returnFlightData && !returnFlightError && (
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-400 text-sm font-medium flex items-center gap-1">
+                          <Plane className="w-4 h-4" />
+                          Return Flight {returnFlightData.is_cached && "(cached)"}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          returnFlightData.flight_status === 'landed' ? 'bg-green-500/20 text-green-400' :
+                          returnFlightData.flight_status === 'active' ? 'bg-blue-500/20 text-blue-400' :
+                          returnFlightData.flight_status === 'scheduled' ? 'bg-gray-500/20 text-gray-400' :
+                          returnFlightData.flight_status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {returnFlightData.flight_status?.toUpperCase() || 'UNKNOWN'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500 text-xs">From</p>
+                          <p className="font-medium text-white">{returnFlightData.departure_airport}</p>
+                        </div>
+                        <Plane className="w-4 h-4 text-green-400" />
+                        <div>
+                          <p className="text-gray-500 text-xs">To</p>
+                          <p className="font-medium text-white">{returnFlightData.arrival_airport}</p>
+                        </div>
+                      </div>
+                      {returnFlightData.departure_scheduled && (
+                        <div className="text-xs text-gray-400">
+                          <span className="font-medium">Departure:</span>{' '}
+                          {new Date(returnFlightData.departure_scheduled).toLocaleString()}
+                          {returnFlightData.departure_terminal && ` - Terminal ${returnFlightData.departure_terminal}`}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label className="text-gray-300">Notes</Label>
               <Textarea

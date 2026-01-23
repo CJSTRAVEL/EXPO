@@ -136,6 +136,7 @@ const Sidebar = () => {
     { path: "/passengers", icon: UserCircle, label: "Passengers" },
     { path: "/drivers", icon: Users, label: "Drivers" },
     { path: "/vehicles", icon: Truck, label: "Vehicles" },
+    { path: "/walkaround-certificates", icon: FileText, label: "Walkaround Certs" },
     { path: "/passenger-portal", icon: KeyRound, label: "Passenger Portal" },
   ];
 

@@ -1366,13 +1366,37 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
     return buffer.getvalue()
 
 @api_router.get("/walkaround-checks")
-async def get_walkaround_checks(vehicle_id: Optional[str] = None, driver_id: Optional[str] = None):
-    """Get all walkaround checks, optionally filtered by vehicle or driver"""
+async def get_walkaround_checks(
+    vehicle_id: Optional[str] = None, 
+    driver_id: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    search: Optional[str] = None
+):
+    """Get all walkaround checks, optionally filtered by vehicle, driver, date range, or search term"""
     query = {}
     if vehicle_id:
         query["vehicle_id"] = vehicle_id
     if driver_id:
         query["driver_id"] = driver_id
+    
+    # Date range filter
+    if date_from or date_to:
+        date_query = {}
+        if date_from:
+            date_query["$gte"] = date_from
+        if date_to:
+            date_query["$lte"] = date_to + "T23:59:59"
+        if date_query:
+            query["submitted_at"] = date_query
+    
+    # Search filter (by check number or vehicle registration)
+    if search:
+        query["$or"] = [
+            {"check_number": {"$regex": search, "$options": "i"}},
+            {"vehicle_reg": {"$regex": search, "$options": "i"}},
+            {"driver_name": {"$regex": search, "$options": "i"}}
+        ]
     
     checks = await db.walkaround_checks.find(query, {"_id": 0}).sort("submitted_at", -1).to_list(1000)
     return checks

@@ -428,6 +428,16 @@ export default function JobsScreen({ navigation }) {
   };
 
   const handleStartRide = (booking) => {
+    // Check if driver is online before starting ride
+    if (!user?.is_online) {
+      Alert.alert(
+        'Go Online First',
+        'You must be online to start a ride. Please go to the Home screen and start your shift.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     // Start the ride - set status to on_way
     setShowDetails(false);
     updateBookingStatus(booking.id, 'on_way')

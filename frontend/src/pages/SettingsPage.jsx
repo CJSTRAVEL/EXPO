@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { User, Mail, Shield, Key, Plus, Edit, Trash2, Users, Clock, Check, X, MessageSquare, Send, RotateCcw, Info, Car, Calendar, Phone } from "lucide-react";
+import { User, Mail, Shield, Key, Plus, Edit, Trash2, Users, Clock, Check, X, MessageSquare, Send, RotateCcw, Info, Car, Calendar, Phone, Building2 } from "lucide-react";
 import { format } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { 
   Car, Plus, Edit, Trash2, Users, Calendar, FileText, 
-  Shield, AlertTriangle, CheckCircle2, Truck, Search, Filter, Image, Upload
+  Shield, AlertTriangle, CheckCircle2, Truck, Search, Filter, Image, Upload,
+  ClipboardCheck, Download, Eye, Clock, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

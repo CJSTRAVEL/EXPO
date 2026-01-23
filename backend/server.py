@@ -5539,16 +5539,18 @@ class FareZone(BaseModel):
     zone_type: str = "dropoff"  # pickup, dropoff, both
     postcodes: List[str] = []
     areas: List[str] = []
-    fixed_fare: float
+    vehicle_fares: Dict[str, float] = {}  # Maps vehicle_type_id to price
     description: Optional[str] = None
+    boundary: Optional[List[Dict[str, float]]] = None  # List of {lat, lng} points
 
 class FareZoneUpdate(BaseModel):
     name: Optional[str] = None
     zone_type: Optional[str] = None
     postcodes: Optional[List[str]] = None
     areas: Optional[List[str]] = None
-    fixed_fare: Optional[float] = None
+    vehicle_fares: Optional[Dict[str, float]] = None  # Maps vehicle_type_id to price
     description: Optional[str] = None
+    boundary: Optional[List[Dict[str, float]]] = None
 
 class MileRates(BaseModel):
     base_fare: float = 3.50

@@ -660,6 +660,8 @@ const NewBookingPage = () => {
       vehicle_type: "",
       fare: "",
       deposit_paid: "",
+      deposit_date: null,
+      booking_source: "",
       payment_method: "cash",
       notes: "",
       driver_notes: "",

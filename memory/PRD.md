@@ -14,7 +14,16 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ## What's Been Implemented
 
-### Session: January 22, 2026 (Latest)
+### Session: January 23, 2026 (Latest)
+
+#### Flight Lookup on Corporate Portal - VERIFIED WORKING
+- Tested and confirmed flight lookup is fully functional on Client Portal
+- **Outbound flight lookup**: Enters flight number, calls `/api/flight-lookup`, shows flight data, auto-populates pickup location & time
+- **Return flight lookup**: Same functionality for return journey, auto-sets drop-off location and pickup time (3 hours before departure)
+- Both features tested with live AviationStack API responses (BA4146, BA8940)
+- Toast notifications confirm successful lookups
+
+### Session: January 22, 2026
 
 #### Admin Passenger Portal Management
 1. **Passengers Page Reverted to Original Design**

@@ -2578,7 +2578,7 @@ const BookingsPage = () => {
         </div>
         
         {/* Filter Summary */}
-        {hasActiveFilters && (
+        {hasActiveFilters ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Showing {filteredBookings.length} of {bookings.length} bookings</span>
             {filterDate && (
@@ -2597,6 +2597,11 @@ const BookingsPage = () => {
                 </button>
               </Badge>
             )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <History className="w-3 h-3" />
+            <span>Showing today & upcoming • Use filters to find past bookings</span>
           </div>
         )}
       </div>

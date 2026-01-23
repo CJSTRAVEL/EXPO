@@ -798,6 +798,7 @@ const MessageTemplatesSection = () => {
             <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="driver_app">Driver App</SelectItem>
             <SelectItem value="passenger_portal">Passenger Portal</SelectItem>
+            <SelectItem value="corporate_portal">Corporate Portal</SelectItem>
             <SelectItem value="booking">New Bookings</SelectItem>
           </SelectContent>
         </Select>

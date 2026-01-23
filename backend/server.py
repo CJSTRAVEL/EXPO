@@ -722,9 +722,10 @@ async def lookup_flight(flight_number: str):
         "EXS": "LS",  # Jet2
     }
     
-    # Extract airline code (2-3 characters) from flight number
+    # Extract airline code (2-3 characters, may include digits like U2, 6E) from flight number
     import re
-    match = re.match(r'^([A-Z0-9]{2,3})(\d+[A-Z]?)$', flight_number)
+    # Match: 2-3 letter/number code followed by flight number (digits, optionally with letter suffix)
+    match = re.match(r'^([A-Z]{2}|[A-Z]\d|\d[A-Z]|[A-Z]{3})(\d+[A-Z]?)$', flight_number)
     if not match:
         return {"error": "Invalid flight number format. Use format like BA123, U2456, or FR789", "flight_number": flight_number}
     

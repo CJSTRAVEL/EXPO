@@ -1018,6 +1018,27 @@ const NewBookingPage = () => {
               </div>
             )}
 
+            {/* Booking Source */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-300">Booking Source</Label>
+              <Select
+                value={formData.booking_source || "none"}
+                onValueChange={(value) => setFormData({ ...formData, booking_source: value === "none" ? "" : value })}
+              >
+                <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white" data-testid="booking-source-select">
+                  <SelectValue placeholder="Select source..." />
+                </SelectTrigger>
+                <SelectContent className="bg-[#252525] border-[#3d3d3d]">
+                  <SelectItem value="none" className="text-white">Not Specified</SelectItem>
+                  {bookingSources.map((source) => (
+                    <SelectItem key={source.value} value={source.value} className="text-white">
+                      {source.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5 relative">
                 <Label className="text-xs text-gray-300">First Name *</Label>

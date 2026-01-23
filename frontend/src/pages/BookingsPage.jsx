@@ -2547,7 +2547,20 @@ const BookingsPage = () => {
     setDateFilterOpen(false);
   };
 
-  const hasActiveFilters = searchText || filterDate || (filterDriver && filterDriver !== "all");
+  const hasActiveFilters = searchText || hasDateFilter || (filterDriver && filterDriver !== "all");
+
+  // Format date range display text
+  const getDateFilterText = () => {
+    if (filterDateFrom && filterDateTo) {
+      if (format(filterDateFrom, "yyyy-MM-dd") === format(filterDateTo, "yyyy-MM-dd")) {
+        return format(filterDateFrom, "dd/MM/yyyy");
+      }
+      return `${format(filterDateFrom, "dd/MM")} - ${format(filterDateTo, "dd/MM/yyyy")}`;
+    }
+    if (filterDateFrom) return `From ${format(filterDateFrom, "dd/MM/yyyy")}`;
+    if (filterDateTo) return `Until ${format(filterDateTo, "dd/MM/yyyy")}`;
+    return "Filter by date";
+  };
 
   // Get status color for the card border
   const getStatusColor = (status) => {

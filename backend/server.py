@@ -2697,7 +2697,10 @@ async def request_password_reset(data: PasswordResetRequest):
     
     if not account:
         # Don't reveal if account exists for security
+        logging.info(f"Password reset requested for {identifier} but no account found")
         return {"message": f"If an account exists, a reset code will be sent via {data.method.upper()}"}
+    
+    logging.info(f"Password reset: Found account for {identifier}")
     
     # Generate 6-digit code
     reset_code = str(random.randint(100000, 999999))

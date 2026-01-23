@@ -4954,12 +4954,24 @@ async def get_driver_bookings(driver: dict = Depends(get_current_driver)):
     past_bookings = []
     
     for booking in bookings:
-        booking_dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
-        if today_start <= booking_dt < today_end:
-            today_bookings.append(booking)
-        elif booking_dt >= today_end:
-            upcoming_bookings.append(booking)
-        else:
+        try:
+            booking_dt_str = booking.get("booking_datetime", "")
+            if booking_dt_str:
+                # Handle both naive and aware datetimes
+                booking_dt = datetime.fromisoformat(booking_dt_str.replace("Z", "+00:00"))
+                # Make sure it's timezone-aware
+                if booking_dt.tzinfo is None:
+                    booking_dt = booking_dt.replace(tzinfo=timezone.utc)
+                
+                if today_start <= booking_dt < today_end:
+                    today_bookings.append(booking)
+                elif booking_dt >= today_end:
+                    upcoming_bookings.append(booking)
+                else:
+                    past_bookings.append(booking)
+            else:
+                past_bookings.append(booking)
+        except (ValueError, TypeError):
             past_bookings.append(booking)
     
     return {

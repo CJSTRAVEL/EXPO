@@ -430,6 +430,8 @@ class BookingUpdate(BaseModel):
     driver_notes: Optional[str] = None
     fare: Optional[float] = None
     deposit_paid: Optional[float] = None
+    deposit_date: Optional[datetime] = None
+    booking_source: Optional[str] = None
     status: Optional[BookingStatus] = None
     driver_id: Optional[str] = None
     distance_miles: Optional[float] = None

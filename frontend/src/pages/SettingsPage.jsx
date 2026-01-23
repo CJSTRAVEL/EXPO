@@ -1176,7 +1176,7 @@ const FareSettingsSection = () => {
       zone_type: "dropoff",
       postcodes: "",
       areas: "",
-      fixed_fare: "",
+      vehicle_fares: {},
       description: "",
       boundary: null,
     });
@@ -1186,12 +1186,26 @@ const FareSettingsSection = () => {
 
   const openEditZone = (zone) => {
     setEditingZone(zone);
+    // Convert vehicle_fares to string values for inputs
+    const vehicleFares = {};
+    if (zone.vehicle_fares) {
+      Object.entries(zone.vehicle_fares).forEach(([id, fare]) => {
+        vehicleFares[id] = fare?.toString() || "";
+      });
+    }
+    // Legacy support: if zone has fixed_fare but no vehicle_fares, use fixed_fare for all types
+    if (zone.fixed_fare && (!zone.vehicle_fares || Object.keys(zone.vehicle_fares).length === 0)) {
+      vehicleTypes.forEach(vt => {
+        vehicleFares[vt.id] = zone.fixed_fare.toString();
+      });
+    }
+    
     setZoneForm({
       name: zone.name,
       zone_type: zone.zone_type || "dropoff",
       postcodes: (zone.postcodes || []).join(", "),
       areas: (zone.areas || []).join(", "),
-      fixed_fare: zone.fixed_fare?.toString() || "",
+      vehicle_fares: vehicleFares,
       description: zone.description || "",
       boundary: zone.boundary || null,
     });

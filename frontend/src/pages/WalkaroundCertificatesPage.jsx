@@ -234,13 +234,13 @@ const WalkaroundCertificatesPage = () => {
             {/* Vehicle Filter */}
             <div className="space-y-1.5">
               <Label className="text-xs text-gray-400">Vehicle</Label>
-              <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
+              <Select value={selectedVehicle || "all"} onValueChange={(v) => setSelectedVehicle(v === "all" ? "" : v)}>
                 <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
                   <Car className="w-4 h-4 mr-2 text-gray-500" />
                   <SelectValue placeholder="All Vehicles" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#252525] border-[#3d3d3d]">
-                  <SelectItem value="" className="text-white">All Vehicles</SelectItem>
+                  <SelectItem value="all" className="text-white">All Vehicles</SelectItem>
                   {vehicles.map((v) => (
                     <SelectItem key={v.id} value={v.id} className="text-white">
                       {v.registration} - {v.make} {v.model}
@@ -253,13 +253,13 @@ const WalkaroundCertificatesPage = () => {
             {/* Driver Filter */}
             <div className="space-y-1.5">
               <Label className="text-xs text-gray-400">Driver</Label>
-              <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+              <Select value={selectedDriver || "all"} onValueChange={(v) => setSelectedDriver(v === "all" ? "" : v)}>
                 <SelectTrigger className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white">
                   <User className="w-4 h-4 mr-2 text-gray-500" />
                   <SelectValue placeholder="All Drivers" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#252525] border-[#3d3d3d]">
-                  <SelectItem value="" className="text-white">All Drivers</SelectItem>
+                  <SelectItem value="all" className="text-white">All Drivers</SelectItem>
                   {drivers.map((d) => (
                     <SelectItem key={d.id} value={d.id} className="text-white">
                       {d.name}

@@ -1448,6 +1448,8 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
     elements.append(Paragraph("Driver Signature", header_style))
     
     signature_data = check_data.get('signature')
+    signature_added = False
+    
     if signature_data:
         try:
             # Remove data URL prefix if present (e.g., "data:image/png;base64,")
@@ -1457,6 +1459,14 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
             # Decode base64 signature to image
             sig_bytes = base64.b64decode(signature_data)
             sig_buffer = io.BytesIO(sig_bytes)
+            
+            # Validate the image using PIL
+            from PIL import Image as PILImage
+            pil_img = PILImage.open(sig_buffer)
+            pil_img.verify()  # Verify it's a valid image
+            
+            # Reset buffer and create new one for reportlab
+            sig_buffer.seek(0)
             
             # Create signature image for PDF
             sig_image = Image(sig_buffer, width=150, height=60)
@@ -1477,27 +1487,26 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
             ]))
             elements.append(sig_table)
+            signature_added = True
         except Exception as e:
             logging.error(f"Error adding signature to PDF: {e}")
-            # Fallback to placeholder
-            sig_data = [
-                ['Driver Signature:', '_' * 30, 'Date:', submitted_at.strftime('%d/%m/%Y')],
-            ]
-            sig_table = Table(sig_data, colWidths=[100, 150, 40, 80])
-            sig_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-            ]))
-            elements.append(sig_table)
-    else:
-        # No signature - show placeholder line
+    
+    if not signature_added:
+        # No signature or error - show placeholder line
         sig_data = [
             ['Driver Signature:', '_' * 30, 'Date:', submitted_at.strftime('%d/%m/%Y')],
+            [check_data.get('driver_name', ''), '', '', ''],
         ]
         sig_table = Table(sig_data, colWidths=[100, 150, 40, 80])
         sig_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTSIZE', (0, 1), (0, 1), 9),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.gray),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(sig_table)
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
         ]))

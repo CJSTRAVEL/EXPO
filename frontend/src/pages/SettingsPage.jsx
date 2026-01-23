@@ -1352,15 +1352,113 @@ const FareSettingsSection = () => {
         </TabsContent>
 
         {/* Mile Rates Tab */}
-        <TabsContent value="miles" className="mt-6">
+        <TabsContent value="miles" className="mt-6 space-y-6">
+          {/* Per-Vehicle Rates */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Car className="w-5 h-5" />
+                Vehicle-Specific Mile Rates
+              </CardTitle>
+              <CardDescription>
+                Set different mile rates for each vehicle type. Leave blank to use default rates.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Vehicle Type</TableHead>
+                    <TableHead className="w-[130px]">Base Fare (£)</TableHead>
+                    <TableHead className="w-[130px]">Per Mile (£)</TableHead>
+                    <TableHead className="w-[130px]">Min Fare (£)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {vehicleTypes.map((vt) => {
+                    const vehicleRate = mileRates.vehicle_rates?.[vt.id] || {};
+                    return (
+                      <TableRow key={vt.id}>
+                        <TableCell className="font-medium">{vt.name}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={mileRates.base_fare?.toString() || "3.50"}
+                            value={vehicleRate.base_fare || ""}
+                            onChange={(e) => setMileRates(prev => ({
+                              ...prev,
+                              vehicle_rates: {
+                                ...prev.vehicle_rates,
+                                [vt.id]: {
+                                  ...prev.vehicle_rates?.[vt.id],
+                                  base_fare: e.target.value ? parseFloat(e.target.value) : undefined
+                                }
+                              }
+                            }))}
+                            className="h-8"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={mileRates.price_per_mile?.toString() || "2.00"}
+                            value={vehicleRate.price_per_mile || ""}
+                            onChange={(e) => setMileRates(prev => ({
+                              ...prev,
+                              vehicle_rates: {
+                                ...prev.vehicle_rates,
+                                [vt.id]: {
+                                  ...prev.vehicle_rates?.[vt.id],
+                                  price_per_mile: e.target.value ? parseFloat(e.target.value) : undefined
+                                }
+                              }
+                            }))}
+                            className="h-8"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder={mileRates.minimum_fare?.toString() || "5.00"}
+                            value={vehicleRate.minimum_fare || ""}
+                            onChange={(e) => setMileRates(prev => ({
+                              ...prev,
+                              vehicle_rates: {
+                                ...prev.vehicle_rates,
+                                [vt.id]: {
+                                  ...prev.vehicle_rates?.[vt.id],
+                                  minimum_fare: e.target.value ? parseFloat(e.target.value) : undefined
+                                }
+                              }
+                            }))}
+                            className="h-8"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              {vehicleTypes.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No vehicle types configured. Add vehicle types in the Vehicles section.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Default/Common Rates */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Route className="w-5 h-5" />
-                Mile-Based Pricing
+                Default Mile Rates
               </CardTitle>
               <CardDescription>
-                Configure standard taxi meter rates for distance-based fare calculation
+                These rates are used when no vehicle-specific rate is set
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1460,7 +1558,7 @@ const FareSettingsSection = () => {
 
               <div className="flex justify-end">
                 <Button onClick={handleSaveMileRates} disabled={saving}>
-                  {saving ? "Saving..." : "Save Mile Rates"}
+                  {saving ? "Saving..." : "Save All Mile Rates"}
                 </Button>
               </div>
             </CardContent>

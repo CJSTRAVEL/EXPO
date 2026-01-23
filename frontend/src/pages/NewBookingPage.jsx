@@ -644,6 +644,7 @@ const NewBookingPage = () => {
       driver_id: "",
       vehicle_type: "",
       fare: "",
+      deposit_paid: "",
       payment_method: "cash",
       notes: "",
       driver_notes: "",

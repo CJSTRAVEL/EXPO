@@ -356,25 +356,20 @@ export default function WalkaroundScreen({ navigation }) {
         {/* Defects */}
         <View style={[styles.section, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Defects (if any)</Text>
-          <View style={[styles.textAreaContainer, { borderColor: theme.border }]}>
-            <Text
-              style={[styles.textArea, { color: theme.text }]}
-              onPress={() => {
-                Alert.prompt(
-                  'Enter Defects',
-                  'Describe any defects found during the check',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'OK', onPress: (text) => setDefects(text || '') }
-                  ],
-                  'plain-text',
-                  defects
-                );
-              }}
-            >
-              {defects || 'Tap to enter any defects...'}
-            </Text>
-          </View>
+          <TextInput
+            style={[styles.textAreaInput, { 
+              color: theme.text, 
+              borderColor: theme.border,
+              backgroundColor: theme.background 
+            }]}
+            placeholder="Enter any defects found during the check..."
+            placeholderTextColor={theme.textSecondary}
+            value={defects}
+            onChangeText={setDefects}
+            multiline={true}
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
         </View>
         
         {/* Agreement */}

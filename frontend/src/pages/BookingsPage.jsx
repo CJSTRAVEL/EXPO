@@ -2812,7 +2812,7 @@ const BookingsPage = () => {
                     <Button 
                       variant="link" 
                       className="mt-2 text-primary"
-                      onClick={() => handleAdd()}
+                      onClick={() => navigate('/bookings/new')}
                       data-testid="add-booking-empty-day"
                     >
                       <Plus className="w-4 h-4 mr-1" />

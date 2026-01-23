@@ -5576,10 +5576,19 @@ class FareZoneUpdate(BaseModel):
     description: Optional[str] = None
     boundary: Optional[List[Dict[str, float]]] = None
 
-class MileRates(BaseModel):
+class VehicleMileRate(BaseModel):
     base_fare: float = 3.50
     price_per_mile: float = 2.00
     minimum_fare: float = 5.00
+
+class MileRates(BaseModel):
+    # Default rates (used if no vehicle-specific rate exists)
+    base_fare: float = 3.50
+    price_per_mile: float = 2.00
+    minimum_fare: float = 5.00
+    # Per-vehicle rates: Dict[vehicle_type_id, {base_fare, price_per_mile, minimum_fare}]
+    vehicle_rates: Dict[str, Dict[str, float]] = {}
+    # Common settings
     waiting_rate_per_min: float = 0.50
     night_multiplier: float = 1.5
     night_start: str = "22:00"

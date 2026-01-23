@@ -2658,12 +2658,12 @@ async def request_password_reset(data: PasswordResetRequest):
         identifier = email
         
         if data.account_type == "passenger":
-            account = await db.passengers.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}})
+            account = await db.passengers.find_one({"email": email})
         else:
             account = await db.clients.find_one({
                 "$or": [
-                    {"email": {"$regex": f"^{email}$", "$options": "i"}},
-                    {"contact_email": {"$regex": f"^{email}$", "$options": "i"}}
+                    {"email": email},
+                    {"contact_email": email}
                 ]
             })
     else:

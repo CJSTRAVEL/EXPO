@@ -155,15 +155,42 @@ const NewBookingPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [driversRes, clientsRes, passengersRes, vehicleTypesRes] = await Promise.all([
+        const [driversRes, clientsRes, passengersRes, vehicleTypesRes, bookingsRes] = await Promise.all([
           axios.get(`${API}/drivers`),
           axios.get(`${API}/clients`),
           axios.get(`${API}/admin/passengers`).catch(() => ({ data: [] })),
-          axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] }))
+          axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
+          axios.get(`${API}/bookings`).catch(() => ({ data: [] }))
         ]);
         setDrivers(driversRes.data);
         setClients(clientsRes.data);
-        setPassengers(passengersRes.data || []);
+        
+        // Extract unique passengers from bookings
+        const bookingPassengers = [];
+        const seenPhones = new Set();
+        (bookingsRes.data || []).forEach(booking => {
+          const phone = booking.customer_phone?.replace(/\s+/g, '');
+          if (phone && !seenPhones.has(phone)) {
+            seenPhones.add(phone);
+            bookingPassengers.push({
+              id: `booking-${phone}`,
+              first_name: booking.first_name,
+              last_name: booking.last_name,
+              name: `${booking.first_name || ''} ${booking.last_name || ''}`.trim(),
+              phone: booking.customer_phone,
+              customer_phone: booking.customer_phone,
+              email: booking.customer_email,
+              source: 'booking'
+            });
+          }
+        });
+        
+        // Combine registered passengers with booking passengers (prioritize registered)
+        const registeredPassengers = passengersRes.data || [];
+        const registeredPhones = new Set(registeredPassengers.map(p => (p.phone || p.customer_phone || '').replace(/\s+/g, '')));
+        const uniqueBookingPassengers = bookingPassengers.filter(bp => !registeredPhones.has(bp.phone?.replace(/\s+/g, '')));
+        
+        setPassengers([...registeredPassengers, ...uniqueBookingPassengers]);
         setVehicleTypes(vehicleTypesRes.data || []);
       } catch (error) {
         console.error("Error fetching data:", error);

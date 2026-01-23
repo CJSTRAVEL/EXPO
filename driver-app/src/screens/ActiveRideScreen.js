@@ -77,12 +77,120 @@ const SwipeButton = ({ onSwipeComplete, text, color = '#2196F3' }) => {
   );
 };
 
+// Ride Details Modal Component
+const RideDetailsModal = ({ visible, onClose, booking, theme }) => {
+  if (!visible || !booking) return null;
+
+  const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
+  const fare = booking.fare || 0;
+  const deposit = booking.deposit_paid || 0;
+  const balanceDue = Math.max(0, fare - deposit);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.menuOverlay}>
+        <View style={[styles.detailsContainer, { backgroundColor: theme.background }]}>
+          <View style={styles.detailsHeader}>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="arrow-back" size={28} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={[styles.detailsTitle, { color: theme.text }]}>Ride Details</Text>
+            <View style={{ width: 28 }} />
+          </View>
+
+          <ScrollView style={styles.detailsContent}>
+            {/* Customer Info */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>PASSENGER</Text>
+              <Text style={[styles.detailsValue, { color: theme.text }]}>{customerName}</Text>
+              {booking.customer_phone && (
+                <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>{booking.customer_phone}</Text>
+              )}
+            </View>
+
+            {/* Journey Info */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>JOURNEY</Text>
+              <View style={styles.journeyRow}>
+                <View style={[styles.locationDot, { backgroundColor: '#4CAF50' }]} />
+                <View style={styles.journeyContent}>
+                  <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Pickup</Text>
+                  <Text style={[styles.journeyAddress, { color: theme.text }]}>{booking.pickup_location}</Text>
+                </View>
+              </View>
+              
+              {booking.additional_stops?.length > 0 && booking.additional_stops.map((stop, index) => (
+                <View key={index} style={styles.journeyRow}>
+                  <View style={[styles.locationDot, { backgroundColor: '#FF9800' }]} />
+                  <View style={styles.journeyContent}>
+                    <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Stop {index + 1}</Text>
+                    <Text style={[styles.journeyAddress, { color: theme.text }]}>{stop}</Text>
+                  </View>
+                </View>
+              ))}
+
+              <View style={styles.journeyRow}>
+                <View style={[styles.locationDot, { backgroundColor: '#F44336' }]} />
+                <View style={styles.journeyContent}>
+                  <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Drop-off</Text>
+                  <Text style={[styles.journeyAddress, { color: theme.text }]}>{booking.dropoff_location}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Fare Info */}
+            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>PAYMENT</Text>
+              <View style={styles.fareRow}>
+                <Text style={[styles.fareLabel, { color: theme.text }]}>Total Fare</Text>
+                <Text style={[styles.fareValue, { color: theme.text }]}>£{fare.toFixed(2)}</Text>
+              </View>
+              {deposit > 0 && (
+                <View style={styles.fareRow}>
+                  <Text style={[styles.fareLabel, { color: theme.textSecondary }]}>Deposit Paid</Text>
+                  <Text style={[styles.fareValue, { color: '#4CAF50' }]}>-£{deposit.toFixed(2)}</Text>
+                </View>
+              )}
+              <View style={[styles.fareRow, styles.balanceRow]}>
+                <Text style={[styles.fareLabel, { color: theme.text, fontWeight: '700' }]}>Balance Due</Text>
+                <Text style={[styles.fareValueLarge, { color: '#D4A853' }]}>£{balanceDue.toFixed(2)}</Text>
+              </View>
+              <Text style={[styles.paymentMethod, { color: theme.textSecondary }]}>
+                Payment: {booking.payment_method || 'Cash'}
+              </Text>
+            </View>
+
+            {/* Driver Notes */}
+            {booking.driver_notes && (
+              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>DRIVER NOTES</Text>
+                <Text style={[styles.notesText, { color: theme.text }]}>{booking.driver_notes}</Text>
+              </View>
+            )}
+
+            {/* Flight Info */}
+            {booking.flight_info?.flight_number && (
+              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>FLIGHT INFO</Text>
+                <Text style={[styles.detailsValue, { color: theme.text }]}>{booking.flight_info.flight_number}</Text>
+                {booking.flight_info.airline && (
+                  <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>{booking.flight_info.airline}</Text>
+                )}
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // Ride Menu Component
-const RideMenu = ({ visible, onClose, booking, onCallPassenger, onTextPassenger, onRequestOfficeCall, theme }) => {
+const RideMenu = ({ visible, onClose, booking, onCallPassenger, onTextPassenger, onRequestOfficeCall, onShowDetails, theme }) => {
   if (!visible) return null;
 
   const menuItems = [
-    { icon: 'document-text-outline', label: 'Ride Details', onPress: () => { onClose(); } },
+    { icon: 'document-text-outline', label: 'Ride Details', onPress: () => { onShowDetails(); onClose(); } },
     { icon: 'call-outline', label: 'Call Passenger', onPress: () => { onCallPassenger(); onClose(); } },
     { icon: 'chatbox-outline', label: 'Text Passenger', onPress: () => { onTextPassenger(); onClose(); } },
     { icon: 'call-outline', label: 'Request Call From Office', onPress: () => { onRequestOfficeCall(); onClose(); } },
@@ -129,8 +237,10 @@ const ActiveRideScreen = ({
   const { theme } = useTheme();
   const [stage, setStage] = useState('enroute'); // enroute, arrived, completing
   const [showMenu, setShowMenu] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(0);
+  const [currentStopIndex, setCurrentStopIndex] = useState(0);
 
   useEffect(() => {
     if (booking) {
@@ -155,11 +265,29 @@ const ActiveRideScreen = ({
     }
   };
 
+  // Get current destination based on stage and stop index
+  const getCurrentDestination = () => {
+    if (!booking) return { label: 'Destination', address: '' };
+    
+    if (stage === 'enroute') {
+      return { label: 'Pickup', address: booking.pickup_location };
+    }
+    
+    // After arrival - navigate through stops then to final destination
+    const stops = booking.additional_stops || [];
+    if (currentStopIndex < stops.length) {
+      return { label: `Stop ${currentStopIndex + 1}`, address: stops[currentStopIndex] };
+    }
+    
+    return { label: 'Drop Off', address: booking.dropoff_location };
+  };
+
   const handleArrival = async () => {
     setLoading(true);
     try {
       await updateBookingStatus(booking.id, 'arrived');
       setStage('arrived');
+      setCurrentStopIndex(0);
     } catch (error) {
       Alert.alert('Error', 'Failed to update status');
     } finally {
@@ -176,6 +304,13 @@ const ActiveRideScreen = ({
       Alert.alert('Error', 'Failed to start journey');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNextStop = () => {
+    const stops = booking.additional_stops || [];
+    if (currentStopIndex < stops.length) {
+      setCurrentStopIndex(currentStopIndex + 1);
     }
   };
 
@@ -218,6 +353,14 @@ const ActiveRideScreen = ({
 
   if (!visible || !booking) return null;
 
+  // Calculate fare info
+  const fare = booking.fare || 0;
+  const deposit = booking.deposit_paid || 0;
+  const balanceDue = Math.max(0, fare - deposit);
+  const currentDest = getCurrentDestination();
+  const stops = booking.additional_stops || [];
+  const hasMoreStops = stage === 'completing' && currentStopIndex < stops.length;
+
   // Minimized view
   if (isMinimized) {
     return (
@@ -259,6 +402,20 @@ const ActiveRideScreen = ({
           {stage === 'completing' ? (
             // Journey Completion View
             <View style={styles.completionContainer}>
+              {/* Price Display */}
+              <View style={[styles.priceCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>Balance Due</Text>
+                <Text style={[styles.priceValue, { color: '#D4A853' }]}>£{balanceDue.toFixed(2)}</Text>
+                {deposit > 0 && (
+                  <Text style={[styles.depositNote, { color: '#4CAF50' }]}>
+                    (£{deposit.toFixed(2)} deposit already paid)
+                  </Text>
+                )}
+                <Text style={[styles.paymentMethodText, { color: theme.textSecondary }]}>
+                  Payment: {booking.payment_method || 'Cash'}
+                </Text>
+              </View>
+
               <View style={[styles.completionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.completionHeader}>
                   <View style={styles.customerAvatar}>
@@ -305,19 +462,36 @@ const ActiveRideScreen = ({
                 </TouchableOpacity>
               </View>
 
+              {/* Price Display - Show when arrived or in progress */}
+              {(stage === 'arrived' || stage === 'completing') && fare > 0 && (
+                <View style={[styles.priceCardSmall, { backgroundColor: '#D4A853' }]}>
+                  <Text style={styles.priceCardLabel}>Balance Due</Text>
+                  <Text style={styles.priceCardValue}>£{balanceDue.toFixed(2)}</Text>
+                </View>
+              )}
+
               {/* Booking Info Card */}
               <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <View style={styles.infoRow}>
                   <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Name</Text>
-                  <TouchableOpacity style={styles.notesButton}>
-                    <Ionicons name="document-text-outline" size={24} color="#999" />
+                  {/* Notes Button */}
+                  <TouchableOpacity 
+                    style={[styles.notesButton, booking.driver_notes ? { backgroundColor: '#D4A853' } : {}]} 
+                    onPress={() => setShowDetails(true)}
+                  >
+                    <Ionicons 
+                      name="document-text-outline" 
+                      size={24} 
+                      color={booking.driver_notes ? '#fff' : '#999'} 
+                    />
                   </TouchableOpacity>
                 </View>
                 <Text style={[styles.customerName, { color: theme.text }]}>{customerName}</Text>
 
+                {/* Current Destination - Progressive Display */}
                 <View style={styles.pickupSection}>
                   <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
-                    {stage === 'arrived' ? 'Drop Off' : 'Pickup'}
+                    {currentDest.label}
                   </Text>
                   <View style={styles.timeContainer}>
                     <View style={styles.timeBadge}>
@@ -327,14 +501,18 @@ const ActiveRideScreen = ({
                   </View>
                 </View>
                 <Text style={[styles.addressText, { color: theme.text }]}>
-                  {stage === 'arrived' ? booking.dropoff_location : booking.pickup_location}
+                  {currentDest.address}
                 </Text>
 
-                {stage === 'enroute' && (
-                  <>
-                    <Text style={[styles.infoLabel, { color: theme.textSecondary, marginTop: 16 }]}>Drop Off</Text>
-                    <Text style={[styles.addressText, { color: theme.text }]}>{booking.dropoff_location}</Text>
-                  </>
+                {/* Show stops progress indicator */}
+                {stops.length > 0 && stage !== 'enroute' && (
+                  <View style={styles.stopsProgress}>
+                    <Text style={[styles.stopsProgressText, { color: theme.textSecondary }]}>
+                      {currentStopIndex < stops.length 
+                        ? `Stop ${currentStopIndex + 1} of ${stops.length}` 
+                        : `Final destination`}
+                    </Text>
+                  </View>
                 )}
               </View>
             </>
@@ -357,9 +535,16 @@ const ActiveRideScreen = ({
               color="#4CAF50"
             />
           )}
-          {stage === 'completing' && (
+          {stage === 'completing' && hasMoreStops && (
             <SwipeButton 
-              text="Swipe To Exit" 
+              text={`Swipe: Arrived at Stop ${currentStopIndex + 1}`}
+              onSwipeComplete={handleNextStop}
+              color="#FF9800"
+            />
+          )}
+          {stage === 'completing' && !hasMoreStops && (
+            <SwipeButton 
+              text="Swipe To Complete" 
               onSwipeComplete={handleComplete}
               color="#2196F3"
             />
@@ -374,6 +559,15 @@ const ActiveRideScreen = ({
           onCallPassenger={handleCallPassenger}
           onTextPassenger={handleTextPassenger}
           onRequestOfficeCall={handleRequestOfficeCall}
+          onShowDetails={() => setShowDetails(true)}
+          theme={theme}
+        />
+
+        {/* Ride Details Modal */}
+        <RideDetailsModal
+          visible={showDetails}
+          onClose={() => setShowDetails(false)}
+          booking={booking}
           theme={theme}
         />
       </View>
@@ -399,13 +593,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    fontStyle: 'italic',
     color: '#fff',
   },
   onlineIndicator: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: '#4CAF50',
   },
   content: {
@@ -414,22 +607,38 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    gap: 12,
+    justifyContent: 'center',
+    gap: 20,
     marginBottom: 16,
   },
   actionButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#e0e0e0',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   alertButton: {
     backgroundColor: '#E53935',
-    position: 'absolute',
-    right: 0,
+  },
+  priceCardSmall: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  priceCardLabel: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  priceCardValue: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
   },
   infoCard: {
     borderRadius: 12,
@@ -442,22 +651,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   notesButton: {
-    padding: 4,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   customerName: {
     fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontWeight: '700',
+    marginTop: 4,
   },
   pickupSection: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
+    marginTop: 20,
   },
   timeContainer: {
     flexDirection: 'row',
@@ -469,60 +684,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEBEE',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 16,
+    borderRadius: 12,
     gap: 4,
   },
   timeText: {
     color: '#E53935',
     fontWeight: '600',
-    fontSize: 14,
   },
   addressText: {
-    fontSize: 20,
-    fontWeight: '500',
-    lineHeight: 28,
+    fontSize: 16,
     marginTop: 8,
+    lineHeight: 22,
   },
-  bottomAction: {
-    padding: 16,
-    paddingBottom: 100,
+  stopsProgress: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
-  swipeContainer: {
-    height: 64,
-    borderRadius: 32,
-    overflow: 'hidden',
-  },
-  swipeTrack: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingRight: 16,
-  },
-  swipeButton: {
-    width: 80,
-    height: 64,
-    backgroundColor: '#fff',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  swipeText: {
-    color: '#fff',
-    fontSize: 18,
+  stopsProgressText: {
+    fontSize: 12,
     fontWeight: '600',
-    marginLeft: 16,
   },
   // Completion styles
   completionContainer: {
-    paddingTop: 20,
+    alignItems: 'center',
+  },
+  priceCard: {
+    width: '100%',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  priceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  priceValue: {
+    fontSize: 48,
+    fontWeight: '700',
+    marginVertical: 8,
+  },
+  depositNote: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  paymentMethodText: {
+    fontSize: 12,
+    marginTop: 8,
   },
   completionCard: {
+    width: '100%',
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
@@ -534,10 +749,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   customerAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#e0e0e0',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -545,7 +760,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   customerNameLarge: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
   },
@@ -557,32 +772,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     borderRadius: 8,
-    gap: 12,
+    gap: 8,
+    width: '100%',
   },
   receiptButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
+  },
+  // Bottom action
+  bottomAction: {
+    padding: 16,
+    paddingBottom: 30,
+  },
+  // Swipe styles
+  swipeContainer: {
+    width: '100%',
+    height: 60,
+  },
+  swipeTrack: {
+    flex: 1,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  swipeButton: {
+    width: 50,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    zIndex: 1,
+  },
+  swipeText: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: -50,
   },
   // Minimized bar
   minimizedBar: {
     position: 'absolute',
-    bottom: 100,
-    left: 16,
-    right: 16,
-    height: 56,
-    borderRadius: 28,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    paddingHorizontal: 16,
   },
   minimizedContent: {
     flexDirection: 'row',
@@ -598,19 +844,20 @@ const styles = StyleSheet.create({
   menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
   menuContainer: {
-    flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
   },
   menuBackButton: {
     marginBottom: 16,
   },
   menuTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
+    fontSize: 24,
+    fontWeight: '700',
     marginBottom: 24,
   },
   menuItems: {
@@ -620,14 +867,111 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    gap: 16,
+    gap: 12,
   },
   menuItemText: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '500',
+  },
+  // Details modal styles
+  detailsContainer: {
+    flex: 1,
+    marginTop: 50,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  detailsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  detailsContent: {
+    flex: 1,
+    padding: 16,
+  },
+  detailsSection: {
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  detailsSectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  detailsValue: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  detailsSubValue: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  journeyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  locationDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
+    marginRight: 12,
+  },
+  journeyContent: {
+    flex: 1,
+  },
+  journeyLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  journeyAddress: {
+    fontSize: 15,
+    marginTop: 2,
+  },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  balanceRow: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 8,
+    marginTop: 4,
+  },
+  fareLabel: {
+    fontSize: 15,
+  },
+  fareValue: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  fareValueLarge: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  paymentMethod: {
+    fontSize: 12,
+    marginTop: 8,
+  },
+  notesText: {
+    fontSize: 15,
+    lineHeight: 22,
   },
 });
 

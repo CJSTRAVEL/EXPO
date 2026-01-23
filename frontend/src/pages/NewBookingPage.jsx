@@ -265,7 +265,7 @@ const NewBookingPage = () => {
     return () => clearTimeout(debounce);
   }, [formData.pickup_location, formData.dropoff_location]);
 
-  // Auto-calculate fare from zones when dropoff and vehicle type change
+  // Auto-calculate fare from zones when dropoff, vehicle type, or return changes
   useEffect(() => {
     const calculateFareFromZones = () => {
       if (!formData.dropoff_location || !formData.vehicle_type || fareZones.length === 0) {
@@ -273,6 +273,7 @@ const NewBookingPage = () => {
       }
 
       const dropoff = formData.dropoff_location.toLowerCase();
+      const isReturn = formData.create_return;
       
       // Find matching zone
       for (const zone of fareZones) {
@@ -305,32 +306,68 @@ const NewBookingPage = () => {
         if (zoneMatches) {
           // Get fare for selected vehicle type
           const vehicleFares = zone.vehicle_fares || {};
-          const fare = vehicleFares[formData.vehicle_type];
+          let fare = vehicleFares[formData.vehicle_type];
           
           if (fare) {
-            setFormData(prev => ({
-              ...prev,
-              fare: fare.toFixed(2)
-            }));
-            toast.success(`Fare auto-set from "${zone.name}" zone: £${fare.toFixed(2)}`);
+            // Double the fare if return journey is selected
+            if (isReturn) {
+              fare = fare * 2;
+              setFormData(prev => ({
+                ...prev,
+                fare: fare.toFixed(2)
+              }));
+              toast.success(`Return fare auto-set from "${zone.name}" zone: £${fare.toFixed(2)} (x2)`);
+            } else {
+              setFormData(prev => ({
+                ...prev,
+                fare: fare.toFixed(2)
+              }));
+              toast.success(`Fare auto-set from "${zone.name}" zone: £${fare.toFixed(2)}`);
+            }
             return;
           } else if (zone.fixed_fare) {
             // Legacy support for old fixed_fare field
+            let legacyFare = zone.fixed_fare;
+            if (isReturn) {
+              legacyFare = legacyFare * 2;
+            }
             setFormData(prev => ({
               ...prev,
-              fare: zone.fixed_fare.toFixed(2)
+              fare: legacyFare.toFixed(2)
             }));
-            toast.success(`Fare auto-set from "${zone.name}" zone: £${zone.fixed_fare.toFixed(2)}`);
+            toast.success(`Fare auto-set from "${zone.name}" zone: £${legacyFare.toFixed(2)}${isReturn ? ' (x2)' : ''}`);
             return;
           }
         }
+      }
+      
+      // No zone match - try to calculate based on miles if we have route distance
+      if (routeInfo && mileRates && mileRates.price_per_mile) {
+        const distanceMiles = routeInfo.distance; // Already in miles from the route calculation
+        let fare = (mileRates.base_fare || 0) + (distanceMiles * mileRates.price_per_mile);
+        
+        // Apply minimum fare
+        if (mileRates.minimum_fare && fare < mileRates.minimum_fare) {
+          fare = mileRates.minimum_fare;
+        }
+        
+        // Double for return journey
+        if (isReturn) {
+          fare = fare * 2;
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          fare: fare.toFixed(2)
+        }));
+        toast.success(`Fare calculated: £${fare.toFixed(2)} (${distanceMiles.toFixed(1)} miles${isReturn ? ' x2 return' : ''})`);
       }
     };
 
     // Debounce the calculation
     const debounce = setTimeout(calculateFareFromZones, 500);
     return () => clearTimeout(debounce);
-  }, [formData.dropoff_location, formData.vehicle_type, fareZones]);
+  }, [formData.dropoff_location, formData.vehicle_type, formData.create_return, fareZones, mileRates, routeInfo]);
 
   // Passenger and Client search - find matching when typing name or phone
   const searchPassengers = useCallback((query, field) => {

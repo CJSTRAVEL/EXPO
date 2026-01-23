@@ -2277,9 +2277,11 @@ const BookingsPage = () => {
   
   // Search and filter states
   const [searchText, setSearchText] = useState("");
-  const [filterDate, setFilterDate] = useState(null);
+  const [filterDateFrom, setFilterDateFrom] = useState(null);
+  const [filterDateTo, setFilterDateTo] = useState(null);
   const [filterDriver, setFilterDriver] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
 
   const fetchData = async () => {
     try {

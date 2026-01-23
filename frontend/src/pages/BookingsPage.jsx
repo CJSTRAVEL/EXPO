@@ -2744,8 +2744,8 @@ const BookingsPage = () => {
             <span>Showing {filteredBookings.length} of {bookings.length} bookings</span>
             {hasDateFilter && (
               <Badge variant="secondary" className="gap-1">
-                {format(filterDate, "dd/MM/yyyy")}
-                <button onClick={() => setFilterDate(null)} className="ml-1 hover:text-foreground">
+                {getDateFilterText()}
+                <button onClick={() => { setFilterDateFrom(null); setFilterDateTo(null); }} className="ml-1 hover:text-foreground">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
@@ -2762,7 +2762,7 @@ const BookingsPage = () => {
         ) : (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <History className="w-3 h-3" />
-            <span>Showing today & upcoming • Use filters to find past bookings</span>
+            <span>Showing next 14 days • Use date filter for past bookings</span>
           </div>
         )}
       </div>

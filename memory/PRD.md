@@ -16,11 +16,18 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 23, 2026 (Latest)
 
+#### FlightRadar24 API Integration - COMPLETE
+- **Switched from AviationStack to FlightRadar24** for better UK airport coverage
+- FlightRadar24 covers Newcastle (NCL) and all UK regional airports
+- AviationStack kept as fallback if FlightRadar24 fails
+- **Tested with LS546** (Lanzarote → Newcastle) - works perfectly!
+- Airport ICAO codes mapped to friendly names (40+ airports)
+- Includes aircraft type and registration in response
+
 #### Flight Lookup on Corporate Portal - VERIFIED WORKING
 - Tested and confirmed flight lookup is fully functional on Client Portal
 - **Outbound flight lookup**: Enters flight number, calls `/api/flight-lookup`, shows flight data, auto-populates pickup location & time
 - **Return flight lookup**: Same functionality for return journey, auto-sets drop-off location and pickup time (3 hours before departure)
-- Both features tested with live AviationStack API responses (BA4146, BA8940)
 - Toast notifications confirm successful lookups
 
 ### Session: January 22, 2026

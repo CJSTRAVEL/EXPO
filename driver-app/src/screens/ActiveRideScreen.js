@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   bottomAction: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 100,
   },
   swipeContainer: {
     height: 64,

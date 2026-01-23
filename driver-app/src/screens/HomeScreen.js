@@ -819,8 +819,9 @@ const styles = StyleSheet.create({
   vehicleMarkerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 80,
-    height: 120,
+    width: 100,
+    height: 140,
+    paddingTop: 20,
   },
   minibusShadow: {
     position: 'absolute',
@@ -828,8 +829,8 @@ const styles = StyleSheet.create({
     height: 90,
     backgroundColor: 'rgba(0,0,0,0.15)',
     borderRadius: 10,
-    top: 8,
-    left: 16,
+    top: 28,
+    left: 26,
   },
   minibusBody: {
     width: 50,

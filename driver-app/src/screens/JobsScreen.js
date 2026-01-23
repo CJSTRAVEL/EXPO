@@ -381,6 +381,7 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
 
 export default function JobsScreen({ navigation }) {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState({ today: [], upcoming: [], past: [] });
   const [refreshing, setRefreshing] = useState(false);
   const [activeRide, setActiveRide] = useState(null);

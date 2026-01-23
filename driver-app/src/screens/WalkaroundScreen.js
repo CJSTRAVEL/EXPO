@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SignatureCanvas from 'react-native-signature-canvas';

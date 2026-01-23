@@ -467,7 +467,7 @@ export default function HomeScreen({ navigation }) {
             tracksViewChanges={false}
             style={{ zIndex: 999 }}
           >
-            <View style={{ width: 100, height: 140, overflow: 'visible' }}>
+            <View style={{ width: 60, height: 60, overflow: 'visible' }}>
               <VehicleMarker rotation={0} />
             </View>
           </Marker>

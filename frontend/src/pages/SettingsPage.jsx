@@ -1575,7 +1575,7 @@ const FareSettingsSection = () => {
           <DialogHeader>
             <DialogTitle>{editingZone ? "Edit Zone" : "Create Fare Zone"}</DialogTitle>
             <DialogDescription>
-              Define a geographic boundary with a fixed fare using the map or text inputs
+              Define a geographic boundary with fares per vehicle type using the map or text inputs
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1589,20 +1589,6 @@ const FareSettingsSection = () => {
                   data-testid="zone-name-input"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Fixed Fare (£) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="35.00"
-                  value={zoneForm.fixed_fare}
-                  onChange={(e) => setZoneForm({ ...zoneForm, fixed_fare: e.target.value })}
-                  data-testid="zone-fare-input"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Zone Type</Label>
                 <Select
@@ -1619,14 +1605,54 @@ const FareSettingsSection = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Description (optional)</Label>
-                <Input
-                  placeholder="Additional notes"
-                  value={zoneForm.description}
-                  onChange={(e) => setZoneForm({ ...zoneForm, description: e.target.value })}
-                />
+            </div>
+
+            {/* Vehicle Type Fares */}
+            <div className="space-y-3">
+              <Label className="text-base font-medium flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Fares per Vehicle Type *
+              </Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {vehicleTypes.map((vt) => (
+                  <div key={vt.id} className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">{vt.name}</Label>
+                    <div className="relative">
+                      <PoundSterling className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="pl-6 h-9"
+                        value={zoneForm.vehicle_fares[vt.id] || ""}
+                        onChange={(e) => setZoneForm({
+                          ...zoneForm,
+                          vehicle_fares: {
+                            ...zoneForm.vehicle_fares,
+                            [vt.id]: e.target.value
+                          }
+                        })}
+                        data-testid={`zone-fare-${vt.id}`}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
+              {vehicleTypes.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No vehicle types configured. Add vehicle types in the Vehicles tab first.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Description (optional)</Label>
+              <Input
+                placeholder="Additional notes about this zone"
+                value={zoneForm.description}
+                onChange={(e) => setZoneForm({ ...zoneForm, description: e.target.value })}
+              />
             </div>
 
             {/* Zone Definition Mode Toggle */}

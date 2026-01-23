@@ -2640,7 +2640,7 @@ const BookingsPage = () => {
                         >
                           {/* Outbound Label for linked journeys */}
                           {hasReturnJourney && (
-                            <div className="px-4 pt-2 pb-0">
+                            <div className="px-3 pt-2 pb-0">
                               <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
                                 OUTBOUND
                               </span>

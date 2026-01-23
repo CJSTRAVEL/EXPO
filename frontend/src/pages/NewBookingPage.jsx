@@ -265,7 +265,14 @@ const NewBookingPage = () => {
   // Auto-calculate fare from zones when dropoff and vehicle type change
   useEffect(() => {
     const calculateFareFromZones = () => {
+      console.log('calculateFareFromZones called:', {
+        dropoff: formData.dropoff_location,
+        vehicle_type: formData.vehicle_type,
+        fareZonesCount: fareZones.length
+      });
+      
       if (!formData.dropoff_location || !formData.vehicle_type || fareZones.length === 0) {
+        console.log('Skipping - missing data');
         return;
       }
 
@@ -273,6 +280,8 @@ const NewBookingPage = () => {
       
       // Find matching zone
       for (const zone of fareZones) {
+        console.log('Checking zone:', zone.name, 'type:', zone.zone_type);
+        
         if (zone.zone_type !== 'dropoff' && zone.zone_type !== 'both') {
           continue;
         }
@@ -281,7 +290,9 @@ const NewBookingPage = () => {
         
         // Check postcodes
         for (const postcode of (zone.postcodes || [])) {
-          if (dropoff.includes(postcode.toLowerCase())) {
+          const postcodeCheck = postcode.toLowerCase();
+          if (dropoff.includes(postcodeCheck)) {
+            console.log('Matched postcode:', postcode);
             zoneMatches = true;
             break;
           }
@@ -290,7 +301,9 @@ const NewBookingPage = () => {
         // Check areas
         if (!zoneMatches) {
           for (const area of (zone.areas || [])) {
-            if (dropoff.includes(area.toLowerCase())) {
+            const areaCheck = area.toLowerCase();
+            if (dropoff.includes(areaCheck)) {
+              console.log('Matched area:', area);
               zoneMatches = true;
               break;
             }
@@ -298,9 +311,12 @@ const NewBookingPage = () => {
         }
         
         if (zoneMatches) {
+          console.log('Zone matched:', zone.name, 'vehicle_fares:', zone.vehicle_fares);
           // Get fare for selected vehicle type
           const vehicleFares = zone.vehicle_fares || {};
           const fare = vehicleFares[formData.vehicle_type];
+          
+          console.log('Looking for vehicle_type:', formData.vehicle_type, 'Found fare:', fare);
           
           if (fare) {
             setFormData(prev => ({
@@ -317,9 +333,12 @@ const NewBookingPage = () => {
             }));
             toast.success(`Fare auto-set from "${zone.name}" zone: £${zone.fixed_fare.toFixed(2)}`);
             return;
+          } else {
+            console.log('No fare found for this vehicle type');
           }
         }
       }
+      console.log('No matching zone found');
     };
 
     // Debounce the calculation

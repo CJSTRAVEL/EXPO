@@ -5532,6 +5532,122 @@ async def stripe_webhook(request: Request):
         logging.error(f"Error handling Stripe webhook: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ========== FARE SETTINGS ENDPOINTS ==========
+
+class FareZone(BaseModel):
+    name: str
+    zone_type: str = "dropoff"  # pickup, dropoff, both
+    postcodes: List[str] = []
+    areas: List[str] = []
+    fixed_fare: float
+    description: Optional[str] = None
+
+class FareZoneUpdate(BaseModel):
+    name: Optional[str] = None
+    zone_type: Optional[str] = None
+    postcodes: Optional[List[str]] = None
+    areas: Optional[List[str]] = None
+    fixed_fare: Optional[float] = None
+    description: Optional[str] = None
+
+class MileRates(BaseModel):
+    base_fare: float = 3.50
+    price_per_mile: float = 2.00
+    minimum_fare: float = 5.00
+    waiting_rate_per_min: float = 0.50
+    night_multiplier: float = 1.5
+    night_start: str = "22:00"
+    night_end: str = "06:00"
+    airport_surcharge: float = 5.00
+
+@api_router.get("/settings/fare-zones")
+async def get_fare_zones():
+    """Get all fare zones"""
+    zones = await db.fare_zones.find({}, {"_id": 0}).to_list(100)
+    return zones
+
+@api_router.post("/settings/fare-zones")
+async def create_fare_zone(zone: FareZone):
+    """Create a new fare zone"""
+    zone_data = zone.model_dump()
+    zone_data["id"] = str(uuid.uuid4())
+    zone_data["created_at"] = datetime.now(timezone.utc).isoformat()
+    await db.fare_zones.insert_one(zone_data)
+    return {"id": zone_data["id"], "message": "Zone created"}
+
+@api_router.put("/settings/fare-zones/{zone_id}")
+async def update_fare_zone(zone_id: str, zone: FareZoneUpdate):
+    """Update a fare zone"""
+    update_data = {k: v for k, v in zone.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No data to update")
+    
+    result = await db.fare_zones.update_one({"id": zone_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Zone not found")
+    return {"message": "Zone updated"}
+
+@api_router.delete("/settings/fare-zones/{zone_id}")
+async def delete_fare_zone(zone_id: str):
+    """Delete a fare zone"""
+    result = await db.fare_zones.delete_one({"id": zone_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Zone not found")
+    return {"message": "Zone deleted"}
+
+@api_router.get("/settings/mile-rates")
+async def get_mile_rates():
+    """Get mile-based pricing settings"""
+    rates = await db.settings.find_one({"key": "mile_rates"}, {"_id": 0})
+    if rates:
+        return rates.get("value", {})
+    # Return default rates
+    return MileRates().model_dump()
+
+@api_router.put("/settings/mile-rates")
+async def update_mile_rates(rates: MileRates):
+    """Update mile-based pricing settings"""
+    await db.settings.update_one(
+        {"key": "mile_rates"},
+        {"$set": {"key": "mile_rates", "value": rates.model_dump()}},
+        upsert=True
+    )
+    return {"message": "Mile rates updated"}
+
+@api_router.post("/settings/calculate-fare")
+async def calculate_fare_from_locations(pickup: str, dropoff: str):
+    """Calculate fare based on locations - check zones first, then use mile rates"""
+    # Check if dropoff matches any zone
+    zones = await db.fare_zones.find({}, {"_id": 0}).to_list(100)
+    
+    for zone in zones:
+        if zone.get("zone_type") in ["dropoff", "both"]:
+            # Check postcodes
+            for postcode in zone.get("postcodes", []):
+                if postcode.upper() in dropoff.upper():
+                    return {
+                        "fare": zone["fixed_fare"],
+                        "type": "zone",
+                        "zone_name": zone["name"],
+                        "message": f"Fixed fare for {zone['name']}"
+                    }
+            # Check area names
+            for area in zone.get("areas", []):
+                if area.lower() in dropoff.lower():
+                    return {
+                        "fare": zone["fixed_fare"],
+                        "type": "zone",
+                        "zone_name": zone["name"],
+                        "message": f"Fixed fare for {zone['name']}"
+                    }
+    
+    # No zone match - would need to calculate based on distance
+    return {
+        "fare": None,
+        "type": "distance",
+        "message": "No matching zone - calculate based on distance"
+    }
+
 # ========== AUTH ENDPOINTS MOVED TO routes/auth.py ==========
 
 # Include the router in the main app

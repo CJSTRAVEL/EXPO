@@ -1507,10 +1507,6 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
             ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
         ]))
         elements.append(sig_table)
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-        ]))
-        elements.append(sig_table)
     
     elements.append(Spacer(1, 20))
     

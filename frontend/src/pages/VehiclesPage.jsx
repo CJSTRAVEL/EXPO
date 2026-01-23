@@ -860,6 +860,249 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
   );
 };
 
+// ============== WALKAROUND CHECKS TAB ==============
+const WalkaroundTab = ({ vehicles }) => {
+  const [checks, setChecks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVehicle, setSelectedVehicle] = useState("all");
+  const [viewCheck, setViewCheck] = useState(null);
+
+  const fetchChecks = async () => {
+    try {
+      setLoading(true);
+      const url = selectedVehicle === "all" 
+        ? `${API}/walkaround-checks`
+        : `${API}/vehicles/${selectedVehicle}/walkaround-checks`;
+      const res = await axios.get(url);
+      setChecks(res.data);
+    } catch (error) {
+      console.error("Error fetching walkaround checks:", error);
+      toast.error("Failed to load walkaround checks");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchChecks();
+  }, [selectedVehicle]);
+
+  const handleDownloadPdf = async (check) => {
+    try {
+      const response = await axios.get(`${API}/walkaround-checks/${check.id}/pdf`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${check.check_number}-${check.vehicle_reg}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("PDF downloaded");
+    } catch (error) {
+      toast.error("Failed to download PDF");
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    try {
+      return format(parseISO(dateStr), "dd/MM/yyyy HH:mm");
+    } catch {
+      return dateStr;
+    }
+  };
+
+  return (
+    <div>
+      {/* Filter Bar */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <Label>Filter by Vehicle:</Label>
+          <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="All Vehicles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Vehicles</SelectItem>
+              {vehicles.map(v => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.registration} - {v.make} {v.model}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="text-sm text-muted-foreground ml-auto">
+          {checks.length} check{checks.length !== 1 ? 's' : ''} found
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        </div>
+      ) : checks.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <ClipboardCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <p className="text-muted-foreground">No walkaround checks found</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Drivers can submit checks from the mobile app
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {checks.map((check) => (
+            <Card key={check.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{check.check_number}</span>
+                        <Badge variant={check.all_passed ? "success" : "warning"} 
+                               className={check.all_passed ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}>
+                          {check.all_passed ? "All Passed" : "Issues Found"}
+                        </Badge>
+                        {check.has_defects && (
+                          <Badge variant="destructive" className="bg-red-100 text-red-800">
+                            Defects Reported
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                        <span className="flex items-center gap-1">
+                          <Car className="w-3.5 h-3.5" />
+                          {check.vehicle_reg}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="w-3.5 h-3.5" />
+                          {check.driver_name}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {formatDate(check.submitted_at)}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {check.check_type === "weekly" ? "Weekly" : "Daily"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setViewCheck(check)}
+                      data-testid={`view-check-${check.id}`}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDownloadPdf(check)}
+                      data-testid={`download-check-${check.id}`}
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      PDF
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* View Check Dialog */}
+      <Dialog open={!!viewCheck} onOpenChange={() => setViewCheck(null)}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5" />
+              Walkaround Check - {viewCheck?.check_number}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {viewCheck && (
+            <div className="space-y-4">
+              {/* Info Section */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <Label className="text-muted-foreground">Vehicle</Label>
+                  <p className="font-medium">{viewCheck.vehicle_reg}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Driver</Label>
+                  <p className="font-medium">{viewCheck.driver_name}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date & Time</Label>
+                  <p className="font-medium">{formatDate(viewCheck.submitted_at)}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Check Type</Label>
+                  <p className="font-medium capitalize">{viewCheck.check_type}</p>
+                </div>
+              </div>
+
+              {/* Checklist */}
+              <div>
+                <Label className="text-muted-foreground mb-2 block">Checklist Items</Label>
+                <div className="grid grid-cols-1 gap-1 max-h-[300px] overflow-y-auto border rounded-lg p-3 bg-slate-50">
+                  {viewCheck.checklist && Object.entries(viewCheck.checklist).map(([item, passed]) => (
+                    <div key={item} className="flex items-center gap-2 text-sm py-1">
+                      {passed ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      )}
+                      <span className={passed ? "text-slate-700" : "text-amber-700 font-medium"}>
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Defects */}
+              <div>
+                <Label className="text-muted-foreground mb-2 block">Defects Reported</Label>
+                <div className="border rounded-lg p-3 bg-slate-50">
+                  {viewCheck.defects ? (
+                    <p className="text-sm text-red-700">{viewCheck.defects}</p>
+                  ) : (
+                    <p className="text-sm text-green-700">Nil - No defects reported</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setViewCheck(null)}>
+                  Close
+                </Button>
+                <Button onClick={() => handleDownloadPdf(viewCheck)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 // ============== MAIN PAGE ==============
 const VehiclesPage = () => {
   const [vehicles, setVehicles] = useState([]);

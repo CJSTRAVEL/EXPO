@@ -43,6 +43,9 @@ const ClientPortal = () => {
   const [showInvoiceDetails, setShowInvoiceDetails] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(null);
+  const [loadingFlight, setLoadingFlight] = useState(false);
+  const [flightData, setFlightData] = useState(null);
+  const [flightError, setFlightError] = useState(null);
 
   const [newBooking, setNewBooking] = useState({
     pickup_location: "",

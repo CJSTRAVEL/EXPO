@@ -102,6 +102,7 @@ const NewBookingPage = () => {
     vehicle_type: "",
     // Payment
     fare: "",
+    deposit_paid: "",
     payment_method: "cash",
     // Additional
     notes: "",

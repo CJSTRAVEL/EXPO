@@ -168,6 +168,68 @@ const ClientPortal = () => {
     }
   };
 
+  const handleFlightLookup = async () => {
+    const flightNumber = newBooking.flight_number;
+    if (!flightNumber) {
+      toast.error("Please enter a flight number");
+      return;
+    }
+
+    setLoadingFlight(true);
+    setFlightError(null);
+
+    try {
+      const response = await axios.get(`${API}/flight-lookup`, {
+        params: { flight_number: flightNumber }
+      });
+      
+      const flightInfo = response.data;
+      
+      if (flightInfo.error) {
+        setFlightError(flightInfo.error);
+        if (flightInfo.hint) {
+          toast.error(`${flightInfo.error}. ${flightInfo.hint}`);
+        } else {
+          toast.error(flightInfo.error);
+        }
+        return;
+      }
+      
+      // For arrival, set pickup 30 mins after landing
+      let pickupDateTime = newBooking.pickup_datetime;
+      const arrivalTime = flightInfo.arrival_scheduled || flightInfo.arrival_estimated;
+      if (arrivalTime) {
+        const arrivalDate = new Date(arrivalTime);
+        arrivalDate.setMinutes(arrivalDate.getMinutes() + 30);
+        pickupDateTime = arrivalDate.toISOString().slice(0, 16);
+      }
+      
+      // Determine pickup location based on arrival airport
+      let pickupLocation = newBooking.pickup_location;
+      if (flightInfo.arrival_airport) {
+        pickupLocation = flightInfo.arrival_airport;
+        if (flightInfo.arrival_terminal) {
+          pickupLocation += ` Terminal ${flightInfo.arrival_terminal}`;
+        }
+      }
+      
+      setNewBooking(prev => ({
+        ...prev,
+        pickup_location: pickupLocation || prev.pickup_location,
+        pickup_datetime: pickupDateTime || prev.pickup_datetime
+      }));
+      setFlightData(flightInfo);
+      
+      toast.success("Flight data loaded!");
+    } catch (err) {
+      const errorMsg = "Flight not found or API error";
+      setFlightError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setLoadingFlight(false);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",

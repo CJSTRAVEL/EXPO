@@ -188,7 +188,7 @@ export default function WalkaroundHistoryScreen({ navigation }) {
               <View style={styles.detailRow}>
                 <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Date & Time</Text>
                 <Text style={[styles.detailValue, { color: theme.text }]}>
-                  {selectedCheck.submitted_at ? format(new Date(selectedCheck.submitted_at), 'dd MMM yyyy, HH:mm') : 'N/A'}
+                  {formatDate(selectedCheck.submitted_at)}
                 </Text>
               </View>
 

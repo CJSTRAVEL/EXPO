@@ -1666,7 +1666,42 @@ const NewBookingPage = () => {
                   data-testid="booking-fare"
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-300">Deposit Paid (£)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.deposit_paid}
+                  onChange={(e) => setFormData({ ...formData, deposit_paid: e.target.value })}
+                  placeholder="0.00"
+                  className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
+                  data-testid="booking-deposit"
+                />
+              </div>
             </div>
+
+            {/* Balance Due Display */}
+            {formData.fare && parseFloat(formData.fare) > 0 && (
+              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-[#3d3d3d]">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Total Fare:</span>
+                  <span className="text-white font-medium">£{parseFloat(formData.fare).toFixed(2)}</span>
+                </div>
+                {formData.deposit_paid && parseFloat(formData.deposit_paid) > 0 && (
+                  <div className="flex justify-between items-center text-sm mt-1">
+                    <span className="text-gray-400">Deposit Paid:</span>
+                    <span className="text-green-400 font-medium">-£{parseFloat(formData.deposit_paid).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t border-[#3d3d3d]">
+                  <span className="text-gray-300 font-medium">Balance Due:</span>
+                  <span className="text-[#D4A853] font-bold text-lg">
+                    £{Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0)).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Stripe Payment Info */}
             {formData.payment_method === "stripe" && (
@@ -1682,7 +1717,7 @@ const NewBookingPage = () => {
                 {formData.fare && parseFloat(formData.fare) > 0 && (
                   <div className="mt-2 pt-2 border-t border-[#D4A853]/30">
                     <span className="text-sm text-[#D4A853] font-semibold">
-                      Amount to charge: £{parseFloat(formData.fare).toFixed(2)}
+                      Amount to charge: £{Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0)).toFixed(2)}
                     </span>
                   </div>
                 )}

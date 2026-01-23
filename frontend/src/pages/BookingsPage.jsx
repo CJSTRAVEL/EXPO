@@ -2925,7 +2925,7 @@ const BookingsPage = () => {
                               </div>
                             </div>
                             {/* Vehicle Type Footer Bar for Return */}
-                            <div className={`px-4 py-2 rounded-b-lg ${getVehicleTypeColor(linkedReturn.vehicle_type)}`}>
+                            <div className={`px-3 py-1.5 rounded-b-lg ${getVehicleTypeColor(linkedReturn.vehicle_type)}`}>
                               <div className="flex items-center justify-center gap-2">
                                 <Car className="w-4 h-4" />
                                 <span className="text-sm font-semibold">

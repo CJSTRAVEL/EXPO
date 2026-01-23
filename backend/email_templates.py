@@ -510,28 +510,83 @@ def get_corporate_request_rejected_template(contact_name: str, company_name: str
 
 # ==================== EMAIL SENDING FUNCTION ====================
 
+import re
+import uuid as uuid_module
+from email.utils import formatdate, make_msgid
+
+def strip_html_to_text(html: str) -> str:
+    """Convert HTML to plain text for multipart emails"""
+    # Remove style and script tags
+    text = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    # Replace common HTML entities
+    text = text.replace('&nbsp;', ' ')
+    text = text.replace('&amp;', '&')
+    text = text.replace('&lt;', '<')
+    text = text.replace('&gt;', '>')
+    text = text.replace('&pound;', '£')
+    text = text.replace('&#163;', '£')
+    # Replace breaks and paragraphs with newlines
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</p>', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</div>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</tr>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</li>', '\n', text, flags=re.IGNORECASE)
+    # Remove all remaining HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Clean up whitespace
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    text = re.sub(r' +', ' ', text)
+    return text.strip()
+
 def send_email(to_email: str, subject: str, html_content: str) -> bool:
-    """Send an email using SMTP configuration"""
+    """Send an email using SMTP configuration with spam-reducing best practices"""
     try:
         smtp_server = os.environ.get('SMTP_SERVER')
         smtp_port = int(os.environ.get('SMTP_PORT', 587))
         smtp_username = os.environ.get('SMTP_USERNAME')
         smtp_password = os.environ.get('SMTP_PASSWORD')
         smtp_from = os.environ.get('SMTP_FROM_EMAIL', smtp_username)
+        reply_to = os.environ.get('SMTP_REPLY_TO', 'bookings@cjstravel.uk')
         
         if not all([smtp_server, smtp_username, smtp_password]):
             logging.warning(f"SMTP not configured, cannot send email to {to_email}")
             return False
         
+        # Create multipart message with both plain text and HTML (helps avoid spam filters)
         msg = MIMEMultipart('alternative')
+        
+        # Essential headers
         msg['Subject'] = subject
         msg['From'] = f"CJ's Executive Travel <{smtp_from}>"
         msg['To'] = to_email
+        msg['Reply-To'] = reply_to
         
-        html_part = MIMEText(html_content, 'html')
+        # Additional headers to improve deliverability
+        msg['Message-ID'] = make_msgid(domain='cjstravel.uk')
+        msg['Date'] = formatdate(localtime=True)
+        msg['X-Mailer'] = 'CJs Executive Travel Booking System'
+        msg['X-Priority'] = '3'  # Normal priority
+        msg['Precedence'] = 'bulk'
+        
+        # MIME headers
+        msg['MIME-Version'] = '1.0'
+        
+        # Generate plain text version from HTML (spam filters prefer multipart)
+        plain_text = strip_html_to_text(html_content)
+        
+        # Add plain text footer
+        plain_text += "\n\n---\nCJ's Executive Travel Limited\nPremium Chauffeur & Executive Travel Services\nEmail: bookings@cjstravel.uk\n\nThis is an automated message from our booking system."
+        
+        # Attach both versions - plain text first, then HTML
+        # Email clients will display HTML if available, plain text otherwise
+        text_part = MIMEText(plain_text, 'plain', 'utf-8')
+        html_part = MIMEText(html_content, 'html', 'utf-8')
+        
+        msg.attach(text_part)
         msg.attach(html_part)
         
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
             server.starttls()
             server.login(smtp_username, smtp_password)
             server.sendmail(smtp_from, to_email, msg.as_string())

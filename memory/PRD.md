@@ -148,13 +148,14 @@ Created 10 modular routers in `/app/backend/routes/`:
 ## Prioritized Backlog
 
 ### P0 (Critical)
+- [COMPLETED] Flight Lookup on Corporate Portal - VERIFIED WORKING
 - [COMPLETED] Booking History & Audit Log Feature
 - Driver App Verification (user needs to build and test via Expo)
 
 ### P1 (High)
-- Forgot Password / SMS verification for passenger portal
+- Finalize `server.py` Refactoring - All routes extracted to `/app/backend/routes/`, needs final integration
 - Driver App menu functionality (hamburger menu, logo menu)
-- Refactor `server.py` into APIRouter modules (urgent technical debt - 4300+ lines)
+- Refactor large frontend components
 
 ### P2 (Medium)
 - Refactor large frontend components (BookingsPage 2700+ lines, NewBookingPage 1500+ lines)

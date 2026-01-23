@@ -120,6 +120,18 @@ export default function WalkaroundScreen({ navigation }) {
     return CHECKLIST_ITEMS.every(item => checklist[item] === true);
   };
   
+  const handleSignature = (sig) => {
+    setSignature(sig);
+    setShowSignaturePad(false);
+  };
+  
+  const handleClearSignature = () => {
+    setSignature(null);
+    if (signatureRef.current) {
+      signatureRef.current.clearSignature();
+    }
+  };
+  
   const handleSubmit = async () => {
     // Validation
     if (!selectedVehicle) {
@@ -134,6 +146,11 @@ export default function WalkaroundScreen({ navigation }) {
     
     if (!agreement) {
       Alert.alert('Error', 'Please agree to the declaration before submitting');
+      return;
+    }
+    
+    if (!signature) {
+      Alert.alert('Error', 'Please provide your signature before submitting');
       return;
     }
     
@@ -153,6 +170,7 @@ export default function WalkaroundScreen({ navigation }) {
           checklist: checklist,
           defects: defects.trim() || null,
           agreement: agreement,
+          signature: signature,
         }),
       });
       

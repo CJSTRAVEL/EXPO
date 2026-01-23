@@ -192,7 +192,7 @@ const PassengerPortal = () => {
     const userInfo = localStorage.getItem("passengerInfo");
     
     if (!token || !userInfo) {
-      navigate("/login");
+      navigate("/customer-login");
       return;
     }
 

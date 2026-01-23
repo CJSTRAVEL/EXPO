@@ -49,6 +49,7 @@ const CHECKLIST_ITEMS = [
 export default function WalkaroundScreen({ navigation }) {
   const { user, token } = useAuth();
   const { theme } = useTheme();
+  const signatureRef = useRef(null);
   
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -59,6 +60,8 @@ export default function WalkaroundScreen({ navigation }) {
   const [agreement, setAgreement] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [signature, setSignature] = useState(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
   
   // Initialize checklist with all items unchecked
   useEffect(() => {

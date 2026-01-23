@@ -4476,7 +4476,8 @@ async def get_current_driver(credentials: HTTPAuthorizationCredentials = Depends
     """Verify driver JWT token"""
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        driver_id = payload.get("driver_id")
+        # Token may use 'sub' or 'driver_id' depending on which login endpoint was used
+        driver_id = payload.get("driver_id") or payload.get("sub")
         if not driver_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         

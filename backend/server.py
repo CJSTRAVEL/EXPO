@@ -3109,11 +3109,38 @@ async def create_client_booking_request(request: dict, client: dict = Depends(ge
         "airline": request.get("airline"),
         "flight_type": request.get("flight_type"),
         "terminal": request.get("terminal"),
+        "create_return": request.get("create_return", False),
+        "return_pickup_location": request.get("return_pickup_location"),
+        "return_dropoff_location": request.get("return_dropoff_location"),
+        "return_datetime": request.get("return_datetime"),
+        "return_flight_number": request.get("return_flight_number"),
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     
     await db.booking_requests.insert_one(request_doc)
+    
+    # Send corporate request submitted email
+    client_email = client.get("email") or client.get("contact_email")
+    if client_email:
+        try:
+            pickup_dt = datetime.fromisoformat(request.get("pickup_datetime").replace('Z', '+00:00')) if request.get("pickup_datetime") else None
+            booking_details = {
+                'passenger_name': request_doc['passenger_name'],
+                'pickup_location': request.get("pickup_location"),
+                'dropoff_location': request.get("dropoff_location"),
+                'date': pickup_dt.strftime('%A, %d %B %Y') if pickup_dt else 'TBC',
+                'time': pickup_dt.strftime('%H:%M') if pickup_dt else 'TBC',
+                'vehicle_type': request.get("vehicle_type_name") or 'Executive'
+            }
+            send_corporate_request_submitted_email(
+                client_email,
+                request_doc['passenger_name'],
+                client.get("name", ""),
+                booking_details
+            )
+        except Exception as e:
+            logging.error(f"Failed to send corporate request email: {str(e)}")
     
     return {"message": "Booking request submitted", "request_id": request_id}
 

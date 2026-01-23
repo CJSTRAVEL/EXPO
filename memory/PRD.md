@@ -1,232 +1,126 @@
 # CJ's Executive Travel - Product Requirements Document
 
-## Latest Updates (January 23, 2026)
+## Project Overview
+A private hire booking application with three main components:
+1. **Admin Dispatch System** - Web-based portal for managing bookings, drivers, vehicles, and fares
+2. **Passenger Portal** - Customer-facing booking interface
+3. **Driver Mobile App** - React Native app for drivers to manage their shifts and jobs
 
-### Bookings Page Enhancement
-- First date shown is always Today with highlighted header
-- Past bookings hidden by default, searchable via filters
-- Empty day shows "No bookings for [Day Name]" message
-- Hint text guides users to use filters for past bookings
+## Core Features
 
-## Original Problem Statement
-Build a private hire booking application for CJ's Executive Travel with features for managing bookings, drivers, clients, passengers, and integrations for payments, maps, flight data, and communications.
+### Admin Portal
+- Dashboard with live GPS tracking
+- Booking management (create, edit, assign drivers)
+- Driver management (profiles, documents, expiry tracking)
+- Vehicle management (types, individual vehicles)
+- Client/Corporate account management
+- Fare management system:
+  - **Zone-based fares** with prices per vehicle type
+  - Mile-based pricing configuration
+  - Fare calculator
+- SMS/Email notification templates
+- Invoice generation
 
-## Core Requirements
-- Dispatch system for booking management
-- Customer-facing passenger portal
-- Client portal for business customers (with invoices)
-- Driver mobile app
-- Fleet management
-- Admin authentication
-- Integrations: Stripe, Google Maps, AviationStack, SMS/Email
+### Passenger Portal
+- Phone-based login/registration
+- Booking creation with address autocomplete
+- View booking history
+- Flight tracking integration
+
+### Driver App
+- Biometric login support
+- Shift management (start/stop)
+- Vehicle selection with exclusivity
+- Job list with today/upcoming/past
+- Active ride screen with progressive stops
+- Document expiry notifications
+- Admin chat
+
+## Technical Stack
+- **Backend**: FastAPI, MongoDB, Motor
+- **Frontend**: React, TailwindCSS, Shadcn/UI
+- **Driver App**: React Native, Expo
+- **APIs**: Google Maps, FlightRadar24, Vonage SMS, Mailgun, Stripe
 
 ## What's Been Implemented
 
-### Session: January 23, 2026 (Latest)
+### Session: Jan 23, 2026
 
-#### Walkaround Check System - COMPLETE
-- **Backend API** created with endpoints:
-  - `GET /api/walkaround-checks` - List all checks (filterable by vehicle/driver)
-  - `GET /api/walkaround-checks/{id}` - Get specific check
-  - `GET /api/walkaround-checks/{id}/pdf` - Download PDF certificate
-  - `POST /api/walkaround-checks` - Submit new check (driver auth required)
-  - `GET /api/vehicles/{id}/walkaround-checks` - Get checks for specific vehicle
-  - `GET /api/driver/walkaround-checks` - Get checks for authenticated driver
-  - `GET /api/checklist-items` - Get list of 25 checklist items
-- **Admin Vehicles Page** - Added "Walkaround Checks" tab with:
-  - Filter by vehicle dropdown
-  - List of all submitted checks with status badges
-  - View modal showing full checklist details
-  - PDF download functionality
-- **Driver App** - Created `WalkaroundScreen.js` with:
-  - Vehicle selection dropdown
-  - Daily/Weekly check type toggle
-  - 25 checklist items with Select All/Clear All
-  - Defects text input
-  - Declaration agreement checkbox
-  - Submit validation (all items must be checked)
-- **PDF Certificate Generation** - Professional certificate with:
-  - CJ's Executive Travel branding
-  - Check number, vehicle, driver, date/time
-  - Two-column checklist with ✓ marks
-  - Defects section
-  - Declaration and signature line
-  - Company footer with contact details
+#### Driver App Fixes (P0)
+- [x] Fixed document notifications endpoint - was returning `[]` instead of `{"notifications": [...], "count": N}`
+- [x] Fixed AuthContext profile handling - `checkAuth` and `refreshProfile` now properly extract driver data from `{driver: {...}, vehicle: ...}` response
+- [x] New APK built: https://expo.dev/artifacts/eas/7dMBktRWTW1famyTdsBnwA.apk
+- [x] Created test bookings (CJ-003, CJ-004) for driver app testing
 
-#### FlightRadar24 API Integration - COMPLETE
-- **Switched from AviationStack to FlightRadar24** for better UK airport coverage
-- FlightRadar24 covers Newcastle (NCL) and all UK regional airports
-- AviationStack kept as fallback if FlightRadar24 fails
-- **Tested with LS546** (Lanzarote → Newcastle) - works perfectly!
-- Airport ICAO codes mapped to friendly names (40+ airports)
-- Includes aircraft type and registration in response
+#### Fare System Enhancement (P1)
+- [x] Updated fare zone model to support **prices per vehicle type** instead of single fixed fare
+- [x] Backend: Modified `FareZone` and `FareZoneUpdate` models with `vehicle_fares: Dict[str, float]`
+- [x] Frontend: Updated zone dialog with vehicle-specific price inputs
+- [x] Zone table now displays fares per vehicle type (e.g., "Taxi: £25.00", "8 Minibus: £45.00")
+- [x] Legacy `fixed_fare` field supported for backward compatibility
 
-#### Flight Lookup on Corporate Portal - VERIFIED WORKING
-- Tested and confirmed flight lookup is fully functional on Client Portal
-- **Outbound flight lookup**: Enters flight number, calls `/api/flight-lookup`, shows flight data, auto-populates pickup location & time
-- **Return flight lookup**: Same functionality for return journey, auto-sets drop-off location and pickup time (3 hours before departure)
-- Toast notifications confirm successful lookups
+### Previous Sessions
+- Booking page: 14-day default view, date range filter with presets
+- New/Edit booking: `deposit_paid`, `deposit_date`, `booking_source` fields
+- Driver app: End shift bug fix, invisible car icon fix, offline validation
+- ActiveRideScreen rewritten with progressive stops, notes, pricing
 
-### Session: January 22, 2026
+## Pending/In Progress
 
-#### Admin Passenger Portal Management
-1. **Passengers Page Reverted to Original Design**
-   - Shows passengers aggregated from booking data (by phone number)
-   - Displays booking count and total fare for each passenger
-   - Passengers with portal accounts show "Portal" badge
-   - Blocked passengers show "Blocked" badge
+### P0 - Critical
+- [ ] User to verify driver app login works with new APK
 
-2. **Portal Account Actions in Detail Modal**
-   - When clicking on a passenger with portal account, modal shows:
-     - Stats: Total Bookings, Total Spent, Total Miles
-     - "Portal Account Actions" section with Block/Delete buttons
-     - Booking History
-   - Non-portal passengers show "No portal account registered" message
+### P1 - High Priority
+- [ ] Integrate fare zones into booking form for automatic price calculation
+- [ ] SMS templates based on assigned vehicle type
+- [ ] Backend logic to auto-set `booking_source` to 'portal' for portal bookings
 
-3. **Block/Unblock/Delete Functionality**
-   - Block: Prevents passenger from logging into portal (returns 403)
-   - Unblock: Restores portal access
-   - Delete: Permanently removes portal account
-   - All actions tested and verified via testing agent
+### P2 - Medium Priority
+- [ ] Refactor `server.py` modularization (ongoing)
+- [ ] Refactor large frontend components (`NewBookingPage.jsx`, `BookingsPage.jsx`)
+- [ ] Export bookings to CSV
+- [ ] Driver availability calendar
+- [ ] Email invoice PDF to clients
+- [ ] Online invoice payment via Stripe
 
-#### Server.py Refactoring (Phase 2 Complete)
-Created 10 modular routers in `/app/backend/routes/`:
-- `shared.py` - Base infrastructure, dependencies (~200 lines)
-- `auth.py` - Admin authentication (~150 lines)
-- `drivers.py` - Driver CRUD + mobile app (~400 lines)
-- `vehicles.py` - Vehicle CRUD + types (~200 lines)
-- `passengers.py` - Passenger portal (~150 lines)
-- `client_portal.py` - Client portal + password reset (~400 lines)
-- `external.py` - Google Maps, Postcode, Flight API (~250 lines)
-- `clients.py` - Client management + invoices (~350 lines)
-- `chat.py` - Chat endpoints (~100 lines)
-- `payments.py` - Stripe integration (~200 lines)
+## API Endpoints
 
-**Total extracted**: ~2200 lines into clean, testable modules
-**Documentation**: `/app/docs/REFACTORING_GUIDE.md`
+### Fare Settings
+- `GET /api/settings/fare-zones` - List all fare zones
+- `POST /api/settings/fare-zones` - Create zone with vehicle_fares
+- `PUT /api/settings/fare-zones/{id}` - Update zone
+- `DELETE /api/settings/fare-zones/{id}` - Delete zone
+- `GET /api/settings/mile-rates` - Get mile-based pricing
+- `PUT /api/settings/mile-rates` - Update mile rates
+- `POST /api/settings/calculate-fare` - Calculate fare (supports vehicle_type_id)
 
-#### Password Reset with SMS/Email Options
-1. **Dual Reset Methods**
-   - User can choose SMS or Email for verification code
-   - Toggle buttons on forgot password dialog
-   - Email sends styled HTML with code via Mailgun
-   - SMS sends via Vonage
+### Driver App
+- `POST /api/driver/login` - Driver authentication
+- `GET /api/driver/profile` - Returns `{driver: {...}, vehicle: ...}`
+- `GET /api/driver/document-notifications` - Returns `{notifications: [...], count: N}`
+- `GET /api/driver/bookings` - Returns `{today: [], upcoming: [], past: []}`
 
-2. **Backend Endpoints**
-   - `POST /api/password-reset/request` - Now accepts `method: "sms" | "email"`
-   - `POST /api/password-reset/verify` - Accepts `identifier` (phone or email)
+## Data Models
 
-#### Forgot Password Flow
-1. **3-Step Wizard**
-   - Step 1: Choose SMS or Email, enter contact
-   - Step 2: Enter 6-digit verification code
-   - Step 3: Set new password
-   - Works for both Passengers and Business Clients
-
-2. **Cron Job Documentation**
-   - Created `/app/docs/CRON_SETUP.md`
-   - Covers Linux cron, Windows Task Scheduler, AWS/GCP schedulers
-
-#### Client Portal with Invoices Feature
-1. **Shared Customer Login Page** (`/customer-login`)
-   - Unified login/register for Passengers (gold) and Clients (blue)
-   - Company name field for business clients
-   - Client registration creates pending request
-
-2. **Client Portal** (`/client-portal`)
-   - Tabs: Bookings, Pending Requests, Invoices, History
-   - Invoice stats dashboard with download PDF
-
-### Session: January 21, 2026
-
-
-#### Booking History & Audit Log Feature
-1. **History Tab in Booking View**
-   - Added "Details" and "History" tabs to the Booking Details modal
-   - History tab displays timeline of all booking changes with timestamps
-   - Shows who made each change (user name + type badge)
-   - Displays action icons for different event types
-
-2. **Created By Info**
-   - Shows "Created by [User Name]" in the Details tab
-   - Backend stores `created_by_id` and `created_by_name` for audit trail
-
-3. **Flight Lookup in Edit Form**
-   - Added Flight Information section to the Edit Booking modal
-   - Auto-populates pickup location and booking time from flight data
-
-### Previous Session Features
-1. **New Booking Page Enhancements**
-   - Flight information lookup moved to popup modal
-   - Return flight lookup popup modal
-   - Auto-population of pickup location/time from flight data
-   - Dark theme styling (#D4A853, #1a1a1a, #252525)
-
-2. **Contract Work Page Parity**
-   - Driver assignment/unassignment
-   - Status change functionality
-
-## Architecture
-```
-/app/
-├── backend/
-│   └── server.py         # FastAPI backend (~5000 lines - needs refactoring)
-├── driver-app/           # React Native/Expo mobile app
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── AddressAutocomplete.jsx
-    │   │   └── ui/                      # Shadcn components
-    │   ├── context/
-    │   │   └── AuthContext.jsx
-    │   ├── pages/
-    │   │   ├── BookingsPage.jsx         # History tab, flight lookup
-    │   │   ├── NewBookingPage.jsx       # Flight modal, dark theme
-    │   │   ├── CustomerLogin.jsx        # NEW: Shared login/register
-    │   │   ├── ClientPortal.jsx         # NEW: Client portal with invoices
-    │   │   └── ...
-    │   └── App.js
-    └── ...
+### FareZone
+```python
+{
+  "id": "uuid",
+  "name": "Zone Name",
+  "zone_type": "dropoff|pickup|both",
+  "postcodes": ["NE1", "NE13"],
+  "areas": ["Newcastle Airport"],
+  "vehicle_fares": {
+    "vehicle_type_id_1": 25.00,
+    "vehicle_type_id_2": 45.00
+  },
+  "boundary": [{"lat": 54.77, "lng": -1.57}, ...],
+  "description": "Optional notes",
+  "created_at": "ISO timestamp"
+}
 ```
 
-## Prioritized Backlog
-
-### P0 (Critical)
-- [COMPLETED] Flight Lookup on Corporate Portal - VERIFIED WORKING
-- [COMPLETED] Booking History & Audit Log Feature
-- Driver App Verification (user needs to build and test via Expo)
-
-### P1 (High)
-- Finalize `server.py` Refactoring - All routes extracted to `/app/backend/routes/`, needs final integration
-- Driver App menu functionality (hamburger menu, logo menu)
-- Refactor large frontend components
-
-### P2 (Medium)
-- Refactor large frontend components (BookingsPage 2700+ lines, NewBookingPage 1500+ lines)
-- Export bookings to CSV
-- Driver availability calendar
-- Email invoice PDFs directly to clients
-
-## Key API Endpoints
-- Admin Auth: `POST /api/auth/login`, `GET /api/admin/me`
-- Fleet: `GET/POST /api/vehicle-types`, `GET/POST /api/vehicles`
-- Flights: `GET /api/flight/{flight_number}`
-- Bookings: `GET/POST /api/bookings`, `PUT /api/bookings/{id}`, `POST /api/bookings/{id}/assign/{driver_id}`, `POST /api/bookings/{id}/unassign`
-
-## Database Schema Updates
-
-### bookings collection (updated)
-- `created_by_id`: String - ID of user who created the booking
-- `created_by_name`: String - Name of user who created the booking  
-- `history`: Array of history entries: `[{timestamp, action, user_id, user_name, user_type, details, changes}]`
-
-## Test Credentials
-- Dispatch System: `admin@cjstravel.uk` / `admin123`
-- Passenger Portal: Register via UI
-- Driver App: `john.driver@cjstravel.uk` / `password123`
-
-## Third-Party Integrations
-- AviationStack API (flight lookups)
-- Stripe (payments)
-- Google Maps Platform (mapping, autocomplete)
-- Vonage, Mailgun (communications)
+## Credentials
+- **Admin**: admin@cjstravel.uk / admin123
+- **Driver**: john.driver@cjstravel.uk / password123
+- **Expo**: chris@cjstravel.uk / Newhouse@1

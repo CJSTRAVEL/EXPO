@@ -691,4 +691,102 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  // Signature styles
+  signaturePlaceholder: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  signaturePlaceholderText: {
+    marginTop: 8,
+    fontSize: 14,
+  },
+  signaturePreviewContainer: {
+    alignItems: 'center',
+  },
+  signaturePreview: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  signatureActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
+  signatureActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  signatureActionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  signatureModalContainer: {
+    flex: 1,
+  },
+  signatureModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 12 : 50,
+  },
+  signatureModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  clearSignatureText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  signatureCanvasContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  signatureCanvas: {
+    flex: 1,
+    borderRadius: 12,
+  },
+  signatureModalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+  },
+  signatureCancelButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  signatureCancelText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  signatureSaveButton: {
+    flex: 2,
+    flexDirection: 'row',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  signatureSaveText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

@@ -455,7 +455,7 @@ const PassengerPortal = () => {
   const handleLogout = () => {
     localStorage.removeItem("passengerToken");
     localStorage.removeItem("passengerInfo");
-    navigate("/login");
+    navigate("/customer-login");
   };
 
   // Group bookings by status

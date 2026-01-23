@@ -1516,84 +1516,127 @@ const FareSettingsSection = () => {
 
       {/* Zone Dialog */}
       <Dialog open={showZoneDialog} onOpenChange={setShowZoneDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingZone ? "Edit Zone" : "Create Fare Zone"}</DialogTitle>
             <DialogDescription>
-              Define a geographic boundary with a fixed fare
+              Define a geographic boundary with a fixed fare using the map or text inputs
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Zone Name *</Label>
-              <Input
-                placeholder="e.g. Newcastle Airport, City Centre"
-                value={zoneForm.name}
-                onChange={(e) => setZoneForm({ ...zoneForm, name: e.target.value })}
-                data-testid="zone-name-input"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Zone Name *</Label>
+                <Input
+                  placeholder="e.g. Newcastle Airport, City Centre"
+                  value={zoneForm.name}
+                  onChange={(e) => setZoneForm({ ...zoneForm, name: e.target.value })}
+                  data-testid="zone-name-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fixed Fare (£) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="35.00"
+                  value={zoneForm.fixed_fare}
+                  onChange={(e) => setZoneForm({ ...zoneForm, fixed_fare: e.target.value })}
+                  data-testid="zone-fare-input"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Zone Type</Label>
-              <Select
-                value={zoneForm.zone_type}
-                onValueChange={(value) => setZoneForm({ ...zoneForm, zone_type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dropoff">Drop-off Zone</SelectItem>
-                  <SelectItem value="pickup">Pickup Zone</SelectItem>
-                  <SelectItem value="both">Both Pickup & Drop-off</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Determines when the fixed fare applies
-              </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Zone Type</Label>
+                <Select
+                  value={zoneForm.zone_type}
+                  onValueChange={(value) => setZoneForm({ ...zoneForm, zone_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dropoff">Drop-off Zone</SelectItem>
+                    <SelectItem value="pickup">Pickup Zone</SelectItem>
+                    <SelectItem value="both">Both Pickup & Drop-off</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Description (optional)</Label>
+                <Input
+                  placeholder="Additional notes"
+                  value={zoneForm.description}
+                  onChange={(e) => setZoneForm({ ...zoneForm, description: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Postcodes</Label>
-              <Textarea
-                placeholder="NE1, NE2, NE3, NE13 8BZ..."
-                value={zoneForm.postcodes}
-                onChange={(e) => setZoneForm({ ...zoneForm, postcodes: e.target.value })}
-                rows={2}
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated postcode prefixes or full postcodes
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Area Names</Label>
-              <Textarea
-                placeholder="Newcastle Airport, Central Station, Metro Centre..."
-                value={zoneForm.areas}
-                onChange={(e) => setZoneForm({ ...zoneForm, areas: e.target.value })}
-                rows={2}
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated location names to match in addresses
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Fixed Fare (£) *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="35.00"
-                value={zoneForm.fixed_fare}
-                onChange={(e) => setZoneForm({ ...zoneForm, fixed_fare: e.target.value })}
-                data-testid="zone-fare-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description (optional)</Label>
-              <Input
-                placeholder="Additional notes about this zone"
-                value={zoneForm.description}
-                onChange={(e) => setZoneForm({ ...zoneForm, description: e.target.value })}
-              />
+
+            {/* Zone Definition Mode Toggle */}
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-medium">Define Zone Boundary</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={zoneDefineMode === "map" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setZoneDefineMode("map")}
+                  >
+                    <Map className="w-4 h-4 mr-2" />
+                    Draw on Map
+                  </Button>
+                  <Button
+                    variant={zoneDefineMode === "text" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setZoneDefineMode("text")}
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Postcodes/Areas
+                  </Button>
+                </div>
+              </div>
+
+              {zoneDefineMode === "map" ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Use the polygon tool to draw a boundary on the map. Click points to create the zone, then close the shape.
+                  </p>
+                  <BoundaryMap
+                    initialBoundary={zoneForm.boundary}
+                    onBoundaryChange={(boundary) => setZoneForm({ ...zoneForm, boundary })}
+                    height="350px"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Postcodes</Label>
+                    <Textarea
+                      placeholder="NE1, NE2, NE3, NE13 8BZ..."
+                      value={zoneForm.postcodes}
+                      onChange={(e) => setZoneForm({ ...zoneForm, postcodes: e.target.value })}
+                      rows={2}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Comma-separated postcode prefixes or full postcodes
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Area Names</Label>
+                    <Textarea
+                      placeholder="Newcastle Airport, Central Station, Metro Centre..."
+                      value={zoneForm.areas}
+                      onChange={(e) => setZoneForm({ ...zoneForm, areas: e.target.value })}
+                      rows={2}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Comma-separated location names to match in addresses
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

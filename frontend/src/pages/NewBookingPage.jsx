@@ -89,6 +89,7 @@ const NewBookingPage = () => {
     customer_phone: "",
     customer_email: "",
     client_id: "",
+    booking_source: "",
     // Where
     pickup_location: "",
     dropoff_location: "",
@@ -103,6 +104,7 @@ const NewBookingPage = () => {
     // Payment
     fare: "",
     deposit_paid: "",
+    deposit_date: null,
     payment_method: "cash",
     // Additional
     notes: "",
@@ -123,6 +125,17 @@ const NewBookingPage = () => {
     return_airline: "",
     return_terminal: "",
   });
+
+  // Booking source options
+  const bookingSources = [
+    { value: "phone", label: "Phone Line" },
+    { value: "sms", label: "SMS" },
+    { value: "whatsapp", label: "WhatsApp" },
+    { value: "email", label: "Email" },
+    { value: "facebook", label: "Facebook" },
+    { value: "mobile", label: "Mobile App" },
+    { value: "portal", label: "Customer Portal" },
+  ];
 
   // Notification toggles
   const [notifications, setNotifications] = useState({

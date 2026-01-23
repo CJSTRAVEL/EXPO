@@ -2475,6 +2475,19 @@ async def approve_booking_request(request_id: str):
             {"$set": {"status": "approved", "client_id": client_doc["id"], "account_no": account_no}}
         )
         
+        # Send corporate welcome email
+        client_email = request_doc.get('passenger_email')
+        if client_email:
+            try:
+                send_corporate_welcome_email(
+                    client_email,
+                    request_doc['passenger_name'],
+                    request_doc.get('company_name', request_doc['passenger_name']),
+                    account_no
+                )
+            except Exception as e:
+                logging.error(f"Failed to send corporate welcome email: {str(e)}")
+        
         logging.info(f"Client account created: {account_no} for {request_doc['passenger_name']}")
         return {"message": "Client account created", "account_no": account_no}
     
@@ -2513,6 +2526,44 @@ async def approve_booking_request(request_id: str):
     )
     
     logging.info(f"Booking request {request_id} approved, created booking {readable_id}")
+    
+    # Send booking confirmed email
+    passenger_email = request_doc.get('passenger_email')
+    if passenger_email:
+        try:
+            pickup_dt = datetime.fromisoformat(request_doc['pickup_datetime'].replace('Z', '+00:00')) if isinstance(request_doc['pickup_datetime'], str) else request_doc['pickup_datetime']
+            booking_details = {
+                'booking_id': readable_id,
+                'pickup_location': request_doc['pickup_location'],
+                'dropoff_location': request_doc['dropoff_location'],
+                'date': pickup_dt.strftime('%A, %d %B %Y'),
+                'time': pickup_dt.strftime('%H:%M'),
+                'fare': 'TBC',
+                'driver_name': 'To be assigned',
+                'vehicle_type': 'Executive',
+                'passenger_name': request_doc['passenger_name']
+            }
+            
+            if request_type == 'client':
+                # Get company name
+                company_name = request_doc.get('company_name', '')
+                if not company_name and request_doc.get('client_id'):
+                    client = await db.clients.find_one({"id": request_doc['client_id']})
+                    company_name = client.get('name', '') if client else ''
+                send_corporate_request_accepted_email(
+                    passenger_email,
+                    request_doc['passenger_name'],
+                    company_name,
+                    booking_details
+                )
+            else:
+                send_passenger_request_accepted_email(
+                    passenger_email,
+                    request_doc['passenger_name'],
+                    booking_details
+                )
+        except Exception as e:
+            logging.error(f"Failed to send booking confirmed email: {str(e)}")
     
     return {"message": "Booking created", "booking_id": readable_id}
 

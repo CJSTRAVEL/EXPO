@@ -1157,8 +1157,10 @@ const FareSettingsSection = () => {
       areas: "",
       fixed_fare: "",
       description: "",
+      boundary: null,
     });
     setEditingZone(null);
+    setZoneDefineMode("map");
   };
 
   const openEditZone = (zone) => {

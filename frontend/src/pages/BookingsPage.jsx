@@ -2403,16 +2403,40 @@ const BookingsPage = () => {
   const todayStart = startOfDay(new Date());
 
   // Check if user is actively searching/filtering (to show past bookings)
-  const isSearchingPast = searchText || filterDate || (filterDriver && filterDriver !== "all");
+  const hasDateFilter = filterDateFrom || filterDateTo;
+  const isSearchingPast = searchText || hasDateFilter || (filterDriver && filterDriver !== "all");
 
   // Filter bookings based on search criteria
   const filteredBookings = bookings.filter(booking => {
     const bookingDate = new Date(booking.booking_datetime);
     const bookingDateStr = format(bookingDate, "yyyy-MM-dd");
+    const bookingDateStart = startOfDay(bookingDate);
     
-    // By default (no filters), hide past bookings (before today)
-    if (!isSearchingPast) {
-      if (isBefore(startOfDay(bookingDate), todayStart)) {
+    // Date range filter
+    if (hasDateFilter) {
+      if (filterDateFrom && filterDateTo) {
+        // Both dates set - filter within range
+        if (!isWithinInterval(bookingDateStart, { 
+          start: startOfDay(filterDateFrom), 
+          end: startOfDay(filterDateTo) 
+        })) {
+          return false;
+        }
+      } else if (filterDateFrom) {
+        // Only from date - show from that date onwards
+        if (isBefore(bookingDateStart, startOfDay(filterDateFrom))) {
+          return false;
+        }
+      } else if (filterDateTo) {
+        // Only to date - show up to that date
+        if (isBefore(startOfDay(filterDateTo), bookingDateStart)) {
+          return false;
+        }
+      }
+    } else if (!searchText && (!filterDriver || filterDriver === "all")) {
+      // Default view (no filters) - show only 14 days from today
+      const fourteenDaysLater = addDays(todayStart, 13);
+      if (isBefore(bookingDateStart, todayStart) || isBefore(fourteenDaysLater, bookingDateStart)) {
         return false;
       }
     }
@@ -2428,14 +2452,6 @@ const BookingsPage = () => {
       const matchesDropoff = booking.dropoff_location?.toLowerCase().includes(search);
       
       if (!matchesName && !matchesPhone && !matchesBookingId && !matchesPickup && !matchesDropoff) {
-        return false;
-      }
-    }
-    
-    // Date filter
-    if (filterDate) {
-      const selectedDate = format(filterDate, "yyyy-MM-dd");
-      if (bookingDateStr !== selectedDate) {
         return false;
       }
     }
@@ -2462,9 +2478,26 @@ const BookingsPage = () => {
     return groups;
   }, {});
 
-  // Always include today in the grouped bookings (even if empty) when not searching past
-  if (!isSearchingPast && !groupedBookings[todayStr]) {
-    groupedBookings[todayStr] = [];
+  // Generate all dates for the view
+  if (!isSearchingPast) {
+    // Default view: show 14 days from today (including today)
+    for (let i = 0; i < 14; i++) {
+      const dateStr = format(addDays(todayStart, i), "yyyy-MM-dd");
+      if (!groupedBookings[dateStr]) {
+        groupedBookings[dateStr] = [];
+      }
+    }
+  } else if (hasDateFilter && filterDateFrom && filterDateTo) {
+    // Date range: show all days in range
+    let currentDate = startOfDay(filterDateFrom);
+    const endDate = startOfDay(filterDateTo);
+    while (!isBefore(endDate, currentDate)) {
+      const dateStr = format(currentDate, "yyyy-MM-dd");
+      if (!groupedBookings[dateStr]) {
+        groupedBookings[dateStr] = [];
+      }
+      currentDate = addDays(currentDate, 1);
+    }
   }
 
   // Sort dates and bookings within each date by time

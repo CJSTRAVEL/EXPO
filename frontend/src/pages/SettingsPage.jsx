@@ -1598,7 +1598,7 @@ const FareSettingsSection = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Zone</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteConfirm?.name}"? This action cannot be undone.
+              Are you sure you want to delete &ldquo;{deleteConfirm?.name}&rdquo;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

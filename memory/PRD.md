@@ -16,6 +16,35 @@ Build a private hire booking application for CJ's Executive Travel with features
 
 ### Session: January 23, 2026 (Latest)
 
+#### Walkaround Check System - COMPLETE
+- **Backend API** created with endpoints:
+  - `GET /api/walkaround-checks` - List all checks (filterable by vehicle/driver)
+  - `GET /api/walkaround-checks/{id}` - Get specific check
+  - `GET /api/walkaround-checks/{id}/pdf` - Download PDF certificate
+  - `POST /api/walkaround-checks` - Submit new check (driver auth required)
+  - `GET /api/vehicles/{id}/walkaround-checks` - Get checks for specific vehicle
+  - `GET /api/driver/walkaround-checks` - Get checks for authenticated driver
+  - `GET /api/checklist-items` - Get list of 25 checklist items
+- **Admin Vehicles Page** - Added "Walkaround Checks" tab with:
+  - Filter by vehicle dropdown
+  - List of all submitted checks with status badges
+  - View modal showing full checklist details
+  - PDF download functionality
+- **Driver App** - Created `WalkaroundScreen.js` with:
+  - Vehicle selection dropdown
+  - Daily/Weekly check type toggle
+  - 25 checklist items with Select All/Clear All
+  - Defects text input
+  - Declaration agreement checkbox
+  - Submit validation (all items must be checked)
+- **PDF Certificate Generation** - Professional certificate with:
+  - CJ's Executive Travel branding
+  - Check number, vehicle, driver, date/time
+  - Two-column checklist with ✓ marks
+  - Defects section
+  - Declaration and signature line
+  - Company footer with contact details
+
 #### FlightRadar24 API Integration - COMPLETE
 - **Switched from AviationStack to FlightRadar24** for better UK airport coverage
 - FlightRadar24 covers Newcastle (NCL) and all UK regional airports

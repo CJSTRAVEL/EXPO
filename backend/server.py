@@ -2386,6 +2386,23 @@ async def create_booking_request(request: BookingRequestCreate, passenger: dict 
     
     logging.info(f"New booking request from {passenger['name']}: {request.pickup_location} -> {request.dropoff_location}")
     
+    # Send request submitted email
+    passenger_email = request.customer_email or passenger.get('email')
+    if passenger_email:
+        try:
+            pickup_dt = datetime.fromisoformat(doc['pickup_datetime'].replace('Z', '+00:00'))
+            booking_details = {
+                'pickup_location': request.pickup_location,
+                'dropoff_location': request.dropoff_location,
+                'date': pickup_dt.strftime('%A, %d %B %Y'),
+                'time': pickup_dt.strftime('%H:%M'),
+                'passengers': request.passenger_count or 1,
+                'vehicle_type': 'Executive'
+            }
+            send_passenger_request_submitted_email(passenger_email, passenger['name'], booking_details)
+        except Exception as e:
+            logging.error(f"Failed to send request submitted email: {str(e)}")
+    
     return {"message": "Booking request submitted", "id": booking_request.id}
 
 @api_router.get("/passenger/booking-requests")

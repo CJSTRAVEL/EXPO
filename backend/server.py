@@ -159,6 +159,23 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Import modular routers
+from routes import (
+    auth_router, drivers_router, vehicles_router, passengers_router,
+    client_portal_router, external_router, clients_router, chat_router, payments_router
+)
+
+# Include modular routers
+api_router.include_router(auth_router)
+api_router.include_router(drivers_router)
+api_router.include_router(vehicles_router)
+api_router.include_router(passengers_router)
+api_router.include_router(client_portal_router)
+api_router.include_router(external_router)
+api_router.include_router(clients_router)
+api_router.include_router(chat_router)
+api_router.include_router(payments_router)
+
 # Enums
 class DriverStatus(str, Enum):
     AVAILABLE = "available"

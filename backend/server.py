@@ -425,7 +425,9 @@ class BookingUpdate(BaseModel):
     additional_stops: Optional[List[str]] = None
     booking_datetime: Optional[datetime] = None
     notes: Optional[str] = None
+    driver_notes: Optional[str] = None
     fare: Optional[float] = None
+    deposit_paid: Optional[float] = None
     status: Optional[BookingStatus] = None
     driver_id: Optional[str] = None
     distance_miles: Optional[float] = None

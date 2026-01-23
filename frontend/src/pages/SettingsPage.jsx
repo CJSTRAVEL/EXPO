@@ -1172,7 +1172,9 @@ const FareSettingsSection = () => {
       areas: (zone.areas || []).join(", "),
       fixed_fare: zone.fixed_fare?.toString() || "",
       description: zone.description || "",
+      boundary: zone.boundary || null,
     });
+    setZoneDefineMode(zone.boundary ? "map" : "text");
     setShowZoneDialog(true);
   };
 

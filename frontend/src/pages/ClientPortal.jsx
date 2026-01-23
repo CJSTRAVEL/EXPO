@@ -46,6 +46,9 @@ const ClientPortal = () => {
   const [loadingFlight, setLoadingFlight] = useState(false);
   const [flightData, setFlightData] = useState(null);
   const [flightError, setFlightError] = useState(null);
+  const [loadingReturnFlight, setLoadingReturnFlight] = useState(false);
+  const [returnFlightData, setReturnFlightData] = useState(null);
+  const [returnFlightError, setReturnFlightError] = useState(null);
 
   const [newBooking, setNewBooking] = useState({
     pickup_location: "",
@@ -57,6 +60,11 @@ const ClientPortal = () => {
     vehicle_type_name: "",
     notes: "",
     flight_number: "",
+    create_return: false,
+    return_pickup_location: "",
+    return_dropoff_location: "",
+    return_datetime: "",
+    return_flight_number: "",
   });
 
   const getAuthHeaders = () => {

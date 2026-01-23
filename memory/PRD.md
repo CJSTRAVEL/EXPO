@@ -64,6 +64,14 @@ A private hire booking application with three main components:
   - Vehicle type is selected
   - Shows toast notification: "Fare auto-set from [Zone Name]: £XX.XX"
 
+#### Walkaround Certificates Page (NEW)
+- [x] Created new admin page at `/admin/walkaround-certificates`
+- [x] **Filters**: Search by certificate #/vehicle/driver, filter by vehicle, driver, date range
+- [x] **Table view**: Shows certificate #, date/time, vehicle, driver, type, status, actions
+- [x] **PDF Viewer**: View certificates in a modal dialog with embedded PDF viewer
+- [x] **Download PDF**: Download certificate as PDF file
+- [x] Backend: Enhanced `/api/walkaround-checks` endpoint with date range and search filters
+
 ### Previous Sessions
 - Booking page: 14-day default view, date range filter with presets
 - New/Edit booking: `deposit_paid`, `deposit_date`, `booking_source` fields

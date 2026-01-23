@@ -49,6 +49,7 @@ A private hire booking application with three main components:
 #### Driver App Fixes (P0)
 - [x] Fixed document notifications endpoint - was returning `[]` instead of `{"notifications": [...], "count": N}`
 - [x] Fixed AuthContext profile handling - `checkAuth` and `refreshProfile` now properly extract driver data from `{driver: {...}, vehicle: ...}` response
+- [x] **Fixed vehicle selection crash** - The `/api/driver/select-vehicle` endpoint in `routes/drivers.py` was expecting `vehicle_id` as a query parameter but the app sends it in the request body. Updated to use Pydantic model.
 - [x] New APK built: https://expo.dev/artifacts/eas/7dMBktRWTW1famyTdsBnwA.apk
 - [x] Created test bookings (CJ-003, CJ-004) for driver app testing
 

@@ -81,6 +81,19 @@ export default function MenuScreen({ navigation }) {
           </View>
         </View>
 
+        {/* Vehicle Checks Section */}
+        <View style={styles.section}>
+          <SectionHeader title="VEHICLE CHECKS" />
+          <View style={[styles.menuCard, { backgroundColor: theme.card }]}>
+            <MenuItem
+              icon="clipboard-outline"
+              label="Walkaround Check"
+              onPress={() => navigation.navigate('Walkaround')}
+              color="#10b981"
+            />
+          </View>
+        </View>
+
         {/* Settings Section */}
         <View style={styles.section}>
           <SectionHeader title="SETTINGS" />

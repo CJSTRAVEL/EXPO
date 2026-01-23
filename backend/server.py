@@ -1058,70 +1058,7 @@ async def lookup_flight_aviationstack(flight_number: str):
         logging.error(f"AviationStack lookup error: {e}")
         return {"error": str(e), "flight_number": flight_number}
 
-# ========== DRIVER ENDPOINTS ==========
-@api_router.post("/drivers", response_model=Driver)
-async def create_driver(driver: DriverCreate):
-    driver_dict = driver.model_dump()
-    
-    # Handle password if provided
-    password = driver_dict.pop('password', None)
-    if password:
-        driver_dict['password_hash'] = hashlib.sha256(password.encode()).hexdigest()
-    
-    # Normalize email
-    if driver_dict.get('email'):
-        driver_dict['email'] = driver_dict['email'].lower()
-    
-    driver_obj = Driver(**driver_dict)
-    doc = driver_obj.model_dump()
-    doc['created_at'] = doc['created_at'].isoformat()
-    await db.drivers.insert_one(doc)
-    return driver_obj
-
-@api_router.get("/drivers", response_model=List[Driver])
-async def get_drivers():
-    drivers = await db.drivers.find({}, {"_id": 0}).to_list(1000)
-    for driver in drivers:
-        if isinstance(driver.get('created_at'), str):
-            driver['created_at'] = datetime.fromisoformat(driver['created_at'])
-    return drivers
-
-@api_router.get("/drivers/{driver_id}", response_model=Driver)
-async def get_driver(driver_id: str):
-    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
-    if not driver:
-        raise HTTPException(status_code=404, detail="Driver not found")
-    if isinstance(driver.get('created_at'), str):
-        driver['created_at'] = datetime.fromisoformat(driver['created_at'])
-    return driver
-
-@api_router.put("/drivers/{driver_id}", response_model=Driver)
-async def update_driver(driver_id: str, driver_update: DriverUpdate):
-    existing = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
-    if not existing:
-        raise HTTPException(status_code=404, detail="Driver not found")
-    
-    update_data = {k: v for k, v in driver_update.model_dump().items() if v is not None}
-    
-    # Hash password if provided
-    if 'password' in update_data and update_data['password']:
-        update_data['password_hash'] = hashlib.sha256(update_data['password'].encode()).hexdigest()
-        del update_data['password']
-    
-    if update_data:
-        await db.drivers.update_one({"id": driver_id}, {"$set": update_data})
-    
-    updated = await db.drivers.find_one({"id": driver_id}, {"_id": 0})
-    if isinstance(updated.get('created_at'), str):
-        updated['created_at'] = datetime.fromisoformat(updated['created_at'])
-    return updated
-
-@api_router.delete("/drivers/{driver_id}")
-async def delete_driver(driver_id: str):
-    result = await db.drivers.delete_one({"id": driver_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Driver not found")
-    return {"message": "Driver deleted successfully"}
+# ========== DRIVER ENDPOINTS MOVED TO routes/drivers.py ==========
 
 # ========== VEHICLE TYPE MODELS ==========
 class VehicleTypeBase(BaseModel):

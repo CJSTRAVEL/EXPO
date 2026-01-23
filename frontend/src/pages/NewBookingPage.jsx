@@ -572,7 +572,9 @@ const NewBookingPage = () => {
         additional_stops: formData.additional_stops.length > 0 ? formData.additional_stops : null,
         booking_datetime: formData.booking_datetime.toISOString(),
         notes: formData.notes,
+        driver_notes: formData.driver_notes,
         fare: formData.fare ? parseFloat(formData.fare) : null,
+        deposit_paid: formData.deposit_paid ? parseFloat(formData.deposit_paid) : null,
         status: "pending",
         payment_method: formData.payment_method,
         driver_id: formData.driver_id || null,
@@ -593,11 +595,13 @@ const NewBookingPage = () => {
       const bookingId = response.data.id;
       
       // If Stripe payment selected, create checkout session and redirect
-      if (formData.payment_method === "stripe" && formData.fare) {
+      // Charge the balance (fare - deposit) instead of full fare
+      const balanceDue = Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0));
+      if (formData.payment_method === "stripe" && balanceDue > 0) {
         try {
           const paymentResponse = await axios.post(`${API}/payments/create-checkout`, {
             booking_id: bookingId,
-            amount: parseFloat(formData.fare),
+            amount: balanceDue,
             origin_url: window.location.origin,
             customer_email: formData.customer_email,
             customer_name: `${formData.first_name} ${formData.last_name}`.trim()

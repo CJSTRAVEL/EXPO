@@ -1400,7 +1400,8 @@ async def create_walkaround_check(check: WalkaroundCheckCreate, authorization: s
     token = authorization.replace("Bearer ", "")
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        driver_id = payload.get("driver_id")
+        # Token may use 'sub' or 'driver_id' depending on which login endpoint was used
+        driver_id = payload.get("driver_id") or payload.get("sub")
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:

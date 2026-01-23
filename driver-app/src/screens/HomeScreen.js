@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 100,
     height: 140,
-    paddingTop: 20,
+    overflow: 'visible',
   },
   minibusShadow: {
     position: 'absolute',
@@ -829,14 +829,15 @@ const styles = StyleSheet.create({
     height: 90,
     backgroundColor: 'rgba(0,0,0,0.15)',
     borderRadius: 10,
-    top: 28,
-    left: 26,
+    top: 25,
+    left: 24,
   },
   minibusBody: {
     width: 50,
     height: 90,
     alignItems: 'center',
     position: 'relative',
+    marginTop: 20,
   },
   minibusRear: {
     width: 46,

@@ -1712,13 +1712,55 @@ const NewBookingPage = () => {
                   step="0.01"
                   min="0"
                   value={formData.deposit_paid}
-                  onChange={(e) => setFormData({ ...formData, deposit_paid: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      deposit_paid: value,
+                      // Auto-set deposit date to today if deposit is entered and date not set
+                      deposit_date: value && parseFloat(value) > 0 && !formData.deposit_date 
+                        ? new Date() 
+                        : formData.deposit_date
+                    });
+                  }}
                   placeholder="0.00"
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-deposit"
                 />
               </div>
             </div>
+
+            {/* Deposit Date - Only show if deposit is entered */}
+            {formData.deposit_paid && parseFloat(formData.deposit_paid) > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-300">Deposit Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white hover:bg-[#252525]",
+                        !formData.deposit_date && "text-gray-500"
+                      )}
+                      data-testid="deposit-date-picker"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {formData.deposit_date 
+                        ? format(formData.deposit_date, "dd/MM/yyyy")
+                        : "Select deposit date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-[#252525] border-[#3d3d3d]" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={formData.deposit_date}
+                      onSelect={(date) => setFormData({ ...formData, deposit_date: date })}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
 
             {/* Balance Due Display */}
             {formData.fare && parseFloat(formData.fare) > 0 && (

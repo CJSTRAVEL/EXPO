@@ -1623,7 +1623,7 @@ const SettingsPage = () => {
       <header className="page-header">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your account, users, and message templates
+          Manage your account, fares, users, and message templates
         </p>
       </header>
 
@@ -1633,6 +1633,10 @@ const SettingsPage = () => {
             <TabsTrigger value="account">
               <User className="w-4 h-4 mr-2" />
               Account
+            </TabsTrigger>
+            <TabsTrigger value="fares">
+              <PoundSterling className="w-4 h-4 mr-2" />
+              Fares
             </TabsTrigger>
             <TabsTrigger value="templates">
               <MessageSquare className="w-4 h-4 mr-2" />
@@ -1646,6 +1650,10 @@ const SettingsPage = () => {
               <PasswordCard onUpdate={updateProfile} />
               {isSuperAdmin && <UsersManagementCard />}
             </div>
+          </TabsContent>
+
+          <TabsContent value="fares">
+            <FareSettingsSection />
           </TabsContent>
 
           <TabsContent value="templates">

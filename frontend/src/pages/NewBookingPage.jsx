@@ -342,7 +342,7 @@ const NewBookingPage = () => {
       }
       
       // No zone match - try to calculate based on miles if we have route distance
-      if (routeInfo && mileRates && mileRates.price_per_mile) {
+      if (routeInfo && mileRates) {
         // Extract numeric distance from routeInfo
         let distanceMiles = 0;
         if (routeInfo.distance) {
@@ -363,11 +363,17 @@ const NewBookingPage = () => {
         }
         
         if (distanceMiles > 0) {
-          let fare = (parseFloat(mileRates.base_fare) || 0) + (distanceMiles * parseFloat(mileRates.price_per_mile));
+          // Get vehicle-specific rates or use defaults
+          const vehicleRates = formData.vehicle_type && mileRates.vehicle_rates?.[formData.vehicle_type];
+          const baseFare = parseFloat(vehicleRates?.base_fare ?? mileRates.base_fare) || 0;
+          const pricePerMile = parseFloat(vehicleRates?.price_per_mile ?? mileRates.price_per_mile) || 0;
+          const minimumFare = parseFloat(vehicleRates?.minimum_fare ?? mileRates.minimum_fare) || 0;
+          
+          let fare = baseFare + (distanceMiles * pricePerMile);
           
           // Apply minimum fare
-          if (mileRates.minimum_fare && fare < parseFloat(mileRates.minimum_fare)) {
-            fare = parseFloat(mileRates.minimum_fare);
+          if (minimumFare && fare < minimumFare) {
+            fare = minimumFare;
           }
           
           // Double for return journey

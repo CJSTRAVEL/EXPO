@@ -1085,6 +1085,22 @@ const WalkaroundTab = ({ vehicles }) => {
                 </div>
               </div>
 
+              {/* Signature */}
+              <div>
+                <Label className="text-muted-foreground mb-2 block">Driver Signature</Label>
+                <div className="border rounded-lg p-3 bg-slate-50">
+                  {viewCheck.signature ? (
+                    <img 
+                      src={viewCheck.signature} 
+                      alt="Driver Signature" 
+                      className="max-h-24 object-contain"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No signature captured</p>
+                  )}
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setViewCheck(null)}>

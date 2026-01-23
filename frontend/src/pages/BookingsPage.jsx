@@ -2602,9 +2602,9 @@ const BookingsPage = () => {
             </Button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {sortedDates.map((date) => (
-              <div key={date} className="space-y-3">
+              <div key={date} className="space-y-2">
                 {/* Date Header */}
                 <div className="sticky top-0 z-10 bg-slate-100 rounded-lg px-4 py-2 shadow-sm">
                   <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
@@ -2613,7 +2613,7 @@ const BookingsPage = () => {
                 </div>
                 
                 {/* Bookings for this date */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {groupedBookings[date].map((booking) => {
                     // Skip return bookings as they'll be shown under their parent
                     if (booking.is_return) {

@@ -2646,8 +2646,8 @@ const BookingsPage = () => {
                               </span>
                             </div>
                           )}
-                          <div className="p-4 pt-2">
-                            <div className="grid grid-cols-12 gap-4 items-center">
+                          <div className="p-3">
+                            <div className="grid grid-cols-12 gap-3 items-center">
                               {/* Time & Booking ID */}
                               <div className="col-span-2 lg:col-span-1">
                                 <p className="text-lg font-bold text-slate-800">

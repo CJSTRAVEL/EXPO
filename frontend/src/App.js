@@ -19,6 +19,7 @@ import ClientsPage from "@/pages/ClientsPage";
 import ContractWorkPage from "@/pages/ContractWorkPage";
 import RequestsPage from "@/pages/RequestsPage";
 import VehiclesPage from "@/pages/VehiclesPage";
+import WalkaroundCertificatesPage from "@/pages/WalkaroundCertificatesPage";
 import AdminLogin from "@/pages/AdminLogin";
 import SettingsPage from "@/pages/SettingsPage";
 import "@/App.css";

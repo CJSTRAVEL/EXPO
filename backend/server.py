@@ -2198,11 +2198,14 @@ async def register_passenger(data: PassengerRegister):
     if existing:
         raise HTTPException(status_code=400, detail="Phone number already registered")
     
+    # Normalize email
+    email = data.email.strip().lower() if data.email else None
+    
     # Create passenger
     passenger = Passenger(
         name=data.name,
         phone=phone,
-        email=data.email,
+        email=email,
         password_hash=hash_password(data.password)
     )
     
@@ -2210,13 +2213,20 @@ async def register_passenger(data: PassengerRegister):
     doc['created_at'] = doc['created_at'].isoformat()
     await db.passengers.insert_one(doc)
     
+    # Send welcome email
+    if email:
+        try:
+            send_passenger_welcome_email(email, data.name)
+        except Exception as e:
+            logging.error(f"Failed to send welcome email: {str(e)}")
+    
     token = create_token(passenger.id, phone)
     
     return PassengerResponse(
         id=passenger.id,
         name=passenger.name,
         phone=phone,
-        email=data.email,
+        email=email,
         token=token
     )
 

@@ -390,6 +390,8 @@ class BookingBase(BaseModel):
     driver_notes: Optional[str] = None  # Notes visible to driver
     fare: Optional[float] = None
     deposit_paid: Optional[float] = None  # Deposit amount paid
+    deposit_date: Optional[datetime] = None  # Date deposit was paid
+    booking_source: Optional[str] = None  # Source of booking (Facebook, SMS, Phone, WhatsApp, etc.)
     client_id: Optional[str] = None  # Link to client account for invoicing
     flight_info: Optional[FlightInfo] = None  # Flight tracking info
     is_return: Optional[bool] = False  # Is this a return leg

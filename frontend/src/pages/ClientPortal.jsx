@@ -238,6 +238,68 @@ const ClientPortal = () => {
     }
   };
 
+  const handleReturnFlightLookup = async () => {
+    const flightNumber = newBooking.return_flight_number;
+    if (!flightNumber) {
+      toast.error("Please enter a return flight number");
+      return;
+    }
+
+    setLoadingReturnFlight(true);
+    setReturnFlightError(null);
+
+    try {
+      const response = await axios.get(`${API}/flight-lookup`, {
+        params: { flight_number: flightNumber }
+      });
+      
+      const flightInfo = response.data;
+      
+      if (flightInfo.error) {
+        setReturnFlightError(flightInfo.error);
+        if (flightInfo.hint) {
+          toast.error(`${flightInfo.error}. ${flightInfo.hint}`);
+        } else {
+          toast.error(flightInfo.error);
+        }
+        return;
+      }
+      
+      // For departure, set pickup 3 hours before departure
+      let returnDateTime = newBooking.return_datetime;
+      const departureTime = flightInfo.departure_scheduled || flightInfo.departure_estimated;
+      if (departureTime) {
+        const departureDate = new Date(departureTime);
+        departureDate.setHours(departureDate.getHours() - 3);
+        returnDateTime = departureDate.toISOString().slice(0, 16);
+      }
+      
+      // Determine dropoff location based on departure airport
+      let returnDropoff = newBooking.return_dropoff_location;
+      if (flightInfo.departure_airport) {
+        returnDropoff = flightInfo.departure_airport;
+        if (flightInfo.departure_terminal) {
+          returnDropoff += ` Terminal ${flightInfo.departure_terminal}`;
+        }
+      }
+      
+      setNewBooking(prev => ({
+        ...prev,
+        return_dropoff_location: returnDropoff || prev.return_dropoff_location,
+        return_datetime: returnDateTime || prev.return_datetime
+      }));
+      setReturnFlightData(flightInfo);
+      
+      toast.success("Return flight data loaded!");
+    } catch (err) {
+      const errorMsg = "Flight not found or API error";
+      setReturnFlightError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setLoadingReturnFlight(false);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",

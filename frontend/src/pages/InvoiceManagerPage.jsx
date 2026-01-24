@@ -728,7 +728,7 @@ const InvoiceManagerPage = () => {
 
       {/* Edit Invoice Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pencil className="w-5 h-5 text-primary" />
@@ -736,7 +736,7 @@ const InvoiceManagerPage = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1">
             {/* Invoice Reference */}
             <div className="space-y-2">
               <Label htmlFor="invoice_ref">Invoice Reference</Label>

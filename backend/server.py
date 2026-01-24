@@ -291,6 +291,7 @@ class DriverBase(BaseModel):
     phone: str
     email: Optional[str] = None
     driver_types: List[str] = ["taxi"]  # Can be ["taxi"], ["psv"], or ["taxi", "psv"]
+    photo: Optional[str] = None  # Base64 encoded photo
     # Taxi driver documents
     taxi_licence_expiry: Optional[str] = None
     dbs_expiry: Optional[str] = None

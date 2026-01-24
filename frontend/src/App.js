@@ -131,6 +131,7 @@ const Sidebar = () => {
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/bookings/new", icon: PlusCircle, label: "New Booking", highlight: true },
     { path: "/bookings", icon: Calendar, label: "Bookings" },
+    { path: "/quotes", icon: FileQuestion, label: "Quotes" },
     { path: "/requests", icon: Inbox, label: "Requests", badge: pendingRequestsCount },
     { path: "/contract-work", icon: FileText, label: "Contract Work" },
     { path: "/clients", icon: Building2, label: "Clients" },

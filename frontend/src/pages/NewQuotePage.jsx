@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, Save, MapPin, User, Phone, Mail, Car, Calendar, Clock, RotateCcw } from "lucide-react";
+import { ArrowLeft, Plus, X, Save, MapPin, User, Phone, Mail, Car, Calendar, Clock, RotateCcw, Loader2 } from "lucide-react";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -28,6 +28,10 @@ export default function NewQuotePage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [fareZones, setFareZones] = useState([]);
+  const [mileRates, setMileRates] = useState(null);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const [calculatingFare, setCalculatingFare] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({

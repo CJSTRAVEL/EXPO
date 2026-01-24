@@ -356,6 +356,28 @@ const PassengerPortalAdmin = () => {
                           <DropdownMenuItem 
                             onClick={() => {
                               setSelectedPassenger(passenger);
+                              setNewName(passenger.name || "");
+                              setShowNameModal(true);
+                            }}
+                            data-testid={`edit-name-${passenger.id}`}
+                          >
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Edit Name
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedPassenger(passenger);
+                              setNewPhone(passenger.phone || "");
+                              setShowPhoneModal(true);
+                            }}
+                            data-testid={`edit-phone-${passenger.id}`}
+                          >
+                            <Phone className="w-4 h-4 mr-2" />
+                            Edit Phone
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedPassenger(passenger);
                               setNewEmail(passenger.email || "");
                               setShowEmailModal(true);
                             }}

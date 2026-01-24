@@ -212,6 +212,19 @@ const ClientsPage = () => {
     }
   };
 
+  const fetchPastJobs = async (clientId) => {
+    setLoadingPastJobs(true);
+    try {
+      const response = await axios.get(`${API}/clients/${clientId}/past-jobs`);
+      setPastJobs(response.data);
+    } catch (error) {
+      console.error("Error fetching past jobs:", error);
+      setPastJobs([]);
+    } finally {
+      setLoadingPastJobs(false);
+    }
+  };
+
   const handleSetPassword = async () => {
     if (!selectedClient || !newPassword) {
       toast.error("Please enter a password");

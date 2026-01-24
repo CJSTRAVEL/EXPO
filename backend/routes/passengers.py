@@ -43,6 +43,9 @@ class BookingRequestCreate(BaseModel):
     lead_passenger_name: Optional[str] = None
     lead_passenger_phone: Optional[str] = None
     lead_passenger_email: Optional[str] = None
+    quoted_fare: Optional[float] = None  # Estimated fare from portal
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
 
 
 # ========== AUTHENTICATION ==========

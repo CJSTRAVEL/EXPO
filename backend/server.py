@@ -333,6 +333,7 @@ class Driver(BaseModel):
     phone: str
     email: Optional[str] = None
     driver_types: List[str] = ["taxi"]
+    photo: Optional[str] = None
     # Documents
     taxi_licence_expiry: Optional[str] = None
     dbs_expiry: Optional[str] = None

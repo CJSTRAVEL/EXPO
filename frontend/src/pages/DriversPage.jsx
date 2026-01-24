@@ -398,6 +398,57 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
               />
             </div>
 
+            {/* Photo Upload */}
+            <div className="space-y-2">
+              <Label>Driver Photo</Label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                  {formData.photo ? (
+                    <img 
+                      src={formData.photo} 
+                      alt="Driver preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Camera className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {formData.photo ? "Change Photo" : "Upload Photo"}
+                  </Button>
+                  {formData.photo && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={removePhoto}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Upload a photo (max 2MB, JPG/PNG)
+              </p>
+            </div>
+
             {/* Driver Types - Checkboxes */}
             <div className="space-y-2">
               <Label>Driver Type(s) *</Label>

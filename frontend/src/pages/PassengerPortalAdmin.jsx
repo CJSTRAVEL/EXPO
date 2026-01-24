@@ -242,6 +242,7 @@ const PassengerPortalAdmin = () => {
               <thead className="bg-slate-50 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-slate-600">Passenger</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-600">Email</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-slate-600">Phone</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-slate-600">Registered</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-slate-600">Bookings</th>
@@ -265,6 +266,16 @@ const PassengerPortalAdmin = () => {
                           </div>
                           <p className="text-xs text-muted-foreground">ID: {passenger.id.slice(0, 8)}...</p>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        {passenger.email ? (
+                          <span className="text-slate-700">{passenger.email}</span>
+                        ) : (
+                          <span className="text-slate-400 italic">Not set</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">

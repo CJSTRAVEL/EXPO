@@ -1372,30 +1372,7 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                         if (d.id === formData.driver_id) return true;
                         // Include all active drivers (not inactive)
                         if (d.status === 'inactive') return false;
-                        // Filter by vehicle type if specified
-                        if (formData.vehicle_type) {
-                          // Vehicle type might be an ID, look up the name
-                          let vehicleTypeName = formData.vehicle_type;
-                          if (vehicleTypes && vehicleTypes.length > 0) {
-                            const vt = vehicleTypes.find(v => v.id === formData.vehicle_type);
-                            if (vt) {
-                              vehicleTypeName = vt.name;
-                            }
-                          }
-                          
-                          const vType = vehicleTypeName.toLowerCase();
-                          const driverTypes = d.driver_types || [];
-                          
-                          // CJ's 16 Minibus or CJ's 16 with Trailer = PSV
-                          if (vType.includes('16')) {
-                            return driverTypes.includes('psv');
-                          }
-                          
-                          // CJ's Taxi = Taxi, CJ's 8 Minibus = Taxi
-                          if (vType.includes('taxi') || vType.includes('8 minibus') || vType.includes('8minibus')) {
-                            return driverTypes.includes('taxi');
-                          }
-                        }
+                        // Allow all drivers to be assigned
                         return true;
                       }).map((driver) => (
                         <SelectItem key={driver.id} value={driver.id}>

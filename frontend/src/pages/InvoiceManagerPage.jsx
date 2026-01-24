@@ -887,6 +887,46 @@ const InvoiceManagerPage = () => {
                 data-testid="edit-invoice-notes"
               />
             </div>
+
+            {/* Journeys Section - Remove individual journeys */}
+            {editBookings.length > 0 && (
+              <div className="space-y-2">
+                <Label>Journeys ({editBookings.length})</Label>
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {editBookings.map((booking) => (
+                      <div 
+                        key={booking.id} 
+                        className="flex items-center justify-between px-3 py-2 border-b last:border-b-0 hover:bg-slate-50"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{booking.booking_id}</p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {booking.pickup_location?.substring(0, 30)}...
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            £{(parseFloat(booking.fare) || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveJourney(booking.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-2"
+                          data-testid={`remove-journey-${booking.id}`}
+                          disabled={editBookings.length <= 1}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Remove journeys from this invoice. At least one journey must remain.
+                </p>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

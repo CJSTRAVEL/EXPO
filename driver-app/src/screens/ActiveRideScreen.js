@@ -477,7 +477,7 @@ const ActiveRideScreen = ({
             <>
               {/* Action Buttons Row */}
               <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.actionButton} onPress={openNavigationToDestination}>
                   <Ionicons name="navigate" size={28} color="#666" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton} onPress={() => setShowMenu(true)}>

@@ -70,11 +70,12 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
     description: "",
     has_trailer: false,
     photo_url: "",
+    category: "taxi",
   });
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
-    setFormData({ name: "", capacity: 4, description: "", has_trailer: false, photo_url: "" });
+    setFormData({ name: "", capacity: 4, description: "", has_trailer: false, photo_url: "", category: "taxi" });
     setEditing(null);
   };
 
@@ -86,6 +87,7 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
       description: vt.description || "",
       has_trailer: vt.has_trailer || false,
       photo_url: vt.photo_url || "",
+      category: vt.category || "taxi",
     });
     setShowForm(true);
   };

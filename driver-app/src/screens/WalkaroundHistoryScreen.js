@@ -490,24 +490,24 @@ export default function WalkaroundHistoryScreen({ navigation }) {
 
       {/* Search Filters */}
       <View style={[styles.filterContainer, { backgroundColor: theme.card }]}>
-        {/* Date Filter */}
+        {/* Date Filter - Calendar Dropdown */}
         <View style={styles.filterRow}>
-          <View style={[styles.filterInput, { backgroundColor: theme.background, borderColor: theme.border }]}>
+          <TouchableOpacity 
+            style={[styles.filterInput, { backgroundColor: theme.background, borderColor: theme.border }]}
+            onPress={() => setShowDatePicker(true)}
+          >
             <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} />
-            <TextInput
-              style={[styles.filterTextInput, { color: theme.text }]}
-              placeholder="Date (YYYY-MM-DD)"
-              placeholderTextColor={theme.textSecondary}
-              value={searchDate}
-              onChangeText={setSearchDate}
-              keyboardType="default"
-            />
+            <Text style={[styles.filterTextInput, { color: searchDate ? theme.text : theme.textSecondary, flex: 1 }]}>
+              {searchDate ? formatFilterDate(searchDate) : 'Select date...'}
+            </Text>
             {searchDate ? (
               <TouchableOpacity onPress={() => setSearchDate('')}>
                 <Ionicons name="close-circle" size={18} color={theme.textSecondary} />
               </TouchableOpacity>
-            ) : null}
-          </View>
+            ) : (
+              <Ionicons name="chevron-down" size={18} color={theme.textSecondary} />
+            )}
+          </TouchableOpacity>
         </View>
         
         {/* Vehicle Filter */}
@@ -538,6 +538,29 @@ export default function WalkaroundHistoryScreen({ navigation }) {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Date Picker Modal */}
+      <Modal
+        visible={showDatePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.calendarOverlay} 
+          activeOpacity={1} 
+          onPress={() => setShowDatePicker(false)}
+        >
+          <TouchableOpacity activeOpacity={1}>
+            <SimpleCalendar
+              selectedDate={searchDate}
+              onSelectDate={setSearchDate}
+              onClose={() => setShowDatePicker(false)}
+              theme={theme}
+            />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Content */}
       {loading ? (

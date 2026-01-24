@@ -623,17 +623,17 @@ const ClientPortal = () => {
         {/* Confirmed Bookings */}
         {activeTab === "bookings" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Car className="w-5 h-5 text-blue-400" />
+            <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <Car className="w-5 h-5 text-[#D4A853]" />
               Confirmed Bookings
             </h2>
             {bookings.filter(b => !['completed', 'cancelled'].includes(b.status)).length === 0 ? (
-              <div className="text-center py-12 bg-[#1a1a1a] rounded-xl border border-[#2d2d2d]">
-                <Car className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No confirmed bookings yet</p>
+              <div className="text-center py-12 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <Car className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600">No confirmed bookings yet</p>
                 <Button
                   onClick={() => setShowNewBooking(true)}
-                  className="mt-4 bg-blue-500 hover:bg-blue-600"
+                  className="mt-4 bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Request a Booking
@@ -646,15 +646,15 @@ const ClientPortal = () => {
                   .map((booking) => (
                     <div
                       key={booking.id}
-                      className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4 hover:border-blue-500/30 transition-colors"
+                      className="bg-white rounded-xl border border-slate-200 p-4 hover:border-[#D4A853]/50 transition-colors shadow-sm"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-semibold">{booking.booking_id}</span>
+                            <span className="text-slate-800 font-semibold">{booking.booking_id}</span>
                             {getStatusBadge(booking.status)}
                           </div>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                          <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
                               {safeFormatDate(booking.booking_datetime, "dd MMM yyyy")}
@@ -666,7 +666,7 @@ const ClientPortal = () => {
                           </div>
                         </div>
                         {booking.fare && (
-                          <span className="text-xl font-bold text-blue-400">
+                          <span className="text-xl font-bold text-[#D4A853]">
                             £{booking.fare.toFixed(2)}
                           </span>
                         )}
@@ -674,17 +674,17 @@ const ClientPortal = () => {
                       <div className="space-y-2">
                         <div className="flex items-start gap-2">
                           <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
-                          <span className="text-gray-300 text-sm">{booking.pickup_location}</span>
+                          <span className="text-slate-700 text-sm">{booking.pickup_location}</span>
                         </div>
                         <div className="flex items-start gap-2">
                           <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />
-                          <span className="text-gray-300 text-sm">{booking.dropoff_location}</span>
+                          <span className="text-slate-700 text-sm">{booking.dropoff_location}</span>
                         </div>
                       </div>
                       {booking.driver_name && (
-                        <div className="mt-3 pt-3 border-t border-[#2d2d2d] flex items-center gap-2 text-sm text-gray-400">
+                        <div className="mt-3 pt-3 border-t border-slate-200 flex items-center gap-2 text-sm text-slate-500">
                           <User className="w-4 h-4" />
-                          Driver: <span className="text-white">{booking.driver_name}</span>
+                          Driver: <span className="text-slate-800">{booking.driver_name}</span>
                         </div>
                       )}
                     </div>

@@ -109,6 +109,12 @@ const RequestsPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {request.quoted_fare && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-600 text-white text-sm font-bold rounded" data-testid={`quoted-fare-${request.id}`}>
+                <PoundSterling className="w-3 h-3" />
+                {request.quoted_fare.toFixed(2)}
+              </span>
+            )}
             {request.flight_number && (
               <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-600 text-white text-xs font-bold rounded">
                 <Plane className="w-3 h-3" />

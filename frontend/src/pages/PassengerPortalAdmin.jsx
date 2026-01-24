@@ -306,6 +306,17 @@ const PassengerPortalAdmin = () => {
                           <DropdownMenuItem 
                             onClick={() => {
                               setSelectedPassenger(passenger);
+                              setNewEmail(passenger.email || "");
+                              setShowEmailModal(true);
+                            }}
+                            data-testid={`edit-email-${passenger.id}`}
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Edit Email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedPassenger(passenger);
                               setShowPasswordModal(true);
                             }}
                             data-testid={`change-password-${passenger.id}`}

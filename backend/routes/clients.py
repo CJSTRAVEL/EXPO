@@ -384,7 +384,7 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
     # Totals
     totals_data = [
         ['Subtotal:', f'£{subtotal:.2f}'],
-        ['VAT (20%):', f'£{vat_amount:.2f}'],
+        [f'{vat_label}:', f'£{vat_amount:.2f}'],
         ['Total:', f'£{total:.2f}'],
     ]
     totals_table = Table(totals_data, colWidths=[100, 70])
@@ -406,6 +406,7 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
         "start_date": start_date,
         "end_date": end_date,
         "subtotal": subtotal,
+        "vat_rate": client_vat_rate,
         "vat_amount": vat_amount,
         "total": total,
         "journey_count": len(bookings),

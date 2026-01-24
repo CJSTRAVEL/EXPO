@@ -347,6 +347,15 @@ export default function HomeScreen({ navigation }) {
   const handleStartShift = async () => {
     // If shift is active, we're stopping - end the shift
     if (isShiftActive) {
+      // Check if there's an active booking in progress
+      if (activeBooking && ['assigned', 'on_way', 'arrived', 'in_progress'].includes(activeBooking.status)) {
+        Alert.alert(
+          'Booking In Progress',
+          'You cannot end your shift while you have an active booking. Please complete or cancel the current booking first.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
       await stopShift();
     } else {
       // Starting shift - show vehicle selection popup

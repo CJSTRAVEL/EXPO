@@ -27,8 +27,10 @@ export default function LogoutScreen({ navigation }) {
     try {
       const data = await getBookings();
       const todayBookings = data?.today || [];
-      const activeStatuses = ['assigned', 'on_way', 'arrived', 'in_progress'];
-      const activeBooking = todayBookings.find(b => activeStatuses.includes(b.status));
+      // Only block logout when a job is ACTIVELY IN PROGRESS
+      // Allow logout if jobs are just scheduled/assigned but not yet started
+      const inProgressStatuses = ['on_way', 'arrived', 'in_progress'];
+      const activeBooking = todayBookings.find(b => inProgressStatuses.includes(b.status));
       setHasActiveBooking(!!activeBooking);
     } catch (error) {
       console.error('Error checking bookings:', error);

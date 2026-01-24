@@ -925,7 +925,7 @@ const ClientPortal = () => {
                               size="sm"
                               onClick={() => handleDownloadInvoice(invoice)}
                               disabled={downloadingInvoice === invoice.id}
-                              className="text-blue-400 hover:text-blue-300"
+                              className="text-[#D4A853] hover:text-[#c49843]"
                               data-testid={`download-invoice-${invoice.id}`}
                             >
                               {downloadingInvoice === invoice.id ? (
@@ -948,14 +948,14 @@ const ClientPortal = () => {
         {/* History */}
         {activeTab === "history" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <History className="w-5 h-5 text-gray-400" />
+            <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <History className="w-5 h-5 text-slate-500" />
               Booking History
             </h2>
             {bookings.filter(b => ['completed', 'cancelled'].includes(b.status)).length === 0 ? (
-              <div className="text-center py-12 bg-[#1a1a1a] rounded-xl border border-[#2d2d2d]">
-                <History className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No booking history</p>
+              <div className="text-center py-12 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <History className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600">No booking history</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -964,25 +964,25 @@ const ClientPortal = () => {
                   .map((booking) => (
                     <div
                       key={booking.id}
-                      className="bg-[#1a1a1a]/50 rounded-xl border border-[#2d2d2d] p-4"
+                      className="bg-white/70 rounded-xl border border-slate-200 p-4 shadow-sm"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-300 font-semibold">{booking.booking_id}</span>
+                            <span className="text-slate-700 font-semibold">{booking.booking_id}</span>
                             {getStatusBadge(booking.status)}
                           </div>
-                          <div className="text-sm text-gray-500 mt-1">
+                          <div className="text-sm text-slate-500 mt-1">
                             {safeFormatDate(booking.booking_datetime, "dd MMM yyyy 'at' HH:mm")}
                           </div>
                         </div>
                         {booking.fare && (
-                          <span className="text-lg font-bold text-gray-400">
+                          <span className="text-lg font-bold text-slate-500">
                             £{booking.fare.toFixed(2)}
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm text-slate-600">
                         {booking.pickup_location} → {booking.dropoff_location}
                       </div>
                     </div>
@@ -997,13 +997,13 @@ const ClientPortal = () => {
       {/* New Booking Request Dialog */}
       <Dialog open={showNewBooking} onOpenChange={setShowNewBooking}>
         <DialogContent 
-          className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-lg max-h-[90vh] overflow-y-auto" 
+          className="bg-[#1a1a1a] border-[#D4A853]/30 text-white max-w-lg max-h-[90vh] overflow-y-auto" 
           data-testid="request-form-modal"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-400">
+            <DialogTitle className="flex items-center gap-2 text-[#D4A853]">
               <Plus className="w-5 h-5" />
               Request a Booking
             </DialogTitle>

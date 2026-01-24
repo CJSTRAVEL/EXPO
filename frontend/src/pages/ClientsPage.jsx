@@ -82,6 +82,8 @@ const ClientsPage = () => {
     post_code: "",
     country: "United Kingdom",
     notes: "",
+    vat_rate: "20",
+    vat_number: "",
   });
 
   useEffect(() => {

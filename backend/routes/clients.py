@@ -166,6 +166,43 @@ async def delete_client(client_id: str):
     return {"message": "Client deleted successfully"}
 
 
+# ========== CLIENT FARE SETTINGS ==========
+class ClientFareSettings(BaseModel):
+    use_custom_fares: bool = False
+    custom_fare_zones: Optional[List[dict]] = None
+    custom_mile_rates: Optional[dict] = None
+
+@router.get("/clients/{client_id}/fare-settings")
+async def get_client_fare_settings(client_id: str):
+    """Get fare settings for a specific client"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return {
+        "use_custom_fares": client.get("use_custom_fares", False),
+        "custom_fare_zones": client.get("custom_fare_zones", []),
+        "custom_mile_rates": client.get("custom_mile_rates", None)
+    }
+
+@router.put("/clients/{client_id}/fare-settings")
+async def update_client_fare_settings(client_id: str, settings: ClientFareSettings):
+    """Update fare settings for a specific client"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    update_data = {
+        "use_custom_fares": settings.use_custom_fares,
+        "custom_fare_zones": settings.custom_fare_zones or [],
+        "custom_mile_rates": settings.custom_mile_rates
+    }
+    
+    await db.clients.update_one({"id": client_id}, {"$set": update_data})
+    
+    return {"message": "Fare settings updated successfully", **update_data}
+
+
 @router.get("/clients/{client_id}/invoice/preview")
 async def get_invoice_preview(client_id: str, start_date: str = None, end_date: str = None):
     """Get bookings preview for invoice generation"""

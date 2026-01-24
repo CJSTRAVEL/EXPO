@@ -931,34 +931,13 @@ const ClientPortal = () => {
 
       {/* New Booking Dialog */}
       {/* New Booking Request Dialog */}
-      <Dialog open={showNewBooking} onOpenChange={(open) => {
-        if (!open) {
-          setNewBooking({
-            pickup_location: "",
-            dropoff_location: "",
-            pickup_datetime: "",
-            passenger_count: 1,
-            luggage_count: 0,
-            vehicle_type_id: "",
-            vehicle_type_name: "",
-            notes: "",
-            flight_number: "",
-            additional_stops: [],
-            create_return: false,
-            return_pickup_location: "",
-            return_additional_stops: [],
-            return_dropoff_location: "",
-            return_datetime: "",
-            return_flight_number: "",
-          });
-          setFlightData(null);
-          setReturnFlightData(null);
-          setEstimatedFare(null);
-          setRouteInfo(null);
-        }
-        setShowNewBooking(open);
-      }}>
-        <DialogContent className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-lg max-h-[90vh] overflow-y-auto" data-testid="request-form-modal">
+      <Dialog open={showNewBooking} onOpenChange={setShowNewBooking}>
+        <DialogContent 
+          className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-lg max-h-[90vh] overflow-y-auto" 
+          data-testid="request-form-modal"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-blue-400">
               <Plus className="w-5 h-5" />

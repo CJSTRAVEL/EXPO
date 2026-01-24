@@ -87,14 +87,25 @@ async def register_passenger(data: PassengerRegister):
 
 @router.post("/passenger/login", response_model=PassengerResponse)
 async def login_passenger(data: PassengerLogin):
-    """Login a passenger"""
-    # Try to find passenger by phone or email
-    passenger = await db.passengers.find_one({
-        "$or": [
-            {"phone": data.identifier},
-            {"email": data.identifier}
-        ]
-    })
+    """Login a passenger with phone or email"""
+    identifier = data.identifier.strip()
+    
+    # Build query to search by phone OR email
+    query_conditions = []
+    
+    # Check if it looks like an email
+    if "@" in identifier:
+        query_conditions.append({"email": {"$regex": f"^{identifier}$", "$options": "i"}})
+    else:
+        # It's a phone number - check various formats
+        phone_variations = [identifier]
+        if identifier.startswith("+44"):
+            phone_variations.append("0" + identifier[3:])
+        elif identifier.startswith("0"):
+            phone_variations.append("+44" + identifier[1:])
+        query_conditions.append({"phone": {"$in": phone_variations}})
+    
+    passenger = await db.passengers.find_one({"$or": query_conditions})
     
     if not passenger:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -102,12 +113,12 @@ async def login_passenger(data: PassengerLogin):
     if passenger.get("password_hash") != hash_password(data.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_token(passenger["id"], passenger["phone"])
+    token = create_token(passenger["id"], passenger.get("phone", ""))
     
     return PassengerResponse(
         id=passenger["id"],
         name=passenger["name"],
-        phone=passenger["phone"],
+        phone=passenger.get("phone", ""),
         email=passenger.get("email"),
         token=token
     )

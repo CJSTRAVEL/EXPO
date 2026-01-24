@@ -1,5 +1,8 @@
 # CJ's Executive Travel - Product Requirements Document
 
+## Changelog
+- **2025-01-24**: Fixed walkaround submission bug - `AuthContext` was not exposing `token` to `useAuth()` hook, causing API auth to fail with `Bearer undefined`
+
 ## Project Overview
 A private hire booking application with three main components:
 1. **Admin Dispatch System** - Web-based portal for managing bookings, drivers, vehicles, and fares

@@ -214,16 +214,16 @@ const InvoiceManagerPage = () => {
 
   const handleDownloadInvoice = async (invoice) => {
     try {
-      // Use the client portal download endpoint with client ID
+      // Use the dedicated invoice download endpoint
       const response = await axios.get(
-        `${API}/clients/${invoice.client_id}/invoice?start_date=${invoice.start_date}&end_date=${invoice.end_date}`,
+        `${API}/invoices/${invoice.id}/download`,
         { responseType: "blob" }
       );
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `${invoice.invoice_ref}.pdf`);
+      link.setAttribute("download", `${invoice.invoice_ref || 'invoice'}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();

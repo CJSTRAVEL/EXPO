@@ -419,12 +419,23 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
     photo_url: "",
     insurance_expiry: "",
     tax_expiry: "",
+    // Taxi documents
     dcc_test_date_1: "",
     dcc_test_date_2: "",
+    // PSV documents
+    dvsa_mot_expiry: "",
+    next_10_weekly: "",
     notes: "",
     is_active: true,
   });
   const [saving, setSaving] = useState(false);
+
+  // Get selected vehicle type category
+  const getVehicleTypeCategory = () => {
+    if (!formData.vehicle_type_id) return "taxi";
+    const vt = vehicleTypes.find(t => t.id === formData.vehicle_type_id);
+    return vt?.category || "taxi";
+  };
 
   const resetForm = () => {
     setFormData({
@@ -439,6 +450,8 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
       tax_expiry: "",
       dcc_test_date_1: "",
       dcc_test_date_2: "",
+      dvsa_mot_expiry: "",
+      next_10_weekly: "",
       notes: "",
       is_active: true,
     });
@@ -459,6 +472,8 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
       tax_expiry: v.tax_expiry || "",
       dcc_test_date_1: v.dcc_test_date_1 || "",
       dcc_test_date_2: v.dcc_test_date_2 || "",
+      dvsa_mot_expiry: v.dvsa_mot_expiry || "",
+      next_10_weekly: v.next_10_weekly || "",
       notes: v.notes || "",
       is_active: v.is_active !== false,
     });
@@ -477,6 +492,8 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
       if (!dataToSend.tax_expiry) dataToSend.tax_expiry = null;
       if (!dataToSend.dcc_test_date_1) dataToSend.dcc_test_date_1 = null;
       if (!dataToSend.dcc_test_date_2) dataToSend.dcc_test_date_2 = null;
+      if (!dataToSend.dvsa_mot_expiry) dataToSend.dvsa_mot_expiry = null;
+      if (!dataToSend.next_10_weekly) dataToSend.next_10_weekly = null;
       
       if (editing) {
         await axios.put(`${API}/vehicles/${editing.id}`, dataToSend);

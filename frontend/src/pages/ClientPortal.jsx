@@ -259,7 +259,15 @@ const ClientPortal = () => {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/client-portal/booking-requests`, newBooking, {
+      // Include quoted fare and route info in the request
+      const bookingData = {
+        ...newBooking,
+        quoted_fare: estimatedFare || null,
+        distance_miles: routeInfo?.distance?.miles || null,
+        duration_minutes: routeInfo?.duration?.minutes || null,
+      };
+      
+      await axios.post(`${API}/client-portal/booking-requests`, bookingData, {
         headers: getAuthHeaders(),
       });
       toast.success(newBooking.create_return ? "Booking requests submitted (outbound + return)!" : "Booking request submitted! We'll confirm shortly.");
@@ -282,6 +290,8 @@ const ClientPortal = () => {
       });
       setFlightData(null);
       setReturnFlightData(null);
+      setEstimatedFare(null);
+      setRouteInfo(null);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to submit booking");

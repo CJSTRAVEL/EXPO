@@ -402,3 +402,172 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={invoice_ref}.pdf"}
     )
+
+
+
+# ========== ADMIN INVOICE MANAGEMENT ==========
+
+class InvoiceStatusUpdate(BaseModel):
+    status: str  # "paid", "unpaid", "overdue", "cancelled"
+
+@router.get("/invoices")
+async def get_all_invoices():
+    """Get all invoices across all clients (admin view)"""
+    invoices = await db.invoices.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Enrich with client names
+    client_ids = list(set(inv.get("client_id") for inv in invoices if inv.get("client_id")))
+    clients = await db.clients.find({"id": {"$in": client_ids}}, {"_id": 0, "id": 1, "name": 1, "account_no": 1, "email": 1}).to_list(1000)
+    client_map = {c["id"]: c for c in clients}
+    
+    for inv in invoices:
+        client = client_map.get(inv.get("client_id"), {})
+        inv["client_name"] = client.get("name", "Unknown")
+        inv["client_account_no"] = client.get("account_no", "")
+        inv["client_email"] = client.get("email", "")
+    
+    return invoices
+
+@router.get("/invoices/{invoice_id}")
+async def get_invoice_details(invoice_id: str):
+    """Get detailed invoice information"""
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Get client details
+    client = await db.clients.find_one({"id": invoice.get("client_id")}, {"_id": 0})
+    if client:
+        invoice["client_name"] = client.get("name", "Unknown")
+        invoice["client_account_no"] = client.get("account_no", "")
+        invoice["client_email"] = client.get("email", "")
+        invoice["client_address"] = client.get("address", "")
+    
+    # Get bookings for this invoice period
+    query = {"client_id": invoice.get("client_id")}
+    if invoice.get("start_date") or invoice.get("end_date"):
+        date_query = {}
+        if invoice.get("start_date"):
+            date_query["$gte"] = invoice["start_date"]
+        if invoice.get("end_date"):
+            date_query["$lte"] = invoice["end_date"] + "T23:59:59"
+        if date_query:
+            query["booking_datetime"] = date_query
+    
+    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    invoice["bookings"] = bookings
+    
+    return invoice
+
+@router.put("/invoices/{invoice_id}/status")
+async def update_invoice_status(invoice_id: str, status_update: InvoiceStatusUpdate):
+    """Update invoice status (paid, unpaid, overdue, cancelled)"""
+    invoice = await db.invoices.find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    valid_statuses = ["paid", "unpaid", "overdue", "cancelled"]
+    if status_update.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    update_data = {
+        "status": status_update.status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # If marking as paid, add paid_at timestamp
+    if status_update.status == "paid":
+        update_data["paid_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.invoices.update_one(
+        {"id": invoice_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Invoice status updated", "status": status_update.status}
+
+@router.delete("/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str):
+    """Delete an invoice"""
+    result = await db.invoices.delete_one({"id": invoice_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return {"message": "Invoice deleted"}
+
+@router.post("/invoices/{invoice_id}/send-reminder")
+async def send_invoice_reminder(invoice_id: str):
+    """Send a reminder email to the client for an outstanding invoice"""
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Get client details
+    client = await db.clients.find_one({"id": invoice.get("client_id")}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    client_email = client.get("email") or client.get("contact_email")
+    if not client_email:
+        raise HTTPException(status_code=400, detail="Client has no email address")
+    
+    # Get email settings
+    email_settings = await db.settings.find_one({"type": "email"}, {"_id": 0})
+    if not email_settings:
+        raise HTTPException(status_code=400, detail="Email settings not configured")
+    
+    smtp_host = email_settings.get("smtp_host")
+    smtp_port = email_settings.get("smtp_port", 587)
+    smtp_user = email_settings.get("smtp_user")
+    smtp_password = email_settings.get("smtp_password")
+    from_email = email_settings.get("from_email", smtp_user)
+    
+    if not all([smtp_host, smtp_user, smtp_password]):
+        raise HTTPException(status_code=400, detail="Email settings incomplete")
+    
+    # Build email content
+    subject = f"Payment Reminder - Invoice {invoice.get('invoice_ref', 'N/A')}"
+    body = f"""Dear {client.get('name', 'Valued Client')},
+
+This is a friendly reminder that invoice {invoice.get('invoice_ref', 'N/A')} remains outstanding.
+
+Invoice Details:
+- Reference: {invoice.get('invoice_ref', 'N/A')}
+- Date: {invoice.get('created_at', '')[:10] if invoice.get('created_at') else 'N/A'}
+- Amount: £{invoice.get('total', 0):.2f}
+- Status: {invoice.get('status', 'unpaid').title()}
+
+You can view and download your invoices by logging into our Client Portal.
+
+If you have already made payment, please disregard this reminder.
+
+If you have any questions, please don't hesitate to contact us.
+
+Kind regards,
+CJ's Executive Travel
+"""
+    
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart()
+        msg['From'] = from_email
+        msg['To'] = client_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+        
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        
+        # Log the reminder
+        await db.invoices.update_one(
+            {"id": invoice_id},
+            {"$push": {"reminders_sent": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {"message": f"Reminder sent to {client_email}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")

@@ -24,7 +24,10 @@
         "buildType": "apk",
         "credentialsSource": "remote"
       },
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://cjhire.preview.emergentagent.com/api"
+      }
     },
     "production": {
       "ios": {

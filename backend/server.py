@@ -311,6 +311,7 @@ class DriverUpdate(BaseModel):
     email: Optional[str] = None
     driver_types: Optional[List[str]] = None
     password: Optional[str] = None
+    photo: Optional[str] = None
     # Taxi driver documents
     taxi_licence_expiry: Optional[str] = None
     dbs_expiry: Optional[str] = None

@@ -539,24 +539,24 @@ export default function WalkaroundHistoryScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         
-        {/* Vehicle Filter */}
+        {/* Vehicle Filter - Dropdown */}
         <View style={styles.filterRow}>
-          <View style={[styles.filterInput, { backgroundColor: theme.background, borderColor: theme.border }]}>
+          <TouchableOpacity 
+            style={[styles.filterInput, { backgroundColor: theme.background, borderColor: theme.border }]}
+            onPress={() => setShowVehiclePicker(true)}
+          >
             <Ionicons name="car-outline" size={18} color={theme.textSecondary} />
-            <TextInput
-              style={[styles.filterTextInput, { color: theme.text }]}
-              placeholder="Search vehicle reg..."
-              placeholderTextColor={theme.textSecondary}
-              value={searchVehicle}
-              onChangeText={setSearchVehicle}
-              autoCapitalize="characters"
-            />
+            <Text style={[styles.filterTextInput, { color: searchVehicle ? theme.text : theme.textSecondary, flex: 1 }]}>
+              {searchVehicle || 'Select vehicle...'}
+            </Text>
             {searchVehicle ? (
               <TouchableOpacity onPress={() => setSearchVehicle('')}>
                 <Ionicons name="close-circle" size={18} color={theme.textSecondary} />
               </TouchableOpacity>
-            ) : null}
-          </View>
+            ) : (
+              <Ionicons name="chevron-down" size={18} color={theme.textSecondary} />
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Clear Filters Button */}
@@ -588,6 +588,58 @@ export default function WalkaroundHistoryScreen({ navigation }) {
               theme={theme}
             />
           </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Vehicle Picker Modal */}
+      <Modal
+        visible={showVehiclePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowVehiclePicker(false)}
+      >
+        <TouchableOpacity 
+          style={styles.calendarOverlay} 
+          activeOpacity={1} 
+          onPress={() => setShowVehiclePicker(false)}
+        >
+          <View style={[styles.vehiclePickerContainer, { backgroundColor: theme.card }]}>
+            <Text style={[styles.vehiclePickerTitle, { color: theme.text }]}>Select Vehicle</Text>
+            <ScrollView style={styles.vehiclePickerList}>
+              {vehicles.map((vehicle) => (
+                <TouchableOpacity
+                  key={vehicle.id}
+                  style={[
+                    styles.vehiclePickerItem, 
+                    { borderBottomColor: theme.border },
+                    searchVehicle === vehicle.registration && { backgroundColor: theme.primary + '20' }
+                  ]}
+                  onPress={() => {
+                    setSearchVehicle(vehicle.registration);
+                    setShowVehiclePicker(false);
+                  }}
+                >
+                  <View style={styles.vehiclePickerItemContent}>
+                    <Text style={[styles.vehiclePickerReg, { color: theme.text }]}>
+                      {vehicle.registration}
+                    </Text>
+                    <Text style={[styles.vehiclePickerType, { color: theme.textSecondary }]}>
+                      {vehicle.vehicle_type?.name || `${vehicle.make} ${vehicle.model}`}
+                    </Text>
+                  </View>
+                  {searchVehicle === vehicle.registration && (
+                    <Ionicons name="checkmark-circle" size={20} color={theme.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity 
+              style={[styles.vehiclePickerClose, { borderTopColor: theme.border }]} 
+              onPress={() => setShowVehiclePicker(false)}
+            >
+              <Text style={[styles.vehiclePickerCloseText, { color: theme.primary }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       </Modal>
 

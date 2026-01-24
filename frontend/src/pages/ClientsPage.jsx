@@ -308,7 +308,7 @@ const ClientsPage = () => {
     }
   };
 
-  const handleGenerateInvoice = async () => {
+  const handleGenerateInvoice = async (downloadOnly = false) => {
     if (!selectedClient || invoiceBookings.length === 0) {
       toast.error("No bookings to include in invoice");
       return;
@@ -332,17 +332,22 @@ const ClientsPage = () => {
         { responseType: 'blob' }
       );
       
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `invoice_${selectedClient.account_no}_${format(new Date(), 'yyyyMMdd')}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      if (downloadOnly) {
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `invoice_${selectedClient.account_no}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        toast.success("Invoice downloaded successfully");
+      } else {
+        toast.success("Invoice generated and saved. It's now available in Invoice Manager and Client Portal.");
+      }
       
-      toast.success("Invoice downloaded successfully");
       setShowInvoiceModal(false);
     } catch (error) {
       console.error("Error generating invoice:", error);

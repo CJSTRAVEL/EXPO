@@ -65,7 +65,7 @@ const PassengerCard = ({ passenger, onClick }) => {
   );
 };
 
-const PassengerDetailModal = ({ passenger, bookings, onClose }) => {
+const PassengerDetailModal = ({ passenger, bookings, onClose, onEdit }) => {
   if (!passenger) return null;
 
   const passengerBookings = bookings.filter(b => b.customer_phone === passenger.phone);
@@ -74,17 +74,28 @@ const PassengerDetailModal = ({ passenger, bookings, onClose }) => {
     <Dialog open={!!passenger} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col" data-testid="passenger-detail-modal">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" />
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">{passenger.name}</h2>
+                <p className="text-sm text-muted-foreground font-normal flex items-center gap-1">
+                  <Phone className="w-3 h-3" />
+                  {passenger.phone}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold">{passenger.name}</h2>
-              <p className="text-sm text-muted-foreground font-normal flex items-center gap-1">
-                <Phone className="w-3 h-3" />
-                {passenger.phone}
-              </p>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onEdit(passenger)}
+              data-testid="edit-passenger-btn"
+            >
+              <Pencil className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
           </DialogTitle>
         </DialogHeader>
         

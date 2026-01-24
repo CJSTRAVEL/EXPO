@@ -51,6 +51,7 @@ const ClientsPage = () => {
   const [saving, setSaving] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [invoiceBookings, setInvoiceBookings] = useState([]);
+  const [selectedBookingIds, setSelectedBookingIds] = useState(new Set()); // Track selected bookings for invoice
   const [loadingInvoicePreview, setLoadingInvoicePreview] = useState(false);
   const [loadingFareSettings, setLoadingFareSettings] = useState(false);
   const [vehicleTypes, setVehicleTypes] = useState([]);

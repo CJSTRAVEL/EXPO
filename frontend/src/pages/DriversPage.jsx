@@ -139,8 +139,16 @@ const DriverCard = ({ driver, onEdit, onDelete }) => {
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center relative">
-              <User className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center relative overflow-hidden">
+              {driver.photo ? (
+                <img 
+                  src={driver.photo} 
+                  alt={driver.name} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-6 h-6 text-primary" />
+              )}
               {showExpiringWarning && (
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
                   <AlertTriangle className="w-2.5 h-2.5 text-white" />

@@ -52,9 +52,16 @@ class BookingRequestCreate(BaseModel):
 @router.post("/passenger/register", response_model=PassengerResponse)
 async def register_passenger(data: PassengerRegister):
     """Register a new passenger"""
+    # Check if phone already exists
     existing = await db.passengers.find_one({"phone": data.phone})
     if existing:
         raise HTTPException(status_code=400, detail="Phone number already registered")
+    
+    # Check if email already exists (if provided)
+    if data.email:
+        existing_email = await db.passengers.find_one({"email": data.email})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
     
     passenger = {
         "id": str(uuid.uuid4()),

@@ -777,18 +777,25 @@ async def download_invoice_pdf(invoice_id: str):
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    # Get bookings for this invoice period
-    query = {"client_id": invoice.get("client_id"), "status": "completed"}
-    if invoice.get("start_date") or invoice.get("end_date"):
-        date_query = {}
-        if invoice.get("start_date"):
-            date_query["$gte"] = invoice["start_date"]
-        if invoice.get("end_date"):
-            date_query["$lte"] = invoice["end_date"] + "T23:59:59"
-        if date_query:
-            query["booking_datetime"] = date_query
-    
-    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    # Get bookings for this invoice - prefer booking_ids if available
+    if invoice.get("booking_ids"):
+        bookings = await db.bookings.find(
+            {"id": {"$in": invoice["booking_ids"]}}, 
+            {"_id": 0}
+        ).sort("booking_datetime", 1).to_list(1000)
+    else:
+        # Fallback to date range query for old invoices
+        query = {"client_id": invoice.get("client_id"), "status": "completed"}
+        if invoice.get("start_date") or invoice.get("end_date"):
+            date_query = {}
+            if invoice.get("start_date"):
+                date_query["$gte"] = invoice["start_date"]
+            if invoice.get("end_date"):
+                date_query["$lte"] = invoice["end_date"] + "T23:59:59"
+            if date_query:
+                query["booking_datetime"] = date_query
+        
+        bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
     
     # Use stored values from invoice
     subtotal = invoice.get('subtotal', 0) or 0

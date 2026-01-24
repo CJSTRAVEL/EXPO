@@ -11,6 +11,7 @@ import {
   Linking,
   Alert,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';

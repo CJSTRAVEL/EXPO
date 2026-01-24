@@ -3280,11 +3280,17 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
     from fastapi.responses import StreamingResponse
     from datetime import timedelta
     
+    print(f"=== INVOICE DOWNLOAD DEBUG ===")
+    print(f"Invoice ID: {invoice_id}")
+    print(f"Client ID: {client.get('id')}")
+    
     # Get invoice
     invoice = await db.invoices.find_one(
         {"id": invoice_id, "client_id": client["id"]},
         {"_id": 0}
     )
+    
+    print(f"Invoice found: {invoice is not None}")
     
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")

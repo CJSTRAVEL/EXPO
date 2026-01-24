@@ -248,6 +248,9 @@ function AppRoutes() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/bookings" element={<BookingsPage />} />
                 <Route path="/bookings/new" element={<NewBookingPage />} />
+                <Route path="/quotes" element={<QuotesPage />} />
+                <Route path="/quotes/new" element={<NewQuotePage />} />
+                <Route path="/quotes/:quoteId/edit" element={<NewQuotePage />} />
                 <Route path="/requests" element={<RequestsPage />} />
                 <Route path="/contract-work" element={<ContractWorkPage />} />
                 <Route path="/clients" element={<ClientsPage />} />

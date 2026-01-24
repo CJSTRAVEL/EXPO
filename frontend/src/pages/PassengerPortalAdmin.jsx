@@ -20,10 +20,12 @@ const PassengerPortalAdmin = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [newUser, setNewUser] = useState({ name: "", phone: "", password: "" });
+  const [newUser, setNewUser] = useState({ name: "", phone: "", email: "", password: "" });
 
   useEffect(() => {
     fetchPassengers();

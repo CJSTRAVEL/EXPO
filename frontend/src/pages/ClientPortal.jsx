@@ -1247,7 +1247,7 @@ const ClientPortal = () => {
             </div>
 
             {/* Estimated Fare Display */}
-            {(estimatedFare || calculatingFare || routeInfo) && (
+            {(estimatedFare || calculatingFare || routeInfo || (newBooking.vehicle_type_id && newBooking.dropoff_location)) && (
               <div className="bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-xl p-4 border border-blue-500/30 shadow-lg" data-testid="fare-estimate-card">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-semibold text-blue-400 uppercase tracking-wide flex items-center gap-2">
@@ -1271,12 +1271,11 @@ const ClientPortal = () => {
                         <p className="text-xs text-blue-400 mt-1">Includes return journey</p>
                       )}
                     </div>
-                  ) : newBooking.vehicle_type_id && newBooking.dropoff_location ? (
-                    <p className="text-gray-400 text-sm">Unable to calculate fare for this route</p>
                   ) : (
-                    <p className="text-gray-400 text-sm">
-                      {!newBooking.vehicle_type_id ? "Select a vehicle to see fare" : "Enter drop-off location"}
-                    </p>
+                    <div>
+                      <p className="text-gray-400 text-sm">Fare will be calculated based on your route</p>
+                      <p className="text-xs text-gray-500 mt-1">Contact us for a custom quote</p>
+                    </div>
                   )}
                 </div>
 
@@ -1302,7 +1301,7 @@ const ClientPortal = () => {
                 )}
 
                 <p className="text-xs text-gray-500 text-center mt-3">
-                  * Final fare may vary based on actual route and waiting time
+                  * Final fare confirmed upon booking approval
                 </p>
               </div>
             )}

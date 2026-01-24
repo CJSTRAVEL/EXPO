@@ -74,7 +74,7 @@ export default function LogoutScreen({ navigation }) {
           <View style={[styles.warningCard, { backgroundColor: '#fef3c7', borderColor: '#f59e0b' }]}>
             <Ionicons name="warning-outline" size={24} color="#f59e0b" />
             <Text style={styles.warningText}>
-              You have an active booking. Complete it before logging out.
+              You have a journey in progress. Complete it before logging out.
             </Text>
           </View>
         )}

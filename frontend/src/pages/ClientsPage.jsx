@@ -1081,7 +1081,14 @@ const ClientsPage = () => {
 
             {/* Bookings Preview */}
             <div className="space-y-2">
-              <Label>Bookings Preview</Label>
+              <div className="flex items-center justify-between">
+                <Label>Select Journeys to Invoice</Label>
+                {invoiceBookings.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {selectedBookingIds.size} of {invoiceBookings.length} selected
+                  </span>
+                )}
+              </div>
               <div className="border rounded-lg overflow-hidden">
                 {loadingInvoicePreview ? (
                   <div className="flex items-center justify-center py-8">
@@ -1093,11 +1100,18 @@ const ClientsPage = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Table Header */}
-                    <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-slate-100 text-xs font-medium text-slate-600 border-b">
+                    {/* Table Header with Select All */}
+                    <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-slate-100 text-xs font-medium text-slate-600 border-b items-center">
+                      <div className="col-span-1">
+                        <Checkbox
+                          checked={selectedBookingIds.size === invoiceBookings.length && invoiceBookings.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                          data-testid="select-all-bookings"
+                        />
+                      </div>
                       <div className="col-span-2">Date</div>
                       <div className="col-span-2">Booking</div>
-                      <div className="col-span-3">Passenger</div>
+                      <div className="col-span-2">Passenger</div>
                       <div className="col-span-3">Route</div>
                       <div className="col-span-2 text-right">Fare (£)</div>
                     </div>
@@ -1110,15 +1124,23 @@ const ClientsPage = () => {
                         const customerName = booking.customer_name || 
                           `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || '-';
                         const route = `${(booking.pickup_location || '').substring(0, 15)}...`;
+                        const isSelected = selectedBookingIds.has(booking.id);
                         
                         return (
                           <div 
                             key={booking.id} 
-                            className="grid grid-cols-12 gap-2 px-3 py-2 text-sm border-b last:border-b-0 hover:bg-slate-50 items-center"
+                            className={`grid grid-cols-12 gap-2 px-3 py-2 text-sm border-b last:border-b-0 hover:bg-slate-50 items-center ${!isSelected ? 'opacity-50 bg-slate-50' : ''}`}
                           >
+                            <div className="col-span-1">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleBookingSelection(booking.id)}
+                                data-testid={`select-booking-${booking.id}`}
+                              />
+                            </div>
                             <div className="col-span-2 text-xs text-muted-foreground">{bookingDate}</div>
                             <div className="col-span-2 font-medium">{booking.booking_id}</div>
-                            <div className="col-span-3 truncate">{customerName}</div>
+                            <div className="col-span-2 truncate">{customerName}</div>
                             <div className="col-span-3 text-xs text-muted-foreground truncate">{route}</div>
                             <div className="col-span-2">
                               <Input
@@ -1128,6 +1150,7 @@ const ClientsPage = () => {
                                 value={booking.fare || 0}
                                 onChange={(e) => updateBookingPrice(booking.id, e.target.value)}
                                 className="h-7 text-right text-sm w-full"
+                                disabled={!isSelected}
                                 data-testid={`booking-fare-${booking.id}`}
                               />
                             </div>
@@ -1137,14 +1160,14 @@ const ClientsPage = () => {
                     </div>
                     {/* Total Row */}
                     <div className="grid grid-cols-12 gap-2 px-3 py-3 bg-slate-50 border-t font-medium">
-                      <div className="col-span-10 text-right">Total:</div>
+                      <div className="col-span-10 text-right">Total ({selectedBookingIds.size} journeys):</div>
                       <div className="col-span-2 text-right text-primary">£{invoiceTotal.toFixed(2)}</div>
                     </div>
                   </>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                You can edit the fares above before generating the invoice
+                Select journeys to include in the invoice. You can edit fares for selected journeys.
               </p>
             </div>
           </div>

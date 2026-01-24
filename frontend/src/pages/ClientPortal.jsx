@@ -656,7 +656,7 @@ const ClientPortal = () => {
                           </div>
                           <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
                             <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5" />
+                              <CalendarIcon className="w-3.5 h-3.5" />
                               {safeFormatDate(booking.booking_datetime, "dd MMM yyyy")}
                             </span>
                             <span className="flex items-center gap-1">

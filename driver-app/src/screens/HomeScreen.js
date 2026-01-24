@@ -546,14 +546,6 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Status Indicator */}
-      {isShiftActive && (
-        <View style={[styles.statusIndicator, { backgroundColor: 'rgba(255,255,255,0.95)' }]}>
-          <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
-          <Text style={[styles.statusText, { color: theme.success }]}>Online</Text>
-        </View>
-      )}
-
       {/* Journey in Progress Bar - Above footer when there's an active booking */}
       {activeBooking && (
         <TouchableOpacity 

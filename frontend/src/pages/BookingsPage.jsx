@@ -1766,10 +1766,10 @@ const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose,
               {vehicleTypes.find(v => v.id === booking.vehicle_type)?.name || booking.vehicle_type}
               {getBookingVehicleCategory() && (
                 <span className="ml-2 text-muted-foreground">
-                  ({getBookingVehicleCategory().toUpperCase()} vehicle - 
-                  {getBookingVehicleCategory() === 'taxi' 
-                    ? ' showing Taxi & PSV drivers' 
-                    : ' showing PSV drivers only'}
+                  ({getBookingVehicleCategory().toUpperCase()} - 
+                  {getBookingVehicleCategory() === 'psv' 
+                    ? ' PSV license required' 
+                    : ' Taxi or PSV license'}
                   )
                 </span>
               )}

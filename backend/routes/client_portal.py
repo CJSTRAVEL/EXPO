@@ -320,14 +320,25 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
     elements = []
     styles = getSampleStyleSheet()
     
-    header_blue = colors.HexColor('#1a3a5c')
-    company_style = ParagraphStyle('company', parent=styles['Normal'], fontSize=16, fontName='Helvetica-Bold', textColor=header_blue)
+    # Gold and Black color scheme
+    header_gold = colors.HexColor('#C9A227')
+    header_black = colors.HexColor('#1a1a1a')
+    gold_accent = colors.HexColor('#D4AF37')
+    
+    company_style = ParagraphStyle('company', parent=styles['Normal'], fontSize=14, fontName='Helvetica-Bold', textColor=header_black)
     normal_style = ParagraphStyle('normal', parent=styles['Normal'], fontSize=9, leading=12)
     small_style = ParagraphStyle('small', parent=styles['Normal'], fontSize=8, leading=10, textColor=colors.grey)
     label_style = ParagraphStyle('label', parent=styles['Normal'], fontSize=8, textColor=colors.grey)
     value_style = ParagraphStyle('value', parent=styles['Normal'], fontSize=9, fontName='Helvetica-Bold')
     
-    # Header
+    # Header with Logo
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'logo_border.png')
+    try:
+        logo = Image(logo_path, width=60, height=60)
+    except:
+        logo = Spacer(60, 60)
+    
+    # Company info (separate from logo)
     company_info = [
         [Paragraph("<b>CJ's Executive Travel Limited</b>", company_style)],
         [Paragraph("Unit 5 Peterlee SR8 2HY", normal_style)],
@@ -335,11 +346,19 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
         [Paragraph("Email: admin@cjstravel.uk", normal_style)],
         [Paragraph("Web: cjstravel.uk", normal_style)],
     ]
-    company_table = Table(company_info, colWidths=[250])
+    company_table = Table(company_info, colWidths=[200])
     company_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('TOPPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    # Logo + Company info combined
+    logo_company = Table([[logo, company_table]], colWidths=[70, 200])
+    logo_company.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (0, 0), 0),
+        ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     
     invoice_details = [
@@ -354,12 +373,12 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
+        ('BOX', (0, 0), (-1, -1), 1, gold_accent),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E8D5A3')),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FDF8E8')),
     ]))
     
-    header_data = [[company_table, invoice_box]]
+    header_data = [[logo_company, invoice_box]]
     header_table = Table(header_data, colWidths=[340, 180])
     header_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
     elements.append(header_table)

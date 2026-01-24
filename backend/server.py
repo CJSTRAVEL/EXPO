@@ -3694,6 +3694,77 @@ async def update_passenger_phone(passenger_id: str, data: dict):
     
     return {"message": "Phone number updated successfully"}
 
+class PassengerUpdate(BaseModel):
+    original_phone: str
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
+@api_router.put("/passengers/update")
+async def update_passenger_by_phone(update: PassengerUpdate):
+    """Update passenger info across all their bookings (by phone number)"""
+    original_phone = update.original_phone.strip()
+    
+    # Find bookings with this phone number
+    bookings_count = await db.bookings.count_documents({"customer_phone": original_phone})
+    if bookings_count == 0:
+        raise HTTPException(status_code=404, detail="No bookings found for this phone number")
+    
+    # Build update data for bookings
+    booking_update = {}
+    if update.name:
+        booking_update["customer_name"] = update.name.strip()
+        # Also try to update first_name/last_name
+        name_parts = update.name.strip().split(" ", 1)
+        booking_update["first_name"] = name_parts[0]
+        booking_update["last_name"] = name_parts[1] if len(name_parts) > 1 else ""
+    
+    if update.phone:
+        # Normalize phone number
+        new_phone = update.phone.strip().replace(" ", "")
+        if new_phone.startswith("0"):
+            new_phone = "+44" + new_phone[1:]
+        elif not new_phone.startswith("+"):
+            new_phone = "+44" + new_phone
+        booking_update["customer_phone"] = new_phone
+    
+    if update.email:
+        booking_update["customer_email"] = update.email.strip()
+    
+    if booking_update:
+        booking_update["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # Update all bookings with original phone
+        result = await db.bookings.update_many(
+            {"customer_phone": original_phone},
+            {"$set": booking_update}
+        )
+        
+        # Also update passenger account if exists
+        passenger = await db.passengers.find_one({"phone": original_phone})
+        if passenger:
+            passenger_update = {}
+            if update.name:
+                passenger_update["name"] = update.name.strip()
+            if update.phone:
+                passenger_update["phone"] = booking_update.get("customer_phone", original_phone)
+            if update.email:
+                passenger_update["email"] = update.email.strip()
+            
+            if passenger_update:
+                passenger_update["updated_at"] = datetime.now(timezone.utc).isoformat()
+                await db.passengers.update_one(
+                    {"phone": original_phone},
+                    {"$set": passenger_update}
+                )
+        
+        return {
+            "message": "Passenger profile updated successfully",
+            "bookings_updated": result.modified_count
+        }
+    
+    return {"message": "No changes to apply"}
+
 @api_router.delete("/admin/passengers/{passenger_id}")
 async def delete_passenger(passenger_id: str):
     """Delete a passenger account (admin only)"""

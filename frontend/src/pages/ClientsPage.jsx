@@ -204,6 +204,31 @@ const ClientsPage = () => {
     }
   };
 
+  const handleSetPassword = async () => {
+    if (!selectedClient || !newPassword) {
+      toast.error("Please enter a password");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await axios.put(`${API}/clients/${selectedClient.id}/portal-password`, {
+        password: newPassword
+      });
+      toast.success("Portal password updated successfully");
+      setShowPasswordModal(false);
+      setNewPassword("");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update password");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleOpenForm = (client = null) => {
     if (client) {
       setEditingClient(client);

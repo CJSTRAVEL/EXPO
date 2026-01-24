@@ -1178,7 +1178,7 @@ const ClientsPage = () => {
             <Button 
               variant="outline"
               onClick={() => handleGenerateInvoice(true)} 
-              disabled={generatingInvoice || invoiceBookings.length === 0} 
+              disabled={generatingInvoice || selectedBookingIds.size === 0} 
               data-testid="download-invoice-btn"
             >
               {generatingInvoice ? (
@@ -1195,7 +1195,7 @@ const ClientsPage = () => {
             </Button>
             <Button 
               onClick={() => handleGenerateInvoice(false)} 
-              disabled={generatingInvoice || invoiceBookings.length === 0} 
+              disabled={generatingInvoice || selectedBookingIds.size === 0} 
               data-testid="generate-invoice-btn"
             >
               {generatingInvoice ? (

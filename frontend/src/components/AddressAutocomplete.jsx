@@ -99,6 +99,13 @@ const AddressAutocomplete = ({
   const [inputValue, setInputValue] = useState(value || "");
   const dropdownRef = useRef(null);
   const initedRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const isSelectingRef = useRef(false); // Track when Google selection is happening
+
+  // Keep onChange ref updated
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const isValidPostcode = useCallback((text) => UK_POSTCODE_REGEX.test(text.trim()), []);
 
@@ -122,10 +129,15 @@ const AddressAutocomplete = ({
           const place = autocompleteRef.current.getPlace();
           const address = place?.formatted_address || place?.name || "";
           if (address) {
+            isSelectingRef.current = true;
             setInputValue(address);
-            onChange(address);
+            onChangeRef.current(address);
             setShowDropdown(false);
             setPostcodeData(null);
+            // Reset the flag after a short delay
+            setTimeout(() => {
+              isSelectingRef.current = false;
+            }, 100);
           }
         });
       } catch (error) {
@@ -134,7 +146,7 @@ const AddressAutocomplete = ({
     };
 
     loadGoogleMapsScript(initAutocomplete);
-  }, [onChange]);
+  }, []); // No dependencies - only run once
 
   // Postcode lookup
   useEffect(() => {

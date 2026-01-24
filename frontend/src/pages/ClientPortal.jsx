@@ -50,6 +50,13 @@ const ClientPortal = () => {
   const [loadingReturnFlight, setLoadingReturnFlight] = useState(false);
   const [returnFlightData, setReturnFlightData] = useState(null);
   const [returnFlightError, setReturnFlightError] = useState(null);
+  
+  // Fare calculation state
+  const [fareZones, setFareZones] = useState([]);
+  const [mileRates, setMileRates] = useState(null);
+  const [estimatedFare, setEstimatedFare] = useState(null);
+  const [calculatingFare, setCalculatingFare] = useState(false);
+  const [routeInfo, setRouteInfo] = useState(null);
 
   const [newBooking, setNewBooking] = useState({
     pickup_location: "",

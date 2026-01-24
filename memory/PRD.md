@@ -47,6 +47,21 @@ A private hire booking application with three main components:
 
 ## What's Been Implemented
 
+### Session: Jan 24, 2026
+
+#### Passenger Portal Fare Estimation (P0) ✅
+- [x] Implemented fare estimation UI in Passenger Portal booking request form
+- [x] Dark-themed fare card showing estimated price in large bold text
+- [x] Displays route distance (miles) and estimated journey duration
+- [x] Auto-calculates fare based on:
+  - Zone-based pricing (matches drop-off postcode/area to fare zones)
+  - Mile-based pricing fallback when no zone match
+  - Vehicle type-specific rates
+  - Return journey multiplier (2x for round trips)
+- [x] Shows loading state during calculation
+- [x] Disclaimer text for fare variance
+- [x] Test passenger account created: `0771849641` / `password123`
+
 ### Session: Jan 23, 2026
 
 #### Driver App Fixes (P0)

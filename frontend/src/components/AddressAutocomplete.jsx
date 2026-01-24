@@ -174,6 +174,10 @@ const AddressAutocomplete = ({
   // Click outside handler
   useEffect(() => {
     const handler = (e) => {
+      // Don't close if clicking on Google Places autocomplete dropdown
+      if (e.target.closest('.pac-container')) {
+        return;
+      }
       if (!dropdownRef.current?.contains(e.target) && !inputRef.current?.contains(e.target)) {
         setShowDropdown(false);
       }

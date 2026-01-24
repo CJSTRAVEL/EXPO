@@ -1671,45 +1671,10 @@ const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose,
     return null; // No specific requirement
   };
 
-  // Filter drivers based on booking vehicle type
-  // Rules:
-  // - PSV drivers can be assigned to ALL jobs (taxi and PSV)
-  // - Taxi drivers can ONLY be assigned to taxi-type bookings
-  // - Drivers with both licenses can be assigned to all jobs
+  // Get all active drivers - no license filtering, allow all drivers to be assigned
   const getFilteredDrivers = () => {
     // Get all active drivers (any status except explicitly inactive)
-    const activeDrivers = drivers.filter(d => d.status !== 'inactive');
-    
-    const vehicleCategory = getBookingVehicleCategory();
-    
-    if (!vehicleCategory) {
-      // No specific filter, show all active drivers
-      return activeDrivers;
-    }
-    
-    // Filter by driver types based on new rules
-    return activeDrivers.filter(driver => {
-      const driverTypes = driver.driver_types || [];
-      const hasTaxi = driverTypes.includes('taxi');
-      const hasPSV = driverTypes.includes('psv');
-      const hasBoth = hasTaxi && hasPSV;
-      
-      // Drivers with both licenses can be assigned to all jobs
-      if (hasBoth) return true;
-      
-      // PSV-only drivers can be assigned to ALL jobs (taxi and PSV)
-      if (hasPSV && !hasTaxi) return true;
-      
-      // Taxi-only drivers can ONLY be assigned to taxi-type bookings
-      if (hasTaxi && !hasPSV) {
-        return vehicleCategory === 'taxi';
-      }
-      
-      // If driver has no license types set, allow assignment (legacy data)
-      if (driverTypes.length === 0) return true;
-      
-      return false;
-    });
+    return drivers.filter(d => d.status !== 'inactive');
   };
 
   const filteredDrivers = getFilteredDrivers();

@@ -93,8 +93,9 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const token = await getStoredToken();
-      if (token) {
+      const storedToken = await getStoredToken();
+      if (storedToken) {
+        setToken(storedToken);
         const profileResponse = await getProfile();
         // Handle both old format (direct driver object) and new format ({driver, vehicle})
         const driverData = profileResponse.driver || profileResponse;
@@ -104,6 +105,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.log('Auth check failed:', error);
       await logoutDriver();
+      setToken(null);
     } finally {
       setLoading(false);
     }
@@ -115,6 +117,7 @@ export const AuthProvider = ({ children }) => {
       const response = await loginDriver(email, password);
       console.log('AuthContext: Login successful, driver:', response.driver);
       setUser(response.driver);
+      setToken(response.token);
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {

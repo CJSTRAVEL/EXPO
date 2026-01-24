@@ -237,6 +237,24 @@ const InvoiceManagerPage = () => {
     }
   };
 
+  const handleDeleteInvoice = async () => {
+    if (!selectedInvoice) return;
+    
+    setDeleting(true);
+    try {
+      await axios.delete(`${API}/invoices/${selectedInvoice.id}`);
+      toast.success(`Invoice ${selectedInvoice.invoice_ref} deleted. Bookings restored to generation list.`);
+      setShowDeleteModal(false);
+      setSelectedInvoice(null);
+      fetchInvoices();
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      toast.error(error.response?.data?.detail || "Failed to delete invoice");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Calculate VAT preview
   const calculateVatPreview = () => {
     const subtotal = parseFloat(editForm.subtotal) || 0;

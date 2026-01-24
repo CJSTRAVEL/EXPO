@@ -24,6 +24,7 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 ## What's Been Implemented
 
 ### January 2026
+- **Invoice Template Redesign** (VERIFIED): Gold/black color scheme, company logo embedded, fixed layout (no overlap)
 - **Invoice Template Unification** (VERIFIED): Professional PDF template now used across both Admin and Client Portal downloads
 - **VAT System**: VAT options (20%, No VAT, Exempt) added to client details and integrated into invoices
 - **Invoice Manager**: Full admin page for viewing, searching, editing all invoices

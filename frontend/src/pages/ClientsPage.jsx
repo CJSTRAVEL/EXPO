@@ -437,10 +437,18 @@ const ClientsPage = () => {
               <h1 className="text-xl font-bold">Clients</h1>
               <p className="text-sm text-muted-foreground">{clients.length} accounts</p>
             </div>
-            <Button onClick={() => handleOpenForm()} size="sm" data-testid="add-client-btn">
-              <Plus className="w-4 h-4 mr-1" />
-              New Client
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link to="/clients/invoices">
+                <Button variant="outline" size="sm" data-testid="invoice-manager-btn">
+                  <FileText className="w-4 h-4 mr-1" />
+                  Invoices
+                </Button>
+              </Link>
+              <Button onClick={() => handleOpenForm()} size="sm" data-testid="add-client-btn">
+                <Plus className="w-4 h-4 mr-1" />
+                New Client
+              </Button>
+            </div>
           </div>
           
           {/* Search */}

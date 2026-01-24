@@ -626,6 +626,7 @@ class InvoiceUpdate(BaseModel):
     total: Optional[float] = None
     status: Optional[str] = None
     notes: Optional[str] = None
+    booking_ids: Optional[List[str]] = None  # List of booking IDs to include
 
 @router.get("/invoices")
 async def get_all_invoices():

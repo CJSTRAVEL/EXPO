@@ -835,14 +835,14 @@ const styles = StyleSheet.create({
   },
   // Vehicle Marker Styles - Top-down car image
   vehicleMarkerContainer: {
-    width: 50,
-    height: 70,
+    width: 60,
+    height: 90,
     alignItems: 'center',
     justifyContent: 'center',
   },
   vehicleMarkerImage: {
-    width: 45,
-    height: 65,
+    width: 55,
+    height: 85,
   },
   // Journey Progress Bar styles
   journeyProgressBar: {

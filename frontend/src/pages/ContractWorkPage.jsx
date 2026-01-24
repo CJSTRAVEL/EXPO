@@ -1628,7 +1628,7 @@ const ContractWorkPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {drivers.filter(d => d.status === "available" || d.id === formData.driver_id).map((driver) => (
+                  {drivers.filter(d => d.status !== "inactive" || d.id === formData.driver_id).map((driver) => (
                     <SelectItem key={driver.id} value={driver.id}>
                       {driver.name} - {driver.vehicle_type}
                     </SelectItem>

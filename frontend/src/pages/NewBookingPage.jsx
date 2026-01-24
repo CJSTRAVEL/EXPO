@@ -794,6 +794,18 @@ const NewBookingPage = () => {
       const response = await axios.post(`${API}/bookings`, payload);
       const bookingId = response.data.id;
       
+      // If converted from quote, update quote status
+      if (formData.converted_from_quote_id) {
+        try {
+          await axios.put(`${API}/quotes/${formData.converted_from_quote_id}`, {
+            status: "converted",
+            converted_booking_id: bookingId,
+          });
+        } catch (quoteError) {
+          console.error("Failed to update quote status:", quoteError);
+        }
+      }
+      
       // If Stripe payment selected, create checkout session and redirect
       // Charge the balance (fare - deposit) instead of full fare
       const balanceDue = Math.max(0, (parseFloat(formData.fare) || 0) - (parseFloat(formData.deposit_paid) || 0));

@@ -134,11 +134,13 @@ const Dashboard = () => {
             color="accent"
           />
           <StatCard 
-            title="In Progress" 
-            value={(stats?.bookings?.assigned || 0) + (stats?.bookings?.in_progress || 0)}
-            icon={Car}
-            subtitle="Active trips"
-            color="warning"
+            title="Docs Expiring" 
+            value={expiringDocs.length}
+            icon={FileWarning}
+            subtitle={expiringDocs.filter(d => d.isExpired).length > 0 
+              ? `${expiringDocs.filter(d => d.isExpired).length} expired!` 
+              : "Within 30 days"}
+            color={expiringDocs.filter(d => d.isExpired).length > 0 ? "warning" : "primary"}
           />
           <StatCard 
             title="Revenue" 

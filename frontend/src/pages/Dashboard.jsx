@@ -38,22 +38,24 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expiringDocs, setExpiringDocs] = useState([]);
+  const [expiringVehicleDocs, setExpiringVehicleDocs] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, driversRes] = await Promise.all([
+        const [statsRes, driversRes, vehiclesRes] = await Promise.all([
           axios.get(`${API}/stats`),
-          axios.get(`${API}/drivers`)
+          axios.get(`${API}/drivers`),
+          axios.get(`${API}/vehicles`)
         ]);
         setStats(statsRes.data);
         
-        // Process driver documents for expiry
         const today = new Date();
         const expiryWarningDays = 30;
-        const expiring = [];
         
-        const docTypes = [
+        // Process driver documents for expiry
+        const expiring = [];
+        const driverDocTypes = [
           { key: 'taxi_licence_expiry', label: 'Taxi Licence' },
           { key: 'dbs_expiry', label: 'DBS Check' },
           { key: 'school_badge_expiry', label: 'School Badge' },
@@ -63,7 +65,7 @@ const Dashboard = () => {
         ];
         
         driversRes.data.forEach(driver => {
-          docTypes.forEach(docType => {
+          driverDocTypes.forEach(docType => {
             const expiryDate = driver[docType.key];
             if (expiryDate) {
               try {
@@ -88,9 +90,45 @@ const Dashboard = () => {
           });
         });
         
-        // Sort by days until expiry (expired first, then closest to expiring)
         expiring.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
         setExpiringDocs(expiring);
+        
+        // Process vehicle documents for expiry
+        const vehicleExpiring = [];
+        const vehicleDocTypes = [
+          { key: 'mot_expiry', label: 'MOT' },
+          { key: 'insurance_expiry', label: 'Insurance' },
+          { key: 'tax_expiry', label: 'Road Tax' },
+        ];
+        
+        vehiclesRes.data.forEach(vehicle => {
+          vehicleDocTypes.forEach(docType => {
+            const expiryDate = vehicle[docType.key];
+            if (expiryDate) {
+              try {
+                const parsedDate = parseISO(expiryDate);
+                if (isValid(parsedDate)) {
+                  const daysUntilExpiry = differenceInDays(parsedDate, today);
+                  if (daysUntilExpiry <= expiryWarningDays) {
+                    vehicleExpiring.push({
+                      vehicleReg: vehicle.registration,
+                      vehicleId: vehicle.id,
+                      docType: docType.label,
+                      expiryDate: parsedDate,
+                      daysUntilExpiry,
+                      isExpired: daysUntilExpiry < 0
+                    });
+                  }
+                }
+              } catch (e) {
+                // Invalid date format, skip
+              }
+            }
+          });
+        });
+        
+        vehicleExpiring.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+        setExpiringVehicleDocs(vehicleExpiring);
         
       } catch (error) {
         console.error("Error fetching dashboard data:", error);

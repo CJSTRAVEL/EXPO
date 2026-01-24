@@ -99,6 +99,7 @@ const ClientsPage = () => {
   useEffect(() => {
     if (selectedClient) {
       fetchClientBookings(selectedClient.id);
+      fetchPastJobs(selectedClient.id);
     }
   }, [selectedClient]);
 

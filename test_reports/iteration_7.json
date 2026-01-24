@@ -1,0 +1,63 @@
+{
+  "summary": "Tested rejected booking requests display feature on both Passenger Portal and Corporate Portal. Both portals correctly display rejected requests with admin's rejection reason (admin_notes field). The 'Rejected Requests' section only appears when there are rejected requests.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend: GET /api/passenger/booking-requests returns rejected requests with admin_notes",
+    "Backend: GET /api/client-portal/booking-requests returns rejected requests with admin_notes",
+    "Backend: PUT /api/admin/booking-requests/{id}/reject correctly sets status and admin_notes",
+    "Frontend: Passenger Portal - Rejected Requests section appears when rejected requests exist",
+    "Frontend: Passenger Portal - Rejected request card shows date/time (Sun, 01 Feb 10:00)",
+    "Frontend: Passenger Portal - Rejected request card shows pickup location (Test Pickup Location, London)",
+    "Frontend: Passenger Portal - Rejected request card shows dropoff location (Test Dropoff Location, Manchester)",
+    "Frontend: Passenger Portal - Rejected request card shows 'REQUEST DECLINED' badge",
+    "Frontend: Passenger Portal - Rejected request card shows 'REASON FOR DECLINE' with admin_notes",
+    "Frontend: Passenger Portal - XCircle icon displayed on rejected cards",
+    "Frontend: Passenger Portal - data-testid='rejected-request-{id}' attribute present",
+    "Frontend: Corporate Portal - Rejected Requests section appears under Pending Requests tab",
+    "Frontend: Corporate Portal - Rejected request card shows date/time (29 Jan 2026 10:30)",
+    "Frontend: Corporate Portal - Rejected request card shows pickup location (Peterlee, UK)",
+    "Frontend: Corporate Portal - Rejected request card shows dropoff location (Newcastle upon Tyne, UK)",
+    "Frontend: Corporate Portal - Rejected request card shows 'Rejected' badge",
+    "Frontend: Corporate Portal - Rejected request card shows 'REASON FOR DECLINE' with admin_notes",
+    "Frontend: Corporate Portal - XCircle icon displayed on rejected cards",
+    "Frontend: Corporate Portal - data-testid='rejected-request-{id}' attribute present",
+    "Frontend: Both portals show default message when admin_notes is empty"
+  ],
+  
+  "test_report_links": [],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [
+    "PassengerPortal.jsx (Lines 725-784): Correctly filters bookingRequests by status='rejected' and displays admin_notes",
+    "ClientPortal.jsx (Lines 740-795): Correctly filters requests by status='rejected' under the 'requests' tab",
+    "Both portals handle missing admin_notes gracefully with default message",
+    "XCircle icon properly imported in PassengerPortal.jsx (Line 3)",
+    "data-testid attributes correctly implemented for testing"
+  ],
+  
+  "updated_files": [],
+  
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  
+  "seed_data_creation": "Created test booking request for passenger test.passenger@email.com and rejected it with admin_notes='No drivers available for this route' for testing purposes",
+  
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Rejected booking requests feature fully implemented and tested. Passenger Portal shows rejected requests on main page. Corporate Portal shows rejected requests under 'Pending Requests' tab. Both portals display: date/time, pickup/dropoff locations, rejection reason from admin_notes field. Section only appears if rejected requests exist. Test credentials: Passenger - test.passenger@email.com/password123, Corporate - chrisnewhouse@live.co.uk/Newhouse@1"
+}

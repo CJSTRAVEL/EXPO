@@ -203,6 +203,31 @@ async def update_client_fare_settings(client_id: str, settings: ClientFareSettin
     return {"message": "Fare settings updated successfully", **update_data}
 
 
+# ========== PORTAL PASSWORD MANAGEMENT ==========
+class PortalPasswordUpdate(BaseModel):
+    password: str
+
+@router.put("/clients/{client_id}/portal-password")
+async def set_client_portal_password(client_id: str, data: PortalPasswordUpdate):
+    """Set or reset a client's portal login password"""
+    from .shared import hash_password
+    
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    password_hash = hash_password(data.password)
+    await db.clients.update_one(
+        {"id": client_id},
+        {"$set": {"password_hash": password_hash}}
+    )
+    
+    return {"message": "Portal password updated successfully"}
+
+
 @router.get("/clients/{client_id}/invoice/preview")
 async def get_invoice_preview(client_id: str, start_date: str = None, end_date: str = None):
     """Get bookings preview for invoice generation"""

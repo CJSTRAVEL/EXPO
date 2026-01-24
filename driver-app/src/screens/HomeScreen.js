@@ -515,11 +515,13 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      {/* Shift Timer (when active) */}
+      {/* Shift Timer (when active) - Combined with status */}
       {isShiftActive && (
         <View style={[styles.timerContainer, { backgroundColor: theme.card }]}>
-          <View style={[styles.timerDot, { backgroundColor: theme.success }]} />
-          <Text style={[styles.timerLabel, { color: theme.textSecondary }]}>Shift Time</Text>
+          <View style={styles.timerRow}>
+            <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
+            <Text style={[styles.statusText, { color: theme.success }]}>Online</Text>
+          </View>
           <Text style={[styles.timerValue, { color: theme.text }]}>{formatDuration(shiftDuration)}</Text>
         </View>
       )}

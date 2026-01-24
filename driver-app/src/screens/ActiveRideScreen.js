@@ -18,9 +18,9 @@ import { useTheme } from '../context/ThemeContext';
 import { updateBookingStatus } from '../services/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.6;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.5;
 
-// Swipe Button Component
+// Swipe Button Component - Fixed to work properly
 const SwipeButton = ({ onSwipeComplete, text, color = '#D4A853', disabled = false }) => {
   const pan = useRef(new Animated.Value(0)).current;
   const [swiping, setSwiping] = useState(false);
@@ -35,7 +35,10 @@ const SwipeButton = ({ onSwipeComplete, text, color = '#D4A853', disabled = fals
   const panResponder = useMemo(() => 
     PanResponder.create({
       onStartShouldSetPanResponder: () => !disabled,
-      onMoveShouldSetPanResponder: () => !disabled,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to horizontal movement
+        return !disabled && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
       onPanResponderGrant: () => {
         if (!disabled) setSwiping(true);
       },
@@ -151,7 +154,7 @@ const ActiveRideScreen = ({
   const [stage, setStage] = useState('on_route');
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [showRideDetails, setShowRideDetails] = useState(false);
 
   const stops = booking?.additional_stops || [];
   const totalStops = stops.length;
@@ -177,7 +180,22 @@ const ActiveRideScreen = ({
     }
   }, [booking?.id]);
 
-  // Get current location info based on stage
+  const getStageTitle = () => {
+    switch (stage) {
+      case 'on_route': return 'On Route';
+      case 'arrived': return 'Arrived';
+      case 'pob': return 'POB';
+      case 'dropoff': return 'Drop-off';
+      case 'complete': return 'Complete';
+      default:
+        if (stage.startsWith('stop_')) {
+          const stopIdx = parseInt(stage.split('_')[1], 10);
+          return `Stop ${stopIdx + 1}`;
+        }
+        return 'In Progress';
+    }
+  };
+
   const getCurrentLocationInfo = () => {
     if (!booking) return { label: '', address: '', instruction: '' };
 
@@ -186,7 +204,7 @@ const ActiveRideScreen = ({
         return {
           label: 'PICKUP LOCATION',
           address: booking.pickup_location,
-          instruction: 'Navigate to pickup location',
+          instruction: 'Confirm arrival at pickup',
           dotColor: '#4CAF50',
         };
       case 'arrived':
@@ -218,7 +236,6 @@ const ActiveRideScreen = ({
           dotColor: '#4CAF50',
         };
       default:
-        // Handle stop stages (stop_0, stop_1, etc.)
         if (stage.startsWith('stop_')) {
           const stopIdx = parseInt(stage.split('_')[1], 10);
           return {
@@ -229,22 +246,6 @@ const ActiveRideScreen = ({
           };
         }
         return { label: '', address: '', instruction: '', dotColor: '#999' };
-    }
-  };
-
-  const getStageTitle = () => {
-    switch (stage) {
-      case 'on_route': return 'On Route';
-      case 'arrived': return 'Arrived';
-      case 'pob': return 'POB';
-      case 'dropoff': return 'Drop-off';
-      case 'complete': return 'Complete';
-      default:
-        if (stage.startsWith('stop_')) {
-          const stopIdx = parseInt(stage.split('_')[1], 10);
-          return `Stop ${stopIdx + 1}`;
-        }
-        return 'In Progress';
     }
   };
 
@@ -395,7 +396,7 @@ const ActiveRideScreen = ({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onMinimize}>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        {/* Header */}
+        {/* Header - Matches design */}
         <View style={[styles.header, { backgroundColor: '#1a3a5c' }]}>
           <TouchableOpacity onPress={onMinimize} style={styles.headerButton}>
             <Ionicons name="chevron-down" size={28} color="#fff" />
@@ -411,34 +412,47 @@ const ActiveRideScreen = ({
           </TouchableOpacity>
         </View>
 
-        {/* Progress Indicator */}
+        {/* Progress Indicator - Matching design */}
         <View style={[styles.progressContainer, { backgroundColor: theme.card }]}>
           <View style={styles.progressSteps}>
-            <View style={[styles.progressStep, stage !== 'on_route' && styles.progressStepComplete]}>
-              <View style={[styles.progressDot, stage !== 'on_route' ? styles.progressDotComplete : styles.progressDotActive]} />
+            {/* Route */}
+            <View style={styles.progressStep}>
+              <View style={[
+                styles.progressDot, 
+                stage !== 'on_route' ? styles.progressDotComplete : styles.progressDotActive
+              ]} />
               <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Route</Text>
             </View>
-            <View style={[styles.progressLine, stage !== 'on_route' && stage !== 'arrived' && styles.progressLineComplete]} />
-            <View style={[styles.progressStep, (stage === 'pob' || stage.startsWith('stop_') || stage === 'dropoff') && styles.progressStepComplete]}>
-              <View style={[styles.progressDot, 
+            <View style={[styles.progressLine, stage !== 'on_route' && styles.progressLineComplete]} />
+            
+            {/* Arrived */}
+            <View style={styles.progressStep}>
+              <View style={[
+                styles.progressDot, 
                 (stage === 'arrived') ? styles.progressDotActive :
                 (stage === 'pob' || stage.startsWith('stop_') || stage === 'dropoff') ? styles.progressDotComplete : {}
               ]} />
               <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Arrived</Text>
             </View>
             <View style={[styles.progressLine, (stage === 'pob' || stage.startsWith('stop_') || stage === 'dropoff') && styles.progressLineComplete]} />
-            <View style={[styles.progressStep, (stage.startsWith('stop_') || stage === 'dropoff') && styles.progressStepComplete]}>
-              <View style={[styles.progressDot,
+            
+            {/* POB */}
+            <View style={styles.progressStep}>
+              <View style={[
+                styles.progressDot,
                 (stage === 'pob') ? styles.progressDotActive :
                 (stage.startsWith('stop_') || stage === 'dropoff') ? styles.progressDotComplete : {}
               ]} />
               <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>POB</Text>
             </View>
+            
+            {/* Stops (if any) */}
             {totalStops > 0 && (
               <>
                 <View style={[styles.progressLine, stage === 'dropoff' && styles.progressLineComplete]} />
-                <View style={[styles.progressStep, stage === 'dropoff' && styles.progressStepComplete]}>
-                  <View style={[styles.progressDot,
+                <View style={styles.progressStep}>
+                  <View style={[
+                    styles.progressDot,
                     stage.startsWith('stop_') ? styles.progressDotActive :
                     stage === 'dropoff' ? styles.progressDotComplete : {}
                   ]} />
@@ -446,7 +460,10 @@ const ActiveRideScreen = ({
                 </View>
               </>
             )}
+            
             <View style={[styles.progressLine, stage === 'dropoff' && styles.progressLineComplete]} />
+            
+            {/* Drop */}
             <View style={styles.progressStep}>
               <View style={[styles.progressDot, stage === 'dropoff' && styles.progressDotActive]} />
               <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Drop</Text>
@@ -454,43 +471,36 @@ const ActiveRideScreen = ({
           </View>
         </View>
 
-        {/* Main Content */}
-        <ScrollView style={styles.content}>
-          {/* Current Location Card */}
-          <View style={[styles.locationCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.locationHeader}>
-              <View style={[styles.locationDot, { backgroundColor: locationInfo.dotColor }]} />
-              <Text style={[styles.locationLabel, { color: theme.textSecondary }]}>{locationInfo.label}</Text>
+        {/* Main Content - Scrollable */}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Fare Section */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>FARE</Text>
+            <View style={styles.fareRow}>
+              <Text style={[styles.fareLabel, { color: theme.text }]}>Total</Text>
+              <Text style={[styles.fareAmount, { color: '#D4A853' }]}>£{(booking.fare || 0).toFixed(2)}</Text>
             </View>
-            <Text style={[styles.locationAddress, { color: theme.text }]}>{locationInfo.address}</Text>
-            {locationInfo.instruction && (
-              <Text style={[styles.locationInstruction, { color: theme.textSecondary }]}>{locationInfo.instruction}</Text>
-            )}
-            
-            {stage !== 'complete' && (
-              <TouchableOpacity 
-                style={[styles.navigateButton, { backgroundColor: '#D4A853' }]}
-                onPress={openNavigation}
-              >
-                <Ionicons name="navigate" size={20} color="#fff" />
-                <Text style={styles.navigateButtonText}>Navigate</Text>
-              </TouchableOpacity>
-            )}
+          </View>
+
+          {/* Customer Name Section */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.customerNameLarge, { color: theme.text }]}>Customer Name</Text>
+            <Text style={[styles.customerNameValue, { color: theme.text }]}>{customerName}</Text>
           </View>
 
           {/* Journey Summary */}
-          <View style={[styles.journeyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>JOURNEY SUMMARY</Text>
+          <View style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>JOURNEY SUMMARY</Text>
             
             {/* Pickup */}
             <View style={styles.journeyRow}>
               <View style={[styles.journeyDot, { backgroundColor: '#4CAF50' }]} />
               <View style={styles.journeyContent}>
                 <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Pickup</Text>
-                <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={1}>{booking.pickup_location}</Text>
+                <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={2}>{booking.pickup_location}</Text>
               </View>
               {(stage === 'on_route' || stage === 'arrived' || stage === 'pob') && (
-                <Ionicons name="location" size={20} color="#4CAF50" />
+                <Ionicons name="location" size={18} color="#4CAF50" />
               )}
             </View>
             
@@ -500,10 +510,10 @@ const ActiveRideScreen = ({
                 <View style={[styles.journeyDot, { backgroundColor: '#FF9800' }]} />
                 <View style={styles.journeyContent}>
                   <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Stop {idx + 1}</Text>
-                  <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={1}>{stop}</Text>
+                  <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={2}>{stop}</Text>
                 </View>
                 {stage === `stop_${idx}` && (
-                  <Ionicons name="location" size={20} color="#FF9800" />
+                  <Ionicons name="location" size={18} color="#FF9800" />
                 )}
               </View>
             ))}
@@ -513,25 +523,47 @@ const ActiveRideScreen = ({
               <View style={[styles.journeyDot, { backgroundColor: '#F44336' }]} />
               <View style={styles.journeyContent}>
                 <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Drop-off</Text>
-                <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={1}>{booking.dropoff_location}</Text>
+                <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={2}>{booking.dropoff_location}</Text>
               </View>
               {stage === 'dropoff' && (
-                <Ionicons name="location" size={20} color="#F44336" />
+                <Ionicons name="location" size={18} color="#F44336" />
               )}
             </View>
           </View>
 
-          {/* Fare Info */}
-          <View style={[styles.fareCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>FARE</Text>
-            <View style={styles.fareRow}>
-              <Text style={[styles.fareLabel, { color: theme.text }]}>Total</Text>
-              <Text style={[styles.fareValue, { color: '#D4A853' }]}>£{(booking.fare || 0).toFixed(2)}</Text>
+          {/* Pickup/Current Location Card */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.locationHeader}>
+              <View style={[styles.locationDot, { backgroundColor: locationInfo.dotColor }]} />
+              <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>{locationInfo.label}</Text>
             </View>
+            <Text style={[styles.locationAddress, { color: theme.text }]}>{locationInfo.address}</Text>
+            {locationInfo.instruction && (
+              <Text style={[styles.locationInstruction, { color: theme.textSecondary }]}>{locationInfo.instruction}</Text>
+            )}
+            
+            <TouchableOpacity 
+              style={[styles.navigateButton, { backgroundColor: '#D4A853' }]}
+              onPress={openNavigation}
+            >
+              <Ionicons name="navigate" size={20} color="#fff" />
+              <Text style={styles.navigateButtonText}>Navigate</Text>
+            </TouchableOpacity>
           </View>
+
+          {/* Job Notes Section */}
+          <View style={[styles.sectionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.notesTitle, { color: theme.text }]}>Job Notes</Text>
+            <Text style={[styles.notesText, { color: theme.textSecondary }]}>
+              {booking.notes || 'No notes for this job'}
+            </Text>
+          </View>
+
+          {/* Extra spacing for bottom button */}
+          <View style={{ height: 100 }} />
         </ScrollView>
 
-        {/* Bottom Action */}
+        {/* Bottom Swipe Action */}
         {swipeConfig && (
           <View style={[styles.bottomAction, { backgroundColor: theme.background }]}>
             <SwipeButton 
@@ -554,15 +586,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'ios' ? 60 : 50,
     paddingBottom: 15,
     paddingHorizontal: 15,
   },
   headerButton: {
     padding: 5,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerCenter: {
     alignItems: 'center',
+    flex: 1,
   },
   stageLabel: {
     fontSize: 14,
@@ -618,11 +655,63 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
   },
-  locationCard: {
+  sectionCard: {
     borderRadius: 12,
     padding: 15,
-    marginBottom: 15,
+    marginBottom: 12,
     borderWidth: 1,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  fareLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  fareAmount: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  customerNameLarge: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  customerNameValue: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  journeyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  journeyDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 12,
+    marginTop: 4,
+  },
+  journeyContent: {
+    flex: 1,
+  },
+  journeyLabel: {
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  journeyAddress: {
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
   },
   locationHeader: {
     flexDirection: 'row',
@@ -635,14 +724,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 8,
   },
-  locationLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
   locationAddress: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 5,
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 4,
+    lineHeight: 22,
   },
   locationInstruction: {
     fontSize: 13,
@@ -652,84 +738,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
   },
   navigateButtonText: {
     color: '#fff',
     fontWeight: '600',
     marginLeft: 8,
-    fontSize: 15,
+    fontSize: 16,
   },
-  journeyCard: {
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 1,
-  },
-  cardTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  journeyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  journeyDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 10,
-  },
-  journeyContent: {
-    flex: 1,
-  },
-  journeyLabel: {
-    fontSize: 11,
-  },
-  journeyAddress: {
-    fontSize: 14,
-  },
-  fareCard: {
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 1,
-  },
-  fareRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  fareLabel: {
-    fontSize: 15,
-  },
-  fareValue: {
+  notesTitle: {
     fontSize: 18,
     fontWeight: '700',
+    marginBottom: 8,
   },
-  fareValueLarge: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  fareDivider: {
-    height: 1,
-    marginVertical: 12,
-  },
-  fareSectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 15,
-  },
-  paymentMethod: {
-    fontSize: 13,
-    marginTop: 10,
+  notesText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   bottomAction: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 15,
-    paddingBottom: 30,
+    paddingBottom: Platform.OS === 'ios' ? 35 : 20,
   },
   swipeContainer: {
     height: 60,
@@ -797,6 +830,33 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     marginTop: 15,
+  },
+  fareCard: {
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+  },
+  fareSectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 15,
+  },
+  fareValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  fareValueLarge: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  fareDivider: {
+    height: 1,
+    marginVertical: 12,
+  },
+  paymentMethod: {
+    fontSize: 13,
+    marginTop: 10,
   },
   endJobButton: {
     paddingVertical: 16,

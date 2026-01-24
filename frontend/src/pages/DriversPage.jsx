@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Plus, Edit, Trash2, Phone, Car, User, FileText, AlertTriangle, CheckCircle2, Calendar, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Phone, Car, User, FileText, AlertTriangle, CheckCircle2, Calendar, Mail, Camera, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

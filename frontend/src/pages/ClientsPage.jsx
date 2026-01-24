@@ -378,11 +378,36 @@ const ClientsPage = () => {
         `${API}/clients/${selectedClient.id}/invoice/preview?${params.toString()}`
       );
       setInvoiceBookings(response.data);
+      // Auto-select all bookings by default
+      setSelectedBookingIds(new Set(response.data.map(b => b.id)));
     } catch (error) {
       console.error("Error fetching invoice preview:", error);
       setInvoiceBookings([]);
+      setSelectedBookingIds(new Set());
     } finally {
       setLoadingInvoicePreview(false);
+    }
+  };
+
+  const toggleBookingSelection = (bookingId) => {
+    setSelectedBookingIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(bookingId)) {
+        newSet.delete(bookingId);
+      } else {
+        newSet.add(bookingId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedBookingIds.size === invoiceBookings.length) {
+      // All selected, deselect all
+      setSelectedBookingIds(new Set());
+    } else {
+      // Select all
+      setSelectedBookingIds(new Set(invoiceBookings.map(b => b.id)));
     }
   };
 
@@ -392,7 +417,9 @@ const ClientsPage = () => {
     );
   };
 
-  const invoiceTotal = invoiceBookings.reduce((sum, b) => sum + (b.fare || 0), 0);
+  // Only calculate total for selected bookings
+  const selectedBookings = invoiceBookings.filter(b => selectedBookingIds.has(b.id));
+  const invoiceTotal = selectedBookings.reduce((sum, b) => sum + (b.fare || 0), 0);
 
   const setQuickDateRange = (range) => {
     const now = new Date();

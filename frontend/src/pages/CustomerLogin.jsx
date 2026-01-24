@@ -90,7 +90,7 @@ const CustomerLogin = () => {
     try {
       const endpoint = isLogin ? "/passenger/login" : "/passenger/register";
       const payload = isLogin 
-        ? { identifier: passengerData.phone, password: passengerData.password }
+        ? { phone: passengerData.phone, password: passengerData.password }
         : { name: passengerData.name, phone: passengerData.phone, email: passengerData.email || null, password: passengerData.password };
 
       const response = await axios.post(`${API}${endpoint}`, payload);
@@ -119,9 +119,9 @@ const CustomerLogin = () => {
 
     try {
       if (isLogin) {
-        // Login using email
+        // Login using phone number
         const response = await axios.post(`${API}/client-portal/login`, {
-          email: corporateData.email,
+          phone: corporateData.mobile,
           password: corporateData.password
         });
         

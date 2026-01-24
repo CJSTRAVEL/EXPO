@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { format, isValid, parseISO } from "date-fns";
-import { Inbox, Plane, Clock, MapPin, User, Phone, CheckCircle, XCircle, Loader2, MessageSquare } from "lucide-react";
+import { Inbox, Plane, Clock, MapPin, User, Phone, CheckCircle, XCircle, Loader2, MessageSquare, PoundSterling, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

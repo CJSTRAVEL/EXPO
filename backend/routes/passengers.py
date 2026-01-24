@@ -154,8 +154,12 @@ async def create_booking_request(request: BookingRequestCreate, passenger: dict 
         "lead_passenger_name": request.lead_passenger_name or passenger.get("name"),
         "lead_passenger_phone": request.lead_passenger_phone or passenger.get("phone"),
         "lead_passenger_email": request.lead_passenger_email or passenger.get("email"),
+        "quoted_fare": request.quoted_fare,
+        "distance_miles": request.distance_miles,
+        "duration_minutes": request.duration_minutes,
         "status": "pending",
         "account_type": "passenger",
+        "booking_source": "portal",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     

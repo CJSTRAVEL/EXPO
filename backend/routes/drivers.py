@@ -501,7 +501,7 @@ async def check_document_notifications(driver: dict = Depends(get_current_driver
                     expiry_str = expiry.replace("Z", "+00:00")
                     try:
                         expiry_date = datetime.fromisoformat(expiry_str)
-                    except:
+                    except ValueError:
                         expiry_date = datetime.fromisoformat(expiry.split("+")[0].split("T")[0] + "T00:00:00")
                         expiry_date = expiry_date.replace(tzinfo=timezone.utc)
                 else:

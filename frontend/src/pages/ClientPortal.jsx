@@ -1023,9 +1023,9 @@ const ClientPortal = () => {
             </div>
 
             {/* Additional Stops */}
-            <div className="space-y-2 pl-4 border-l-2 border-blue-400/50">
+            <div className="space-y-2 pl-4 border-l-2 border-[#D4A853]/50">
               <div className="flex items-center justify-between">
-                <Label className="text-blue-400 text-sm">Stops (in order)</Label>
+                <Label className="text-[#D4A853] text-sm">Stops (in order)</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -1034,7 +1034,7 @@ const ClientPortal = () => {
                     ...newBooking, 
                     additional_stops: [...newBooking.additional_stops, ""] 
                   })}
-                  className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                  className="h-7 text-xs border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/10"
                   data-testid="request-add-stop-btn"
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -1046,7 +1046,7 @@ const ClientPortal = () => {
               ) : (
                 newBooking.additional_stops.map((stop, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    <span className="text-xs font-semibold text-blue-400 w-6">{index + 1}.</span>
+                    <span className="text-xs font-semibold text-[#D4A853] w-6">{index + 1}.</span>
                     <div className="flex-1">
                       <AddressAutocomplete
                         value={stop}
@@ -1098,7 +1098,7 @@ const ClientPortal = () => {
                 variant="outline"
                 className={`w-full justify-between h-auto py-3 ${
                   newBooking.vehicle_type_id 
-                    ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
+                    ? 'bg-[#D4A853]/10 border-[#D4A853]/50 text-[#D4A853]' 
                     : 'bg-[#2d2d2d] border-[#3d3d3d] text-gray-400'
                 }`}
                 onClick={() => setShowVehicleSelector(true)}

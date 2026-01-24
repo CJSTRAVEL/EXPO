@@ -430,7 +430,7 @@ const PassengerPortalAdmin = () => {
       <Dialog open={showCreateModal} onOpenChange={(open) => {
         setShowCreateModal(open);
         if (!open) {
-          setNewUser({ name: "", phone: "", password: "" });
+          setNewUser({ name: "", phone: "", email: "", password: "" });
           setShowPassword(false);
         }
       }}>
@@ -440,7 +440,7 @@ const PassengerPortalAdmin = () => {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="new-user-name">Full Name</Label>
+              <Label htmlFor="new-user-name">Full Name *</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -455,7 +455,23 @@ const PassengerPortalAdmin = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-user-phone">Phone Number</Label>
+              <Label htmlFor="new-user-email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="new-user-email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  className="pl-10"
+                  data-testid="new-user-email-input"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Optional - allows login with email</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-user-phone">Phone Number *</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -470,7 +486,7 @@ const PassengerPortalAdmin = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-user-password">Password</Label>
+              <Label htmlFor="new-user-password">Password *</Label>
               <div className="relative">
                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input

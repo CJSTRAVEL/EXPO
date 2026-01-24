@@ -214,26 +214,26 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Status Overview */}
-          <Card data-testid="status-overview">
-            <CardHeader>
+          {/* Driver Docs Expiring */}
+          <Card data-testid="driver-docs-expiring">
+            <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <FileWarning className="w-5 h-5 text-muted-foreground" />
                 Driver Docs Expiring
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-[380px] overflow-y-auto">
+              <div className="space-y-2 max-h-[165px] overflow-y-auto">
                 {expiringDocs.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                    <p className="text-sm">All driver documents are up to date</p>
+                  <div className="text-center py-4 text-muted-foreground">
+                    <CheckCircle className="w-6 h-6 mx-auto mb-1 text-green-500" />
+                    <p className="text-xs">All driver docs up to date</p>
                   </div>
                 ) : (
-                  expiringDocs.map((doc, idx) => (
+                  expiringDocs.slice(0, 5).map((doc, idx) => (
                     <div 
                       key={`${doc.driverId}-${doc.docType}-${idx}`}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                      className={`flex items-center justify-between p-2 rounded-lg border ${
                         doc.isExpired 
                           ? 'bg-red-50 border-red-200' 
                           : doc.daysUntilExpiry <= 7 
@@ -242,7 +242,7 @@ const Dashboard = () => {
                       }`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${
+                        <p className={`text-xs font-medium truncate ${
                           doc.isExpired ? 'text-red-800' : doc.daysUntilExpiry <= 7 ? 'text-orange-800' : 'text-yellow-800'
                         }`}>
                           {doc.driverName}
@@ -253,7 +253,74 @@ const Dashboard = () => {
                           {doc.docType}
                         </p>
                       </div>
-                      <div className="text-right ml-2">
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${
+                          doc.isExpired 
+                            ? 'bg-red-100 text-red-700 border-red-300' 
+                            : doc.daysUntilExpiry <= 7 
+                              ? 'bg-orange-100 text-orange-700 border-orange-300'
+                              : 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                        }`}
+                      >
+                        {doc.isExpired 
+                          ? `${Math.abs(doc.daysUntilExpiry)}d ago`
+                          : `${doc.daysUntilExpiry}d`
+                        }
+                      </Badge>
+                    </div>
+                  ))
+                )}
+                {expiringDocs.length > 5 && (
+                  <p className="text-xs text-center text-muted-foreground">+{expiringDocs.length - 5} more</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Vehicle Docs Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* Vehicle Docs Expiring */}
+          <Card data-testid="vehicle-docs-expiring" className="lg:col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Truck className="w-5 h-5 text-muted-foreground" />
+                Vehicle Docs Expiring
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {expiringVehicleDocs.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <CheckCircle className="w-6 h-6 mx-auto mb-1 text-green-500" />
+                    <p className="text-xs">All vehicle docs up to date</p>
+                  </div>
+                ) : (
+                  expiringVehicleDocs.map((doc, idx) => (
+                    <div 
+                      key={`${doc.vehicleId}-${doc.docType}-${idx}`}
+                      className={`flex items-center justify-between p-2 rounded-lg border ${
+                        doc.isExpired 
+                          ? 'bg-red-50 border-red-200' 
+                          : doc.daysUntilExpiry <= 7 
+                            ? 'bg-orange-50 border-orange-200'
+                            : 'bg-yellow-50 border-yellow-200'
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-medium truncate ${
+                          doc.isExpired ? 'text-red-800' : doc.daysUntilExpiry <= 7 ? 'text-orange-800' : 'text-yellow-800'
+                        }`}>
+                          {doc.vehicleReg}
+                        </p>
+                        <p className={`text-xs ${
+                          doc.isExpired ? 'text-red-600' : doc.daysUntilExpiry <= 7 ? 'text-orange-600' : 'text-yellow-600'
+                        }`}>
+                          {doc.docType}
+                        </p>
+                      </div>
+                      <div className="text-right">
                         <Badge 
                           variant="outline" 
                           className={`text-xs ${

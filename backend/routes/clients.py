@@ -655,6 +655,16 @@ async def get_all_invoices():
         inv["client_name"] = client.get("name", "Unknown")
         inv["client_account_no"] = client.get("account_no", "")
         inv["client_email"] = client.get("email", "")
+        
+        # Include bookings for each invoice (for edit modal)
+        if inv.get("booking_ids"):
+            bookings = await db.bookings.find(
+                {"id": {"$in": inv["booking_ids"]}}, 
+                {"_id": 0, "id": 1, "booking_id": 1, "pickup_location": 1, "fare": 1, "booking_datetime": 1}
+            ).to_list(1000)
+            inv["bookings"] = bookings
+        else:
+            inv["bookings"] = []
     
     return invoices
 

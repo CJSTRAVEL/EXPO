@@ -825,8 +825,15 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
                 <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Document Expiry Dates
+                  {getVehicleTypeCategory() === "psv" && (
+                    <Badge variant="outline" className="ml-2">PSV</Badge>
+                  )}
+                  {getVehicleTypeCategory() === "taxi" && (
+                    <Badge variant="outline" className="ml-2">Taxi</Badge>
+                  )}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Common fields for both types */}
                   <div className="space-y-2">
                     <Label htmlFor="v-insurance">Insurance</Label>
                     <Input
@@ -847,26 +854,58 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
                       data-testid="vehicle-tax-input"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="v-dcc1">DCC Test Date 1</Label>
-                    <Input
-                      id="v-dcc1"
-                      type="date"
-                      value={formData.dcc_test_date_1}
-                      onChange={(e) => setFormData({ ...formData, dcc_test_date_1: e.target.value })}
-                      data-testid="vehicle-dcc1-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="v-dcc2">DCC Test Date 2</Label>
-                    <Input
-                      id="v-dcc2"
-                      type="date"
-                      value={formData.dcc_test_date_2}
-                      onChange={(e) => setFormData({ ...formData, dcc_test_date_2: e.target.value })}
-                      data-testid="vehicle-dcc2-input"
-                    />
-                  </div>
+                  
+                  {/* PSV-specific documents */}
+                  {getVehicleTypeCategory() === "psv" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="v-dvsa-mot">DVSA MOT</Label>
+                        <Input
+                          id="v-dvsa-mot"
+                          type="date"
+                          value={formData.dvsa_mot_expiry}
+                          onChange={(e) => setFormData({ ...formData, dvsa_mot_expiry: e.target.value })}
+                          data-testid="vehicle-dvsa-mot-input"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="v-10-weekly">Next 10 Weekly</Label>
+                        <Input
+                          id="v-10-weekly"
+                          type="date"
+                          value={formData.next_10_weekly}
+                          onChange={(e) => setFormData({ ...formData, next_10_weekly: e.target.value })}
+                          data-testid="vehicle-10-weekly-input"
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Taxi-specific documents */}
+                  {getVehicleTypeCategory() === "taxi" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="v-dcc1">DCC Test 1</Label>
+                        <Input
+                          id="v-dcc1"
+                          type="date"
+                          value={formData.dcc_test_date_1}
+                          onChange={(e) => setFormData({ ...formData, dcc_test_date_1: e.target.value })}
+                          data-testid="vehicle-dcc1-input"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="v-dcc2">DCC Test 2</Label>
+                        <Input
+                          id="v-dcc2"
+                          type="date"
+                          value={formData.dcc_test_date_2}
+                          onChange={(e) => setFormData({ ...formData, dcc_test_date_2: e.target.value })}
+                          data-testid="vehicle-dcc2-input"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

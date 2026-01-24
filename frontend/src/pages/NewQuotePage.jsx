@@ -414,16 +414,27 @@ export default function NewQuotePage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="quoted_fare">Quoted Fare (£)</Label>
-                <Input
-                  id="quoted_fare"
-                  type="number"
-                  step="0.01"
-                  value={formData.quoted_fare}
-                  onChange={(e) => handleChange("quoted_fare", e.target.value)}
-                  placeholder="0.00"
-                  data-testid="quote-fare"
-                />
+                <Label htmlFor="quoted_fare" className="flex items-center gap-2">
+                  Quoted Fare (£)
+                  {calculatingFare && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="quoted_fare"
+                    type="number"
+                    step="0.01"
+                    value={formData.quoted_fare}
+                    onChange={(e) => handleChange("quoted_fare", e.target.value)}
+                    placeholder="0.00"
+                    data-testid="quote-fare"
+                    className={calculatingFare ? "bg-slate-50" : ""}
+                  />
+                  {routeInfo?.distance && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Distance: {routeInfo.distance.miles?.toFixed(1)} miles • Duration: {routeInfo.duration?.text}
+                    </p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

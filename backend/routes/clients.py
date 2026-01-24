@@ -292,7 +292,15 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
             fare = request.custom_prices[b['id']]
         subtotal += fare
     
-    vat_rate = 0.20
+    # Get client's VAT rate setting
+    client_vat_rate = client.get('vat_rate', '20')  # Default to 20%
+    if client_vat_rate == '0' or client_vat_rate == 'exempt':
+        vat_rate = 0.0
+        vat_label = "VAT Exempt" if client_vat_rate == 'exempt' else "No VAT"
+    else:
+        vat_rate = 0.20
+        vat_label = "VAT (20%)"
+    
     vat_amount = subtotal * vat_rate
     total = subtotal + vat_amount
     

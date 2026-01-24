@@ -758,11 +758,11 @@ const styles = StyleSheet.create({
   },
   bottomAction: {
     position: 'absolute',
-    bottom: 0,
+    bottom: Platform.OS === 'ios' ? 0 : 50,
     left: 0,
     right: 0,
     padding: 15,
-    paddingBottom: Platform.OS === 'ios' ? 35 : 20,
+    paddingBottom: Platform.OS === 'ios' ? 35 : 25,
   },
   swipeContainer: {
     height: 60,

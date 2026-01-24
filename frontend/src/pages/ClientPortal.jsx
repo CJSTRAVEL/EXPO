@@ -122,6 +122,120 @@ const ClientPortal = () => {
     fetchData();
   }, [fetchData]);
 
+  // Calculate route when locations change
+  useEffect(() => {
+    const calculateRoute = async () => {
+      if (!newBooking.pickup_location || !newBooking.dropoff_location ||
+          newBooking.pickup_location.length < 5 || newBooking.dropoff_location.length < 5) {
+        setRouteInfo(null);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API}/directions`, {
+          params: {
+            origin: newBooking.pickup_location,
+            destination: newBooking.dropoff_location
+          }
+        });
+        if (response.data.success) {
+          setRouteInfo(response.data);
+        }
+      } catch (error) {
+        console.error("Error calculating route:", error);
+      }
+    };
+
+    const debounce = setTimeout(calculateRoute, 800);
+    return () => clearTimeout(debounce);
+  }, [newBooking.pickup_location, newBooking.dropoff_location]);
+
+  // Calculate fare when vehicle type, route, or return option changes
+  useEffect(() => {
+    const calculateFare = () => {
+      if (!newBooking.dropoff_location || !newBooking.vehicle_type_id) {
+        setEstimatedFare(null);
+        return;
+      }
+
+      setCalculatingFare(true);
+      const dropoff = newBooking.dropoff_location.toLowerCase();
+      const isReturn = newBooking.create_return;
+      let calculatedFare = null;
+
+      // Check zone-based fares first
+      for (const zone of fareZones) {
+        if (zone.zone_type !== 'dropoff' && zone.zone_type !== 'both') continue;
+        
+        let zoneMatches = false;
+        
+        // Check postcodes
+        for (const postcode of (zone.postcodes || [])) {
+          if (dropoff.includes(postcode.toLowerCase())) {
+            zoneMatches = true;
+            break;
+          }
+        }
+        
+        // Check areas
+        if (!zoneMatches) {
+          for (const area of (zone.areas || [])) {
+            if (dropoff.includes(area.toLowerCase())) {
+              zoneMatches = true;
+              break;
+            }
+          }
+        }
+        
+        if (zoneMatches) {
+          const vehicleFares = zone.vehicle_fares || {};
+          calculatedFare = vehicleFares[newBooking.vehicle_type_id] || zone.fixed_fare;
+          break;
+        }
+      }
+
+      // If no zone match, calculate based on mileage
+      if (!calculatedFare && routeInfo && mileRates) {
+        let distanceMiles = 0;
+        if (routeInfo.distance) {
+          if (typeof routeInfo.distance === 'number') {
+            distanceMiles = routeInfo.distance;
+          } else if (routeInfo.distance.miles) {
+            distanceMiles = parseFloat(routeInfo.distance.miles) || 0;
+          } else if (routeInfo.distance.value) {
+            distanceMiles = (parseFloat(routeInfo.distance.value) || 0) / 1609.34;
+          } else if (routeInfo.distance.text) {
+            const match = routeInfo.distance.text.match(/[\d.]+/);
+            if (match) distanceMiles = parseFloat(match[0]) || 0;
+          }
+        }
+        
+        if (distanceMiles > 0) {
+          const vehicleRates = mileRates.vehicle_rates?.[newBooking.vehicle_type_id];
+          const baseFare = parseFloat(vehicleRates?.base_fare ?? mileRates.base_fare) || 0;
+          const pricePerMile = parseFloat(vehicleRates?.price_per_mile ?? mileRates.price_per_mile) || 0;
+          const minimumFare = parseFloat(vehicleRates?.minimum_fare ?? mileRates.minimum_fare) || 0;
+          
+          calculatedFare = baseFare + (distanceMiles * pricePerMile);
+          if (minimumFare && calculatedFare < minimumFare) {
+            calculatedFare = minimumFare;
+          }
+        }
+      }
+
+      // Apply return multiplier
+      if (calculatedFare && isReturn) {
+        calculatedFare = calculatedFare * 2;
+      }
+
+      setEstimatedFare(calculatedFare);
+      setCalculatingFare(false);
+    };
+
+    const debounce = setTimeout(calculateFare, 300);
+    return () => clearTimeout(debounce);
+  }, [newBooking.vehicle_type_id, newBooking.dropoff_location, newBooking.create_return, routeInfo, fareZones, mileRates]);
+
   const handleLogout = () => {
     localStorage.removeItem("clientToken");
     localStorage.removeItem("clientInfo");

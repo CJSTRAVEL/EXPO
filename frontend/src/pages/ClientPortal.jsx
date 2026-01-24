@@ -534,9 +534,9 @@ const ClientPortal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
-      <header className="bg-[#1a1a1a] border-b border-blue-500/20">
+      <header className="bg-[#1a1a1a] shadow-lg sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -551,15 +551,21 @@ const ClientPortal = () => {
                   <Building2 className="w-3.5 h-3.5" />
                   {client?.company_name || client?.name}
                   {client?.account_no && (
-                    <span className="text-blue-400 ml-1">({client.account_no})</span>
+                    <span className="text-[#D4A853] ml-1">({client.account_no})</span>
                   )}
                 </div>
+                {client?.email && (
+                  <div className="flex items-center gap-1 text-sm text-gray-400 mt-0.5">
+                    <Mail className="w-3.5 h-3.5" />
+                    {client.email}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-4">
               <Button
                 onClick={() => setShowNewBooking(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold"
                 data-testid="new-booking-btn"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -568,7 +574,7 @@ const ClientPortal = () => {
               <Button
                 variant="ghost"
                 onClick={handleLogout}
-                className="text-gray-400 hover:text-white"
+                className="text-white hover:bg-white/10"
                 data-testid="logout-btn"
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -580,7 +586,7 @@ const ClientPortal = () => {
       </header>
 
       {/* Tabs */}
-      <div className="bg-[#1a1a1a]/50 border-b border-[#2d2d2d]">
+      <div className="bg-[#1a1a1a]/90 border-b border-[#D4A853]/20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-1">
             {[
@@ -594,7 +600,7 @@ const ClientPortal = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                   activeTab === tab.id
-                    ? "text-blue-400 border-blue-500"
+                    ? "text-[#D4A853] border-[#D4A853]"
                     : "text-gray-400 border-transparent hover:text-white hover:border-gray-600"
                 }`}
                 data-testid={`tab-${tab.id}`}

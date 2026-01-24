@@ -60,6 +60,7 @@ class ClientUpdate(BaseModel):
     notes: Optional[str] = None
     vat_registered: Optional[bool] = None
     vat_number: Optional[str] = None
+    vat_rate: Optional[str] = None  # "0" (No VAT), "exempt", "20" (20%)
     # Custom fare settings
     use_custom_fares: Optional[bool] = None
     custom_fare_zones: Optional[List[dict]] = None  # Same structure as global fare zones

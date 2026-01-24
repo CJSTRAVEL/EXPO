@@ -62,6 +62,14 @@ A private hire booking application with three main components:
 - [x] Disclaimer text for fare variance
 - [x] Test passenger account created: `0771849641` / `password123`
 
+#### Corporate Client Portal Fare Estimation (P0) ✅
+- [x] Replicated fare estimation feature in Corporate Client Portal (ClientPortal.jsx)
+- [x] Blue-themed fare card matching portal's color scheme
+- [x] Same auto-calculation logic as Passenger Portal
+- [x] Fetches fare zones and mile rates on portal load
+- [x] Route calculation via Google Directions API
+- [x] Test corporate account: `contact@testcompanyltd.com` / `password123`
+
 ### Session: Jan 23, 2026
 
 #### Driver App Fixes (P0)

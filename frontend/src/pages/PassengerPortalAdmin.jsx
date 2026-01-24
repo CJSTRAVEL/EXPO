@@ -21,8 +21,12 @@ const PassengerPortalAdmin = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newUser, setNewUser] = useState({ name: "", phone: "", email: "", password: "" });

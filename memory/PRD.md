@@ -108,7 +108,6 @@ A private hire booking application with three main components:
 
 ### P0 - Critical
 - [ ] User to verify driver app login works with new APK
-- [ ] Fare estimation for Corporate Client Portal (ClientPortal.jsx)
 
 ### P1 - High Priority
 - [ ] SMS templates based on assigned vehicle type

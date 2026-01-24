@@ -241,12 +241,17 @@ async def set_client_portal_password(client_id: str, data: PortalPasswordUpdate)
 
 @router.get("/clients/{client_id}/invoice/preview")
 async def get_invoice_preview(client_id: str, start_date: str = None, end_date: str = None):
-    """Get bookings preview for invoice generation"""
+    """Get bookings preview for invoice generation - excludes already invoiced/paid bookings"""
     client = await db.clients.find_one({"id": client_id}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    query = {"client_id": client_id}
+    # Only show completed bookings that haven't been paid on an invoice
+    query = {
+        "client_id": client_id, 
+        "status": "completed",
+        "invoice_paid": {"$ne": True}  # Exclude bookings already paid on an invoice
+    }
     if start_date or end_date:
         date_query = {}
         if start_date:
@@ -263,6 +268,21 @@ async def get_invoice_preview(client_id: str, start_date: str = None, end_date: 
             booking['created_at'] = booking['created_at']
         if isinstance(booking.get('booking_datetime'), str):
             booking['booking_datetime'] = booking['booking_datetime']
+    
+    return bookings
+
+@router.get("/clients/{client_id}/past-jobs")
+async def get_client_past_jobs(client_id: str):
+    """Get bookings that have been invoiced and paid for a client (Past Jobs)"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Get bookings that have been paid on an invoice
+    bookings = await db.bookings.find(
+        {"client_id": client_id, "invoice_paid": True}, 
+        {"_id": 0}
+    ).sort("booking_datetime", -1).to_list(1000)
     
     return bookings
 

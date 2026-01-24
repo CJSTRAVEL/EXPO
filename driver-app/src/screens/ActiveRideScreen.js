@@ -545,7 +545,7 @@ const ActiveRideScreen = ({
                 </Text>
 
                 {/* Show stops progress indicator */}
-                {stops.length > 0 && stage !== 'enroute' && (
+                {stops.length > 0 && (stage === 'completing' || stage === 'arrived') && (
                   <View style={styles.stopsProgress}>
                     <Text style={[styles.stopsProgressText, { color: theme.textSecondary }]}>
                       {currentStopIndex < stops.length 

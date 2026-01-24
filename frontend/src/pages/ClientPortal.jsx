@@ -763,7 +763,7 @@ const ClientPortal = () => {
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             {getStatusBadge(request.status)}
-                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                            <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                               <span className="flex items-center gap-1">
                                 <CalendarIcon className="w-3.5 h-3.5" />
                                 {safeFormatDate(request.pickup_datetime, "dd MMM yyyy HH:mm")}
@@ -775,23 +775,23 @@ const ClientPortal = () => {
                         <div className="space-y-2">
                           <div className="flex items-start gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
-                            <span className="text-gray-300 text-sm">{request.pickup_location}</span>
+                            <span className="text-slate-700 text-sm">{request.pickup_location}</span>
                           </div>
                           <div className="flex items-start gap-2">
                             <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />
-                            <span className="text-gray-300 text-sm">{request.dropoff_location}</span>
+                            <span className="text-slate-700 text-sm">{request.dropoff_location}</span>
                           </div>
                         </div>
                         
                         {/* Rejection Reason */}
-                        <div className="mt-4 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                          <p className="text-xs font-semibold text-red-400 uppercase mb-1">Reason for Decline</p>
-                          <p className="text-sm text-gray-300">
+                        <div className="mt-4 p-3 bg-red-100 rounded-lg border border-red-200">
+                          <p className="text-xs font-semibold text-red-700 uppercase mb-1">Reason for Decline</p>
+                          <p className="text-sm text-red-800">
                             {request.admin_notes || "We were unable to accommodate this request. Please contact us for alternatives."}
                           </p>
                         </div>
                         
-                        <p className="text-xs text-gray-500 mt-3">
+                        <p className="text-xs text-slate-500 mt-3">
                           Submitted {safeFormatDate(request.created_at, "dd MMM yyyy 'at' HH:mm")}
                         </p>
                       </div>
@@ -807,25 +807,25 @@ const ClientPortal = () => {
           <div className="space-y-6">
             {/* Invoice Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/20">
-                    <Receipt className="w-5 h-5 text-blue-400" />
+                  <div className="p-2 rounded-lg bg-[#D4A853]/20">
+                    <Receipt className="w-5 h-5 text-[#D4A853]" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{invoiceStats.total}</p>
-                    <p className="text-xs text-gray-400">Total Invoices</p>
+                    <p className="text-2xl font-bold text-slate-800">{invoiceStats.total}</p>
+                    <p className="text-xs text-slate-500">Total Invoices</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-green-500/20">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <CheckCircle className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{invoiceStats.paid}</p>
-                    <p className="text-xs text-gray-400">Paid</p>
+                    <p className="text-2xl font-bold text-slate-800">{invoiceStats.paid}</p>
+                    <p className="text-xs text-slate-500">Paid</p>
                   </div>
                 </div>
               </div>

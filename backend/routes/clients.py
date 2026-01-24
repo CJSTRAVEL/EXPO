@@ -289,7 +289,11 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
     for b in bookings:
         fare = b.get('fare', 0) or 0
         if request and request.custom_prices and b.get('id') in request.custom_prices:
-            fare = request.custom_prices[b['id']]
+            custom_fare = request.custom_prices[b['id']]
+            if custom_fare is not None:
+                fare = custom_fare
+        # Ensure fare is a number
+        fare = float(fare) if fare else 0.0
         subtotal += fare
     
     # Get client's VAT rate setting

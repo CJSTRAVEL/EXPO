@@ -57,14 +57,14 @@ const hideOnlineNotification = async () => {
 };
 
 // Custom vehicle marker component - Simple car icon
-const VehicleMarker = ({ rotation = 0 }) => (
+const VehicleMarker = () => (
   <View style={styles.vehicleMarkerContainer}>
-    <View style={[styles.vehicleIcon, { transform: [{ rotate: `${rotation}deg` }] }]}>
-      <View style={styles.vehicleIconBody}>
-        <View style={styles.vehicleIconRoof} />
-        <View style={styles.vehicleIconWindshield} />
+    <View style={styles.vehicleMarkerOuter}>
+      <View style={styles.vehicleMarkerInner}>
+        <Ionicons name="car" size={24} color="#fff" />
       </View>
     </View>
+    <View style={styles.vehicleMarkerArrow} />
   </View>
 );
 

@@ -1290,7 +1290,31 @@ const ClientPortal = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowNewBooking(false)}
+              onClick={() => {
+                setNewBooking({
+                  pickup_location: "",
+                  dropoff_location: "",
+                  pickup_datetime: "",
+                  passenger_count: 1,
+                  luggage_count: 0,
+                  vehicle_type_id: "",
+                  vehicle_type_name: "",
+                  notes: "",
+                  flight_number: "",
+                  additional_stops: [],
+                  create_return: false,
+                  return_pickup_location: "",
+                  return_additional_stops: [],
+                  return_dropoff_location: "",
+                  return_datetime: "",
+                  return_flight_number: "",
+                });
+                setFlightData(null);
+                setReturnFlightData(null);
+                setEstimatedFare(null);
+                setRouteInfo(null);
+                setShowNewBooking(false);
+              }}
               className="border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
             >
               Cancel

@@ -87,22 +87,39 @@ const ClientPortal = () => {
       return;
     }
 
+    // Get client info to fetch client-specific fare settings
+    const clientInfo = localStorage.getItem("clientInfo");
+    const clientData = clientInfo ? JSON.parse(clientInfo) : null;
+
     try {
-      const [bookingsRes, requestsRes, invoicesRes, vehicleTypesRes, zonesRes, ratesRes] = await Promise.all([
+      const [bookingsRes, requestsRes, invoicesRes, vehicleTypesRes, zonesRes, ratesRes, clientFaresRes] = await Promise.all([
         axios.get(`${API}/client-portal/bookings`, { headers: getAuthHeaders() }),
         axios.get(`${API}/client-portal/booking-requests`, { headers: getAuthHeaders() }),
         axios.get(`${API}/client-portal/invoices`, { headers: getAuthHeaders() }).catch(() => ({ data: [] })),
         axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
         axios.get(`${API}/settings/fare-zones`).catch(() => ({ data: [] })),
         axios.get(`${API}/settings/mile-rates`).catch(() => ({ data: null })),
+        clientData?.id ? axios.get(`${API}/clients/${clientData.id}/fare-settings`).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
       ]);
 
       setBookings(bookingsRes.data);
       setRequests(requestsRes.data);
       setInvoices(invoicesRes.data);
       setVehicleTypes(vehicleTypesRes.data);
-      setFareZones(zonesRes.data || []);
-      setMileRates(ratesRes.data);
+      
+      // Use client-specific fare settings if available, otherwise use global
+      const clientFares = clientFaresRes.data;
+      if (clientFares?.use_custom_fares && clientFares.custom_fare_zones?.length > 0) {
+        setFareZones(clientFares.custom_fare_zones);
+      } else {
+        setFareZones(zonesRes.data || []);
+      }
+      
+      if (clientFares?.use_custom_fares && clientFares.custom_mile_rates) {
+        setMileRates(clientFares.custom_mile_rates);
+      } else {
+        setMileRates(ratesRes.data);
+      }
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem("clientToken");

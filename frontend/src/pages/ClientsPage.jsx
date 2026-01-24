@@ -518,6 +518,11 @@ const ClientsPage = () => {
                     Generate Invoice
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleOpenFareSettings(selectedClient)} data-testid="fare-settings-btn">
+                    <PoundSterling className="w-4 h-4 mr-2" />
+                    Fare Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleOpenForm(selectedClient)} data-testid="edit-client-btn">
                     <Pencil className="w-4 h-4 mr-2" />
                     Edit Client

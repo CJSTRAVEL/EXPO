@@ -100,11 +100,12 @@ A private hire booking application with three main components:
 
 ### P0 - Critical
 - [ ] User to verify driver app login works with new APK
+- [ ] Fare estimation for Corporate Client Portal (ClientPortal.jsx)
 
 ### P1 - High Priority
-- [ ] Integrate fare zones into booking form for automatic price calculation
 - [ ] SMS templates based on assigned vehicle type
 - [ ] Backend logic to auto-set `booking_source` to 'portal' for portal bookings
+- [ ] APK build with cache clear (on hold per user request)
 
 ### P2 - Medium Priority
 - [ ] Refactor `server.py` modularization (ongoing)

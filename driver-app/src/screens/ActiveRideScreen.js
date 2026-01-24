@@ -656,23 +656,60 @@ const styles = StyleSheet.create({
   alertButton: {
     backgroundColor: '#E53935',
   },
-  priceCardSmall: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
+  // Taxi Meter Styles - Customer-facing display
+  taxiMeter: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 16,
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#D4A853',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  priceCardLabel: {
-    color: '#fff',
+  meterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  meterLabel: {
+    color: '#D4A853',
     fontSize: 14,
-    fontWeight: '600',
-  },
-  priceCardValue: {
-    color: '#fff',
-    fontSize: 24,
     fontWeight: '700',
+    letterSpacing: 2,
+  },
+  meterPaymentBadge: {
+    backgroundColor: '#D4A853',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  meterPaymentText: {
+    color: '#1a1a1a',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  meterValue: {
+    color: '#4CAF50',
+    fontSize: 64,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    letterSpacing: 2,
+    textShadowColor: '#4CAF50',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  meterDeposit: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 4,
   },
   infoCard: {
     borderRadius: 12,

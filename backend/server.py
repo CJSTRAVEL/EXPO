@@ -603,6 +603,61 @@ WALKAROUND_CHECKLIST_ITEMS = [
     "Are you fit to drive?"
 ]
 
+# Quote Models
+class QuoteBase(BaseModel):
+    vehicle_type_id: Optional[str] = None
+    quote_date: datetime
+    quote_time: Optional[str] = None
+    pickup_location: str
+    dropoff_location: str
+    additional_stops: Optional[List[str]] = None
+    customer_first_name: str
+    customer_last_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    return_journey: bool = False
+    return_datetime: Optional[datetime] = None
+    quoted_fare: Optional[float] = None
+    notes: Optional[str] = None
+
+class QuoteCreate(QuoteBase):
+    pass
+
+class QuoteUpdate(BaseModel):
+    vehicle_type_id: Optional[str] = None
+    quote_date: Optional[datetime] = None
+    quote_time: Optional[str] = None
+    pickup_location: Optional[str] = None
+    dropoff_location: Optional[str] = None
+    additional_stops: Optional[List[str]] = None
+    customer_first_name: Optional[str] = None
+    customer_last_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    return_journey: Optional[bool] = None
+    return_datetime: Optional[datetime] = None
+    quoted_fare: Optional[float] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None  # pending, converted, expired, cancelled
+
+async def generate_quote_number():
+    """Generate a sequential quote number like QT-001, QT-002, etc."""
+    latest = await db.quotes.find_one(
+        {"quote_number": {"$exists": True, "$ne": None}},
+        sort=[("quote_number", -1)]
+    )
+    
+    if latest and latest.get("quote_number"):
+        try:
+            current_num = int(latest["quote_number"].split("-")[1])
+            next_num = current_num + 1
+        except (ValueError, IndexError):
+            next_num = 1
+    else:
+        next_num = 1
+    
+    return f"QT-{next_num:03d}"
+
 async def generate_booking_id():
     """Generate a sequential booking ID like CJ-001, CJ-002, etc."""
     # Find the highest booking number

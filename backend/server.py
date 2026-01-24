@@ -2642,7 +2642,9 @@ async def approve_booking_request(request_id: str):
     doc['customer_name'] = request_doc['passenger_name']
     
     # Add client_id if this is a client booking
-    if request_type == 'client' and request_doc.get('client_id'):
+    # Check both 'type' and 'account_type' fields for backwards compatibility
+    is_client_booking = (request_type == 'client' or request_doc.get('account_type') == 'client')
+    if is_client_booking and request_doc.get('client_id'):
         doc['client_id'] = request_doc['client_id']
     
     await db.bookings.insert_one(doc)

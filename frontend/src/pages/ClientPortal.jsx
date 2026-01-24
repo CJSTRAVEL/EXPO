@@ -1053,30 +1053,97 @@ const ClientPortal = () => {
             {/* Date/Time and PAX */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-300">Pickup Date & Time *</Label>
-                <Input
-                  type="datetime-local"
-                  value={newBooking.pickup_datetime}
-                  onChange={(e) => setNewBooking({ ...newBooking, pickup_datetime: e.target.value })}
-                  className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                  required
-                  data-testid="request-datetime-input"
-                />
+                <Label className="text-gray-300">Pickup Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-full justify-start text-left font-normal bg-[#2d2d2d] border-[#3d3d3d] text-white hover:bg-[#3d3d3d] ${
+                        !newBooking.pickup_datetime && "text-gray-500"
+                      }`}
+                      data-testid="request-date-picker"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newBooking.pickup_datetime 
+                        ? format(new Date(newBooking.pickup_datetime), "EEE, dd MMM yyyy")
+                        : "Select date"
+                      }
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-[#2d2d2d] border-[#3d3d3d]" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={newBooking.pickup_datetime ? new Date(newBooking.pickup_datetime) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          // Preserve existing time or default to 09:00
+                          const existingDate = newBooking.pickup_datetime ? new Date(newBooking.pickup_datetime) : null;
+                          const hours = existingDate ? existingDate.getHours() : 9;
+                          const minutes = existingDate ? existingDate.getMinutes() : 0;
+                          const newDate = setMinutes(setHours(date, hours), minutes);
+                          setNewBooking({ ...newBooking, pickup_datetime: newDate.toISOString() });
+                        }
+                      }}
+                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                      className="bg-[#2d2d2d] text-white"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-300">Passengers</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <Input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={newBooking.passenger_count}
-                    onChange={(e) => setNewBooking({ ...newBooking, passenger_count: parseInt(e.target.value) || 1 })}
-                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                    data-testid="request-pax-input"
-                  />
-                </div>
+                <Label className="text-gray-300">Pickup Time *</Label>
+                <Select
+                  value={newBooking.pickup_datetime 
+                    ? format(new Date(newBooking.pickup_datetime), "HH:mm")
+                    : ""
+                  }
+                  onValueChange={(time) => {
+                    const [hours, minutes] = time.split(":").map(Number);
+                    const date = newBooking.pickup_datetime 
+                      ? new Date(newBooking.pickup_datetime) 
+                      : new Date();
+                    const newDate = setMinutes(setHours(date, hours), minutes);
+                    setNewBooking({ ...newBooking, pickup_datetime: newDate.toISOString() });
+                  }}
+                >
+                  <SelectTrigger className="bg-[#2d2d2d] border-[#3d3d3d] text-white" data-testid="request-time-picker">
+                    <SelectValue placeholder="Select time">
+                      {newBooking.pickup_datetime 
+                        ? format(new Date(newBooking.pickup_datetime), "HH:mm")
+                        : "Select time"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#2d2d2d] border-[#3d3d3d] text-white max-h-[200px]">
+                    {Array.from({ length: 48 }, (_, i) => {
+                      const hours = Math.floor(i / 2);
+                      const minutes = (i % 2) * 30;
+                      const time = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+                      return (
+                        <SelectItem key={time} value={time} className="text-white hover:bg-[#3d3d3d]">
+                          {time}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Passengers */}
+            <div className="space-y-2">
+              <Label className="text-gray-300">Number of Passengers</Label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={newBooking.passenger_count}
+                  onChange={(e) => setNewBooking({ ...newBooking, passenger_count: parseInt(e.target.value) || 1 })}
+                  className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                  data-testid="request-pax-input"
+                />
               </div>
             </div>
 

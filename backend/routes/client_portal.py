@@ -500,9 +500,9 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
         
         journey_table = Table(table_data, colWidths=[30, 80, 230, 55, 55, 55])
         journey_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FDF8E8')),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('GRID', (0, 0), (-1, -1), 0.5, gold_accent),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ALIGN', (3, 0), (-1, -1), 'RIGHT'),
             ('TOPPADDING', (0, 0), (-1, -1), 6),

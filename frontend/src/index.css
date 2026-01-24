@@ -130,12 +130,14 @@ code {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border: 1px solid #e5e7eb;
     font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    pointer-events: auto !important;
 }
 
 .pac-item {
     padding: 10px 14px;
     cursor: pointer;
     border-bottom: 1px solid #f3f4f6;
+    pointer-events: auto !important;
 }
 
 .pac-item:hover {
@@ -153,4 +155,19 @@ code {
 .pac-item-query {
     font-weight: 500;
     color: #1f2937;
+}
+
+/* Ensure dialog overlay doesn't block pac-container clicks */
+[data-radix-portal] {
+    pointer-events: none;
+}
+
+[data-radix-portal] > * {
+    pointer-events: auto;
+}
+
+/* But pac-container should always be clickable */
+.pac-container,
+.pac-container * {
+    pointer-events: auto !important;
 }

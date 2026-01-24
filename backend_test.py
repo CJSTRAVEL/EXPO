@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any
 
 class PrivateHireAPITester:
-    def __init__(self, base_url="https://executive-rides-9.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://exectravel-1.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

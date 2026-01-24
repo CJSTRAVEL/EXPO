@@ -255,6 +255,7 @@ function AppRoutes() {
                 <Route path="/requests" element={<RequestsPage />} />
                 <Route path="/contract-work" element={<ContractWorkPage />} />
                 <Route path="/clients" element={<ClientsPage />} />
+                <Route path="/clients/invoices" element={<InvoiceManagerPage />} />
                 <Route path="/passengers" element={<PassengersPage />} />
                 <Route path="/drivers" element={<DriversPage />} />
                 <Route path="/vehicles" element={<VehiclesPage />} />

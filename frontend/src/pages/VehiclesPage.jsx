@@ -667,15 +667,27 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
                   </div>
                 )}
 
-                {/* Document Status */}
+                {/* Document Status - Different for Taxi vs PSV */}
                 <div className="space-y-2 pt-3 border-t">
                   <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    Documents
+                    Documents {v.vehicle_type?.category === "psv" ? "(PSV)" : "(Taxi)"}
                   </h4>
                   <DocumentBadge label="Insurance" date={v.insurance_expiry} />
                   <DocumentBadge label="Road Tax" date={v.tax_expiry} />
-                  <DocumentBadge label="DCC Test 1" date={v.dcc_test_date_1} />
-                  <DocumentBadge label="DCC Test 2" date={v.dcc_test_date_2} />
+                  
+                  {/* PSV Documents */}
+                  {v.vehicle_type?.category === "psv" ? (
+                    <>
+                      <DocumentBadge label="DVSA MOT" date={v.dvsa_mot_expiry} />
+                      <DocumentBadge label="Next 10 Weekly" date={v.next_10_weekly} />
+                    </>
+                  ) : (
+                    /* Taxi Documents (default) */
+                    <>
+                      <DocumentBadge label="DCC Test 1" date={v.dcc_test_date_1} />
+                      <DocumentBadge label="DCC Test 2" date={v.dcc_test_date_2} />
+                    </>
+                  )}
                 </div>
 
                 {/* Color & Notes */}

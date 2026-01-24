@@ -81,6 +81,7 @@ class Client(ClientBase):
 
 class InvoiceRequest(BaseModel):
     custom_prices: Optional[dict] = None
+    booking_ids: Optional[List[str]] = None  # Specific booking IDs to include in invoice
 
 
 # ========== ENDPOINTS ==========

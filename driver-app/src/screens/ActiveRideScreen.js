@@ -488,11 +488,19 @@ const ActiveRideScreen = ({
                 </TouchableOpacity>
               </View>
 
-              {/* Price Display - Show when arrived or in progress */}
-              {(stage === 'arrived' || stage === 'completing') && fare > 0 && (
-                <View style={[styles.priceCardSmall, { backgroundColor: '#D4A853' }]}>
-                  <Text style={styles.priceCardLabel}>Balance Due</Text>
-                  <Text style={styles.priceCardValue}>£{balanceDue.toFixed(2)}</Text>
+              {/* TAXI METER - Always visible once customer is picked up (from arrived stage onwards) */}
+              {(stage === 'arrived' || stage === 'completing') && (
+                <View style={styles.taxiMeter}>
+                  <View style={styles.meterHeader}>
+                    <Text style={styles.meterLabel}>FARE</Text>
+                    <View style={styles.meterPaymentBadge}>
+                      <Text style={styles.meterPaymentText}>{booking.payment_method || 'Cash'}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.meterValue}>£{balanceDue.toFixed(2)}</Text>
+                  {deposit > 0 && (
+                    <Text style={styles.meterDeposit}>Deposit paid: £{deposit.toFixed(2)}</Text>
+                  )}
                 </View>
               )}
 
@@ -563,7 +571,7 @@ const ActiveRideScreen = ({
           )}
           {stage === 'completing' && hasMoreStops && (
             <SwipeButton 
-              text={`Swipe: Arrived at Stop ${currentStopIndex + 1}`}
+              text="Next Stop"
               onSwipeComplete={handleNextStop}
               color="#FF9800"
             />

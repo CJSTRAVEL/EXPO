@@ -329,6 +329,7 @@ const InvoiceManagerPage = () => {
               <TableHead>Client</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Journeys</TableHead>
+              <TableHead>VAT</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>

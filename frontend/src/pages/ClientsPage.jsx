@@ -1048,6 +1048,338 @@ const ClientsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Fare Settings Modal */}
+      <Dialog open={showFareSettingsModal} onOpenChange={setShowFareSettingsModal}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="fare-settings-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PoundSterling className="w-5 h-5" />
+              Fare Settings - {selectedClient?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingFareSettings ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Toggle Custom Fares */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <Label className="text-base font-medium">Use Custom Fare Model</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Enable to use client-specific fares instead of global settings
+                  </p>
+                </div>
+                <Switch
+                  checked={fareSettings.use_custom_fares}
+                  onCheckedChange={(checked) => setFareSettings({ ...fareSettings, use_custom_fares: checked })}
+                  data-testid="use-custom-fares-switch"
+                />
+              </div>
+
+              {fareSettings.use_custom_fares && (
+                <>
+                  {/* Copy from Global Button */}
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCopyFromGlobal}
+                    className="w-full"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Copy from Global Settings
+                  </Button>
+
+                  {/* Mile Rates Section */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Mileage Rates</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Base Fare (£)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={fareSettings.custom_mile_rates?.base_fare || ""}
+                          onChange={(e) => setFareSettings({
+                            ...fareSettings,
+                            custom_mile_rates: {
+                              ...fareSettings.custom_mile_rates,
+                              base_fare: parseFloat(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="e.g. 3.50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Price per Mile (£)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={fareSettings.custom_mile_rates?.price_per_mile || ""}
+                          onChange={(e) => setFareSettings({
+                            ...fareSettings,
+                            custom_mile_rates: {
+                              ...fareSettings.custom_mile_rates,
+                              price_per_mile: parseFloat(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="e.g. 2.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Minimum Fare (£)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={fareSettings.custom_mile_rates?.minimum_fare || ""}
+                          onChange={(e) => setFareSettings({
+                            ...fareSettings,
+                            custom_mile_rates: {
+                              ...fareSettings.custom_mile_rates,
+                              minimum_fare: parseFloat(e.target.value) || 0
+                            }
+                          })}
+                          placeholder="e.g. 10.00"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Vehicle-specific rates */}
+                    {vehicleTypes.length > 0 && (
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Vehicle-Specific Rates</Label>
+                        <div className="space-y-2">
+                          {vehicleTypes.map((vt) => (
+                            <div key={vt.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+                              <span className="w-32 font-medium text-sm">{vt.name}</span>
+                              <div className="flex-1 grid grid-cols-3 gap-2">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Base"
+                                  className="h-8 text-sm"
+                                  value={fareSettings.custom_mile_rates?.vehicle_rates?.[vt.id]?.base_fare || ""}
+                                  onChange={(e) => {
+                                    const vehicleRates = fareSettings.custom_mile_rates?.vehicle_rates || {};
+                                    setFareSettings({
+                                      ...fareSettings,
+                                      custom_mile_rates: {
+                                        ...fareSettings.custom_mile_rates,
+                                        vehicle_rates: {
+                                          ...vehicleRates,
+                                          [vt.id]: {
+                                            ...vehicleRates[vt.id],
+                                            base_fare: parseFloat(e.target.value) || 0
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Per Mile"
+                                  className="h-8 text-sm"
+                                  value={fareSettings.custom_mile_rates?.vehicle_rates?.[vt.id]?.price_per_mile || ""}
+                                  onChange={(e) => {
+                                    const vehicleRates = fareSettings.custom_mile_rates?.vehicle_rates || {};
+                                    setFareSettings({
+                                      ...fareSettings,
+                                      custom_mile_rates: {
+                                        ...fareSettings.custom_mile_rates,
+                                        vehicle_rates: {
+                                          ...vehicleRates,
+                                          [vt.id]: {
+                                            ...vehicleRates[vt.id],
+                                            price_per_mile: parseFloat(e.target.value) || 0
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Minimum"
+                                  className="h-8 text-sm"
+                                  value={fareSettings.custom_mile_rates?.vehicle_rates?.[vt.id]?.minimum_fare || ""}
+                                  onChange={(e) => {
+                                    const vehicleRates = fareSettings.custom_mile_rates?.vehicle_rates || {};
+                                    setFareSettings({
+                                      ...fareSettings,
+                                      custom_mile_rates: {
+                                        ...fareSettings.custom_mile_rates,
+                                        vehicle_rates: {
+                                          ...vehicleRates,
+                                          [vt.id]: {
+                                            ...vehicleRates[vt.id],
+                                            minimum_fare: parseFloat(e.target.value) || 0
+                                          }
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Fare Zones Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">Fare Zones</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFareSettings({
+                          ...fareSettings,
+                          custom_fare_zones: [
+                            ...fareSettings.custom_fare_zones,
+                            { zone_name: "", zone_type: "dropoff", postcodes: [], areas: [], fixed_fare: 0, vehicle_fares: {} }
+                          ]
+                        })}
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add Zone
+                      </Button>
+                    </div>
+
+                    {fareSettings.custom_fare_zones?.map((zone, idx) => (
+                      <div key={idx} className="p-4 border rounded-lg space-y-3 bg-white">
+                        <div className="flex items-center justify-between">
+                          <Input
+                            value={zone.zone_name || ""}
+                            onChange={(e) => {
+                              const zones = [...fareSettings.custom_fare_zones];
+                              zones[idx] = { ...zones[idx], zone_name: e.target.value };
+                              setFareSettings({ ...fareSettings, custom_fare_zones: zones });
+                            }}
+                            placeholder="Zone Name (e.g. Newcastle Airport)"
+                            className="w-64"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const zones = fareSettings.custom_fare_zones.filter((_, i) => i !== idx);
+                              setFareSettings({ ...fareSettings, custom_fare_zones: zones });
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Postcodes (comma separated)</Label>
+                            <Input
+                              value={(zone.postcodes || []).join(", ")}
+                              onChange={(e) => {
+                                const zones = [...fareSettings.custom_fare_zones];
+                                zones[idx] = { ...zones[idx], postcodes: e.target.value.split(",").map(p => p.trim()).filter(Boolean) };
+                                setFareSettings({ ...fareSettings, custom_fare_zones: zones });
+                              }}
+                              placeholder="NE13, DH1"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Areas (comma separated)</Label>
+                            <Input
+                              value={(zone.areas || []).join(", ")}
+                              onChange={(e) => {
+                                const zones = [...fareSettings.custom_fare_zones];
+                                zones[idx] = { ...zones[idx], areas: e.target.value.split(",").map(a => a.trim()).filter(Boolean) };
+                                setFareSettings({ ...fareSettings, custom_fare_zones: zones });
+                              }}
+                              placeholder="Durham, Sunderland"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Fixed Fare (£) - or set per vehicle below</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={zone.fixed_fare || ""}
+                            onChange={(e) => {
+                              const zones = [...fareSettings.custom_fare_zones];
+                              zones[idx] = { ...zones[idx], fixed_fare: parseFloat(e.target.value) || 0 };
+                              setFareSettings({ ...fareSettings, custom_fare_zones: zones });
+                            }}
+                            placeholder="45.00"
+                            className="h-8 text-sm w-32"
+                          />
+                        </div>
+                        {/* Per-vehicle fares for this zone */}
+                        {vehicleTypes.length > 0 && (
+                          <div className="space-y-1">
+                            <Label className="text-xs">Per Vehicle Fares</Label>
+                            <div className="flex flex-wrap gap-2">
+                              {vehicleTypes.map((vt) => (
+                                <div key={vt.id} className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground">{vt.name}:</span>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    className="h-7 w-20 text-xs"
+                                    placeholder="£"
+                                    value={zone.vehicle_fares?.[vt.id] || ""}
+                                    onChange={(e) => {
+                                      const zones = [...fareSettings.custom_fare_zones];
+                                      zones[idx] = {
+                                        ...zones[idx],
+                                        vehicle_fares: {
+                                          ...zones[idx].vehicle_fares,
+                                          [vt.id]: parseFloat(e.target.value) || 0
+                                        }
+                                      };
+                                      setFareSettings({ ...fareSettings, custom_fare_zones: zones });
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {(!fareSettings.custom_fare_zones || fareSettings.custom_fare_zones.length === 0) && (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No fare zones configured. Add zones or copy from global settings.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFareSettingsModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveFareSettings} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Settings"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

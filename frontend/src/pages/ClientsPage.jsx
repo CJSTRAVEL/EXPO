@@ -248,6 +248,8 @@ const ClientsPage = () => {
         post_code: client.post_code || "",
         country: client.country || "United Kingdom",
         notes: client.notes || "",
+        vat_rate: client.vat_rate || "20",
+        vat_number: client.vat_number || "",
       });
     } else {
       setEditingClient(null);
@@ -264,6 +266,8 @@ const ClientsPage = () => {
         post_code: "",
         country: "United Kingdom",
         notes: "",
+        vat_rate: "20",
+        vat_number: "",
       });
     }
     setShowFormModal(true);

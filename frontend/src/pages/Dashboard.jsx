@@ -37,12 +37,61 @@ const StatCard = ({ title, value, icon: Icon, subtitle, color = "primary" }) => 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expiringDocs, setExpiringDocs] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsRes = await axios.get(`${API}/stats`);
+        const [statsRes, driversRes] = await Promise.all([
+          axios.get(`${API}/stats`),
+          axios.get(`${API}/drivers`)
+        ]);
         setStats(statsRes.data);
+        
+        // Process driver documents for expiry
+        const today = new Date();
+        const expiryWarningDays = 30;
+        const expiring = [];
+        
+        const docTypes = [
+          { key: 'taxi_licence_expiry', label: 'Taxi Licence' },
+          { key: 'dbs_expiry', label: 'DBS Check' },
+          { key: 'school_badge_expiry', label: 'School Badge' },
+          { key: 'driving_licence_expiry', label: 'Driving Licence' },
+          { key: 'cpc_expiry', label: 'CPC' },
+          { key: 'tacho_card_expiry', label: 'Tacho Card' },
+        ];
+        
+        driversRes.data.forEach(driver => {
+          docTypes.forEach(docType => {
+            const expiryDate = driver[docType.key];
+            if (expiryDate) {
+              try {
+                const parsedDate = parseISO(expiryDate);
+                if (isValid(parsedDate)) {
+                  const daysUntilExpiry = differenceInDays(parsedDate, today);
+                  if (daysUntilExpiry <= expiryWarningDays) {
+                    expiring.push({
+                      driverName: driver.name,
+                      driverId: driver.id,
+                      docType: docType.label,
+                      expiryDate: parsedDate,
+                      daysUntilExpiry,
+                      isExpired: daysUntilExpiry < 0
+                    });
+                  }
+                }
+              } catch (e) {
+                // Invalid date format, skip
+              }
+            }
+          });
+        });
+        
+        // Sort by days until expiry (expired first, then closest to expiring)
+        expiring.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+        setExpiringDocs(expiring);
+        
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {

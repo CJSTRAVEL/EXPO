@@ -765,6 +765,46 @@ const ClientsPage = () => {
                 </div>
               )}
             </div>
+
+            {/* Past Jobs (Invoiced & Paid) */}
+            <div className="bg-white rounded-xl border p-5 mt-6">
+              <h3 className="font-semibold mb-4 text-slate-700 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Past Jobs (Invoiced)
+              </h3>
+              {loadingPastJobs ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                </div>
+              ) : pastJobs.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground">No invoiced jobs yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Jobs will appear here when their invoice is marked as paid</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {pastJobs.map((booking) => (
+                    <div key={booking.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
+                      <div>
+                        <p className="text-sm font-medium">{booking.booking_id}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {booking.pickup_location?.substring(0, 30)}...
+                        </p>
+                        <p className="text-xs text-green-600">
+                          Invoice: {booking.invoice_ref}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">£{(booking.fare || 0).toFixed(2)}</p>
+                        <Badge className="bg-green-100 text-green-700 text-xs">
+                          Paid
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">

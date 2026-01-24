@@ -209,6 +209,24 @@ const RequestsPage = () => {
           </div>
         </div>
 
+        {/* Vehicle & Route Info */}
+        {(request.vehicle_type_name || request.distance_miles) && (
+          <div className="flex items-center gap-4 mb-3 text-sm text-slate-600">
+            {request.vehicle_type_name && (
+              <span className="inline-flex items-center gap-1">
+                <Car className="w-4 h-4" />
+                {request.vehicle_type_name}
+              </span>
+            )}
+            {request.distance_miles && (
+              <span>{request.distance_miles.toFixed(1)} miles</span>
+            )}
+            {request.duration_minutes && (
+              <span>~{request.duration_minutes} mins</span>
+            )}
+          </div>
+        )}
+
         {/* Notes */}
         {request.notes && (
           <div className="flex items-start gap-2 p-3 bg-white/50 rounded-lg border border-slate-200">

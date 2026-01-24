@@ -93,6 +93,29 @@ const PassengerPortalAdmin = () => {
     }
   };
 
+  const handleUpdateEmail = async () => {
+    if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/passengers/${selectedPassenger.id}/email`, {
+        email: newEmail || null
+      });
+      toast.success(newEmail ? "Email updated successfully" : "Email removed successfully");
+      setShowEmailModal(false);
+      setNewEmail("");
+      setSelectedPassenger(null);
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update email");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleBlockPassenger = async (passenger) => {
     setSaving(true);
     try {

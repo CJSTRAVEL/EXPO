@@ -218,8 +218,8 @@ const AddressAutocomplete = ({
 
   // Only sync from parent when value prop changes externally (e.g., form reset or flight lookup)
   useEffect(() => {
-    // Don't sync if user is actively typing
-    if (isTypingRef.current) return;
+    // Don't sync if user is actively typing or Google selection just happened
+    if (isTypingRef.current || isSelectingRef.current) return;
     
     // Sync when parent value differs from local state
     // This handles form reset, flight lookup auto-fill, etc.

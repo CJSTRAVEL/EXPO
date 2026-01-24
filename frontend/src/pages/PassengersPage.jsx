@@ -177,21 +177,67 @@ const PassengersPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [selectedPassenger, setSelectedPassenger] = useState(null);
+  const [editingPassenger, setEditingPassenger] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+  });
+
+  const fetchBookings = async () => {
+    try {
+      const response = await axios.get(`${API}/bookings`);
+      setBookings(response.data);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      toast.error("Failed to load passengers");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await axios.get(`${API}/bookings`);
-        setBookings(response.data);
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-        toast.error("Failed to load passengers");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBookings();
   }, []);
+
+  const handleEditPassenger = (passenger) => {
+    setEditingPassenger(passenger);
+    setEditForm({
+      name: passenger.name || "",
+      phone: passenger.phone || "",
+      email: passenger.email || "",
+    });
+    setSelectedPassenger(null);
+    setShowEditModal(true);
+  };
+
+  const handleSavePassenger = async () => {
+    if (!editingPassenger) return;
+    
+    setSaving(true);
+    try {
+      // Update all bookings with this phone number
+      await axios.put(`${API}/passengers/update`, {
+        original_phone: editingPassenger.phone,
+        name: editForm.name,
+        phone: editForm.phone,
+        email: editForm.email,
+      });
+      
+      toast.success("Passenger profile updated successfully");
+      setShowEditModal(false);
+      setEditingPassenger(null);
+      // Refresh bookings to show updated info
+      fetchBookings();
+    } catch (error) {
+      console.error("Error updating passenger:", error);
+      toast.error(error.response?.data?.detail || "Failed to update passenger");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Aggregate bookings by passenger (phone number)
   const passengers = bookings.reduce((acc, booking) => {

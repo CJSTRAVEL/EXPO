@@ -486,12 +486,12 @@ export default function HomeScreen({ navigation }) {
         {location && (
           <Marker
             coordinate={location}
-            anchor={{ x: 0.5, y: 0.9 }}
-            flat={false}
+            anchor={{ x: 0.5, y: 0.5 }}
+            flat={true}
             tracksViewChanges={true}
             style={{ zIndex: 999 }}
           >
-            <VehicleMarker />
+            <VehicleMarker heading={heading} />
           </Marker>
         )}
       </MapView>

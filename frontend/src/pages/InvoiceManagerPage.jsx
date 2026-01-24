@@ -339,7 +339,7 @@ const InvoiceManagerPage = () => {
           <TableBody>
             {filteredInvoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
+                <TableCell colSpan={9} className="text-center py-12">
                   <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                   <p className="text-slate-500">No invoices found</p>
                 </TableCell>
@@ -348,6 +348,8 @@ const InvoiceManagerPage = () => {
               filteredInvoices.map((invoice) => {
                 const statusConfig = STATUS_CONFIG[invoice.status] || STATUS_CONFIG.unpaid;
                 const StatusIcon = statusConfig.icon;
+                const vatLabel = invoice.vat_rate === '0' ? 'No VAT' : 
+                                 invoice.vat_rate === 'exempt' ? 'Exempt' : '20%';
                 
                 return (
                   <TableRow 
@@ -374,6 +376,15 @@ const InvoiceManagerPage = () => {
                       </span>
                     </TableCell>
                     <TableCell>{invoice.journey_count || 0}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={
+                        invoice.vat_rate === '0' || invoice.vat_rate === 'exempt' 
+                          ? 'text-slate-600' 
+                          : 'text-blue-600'
+                      }>
+                        {vatLabel}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right font-semibold">
                       £{(invoice.total || 0).toFixed(2)}
                     </TableCell>

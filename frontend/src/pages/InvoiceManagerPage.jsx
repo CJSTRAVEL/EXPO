@@ -550,6 +550,19 @@ const InvoiceManagerPage = () => {
                               Send Reminder
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setSelectedInvoice(invoice);
+                              setShowDeleteModal(true);
+                            }}
+                            className="text-red-600"
+                            data-testid={`delete-invoice-${invoice.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Invoice
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

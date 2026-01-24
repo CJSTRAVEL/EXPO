@@ -737,6 +737,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  vehiclePickerContainer: {
+    width: '85%',
+    maxHeight: '70%',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  vehiclePickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  vehiclePickerList: {
+    maxHeight: 300,
+  },
+  vehiclePickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  vehiclePickerItemContent: {
+    flex: 1,
+  },
+  vehiclePickerReg: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  vehiclePickerType: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  vehiclePickerClose: {
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    alignItems: 'center',
+  },
+  vehiclePickerCloseText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

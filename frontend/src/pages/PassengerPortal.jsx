@@ -722,6 +722,67 @@ const PassengerPortal = () => {
           </div>
         )}
 
+        {/* Rejected Requests */}
+        {bookingRequests.filter(r => r.status === 'rejected').length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-3">
+              Rejected Requests
+            </h3>
+            <div className="space-y-3">
+              {bookingRequests.filter(r => r.status === 'rejected').map((request) => (
+                <div
+                  key={request.id}
+                  className="bg-red-50 rounded-lg border border-red-200 p-4"
+                  data-testid={`rejected-request-${request.id}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
+                        REQUEST DECLINED
+                      </Badge>
+                      <p className="font-medium text-slate-800 mt-2">
+                        {format(new Date(request.pickup_datetime), "EEE, dd MMM")}
+                      </p>
+                      <p className="text-lg font-bold">
+                        {format(new Date(request.pickup_datetime), "HH:mm")}
+                      </p>
+                    </div>
+                    <XCircle className="w-6 h-6 text-red-500" />
+                  </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <div className="flex flex-col items-center mt-1">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <div className="w-0.5 h-6 bg-red-300"></div>
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700 truncate">{request.pickup_location}</p>
+                      <div className="h-3"></div>
+                      <p className="text-sm text-slate-600 truncate">{request.dropoff_location}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Rejection Reason */}
+                  {request.admin_notes && (
+                    <div className="mt-3 p-3 bg-red-100 rounded-lg border border-red-200">
+                      <p className="text-xs font-semibold text-red-700 uppercase mb-1">Reason for Decline</p>
+                      <p className="text-sm text-red-800">{request.admin_notes}</p>
+                    </div>
+                  )}
+                  
+                  {!request.admin_notes && (
+                    <div className="mt-3 p-3 bg-red-100 rounded-lg border border-red-200">
+                      <p className="text-xs font-semibold text-red-700 uppercase mb-1">Reason for Decline</p>
+                      <p className="text-sm text-red-800">We were unable to accommodate this request. Please contact us for alternatives.</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded-lg p-4 border">

@@ -317,8 +317,8 @@ const ClientsPage = () => {
   };
 
   const handleGenerateInvoice = async (downloadOnly = false) => {
-    if (!selectedClient || invoiceBookings.length === 0) {
-      toast.error("No bookings to include in invoice");
+    if (!selectedClient || selectedBookingIds.size === 0) {
+      toast.error("No bookings selected for invoice");
       return;
     }
     
@@ -328,15 +328,19 @@ const ClientsPage = () => {
       if (invoiceDateRange.start) params.append('start_date', invoiceDateRange.start);
       if (invoiceDateRange.end) params.append('end_date', invoiceDateRange.end);
       
-      // Send custom prices along with the request
+      // Send custom prices only for selected bookings
       const customPrices = {};
+      const selectedBookingIdsList = [];
       invoiceBookings.forEach(b => {
-        customPrices[b.id] = b.fare;
+        if (selectedBookingIds.has(b.id)) {
+          customPrices[b.id] = b.fare;
+          selectedBookingIdsList.push(b.id);
+        }
       });
       
       const response = await axios.post(
         `${API}/clients/${selectedClient.id}/invoice?${params.toString()}`,
-        { custom_prices: customPrices },
+        { custom_prices: customPrices, booking_ids: selectedBookingIdsList },
         { responseType: 'blob' }
       );
       

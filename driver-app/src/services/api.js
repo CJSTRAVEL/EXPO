@@ -69,6 +69,11 @@ export const getStoredToken = async () => {
   }
 };
 
+// Get current auth token (synchronous - returns cached token)
+export const getCurrentToken = () => {
+  return authToken;
+};
+
 // Auth API
 export const loginDriver = async (email, password) => {
   try {

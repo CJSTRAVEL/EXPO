@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Calendar, Users, Car, DollarSign, Clock, CheckCircle, XCircle, AlertTriangle, MapPin, Navigation, FileWarning } from "lucide-react";
+import { Calendar, Users, Car, DollarSign, Clock, CheckCircle, XCircle, AlertTriangle, MapPin, Navigation, FileWarning, Truck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, differenceInDays, parseISO, isValid } from "date-fns";

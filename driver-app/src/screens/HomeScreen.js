@@ -186,7 +186,23 @@ export default function HomeScreen({ navigation }) {
     try {
       // Use the new available-vehicles endpoint that includes exclusivity status
       const data = await getAvailableVehicles();
-      setVehicles(data || []);
+      
+      // Filter vehicles based on driver's license type
+      // license_type can be: "taxi", "psv", "both", or null
+      const driverLicenseType = user?.license_type;
+      
+      let filteredVehicles = data || [];
+      if (driverLicenseType && driverLicenseType !== 'both') {
+        filteredVehicles = (data || []).filter(vehicle => {
+          const vehicleCategory = vehicle.vehicle_type?.category;
+          // If vehicle has no category or is "both", show it
+          if (!vehicleCategory || vehicleCategory === 'both') return true;
+          // Otherwise, match driver license type to vehicle category
+          return vehicleCategory === driverLicenseType;
+        });
+      }
+      
+      setVehicles(filteredVehicles);
     } catch (error) {
       console.error('Error loading vehicles:', error);
       Alert.alert('Error', 'Failed to load vehicles. Please try again.');

@@ -1087,6 +1087,61 @@ const ClientsPage = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Set Portal Password Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="password-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              Set Portal Password
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Set or reset the portal login password for <strong>{selectedClient?.name}</strong>
+            </p>
+            
+            <div className="space-y-2">
+              <Label>Login Email</Label>
+              <Input 
+                value={selectedClient?.email || selectedClient?.contact_email || "-"} 
+                disabled 
+                className="bg-slate-50"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (min 6 characters)"
+                data-testid="new-password-input"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSetPassword} disabled={saving || !newPassword}>
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Set Password"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Fare Settings Modal */}
       <Dialog open={showFareSettingsModal} onOpenChange={setShowFareSettingsModal}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" data-testid="fare-settings-modal">

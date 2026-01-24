@@ -707,8 +707,169 @@ const InvoiceManagerPage = () => {
                 Download PDF
               </Button>
             )}
+            {invoiceDetails && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowDetailModal(false);
+                  handleEditInvoice(invoiceDetails);
+                }}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            )}
             <Button onClick={() => setShowDetailModal(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Invoice Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-primary" />
+              Edit Invoice
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Invoice Reference */}
+            <div className="space-y-2">
+              <Label htmlFor="invoice_ref">Invoice Reference</Label>
+              <Input
+                id="invoice_ref"
+                value={editForm.invoice_ref}
+                onChange={(e) => setEditForm({ ...editForm, invoice_ref: e.target.value })}
+                data-testid="edit-invoice-ref"
+              />
+            </div>
+
+            {/* Client Info (read-only) */}
+            <div className="bg-slate-50 rounded-lg p-3">
+              <p className="text-sm text-slate-500">Client</p>
+              <p className="font-medium">{selectedInvoice?.client_name}</p>
+              <p className="text-xs text-slate-500">{selectedInvoice?.client_account_no}</p>
+            </div>
+
+            {/* Subtotal */}
+            <div className="space-y-2">
+              <Label htmlFor="subtotal">Subtotal (£)</Label>
+              <Input
+                id="subtotal"
+                type="number"
+                step="0.01"
+                min="0"
+                value={editForm.subtotal}
+                onChange={(e) => setEditForm({ ...editForm, subtotal: parseFloat(e.target.value) || 0 })}
+                data-testid="edit-invoice-subtotal"
+              />
+            </div>
+
+            {/* VAT Rate */}
+            <div className="space-y-2">
+              <Label>VAT Rate</Label>
+              <Select
+                value={editForm.vat_rate}
+                onValueChange={(value) => setEditForm({ ...editForm, vat_rate: value })}
+              >
+                <SelectTrigger data-testid="edit-invoice-vat">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="20">20% VAT</SelectItem>
+                  <SelectItem value="0">No VAT (0%)</SelectItem>
+                  <SelectItem value="exempt">VAT Exempt</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Calculated Preview */}
+            <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-medium text-slate-600">Preview</p>
+              <div className="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <span>£{calculateVatPreview().subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>{editForm.vat_rate === "0" ? "No VAT" : editForm.vat_rate === "exempt" ? "VAT Exempt" : "VAT (20%)"}</span>
+                <span>£{calculateVatPreview().vatAmount.toFixed(2)}</span>
+              </div>
+              <div className="border-t pt-2 flex justify-between font-semibold">
+                <span>Total</span>
+                <span className="text-primary">£{calculateVatPreview().total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(value) => setEditForm({ ...editForm, status: value })}
+              >
+                <SelectTrigger data-testid="edit-invoice-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paid">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      Paid
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="unpaid">
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      Outstanding
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="overdue">
+                    <span className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                      Overdue
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="cancelled">
+                    <span className="flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-slate-500" />
+                      Cancelled
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Add notes about this invoice..."
+                rows={3}
+                data-testid="edit-invoice-notes"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveInvoice} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

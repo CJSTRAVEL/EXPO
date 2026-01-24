@@ -5520,21 +5520,36 @@ async def notify_passenger_arrival(booking_id: str, driver: dict = Depends(get_c
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
-    # Send SMS notification
+    # Get vehicle info
+    vehicle = await db.vehicles.find_one({"id": driver.get("selected_vehicle_id")})
+    vehicle_make = vehicle.get("make", "") if vehicle else ""
+    vehicle_model = vehicle.get("model", "") if vehicle else ""
+    vehicle_colour = vehicle.get("colour", vehicle.get("color", "")) if vehicle else ""
+    vehicle_registration = vehicle.get("registration", driver.get("vehicle_number", "")) if vehicle else driver.get("vehicle_number", "")
+    
+    # Generate booking link
+    app_url = os.environ.get('APP_URL', 'https://execcarapp.preview.emergentagent.com')
+    short_booking_id = booking.get("short_booking_id", booking_id[:8])
+    booking_link = f"{app_url}/api/preview/{short_booking_id}"
+    
+    # Send SMS notification using template
     customer_phone = booking.get("customer_phone")
+    customer_name = booking.get("customer_name", "Customer")
+    
     if customer_phone and vonage_client:
-        try:
-            message = f"Your driver {driver['name']} has arrived at the pickup location. Vehicle: {driver['vehicle_type']} ({driver['vehicle_number']})"
-            vonage_client.sms.send(
-                vonage.Sms(
-                    from_=VONAGE_FROM_NUMBER,
-                    to=customer_phone.replace("+", "").replace(" ", ""),
-                    text=message
-                )
-            )
-            logging.info(f"Arrival notification sent to {customer_phone}")
-        except Exception as e:
-            logging.error(f"Failed to send arrival notification: {e}")
+        await send_templated_sms(
+            phone=customer_phone,
+            template_type="driver_arrived",
+            variables={
+                "customer_name": customer_name,
+                "vehicle_make": vehicle_make,
+                "vehicle_model": vehicle_model,
+                "vehicle_colour": vehicle_colour,
+                "vehicle_registration": vehicle_registration,
+                "booking_link": booking_link
+            }
+        )
+        logging.info(f"Arrival notification sent to {customer_phone}")
     
     # Update booking
     await db.bookings.update_one(

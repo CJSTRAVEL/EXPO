@@ -173,7 +173,7 @@ const InvoiceManagerPage = () => {
     }
   };
 
-  const handleEditInvoice = (invoice) => {
+  const handleEditInvoice = async (invoice) => {
     setSelectedInvoice(invoice);
     setEditForm({
       invoice_ref: invoice.invoice_ref || "",
@@ -181,8 +181,31 @@ const InvoiceManagerPage = () => {
       vat_rate: invoice.vat_rate || "20",
       status: invoice.status || "unpaid",
       notes: invoice.notes || "",
+      booking_ids: invoice.booking_ids || [],
     });
+    // Fetch bookings for this invoice if it has booking_ids
+    if (invoice.booking_ids && invoice.booking_ids.length > 0) {
+      setEditBookings(invoice.bookings || []);
+    } else if (invoice.bookings) {
+      setEditBookings(invoice.bookings);
+    } else {
+      setEditBookings([]);
+    }
     setShowEditModal(true);
+  };
+
+  const handleRemoveJourney = (bookingId) => {
+    // Remove from edit bookings
+    setEditBookings(prev => prev.filter(b => b.id !== bookingId));
+    // Update booking_ids in form
+    setEditForm(prev => ({
+      ...prev,
+      booking_ids: prev.booking_ids.filter(id => id !== bookingId)
+    }));
+    // Recalculate subtotal from remaining bookings
+    const remainingBookings = editBookings.filter(b => b.id !== bookingId);
+    const newSubtotal = remainingBookings.reduce((sum, b) => sum + (parseFloat(b.fare) || 0), 0);
+    setEditForm(prev => ({ ...prev, subtotal: newSubtotal }));
   };
 
   const handleSaveInvoice = async () => {
@@ -190,7 +213,13 @@ const InvoiceManagerPage = () => {
     
     setSaving(true);
     try {
-      await axios.put(`${API}/invoices/${selectedInvoice.id}`, editForm);
+      // If booking_ids were modified, include them in the update
+      const updateData = { ...editForm };
+      if (editBookings.length > 0) {
+        updateData.booking_ids = editBookings.map(b => b.id);
+      }
+      
+      await axios.put(`${API}/invoices/${selectedInvoice.id}`, updateData);
       toast.success("Invoice updated successfully");
       setShowEditModal(false);
       fetchInvoices();

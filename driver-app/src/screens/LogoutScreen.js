@@ -67,6 +67,16 @@ export default function LogoutScreen({ navigation }) {
           Are you sure you want to logout from your account?
         </Text>
 
+        {/* Warning if active booking */}
+        {hasActiveBooking && (
+          <View style={[styles.warningCard, { backgroundColor: '#fef3c7', borderColor: '#f59e0b' }]}>
+            <Ionicons name="warning-outline" size={24} color="#f59e0b" />
+            <Text style={styles.warningText}>
+              You have an active booking. Complete it before logging out.
+            </Text>
+          </View>
+        )}
+
         {/* User Info */}
         <View style={[styles.userCard, { backgroundColor: theme.card }]}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
@@ -89,11 +99,21 @@ export default function LogoutScreen({ navigation }) {
             <Text style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.logoutButton, { backgroundColor: theme.danger }]}
+            style={[
+              styles.logoutButton, 
+              { backgroundColor: hasActiveBooking ? theme.border : theme.danger }
+            ]}
             onPress={handleLogout}
+            disabled={checking}
           >
-            <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.logoutButtonText}>Logout</Text>
+            {checking ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="log-out-outline" size={20} color="#fff" />
+                <Text style={styles.logoutButtonText}>Logout</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </View>

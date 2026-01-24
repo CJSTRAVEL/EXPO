@@ -1,20 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { getBookings } from '../services/api';
 
 export default function LogoutScreen({ navigation }) {
   const { user, logout } = useAuth();
   const { theme } = useTheme();
+  const [hasActiveBooking, setHasActiveBooking] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    checkActiveBookings();
+  }, []);
+
+  const checkActiveBookings = async () => {
+    try {
+      const data = await getBookings();
+      const todayBookings = data?.today || [];
+      const activeStatuses = ['assigned', 'on_way', 'arrived', 'in_progress'];
+      const activeBooking = todayBookings.find(b => activeStatuses.includes(b.status));
+      setHasActiveBooking(!!activeBooking);
+    } catch (error) {
+      console.error('Error checking bookings:', error);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const handleLogout = () => {
+    if (hasActiveBooking) {
+      Alert.alert(
+        'Booking In Progress',
+        'You cannot logout while you have an active booking. Please complete or cancel the current booking first.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
     logout();
   };
 

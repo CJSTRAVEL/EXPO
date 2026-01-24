@@ -428,6 +428,15 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
 class InvoiceStatusUpdate(BaseModel):
     status: str  # "paid", "unpaid", "overdue", "cancelled"
 
+class InvoiceUpdate(BaseModel):
+    invoice_ref: Optional[str] = None
+    subtotal: Optional[float] = None
+    vat_rate: Optional[str] = None  # "0", "exempt", "20"
+    vat_amount: Optional[float] = None
+    total: Optional[float] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
 @router.get("/invoices")
 async def get_all_invoices():
     """Get all invoices across all clients (admin view)"""

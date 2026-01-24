@@ -296,25 +296,55 @@ export default function WalkaroundHistoryScreen({ navigation }) {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* Filter Tabs */}
+      {/* Search Filters */}
       <View style={[styles.filterContainer, { backgroundColor: theme.card }]}>
-        {['all', 'pass', 'fail'].map((f) => (
-          <TouchableOpacity
-            key={f}
-            style={[
-              styles.filterTab,
-              filter === f && { backgroundColor: theme.primary + '20' }
-            ]}
-            onPress={() => setFilter(f)}
-          >
-            <Text style={[
-              styles.filterText,
-              { color: filter === f ? theme.primary : theme.textSecondary }
-            ]}>
-              {f === 'all' ? 'All' : f === 'pass' ? 'Passed' : 'Failed'}
-            </Text>
+        {/* Date Filter */}
+        <View style={styles.filterRow}>
+          <View style={[styles.filterInput, { backgroundColor: theme.background, borderColor: theme.border }]}>
+            <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} />
+            <TextInput
+              style={[styles.filterTextInput, { color: theme.text }]}
+              placeholder="Date (YYYY-MM-DD)"
+              placeholderTextColor={theme.textSecondary}
+              value={searchDate}
+              onChangeText={setSearchDate}
+              keyboardType="default"
+            />
+            {searchDate ? (
+              <TouchableOpacity onPress={() => setSearchDate('')}>
+                <Ionicons name="close-circle" size={18} color={theme.textSecondary} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+        
+        {/* Vehicle Filter */}
+        <View style={styles.filterRow}>
+          <View style={[styles.filterInput, { backgroundColor: theme.background, borderColor: theme.border }]}>
+            <Ionicons name="car-outline" size={18} color={theme.textSecondary} />
+            <TextInput
+              style={[styles.filterTextInput, { color: theme.text }]}
+              placeholder="Search vehicle reg..."
+              placeholderTextColor={theme.textSecondary}
+              value={searchVehicle}
+              onChangeText={setSearchVehicle}
+              autoCapitalize="characters"
+            />
+            {searchVehicle ? (
+              <TouchableOpacity onPress={() => setSearchVehicle('')}>
+                <Ionicons name="close-circle" size={18} color={theme.textSecondary} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+
+        {/* Clear Filters Button */}
+        {(searchDate || searchVehicle) && (
+          <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
+            <Ionicons name="refresh-outline" size={16} color={theme.primary} />
+            <Text style={[styles.clearButtonText, { color: theme.primary }]}>Clear Filters</Text>
           </TouchableOpacity>
-        ))}
+        )}
       </View>
 
       {/* Content */}

@@ -74,12 +74,16 @@ const InfoCard = ({ label, value, icon: Icon }) => (
 
 const NewBookingPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromQuoteId = searchParams.get('from_quote');
+  
   const [drivers, setDrivers] = useState([]);
   const [clients, setClients] = useState([]);
   const [passengers, setPassengers] = useState([]);
   const [saving, setSaving] = useState(false);
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
+  const [loadingQuote, setLoadingQuote] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -124,6 +128,8 @@ const NewBookingPage = () => {
     return_flight_number: "",
     return_airline: "",
     return_terminal: "",
+    // Quote reference
+    converted_from_quote_id: null,
   });
 
   // Booking source options

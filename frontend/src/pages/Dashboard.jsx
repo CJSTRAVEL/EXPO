@@ -178,47 +178,68 @@ const Dashboard = () => {
           <Card data-testid="status-overview">
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-muted-foreground" />
-                Status Overview
+                <FileWarning className="w-5 h-5 text-muted-foreground" />
+                Driver Docs Expiring
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-800">Pending</span>
+              <div className="space-y-3 max-h-[380px] overflow-y-auto">
+                {expiringDocs.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                    <p className="text-sm">All driver documents are up to date</p>
                   </div>
-                  <span className="text-lg font-bold text-yellow-800">{stats?.bookings?.pending || 0}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Assigned</span>
-                  </div>
-                  <span className="text-lg font-bold text-blue-800">{stats?.bookings?.assigned || 0}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200">
-                  <div className="flex items-center gap-2">
-                    <Car className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm font-medium text-purple-800">In Progress</span>
-                  </div>
-                  <span className="text-lg font-bold text-purple-800">{stats?.bookings?.in_progress || 0}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-800">Completed</span>
-                  </div>
-                  <span className="text-lg font-bold text-green-800">{stats?.bookings?.completed || 0}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-red-50 border border-red-200">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-800">Cancelled</span>
-                  </div>
-                  <span className="text-lg font-bold text-red-800">{stats?.bookings?.cancelled || 0}</span>
-                </div>
+                ) : (
+                  expiringDocs.map((doc, idx) => (
+                    <div 
+                      key={`${doc.driverId}-${doc.docType}-${idx}`}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        doc.isExpired 
+                          ? 'bg-red-50 border-red-200' 
+                          : doc.daysUntilExpiry <= 7 
+                            ? 'bg-orange-50 border-orange-200'
+                            : 'bg-yellow-50 border-yellow-200'
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${
+                          doc.isExpired ? 'text-red-800' : doc.daysUntilExpiry <= 7 ? 'text-orange-800' : 'text-yellow-800'
+                        }`}>
+                          {doc.driverName}
+                        </p>
+                        <p className={`text-xs ${
+                          doc.isExpired ? 'text-red-600' : doc.daysUntilExpiry <= 7 ? 'text-orange-600' : 'text-yellow-600'
+                        }`}>
+                          {doc.docType}
+                        </p>
+                      </div>
+                      <div className="text-right ml-2">
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            doc.isExpired 
+                              ? 'bg-red-100 text-red-700 border-red-300' 
+                              : doc.daysUntilExpiry <= 7 
+                                ? 'bg-orange-100 text-orange-700 border-orange-300'
+                                : 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                          }`}
+                        >
+                          {doc.isExpired 
+                            ? `Expired ${Math.abs(doc.daysUntilExpiry)}d ago`
+                            : doc.daysUntilExpiry === 0 
+                              ? 'Expires today'
+                              : `${doc.daysUntilExpiry}d left`
+                          }
+                        </Badge>
+                        <p className={`text-xs mt-1 ${
+                          doc.isExpired ? 'text-red-500' : doc.daysUntilExpiry <= 7 ? 'text-orange-500' : 'text-yellow-500'
+                        }`}>
+                          {format(doc.expiryDate, 'dd MMM yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

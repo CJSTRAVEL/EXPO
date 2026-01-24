@@ -242,6 +242,31 @@ const ActiveRideScreen = ({
   const [rating, setRating] = useState(0);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
 
+  // Open maps app with directions to current destination
+  const openNavigationToDestination = () => {
+    const currentDest = getCurrentDestination();
+    if (!currentDest.address) {
+      Alert.alert('No Address', 'No destination address available');
+      return;
+    }
+    
+    const encodedAddress = encodeURIComponent(currentDest.address);
+    // Use Google Maps for navigation on Android, Apple Maps on iOS
+    const url = Platform.select({
+      ios: `maps://app?daddr=${encodedAddress}`,
+      android: `google.navigation:q=${encodedAddress}`,
+    });
+    
+    Linking.canOpenURL(url).then((supported) => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        // Fallback to Google Maps web URL
+        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`);
+      }
+    });
+  };
+
   useEffect(() => {
     if (booking) {
       // Set stage based on booking status

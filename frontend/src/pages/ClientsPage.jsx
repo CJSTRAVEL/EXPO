@@ -116,6 +116,79 @@ const ClientsPage = () => {
     }
   };
 
+  const fetchVehicleTypes = async () => {
+    try {
+      const response = await axios.get(`${API}/vehicle-types`);
+      setVehicleTypes(response.data || []);
+    } catch (error) {
+      console.error("Error fetching vehicle types:", error);
+    }
+  };
+
+  const fetchGlobalFareSettings = async () => {
+    try {
+      const [zonesRes, ratesRes] = await Promise.all([
+        axios.get(`${API}/settings/fare-zones`),
+        axios.get(`${API}/settings/mile-rates`)
+      ]);
+      setGlobalFareZones(zonesRes.data || []);
+      setGlobalMileRates(ratesRes.data);
+    } catch (error) {
+      console.error("Error fetching global fare settings:", error);
+    }
+  };
+
+  const fetchClientFareSettings = async (clientId) => {
+    setLoadingFareSettings(true);
+    try {
+      const response = await axios.get(`${API}/clients/${clientId}/fare-settings`);
+      setFareSettings(response.data || {
+        use_custom_fares: false,
+        custom_fare_zones: [],
+        custom_mile_rates: null
+      });
+    } catch (error) {
+      console.error("Error fetching client fare settings:", error);
+      setFareSettings({
+        use_custom_fares: false,
+        custom_fare_zones: [],
+        custom_mile_rates: null
+      });
+    } finally {
+      setLoadingFareSettings(false);
+    }
+  };
+
+  const handleOpenFareSettings = async (client) => {
+    setSelectedClient(client);
+    await fetchClientFareSettings(client.id);
+    setShowFareSettingsModal(true);
+  };
+
+  const handleSaveFareSettings = async () => {
+    if (!selectedClient) return;
+    
+    setSaving(true);
+    try {
+      await axios.put(`${API}/clients/${selectedClient.id}/fare-settings`, fareSettings);
+      toast.success("Fare settings saved successfully");
+      setShowFareSettingsModal(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save fare settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCopyFromGlobal = () => {
+    setFareSettings({
+      ...fareSettings,
+      custom_fare_zones: [...globalFareZones],
+      custom_mile_rates: globalMileRates ? { ...globalMileRates } : null
+    });
+    toast.success("Copied global fare settings");
+  };
+
   const fetchClientBookings = async (clientId) => {
     setLoadingBookings(true);
     try {

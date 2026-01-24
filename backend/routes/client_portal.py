@@ -54,6 +54,9 @@ class ClientBookingRequestCreate(BaseModel):
     vehicle_type_name: Optional[str] = None
     notes: Optional[str] = None
     flight_number: Optional[str] = None
+    quoted_fare: Optional[float] = None  # Estimated fare from portal
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
 
 
 # ========== AUTHENTICATION ==========

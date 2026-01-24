@@ -52,6 +52,10 @@ class ClientUpdate(BaseModel):
     notes: Optional[str] = None
     vat_registered: Optional[bool] = None
     vat_number: Optional[str] = None
+    # Custom fare settings
+    use_custom_fares: Optional[bool] = None
+    custom_fare_zones: Optional[List[dict]] = None  # Same structure as global fare zones
+    custom_mile_rates: Optional[dict] = None  # Same structure as global mile rates
 
 class Client(ClientBase):
     id: str = ""

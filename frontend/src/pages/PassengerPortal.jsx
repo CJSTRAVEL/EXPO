@@ -427,6 +427,10 @@ const PassengerPortal = () => {
         vehicle_type_name: requestForm.vehicle_type_name,
         flight_number: requestForm.flight_number || null,
         flight_info: flight_info,
+        // Quoted fare from estimation
+        quoted_fare: estimatedFare || null,
+        distance_miles: routeInfo?.distance?.miles || null,
+        duration_minutes: routeInfo?.duration?.minutes || null,
         // Return booking fields
         create_return: requestForm.create_return,
         return_pickup_location: requestForm.create_return ? requestForm.return_pickup_location : null,

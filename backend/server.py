@@ -4638,11 +4638,11 @@ async def get_sms_templates():
     # Include defaults for missing templates
     defaults = [
         {"type": "driver_on_route", "category": "driver_app", "description": "Sent when driver starts journey to pickup", 
-         "content": "Hello {customer_name}, Your driver is on their way!\n\nFollow the link for details and updates:\n{booking_link}",
-         "variables": ["customer_name", "booking_link"]},
+         "content": "Hello {customer_name}, Your driver is on their way!\n\nVehicle: {vehicle_colour} {vehicle_make} {vehicle_model}\nReg: {vehicle_registration}\n\nFollow the link for details:\n{booking_link}",
+         "variables": ["customer_name", "vehicle_colour", "vehicle_make", "vehicle_model", "vehicle_registration", "booking_link"]},
         {"type": "driver_arrived", "category": "driver_app", "description": "Sent when driver arrives at pickup",
-         "content": "Your vehicle has arrived! {vehicle_make} {vehicle_model} - {vehicle_registration}\n\nCheck where the vehicle is:\n{booking_link}",
-         "variables": ["customer_name", "vehicle_make", "vehicle_model", "vehicle_registration", "booking_link"]},
+         "content": "Your vehicle has arrived!\n\nVehicle: {vehicle_colour} {vehicle_make} {vehicle_model}\nReg: {vehicle_registration}\n\nCheck where the vehicle is:\n{booking_link}",
+         "variables": ["customer_name", "vehicle_colour", "vehicle_make", "vehicle_model", "vehicle_registration", "booking_link"]},
         {"type": "booking_review", "category": "driver_app", "description": "Sent 15 minutes after booking completion",
          "content": "Hi {customer_name}, we hope you had a great journey with CJ's Executive Travel!\n\nWe'd love to hear your feedback:\n{review_link}\n\nThank you for choosing us!",
          "variables": ["customer_name", "review_link"]},

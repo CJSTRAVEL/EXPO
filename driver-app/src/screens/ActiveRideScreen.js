@@ -21,24 +21,24 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.6;
 
 // Swipe Button Component
-const SwipeButton = ({ onSwipeComplete, text, color = '#2196F3' }) => {
+const SwipeButton = ({ onSwipeComplete, text, color = '#D4A853', disabled = false }) => {
   const pan = useRef(new Animated.Value(0)).current;
   const [swiping, setSwiping] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => !disabled,
       onPanResponderGrant: () => {
-        setSwiping(true);
+        if (!disabled) setSwiping(true);
       },
       onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx > 0 && gestureState.dx < SCREEN_WIDTH - 100) {
+        if (!disabled && gestureState.dx > 0 && gestureState.dx < SCREEN_WIDTH - 100) {
           pan.setValue(gestureState.dx);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         setSwiping(false);
-        if (gestureState.dx > SWIPE_THRESHOLD) {
+        if (!disabled && gestureState.dx > SWIPE_THRESHOLD) {
           Animated.spring(pan, {
             toValue: SCREEN_WIDTH - 100,
             useNativeDriver: false,
@@ -63,7 +63,7 @@ const SwipeButton = ({ onSwipeComplete, text, color = '#2196F3' }) => {
   });
 
   return (
-    <View style={styles.swipeContainer}>
+    <View style={[styles.swipeContainer, disabled && { opacity: 0.5 }]}>
       <Animated.View style={[styles.swipeTrack, { backgroundColor }]}>
         <Animated.View
           style={[styles.swipeButton, { transform: [{ translateX: pan }] }]}
@@ -78,151 +78,53 @@ const SwipeButton = ({ onSwipeComplete, text, color = '#2196F3' }) => {
   );
 };
 
-// Ride Details Modal Component
-const RideDetailsModal = ({ visible, onClose, booking, theme }) => {
-  if (!visible || !booking) return null;
-
-  const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
-  const fare = booking.fare || 0;
-  const deposit = booking.deposit_paid || 0;
+// Completion Screen Component
+const CompletionScreen = ({ booking, onEndJob, theme }) => {
+  const fare = booking?.fare || 0;
+  const deposit = booking?.deposit_paid || 0;
   const balanceDue = Math.max(0, fare - deposit);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.menuOverlay}>
-        <View style={[styles.detailsContainer, { backgroundColor: theme.background }]}>
-          <View style={styles.detailsHeader}>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="arrow-back" size={28} color={theme.text} />
-            </TouchableOpacity>
-            <Text style={[styles.detailsTitle, { color: theme.text }]}>Ride Details</Text>
-            <View style={{ width: 28 }} />
-          </View>
-
-          <ScrollView style={styles.detailsContent}>
-            {/* Customer Info */}
-            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>PASSENGER</Text>
-              <Text style={[styles.detailsValue, { color: theme.text }]}>{customerName}</Text>
-              {booking.customer_phone && (
-                <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>{booking.customer_phone}</Text>
-              )}
-            </View>
-
-            {/* Journey Info */}
-            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>JOURNEY</Text>
-              <View style={styles.journeyRow}>
-                <View style={[styles.locationDot, { backgroundColor: '#4CAF50' }]} />
-                <View style={styles.journeyContent}>
-                  <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Pickup</Text>
-                  <Text style={[styles.journeyAddress, { color: theme.text }]}>{booking.pickup_location}</Text>
-                </View>
-              </View>
-              
-              {booking.additional_stops?.length > 0 && booking.additional_stops.map((stop, index) => (
-                <View key={index} style={styles.journeyRow}>
-                  <View style={[styles.locationDot, { backgroundColor: '#FF9800' }]} />
-                  <View style={styles.journeyContent}>
-                    <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Stop {index + 1}</Text>
-                    <Text style={[styles.journeyAddress, { color: theme.text }]}>{stop}</Text>
-                  </View>
-                </View>
-              ))}
-
-              <View style={styles.journeyRow}>
-                <View style={[styles.locationDot, { backgroundColor: '#F44336' }]} />
-                <View style={styles.journeyContent}>
-                  <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Drop-off</Text>
-                  <Text style={[styles.journeyAddress, { color: theme.text }]}>{booking.dropoff_location}</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Fare Info */}
-            <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>PAYMENT</Text>
-              <View style={styles.fareRow}>
-                <Text style={[styles.fareLabel, { color: theme.text }]}>Total Fare</Text>
-                <Text style={[styles.fareValue, { color: theme.text }]}>£{fare.toFixed(2)}</Text>
-              </View>
-              {deposit > 0 && (
-                <View style={styles.fareRow}>
-                  <Text style={[styles.fareLabel, { color: theme.textSecondary }]}>Deposit Paid</Text>
-                  <Text style={[styles.fareValue, { color: '#4CAF50' }]}>-£{deposit.toFixed(2)}</Text>
-                </View>
-              )}
-              <View style={[styles.fareRow, styles.balanceRow]}>
-                <Text style={[styles.fareLabel, { color: theme.text, fontWeight: '700' }]}>Balance Due</Text>
-                <Text style={[styles.fareValueLarge, { color: '#D4A853' }]}>£{balanceDue.toFixed(2)}</Text>
-              </View>
-              <Text style={[styles.paymentMethod, { color: theme.textSecondary }]}>
-                Payment: {booking.payment_method || 'Cash'}
-              </Text>
-            </View>
-
-            {/* Driver Notes */}
-            {booking.driver_notes && (
-              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>DRIVER NOTES</Text>
-                <Text style={[styles.notesText, { color: theme.text }]}>{booking.driver_notes}</Text>
-              </View>
-            )}
-
-            {/* Flight Info */}
-            {booking.flight_info?.flight_number && (
-              <View style={[styles.detailsSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.detailsSectionTitle, { color: theme.textSecondary }]}>FLIGHT INFO</Text>
-                <Text style={[styles.detailsValue, { color: theme.text }]}>{booking.flight_info.flight_number}</Text>
-                {booking.flight_info.airline && (
-                  <Text style={[styles.detailsSubValue, { color: theme.textSecondary }]}>{booking.flight_info.airline}</Text>
-                )}
-              </View>
-            )}
-          </ScrollView>
-        </View>
+    <View style={[styles.completionContainer, { backgroundColor: theme.background }]}>
+      <View style={styles.completionHeader}>
+        <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
+        <Text style={[styles.completionTitle, { color: theme.text }]}>Journey Complete!</Text>
       </View>
-    </Modal>
-  );
-};
 
-// Ride Menu Component
-const RideMenu = ({ visible, onClose, booking, onCallPassenger, onTextPassenger, onRequestOfficeCall, onShowDetails, theme }) => {
-  if (!visible) return null;
-
-  const menuItems = [
-    { icon: 'document-text-outline', label: 'Ride Details', onPress: () => { onShowDetails(); onClose(); } },
-    { icon: 'call-outline', label: 'Call Passenger', onPress: () => { onCallPassenger(); onClose(); } },
-    { icon: 'chatbox-outline', label: 'Text Passenger', onPress: () => { onTextPassenger(); onClose(); } },
-    { icon: 'call-outline', label: 'Request Call From Office', onPress: () => { onRequestOfficeCall(); onClose(); } },
-  ];
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.menuOverlay}>
-        <View style={[styles.menuContainer, { backgroundColor: theme.background }]}>
-          <TouchableOpacity style={styles.menuBackButton} onPress={onClose}>
-            <Ionicons name="arrow-back" size={28} color={theme.text} />
-          </TouchableOpacity>
-          
-          <Text style={[styles.menuTitle, { color: theme.text }]}>Ride Menu</Text>
-          
-          <View style={styles.menuItems}>
-            {menuItems.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.menuItem, { borderColor: theme.border }]}
-                onPress={item.onPress}
-              >
-                <Ionicons name={item.icon} size={24} color={theme.text} />
-                <Text style={[styles.menuItemText, { color: theme.text }]}>{item.label}</Text>
-                <Ionicons name="arrow-forward" size={20} color={theme.textSecondary} />
-              </TouchableOpacity>
-            ))}
-          </View>
+      <View style={[styles.fareCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.fareSectionTitle, { color: theme.textSecondary }]}>PAYMENT SUMMARY</Text>
+        
+        <View style={styles.fareRow}>
+          <Text style={[styles.fareLabel, { color: theme.text }]}>Total Fare</Text>
+          <Text style={[styles.fareValue, { color: theme.text }]}>£{fare.toFixed(2)}</Text>
         </View>
+        
+        <View style={styles.fareRow}>
+          <Text style={[styles.fareLabel, { color: theme.textSecondary }]}>Deposit Paid</Text>
+          <Text style={[styles.fareValue, { color: deposit > 0 ? '#4CAF50' : theme.textSecondary }]}>
+            £{deposit.toFixed(2)}
+          </Text>
+        </View>
+        
+        <View style={[styles.fareDivider, { backgroundColor: theme.border }]} />
+        
+        <View style={styles.fareRow}>
+          <Text style={[styles.fareLabel, { color: theme.text, fontWeight: '700', fontSize: 18 }]}>Balance Due</Text>
+          <Text style={[styles.fareValueLarge, { color: '#D4A853' }]}>£{balanceDue.toFixed(2)}</Text>
+        </View>
+        
+        <Text style={[styles.paymentMethod, { color: theme.textSecondary }]}>
+          Payment Method: {booking?.payment_method || 'Cash'}
+        </Text>
       </View>
-    </Modal>
+
+      <TouchableOpacity
+        style={[styles.endJobButton, { backgroundColor: '#D4A853' }]}
+        onPress={onEndJob}
+      >
+        <Text style={styles.endJobButtonText}>End Job</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -236,83 +138,133 @@ const ActiveRideScreen = ({
   isMinimized 
 }) => {
   const { theme } = useTheme();
-  const [stage, setStage] = useState('enroute'); // enroute, arrived, completing
-  const [showMenu, setShowMenu] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [rating, setRating] = useState(0);
+  // Stages: on_route -> arrived -> pob -> stop_0, stop_1... -> dropoff -> complete
+  const [stage, setStage] = useState('on_route');
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
-  // Open maps app with directions to current destination
-  const openNavigationToDestination = () => {
-    const currentDest = getCurrentDestination();
-    if (!currentDest.address) {
-      Alert.alert('No Address', 'No destination address available');
-      return;
-    }
-    
-    const encodedAddress = encodeURIComponent(currentDest.address);
-    // Use Google Maps for navigation on Android, Apple Maps on iOS
-    const url = Platform.select({
-      ios: `maps://app?daddr=${encodedAddress}`,
-      android: `google.navigation:q=${encodedAddress}`,
-    });
-    
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        // Fallback to Google Maps web URL
-        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`);
-      }
-    });
-  };
+  const stops = booking?.additional_stops || [];
+  const totalStops = stops.length;
 
   useEffect(() => {
     if (booking) {
-      // Set stage based on booking status
-      if (booking.status === 'arrived') {
-        setStage('arrived');
+      // Set initial stage based on booking status
+      if (booking.status === 'completed') {
+        setStage('complete');
       } else if (booking.status === 'in_progress') {
-        setStage('completing');
+        // Check if we have stops to navigate
+        if (totalStops > 0) {
+          setStage('stop_0');
+          setCurrentStopIndex(0);
+        } else {
+          setStage('dropoff');
+        }
+      } else if (booking.status === 'arrived') {
+        setStage('arrived');
       } else {
-        setStage('enroute');
+        setStage('on_route');
       }
     }
-  }, [booking]);
+  }, [booking?.id]);
 
-  const formatTime = (datetime) => {
-    if (!datetime) return '--:--';
-    try {
-      const date = new Date(datetime);
-      return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return '--:--';
+  // Get current location info based on stage
+  const getCurrentLocationInfo = () => {
+    if (!booking) return { label: '', address: '', instruction: '' };
+
+    switch (stage) {
+      case 'on_route':
+        return {
+          label: 'PICKUP LOCATION',
+          address: booking.pickup_location,
+          instruction: 'Navigate to pickup location',
+          dotColor: '#4CAF50',
+        };
+      case 'arrived':
+        return {
+          label: 'PICKUP LOCATION',
+          address: booking.pickup_location,
+          instruction: 'Confirm arrival at pickup',
+          dotColor: '#4CAF50',
+        };
+      case 'pob':
+        return {
+          label: 'PICKUP LOCATION',
+          address: booking.pickup_location,
+          instruction: 'Confirm passengers on board',
+          dotColor: '#4CAF50',
+        };
+      case 'dropoff':
+        return {
+          label: 'DROP-OFF LOCATION',
+          address: booking.dropoff_location,
+          instruction: 'Navigate to drop-off',
+          dotColor: '#F44336',
+        };
+      case 'complete':
+        return {
+          label: 'JOURNEY COMPLETE',
+          address: booking.dropoff_location,
+          instruction: '',
+          dotColor: '#4CAF50',
+        };
+      default:
+        // Handle stop stages (stop_0, stop_1, etc.)
+        if (stage.startsWith('stop_')) {
+          const stopIdx = parseInt(stage.split('_')[1], 10);
+          return {
+            label: `STOP ${stopIdx + 1} OF ${totalStops}`,
+            address: stops[stopIdx] || '',
+            instruction: `Navigate to stop ${stopIdx + 1}`,
+            dotColor: '#FF9800',
+          };
+        }
+        return { label: '', address: '', instruction: '', dotColor: '#999' };
     }
   };
 
-  // Get current destination based on stage and stop index
-  const getCurrentDestination = () => {
-    if (!booking) return { label: 'Destination', address: '' };
-    
-    if (stage === 'enroute') {
-      return { label: 'Pickup', address: booking.pickup_location };
+  const getStageTitle = () => {
+    switch (stage) {
+      case 'on_route': return 'On Route';
+      case 'arrived': return 'Arrived';
+      case 'pob': return 'POB';
+      case 'dropoff': return 'Drop-off';
+      case 'complete': return 'Complete';
+      default:
+        if (stage.startsWith('stop_')) {
+          const stopIdx = parseInt(stage.split('_')[1], 10);
+          return `Stop ${stopIdx + 1}`;
+        }
+        return 'In Progress';
     }
-    
-    if (stage === 'arrived') {
-      // At pickup location - show pickup (passenger is getting in)
-      return { label: 'Pickup', address: booking.pickup_location };
-    }
-    
-    // In 'completing' stage - navigate through stops then to final destination
-    const stops = booking.additional_stops || [];
-    if (currentStopIndex < stops.length) {
-      return { label: `Stop ${currentStopIndex + 1}`, address: stops[currentStopIndex] };
-    }
-    
-    return { label: 'Drop Off', address: booking.dropoff_location };
   };
 
+  const getSwipeButtonConfig = () => {
+    switch (stage) {
+      case 'on_route':
+        return { text: 'Swipe to Confirm Arrival', action: handleArrival };
+      case 'arrived':
+        return { text: 'Swipe to Confirm POB', action: handleConfirmPOB };
+      case 'pob':
+        if (totalStops > 0) {
+          return { text: 'Swipe to Proceed to Stop 1', action: handleProceedToFirstStop };
+        }
+        return { text: 'Swipe to Proceed to Drop-off', action: handleProceedToDropoff };
+      case 'dropoff':
+        return { text: 'Swipe to Complete Journey', action: handleCompleteJourney };
+      default:
+        if (stage.startsWith('stop_')) {
+          const stopIdx = parseInt(stage.split('_')[1], 10);
+          if (stopIdx < totalStops - 1) {
+            return { text: `Swipe to Proceed to Stop ${stopIdx + 2}`, action: () => handleNextStop(stopIdx) };
+          }
+          return { text: 'Swipe to Proceed to Drop-off', action: handleProceedToDropoff };
+        }
+        return null;
+    }
+  };
+
+  // Stage handlers
   const handleArrival = async () => {
     setLoading(true);
     try {
@@ -325,37 +277,71 @@ const ActiveRideScreen = ({
     }
   };
 
-  const handleStartJourney = async () => {
+  const handleConfirmPOB = async () => {
     setLoading(true);
     try {
       await updateBookingStatus(booking.id, 'in_progress');
-      setStage('completing');
-      setCurrentStopIndex(0); // Start at first stop
+      setStage('pob');
     } catch (error) {
-      Alert.alert('Error', 'Failed to start journey');
+      Alert.alert('Error', 'Failed to update status');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNextStop = () => {
-    const stops = booking.additional_stops || [];
-    if (currentStopIndex < stops.length) {
-      setCurrentStopIndex(currentStopIndex + 1);
-    }
+  const handleProceedToFirstStop = () => {
+    setCurrentStopIndex(0);
+    setStage('stop_0');
   };
 
-  const handleComplete = async () => {
+  const handleNextStop = (currentIdx) => {
+    const nextIdx = currentIdx + 1;
+    setCurrentStopIndex(nextIdx);
+    setStage(`stop_${nextIdx}`);
+  };
+
+  const handleProceedToDropoff = () => {
+    setStage('dropoff');
+  };
+
+  const handleCompleteJourney = async () => {
     setLoading(true);
     try {
       await updateBookingStatus(booking.id, 'completed');
-      if (onComplete) onComplete();
-      onClose();
+      setStage('complete');
     } catch (error) {
-      Alert.alert('Error', 'Failed to complete booking');
+      Alert.alert('Error', 'Failed to complete journey');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEndJob = () => {
+    if (onComplete) onComplete();
+    onClose();
+  };
+
+  // Navigation
+  const openNavigation = () => {
+    const locationInfo = getCurrentLocationInfo();
+    if (!locationInfo.address) {
+      Alert.alert('No Address', 'No destination address available');
+      return;
+    }
+    
+    const encodedAddress = encodeURIComponent(locationInfo.address);
+    const url = Platform.select({
+      ios: `maps://app?daddr=${encodedAddress}`,
+      android: `google.navigation:q=${encodedAddress}`,
+    });
+    
+    Linking.canOpenURL(url).then((supported) => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`);
+      }
+    });
   };
 
   const handleCallPassenger = () => {
@@ -366,255 +352,186 @@ const ActiveRideScreen = ({
     }
   };
 
-  const handleTextPassenger = () => {
-    if (booking?.customer_phone) {
-      Linking.openURL(`sms:${booking.customer_phone}`);
-    } else {
-      Alert.alert('No Phone', 'No phone number available');
-    }
-  };
-
-  const handleRequestOfficeCall = () => {
-    Alert.alert('Request Sent', 'Office will call you shortly');
-  };
-
-  const handleSendReceipt = () => {
-    Alert.alert('Receipt Sent', 'Payment receipt has been sent to the passenger');
-  };
-
   if (!visible || !booking) return null;
 
-  // Calculate fare info
-  const fare = booking.fare || 0;
-  const deposit = booking.deposit_paid || 0;
-  const balanceDue = Math.max(0, fare - deposit);
-  const currentDest = getCurrentDestination();
-  const stops = booking.additional_stops || [];
-  const hasMoreStops = stage === 'completing' && currentStopIndex < stops.length;
+  const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
+  const locationInfo = getCurrentLocationInfo();
+  const swipeConfig = getSwipeButtonConfig();
 
   // Minimized view
   if (isMinimized) {
     return (
       <TouchableOpacity 
-        style={[styles.minimizedBar, { backgroundColor: theme.primary }]}
+        style={[styles.minimizedBar, { backgroundColor: '#D4A853' }]}
         onPress={onMinimize}
       >
         <View style={styles.minimizedContent}>
           <Ionicons name="car" size={20} color="#fff" />
-          <Text style={styles.minimizedText}>
-            {stage === 'enroute' ? 'EnRoute to Passenger' : 
-             stage === 'arrived' ? 'Passenger Pickup' : 'Journey in Progress'}
-          </Text>
+          <Text style={styles.minimizedText}>{getStageTitle()} - {customerName}</Text>
         </View>
         <Ionicons name="chevron-up" size={24} color="#fff" />
       </TouchableOpacity>
     );
   }
 
-  const customerName = `${booking.first_name || ''} ${booking.last_name || ''}`.trim() || 'Customer';
+  // Complete screen
+  if (stage === 'complete') {
+    return (
+      <Modal visible={visible} animationType="slide" onRequestClose={onMinimize}>
+        <CompletionScreen booking={booking} onEndJob={handleEndJob} theme={theme} />
+      </Modal>
+    );
+  }
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onMinimize}>
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: '#333' }]}>
-          <TouchableOpacity onPress={onMinimize} style={styles.closeButton}>
-            <Ionicons name="close" size={28} color="#fff" />
+        <View style={[styles.header, { backgroundColor: '#1a3a5c' }]}>
+          <TouchableOpacity onPress={onMinimize} style={styles.headerButton}>
+            <Ionicons name="chevron-down" size={28} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {stage === 'enroute' ? 'EnRoute to Passenger' : 
-             stage === 'arrived' ? 'Passenger Pickup' : 'Journey Completion'}
-          </Text>
-          <View style={styles.onlineIndicator} />
+          
+          <View style={styles.headerCenter}>
+            <Text style={styles.stageLabel}>{getStageTitle()}</Text>
+            <Text style={styles.customerName}>{customerName}</Text>
+          </View>
+          
+          <TouchableOpacity onPress={handleCallPassenger} style={styles.headerButton}>
+            <Ionicons name="call" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
 
-        {/* Content */}
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {stage === 'completing' && !hasMoreStops ? (
-            // Final Journey Completion View - Only show when at final destination
-            <View style={styles.completionContainer}>
-              {/* Price Display */}
-              <View style={[styles.priceCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>BALANCE DUE</Text>
-                <Text style={[styles.priceValue, { color: '#D4A853' }]}>£{balanceDue.toFixed(2)}</Text>
-                <Text style={[styles.depositNote, { color: deposit > 0 ? '#4CAF50' : theme.textSecondary }]}>
-                  Deposit: £{deposit.toFixed(2)}
-                </Text>
-                <Text style={[styles.paymentMethodText, { color: theme.textSecondary }]}>
-                  Payment: {booking.payment_method || 'Cash'}
-                </Text>
-              </View>
-
-              {/* Final Destination Info */}
-              <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Final Drop Off</Text>
-                <Text style={[styles.addressText, { color: theme.text }]}>
-                  {booking.dropoff_location}
-                </Text>
-              </View>
-
-              <View style={[styles.completionCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <View style={styles.completionHeader}>
-                  <View style={styles.customerAvatar}>
-                    <Ionicons name="person" size={40} color="#999" />
-                  </View>
-                  <View style={styles.ratingContainer}>
-                    <Text style={[styles.customerNameLarge, { color: theme.text }]}>{customerName}</Text>
-                    <View style={styles.stars}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                          <Ionicons 
-                            name={rating >= star ? 'star' : 'star-outline'} 
-                            size={32} 
-                            color={rating >= star ? '#FFD700' : '#ccc'} 
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <TouchableOpacity 
-                style={[styles.receiptButton, { backgroundColor: '#0097A7' }]}
-                onPress={handleSendReceipt}
-              >
-                <Ionicons name="mail-outline" size={24} color="#fff" />
-                <Text style={styles.receiptButtonText}>Send Payment Receipt</Text>
-              </TouchableOpacity>
+        {/* Progress Indicator */}
+        <View style={[styles.progressContainer, { backgroundColor: theme.card }]}>
+          <View style={styles.progressSteps}>
+            <View style={[styles.progressStep, stage !== 'on_route' && styles.progressStepComplete]}>
+              <View style={[styles.progressDot, stage !== 'on_route' ? styles.progressDotComplete : styles.progressDotActive]} />
+              <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Route</Text>
             </View>
-          ) : (
-            // EnRoute / Arrived View
-            <>
-              {/* Action Buttons Row */}
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.actionButton} onPress={openNavigationToDestination}>
-                  <Ionicons name="navigate" size={28} color="#666" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton} onPress={() => setShowMenu(true)}>
-                  <Ionicons name="menu" size={28} color="#666" />
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, styles.alertButton]}>
-                  <Ionicons name="alert-circle" size={28} color="#fff" />
-                </TouchableOpacity>
+            <View style={[styles.progressLine, stage !== 'on_route' && stage !== 'arrived' && styles.progressLineComplete]} />
+            <View style={[styles.progressStep, (stage === 'pob' || stage.startsWith('stop_') || stage === 'dropoff') && styles.progressStepComplete]}>
+              <View style={[styles.progressDot, 
+                (stage === 'arrived') ? styles.progressDotActive :
+                (stage === 'pob' || stage.startsWith('stop_') || stage === 'dropoff') ? styles.progressDotComplete : {}
+              ]} />
+              <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Arrived</Text>
+            </View>
+            <View style={[styles.progressLine, (stage === 'pob' || stage.startsWith('stop_') || stage === 'dropoff') && styles.progressLineComplete]} />
+            <View style={[styles.progressStep, (stage.startsWith('stop_') || stage === 'dropoff') && styles.progressStepComplete]}>
+              <View style={[styles.progressDot,
+                (stage === 'pob') ? styles.progressDotActive :
+                (stage.startsWith('stop_') || stage === 'dropoff') ? styles.progressDotComplete : {}
+              ]} />
+              <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>POB</Text>
+            </View>
+            {totalStops > 0 && (
+              <>
+                <View style={[styles.progressLine, stage === 'dropoff' && styles.progressLineComplete]} />
+                <View style={[styles.progressStep, stage === 'dropoff' && styles.progressStepComplete]}>
+                  <View style={[styles.progressDot,
+                    stage.startsWith('stop_') ? styles.progressDotActive :
+                    stage === 'dropoff' ? styles.progressDotComplete : {}
+                  ]} />
+                  <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Stops</Text>
+                </View>
+              </>
+            )}
+            <View style={[styles.progressLine, stage === 'dropoff' && styles.progressLineComplete]} />
+            <View style={styles.progressStep}>
+              <View style={[styles.progressDot, stage === 'dropoff' && styles.progressDotActive]} />
+              <Text style={[styles.progressLabel, { color: theme.textSecondary }]}>Drop</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Main Content */}
+        <ScrollView style={styles.content}>
+          {/* Current Location Card */}
+          <View style={[styles.locationCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.locationHeader}>
+              <View style={[styles.locationDot, { backgroundColor: locationInfo.dotColor }]} />
+              <Text style={[styles.locationLabel, { color: theme.textSecondary }]}>{locationInfo.label}</Text>
+            </View>
+            <Text style={[styles.locationAddress, { color: theme.text }]}>{locationInfo.address}</Text>
+            {locationInfo.instruction && (
+              <Text style={[styles.locationInstruction, { color: theme.textSecondary }]}>{locationInfo.instruction}</Text>
+            )}
+            
+            {stage !== 'complete' && (
+              <TouchableOpacity 
+                style={[styles.navigateButton, { backgroundColor: '#D4A853' }]}
+                onPress={openNavigation}
+              >
+                <Ionicons name="navigate" size={20} color="#fff" />
+                <Text style={styles.navigateButtonText}>Navigate</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Journey Summary */}
+          <View style={[styles.journeyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>JOURNEY SUMMARY</Text>
+            
+            {/* Pickup */}
+            <View style={styles.journeyRow}>
+              <View style={[styles.journeyDot, { backgroundColor: '#4CAF50' }]} />
+              <View style={styles.journeyContent}>
+                <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Pickup</Text>
+                <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={1}>{booking.pickup_location}</Text>
               </View>
-
-              {/* TAXI METER - Always visible once customer is picked up (from arrived stage onwards) */}
-              {(stage === 'arrived' || stage === 'completing') && (
-                <View style={styles.taxiMeter}>
-                  <View style={styles.meterHeader}>
-                    <Text style={styles.meterLabel}>FARE</Text>
-                    <View style={styles.meterPaymentBadge}>
-                      <Text style={styles.meterPaymentText}>{booking.payment_method || 'Cash'}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.meterValue}>£{balanceDue.toFixed(2)}</Text>
-                  <Text style={[styles.meterDeposit, deposit > 0 && { color: '#4CAF50' }]}>
-                    Deposit: £{deposit.toFixed(2)}
-                  </Text>
-                </View>
+              {(stage === 'on_route' || stage === 'arrived' || stage === 'pob') && (
+                <Ionicons name="location" size={20} color="#4CAF50" />
               )}
-
-              {/* Booking Info Card */}
-              <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <View style={styles.infoRow}>
-                  <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Name</Text>
-                  {/* Notes Button */}
-                  <TouchableOpacity 
-                    style={[styles.notesButton, booking.driver_notes ? { backgroundColor: '#D4A853' } : {}]} 
-                    onPress={() => setShowDetails(true)}
-                  >
-                    <Ionicons 
-                      name="document-text-outline" 
-                      size={24} 
-                      color={booking.driver_notes ? '#fff' : '#999'} 
-                    />
-                  </TouchableOpacity>
+            </View>
+            
+            {/* Stops */}
+            {stops.map((stop, idx) => (
+              <View key={idx} style={styles.journeyRow}>
+                <View style={[styles.journeyDot, { backgroundColor: '#FF9800' }]} />
+                <View style={styles.journeyContent}>
+                  <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Stop {idx + 1}</Text>
+                  <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={1}>{stop}</Text>
                 </View>
-                <Text style={[styles.customerName, { color: theme.text }]}>{customerName}</Text>
-
-                {/* Current Destination - Progressive Display */}
-                <View style={styles.pickupSection}>
-                  <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
-                    {currentDest.label}
-                  </Text>
-                  <View style={styles.timeContainer}>
-                    <View style={styles.timeBadge}>
-                      <Ionicons name="time-outline" size={16} color="#E53935" />
-                      <Text style={styles.timeText}>{formatTime(booking.booking_datetime)}</Text>
-                    </View>
-                  </View>
-                </View>
-                <Text style={[styles.addressText, { color: theme.text }]}>
-                  {currentDest.address}
-                </Text>
-
-                {/* Show stops progress indicator */}
-                {stops.length > 0 && (stage === 'completing' || stage === 'arrived') && (
-                  <View style={styles.stopsProgress}>
-                    <Text style={[styles.stopsProgressText, { color: theme.textSecondary }]}>
-                      {currentStopIndex < stops.length 
-                        ? `Stop ${currentStopIndex + 1} of ${stops.length}` 
-                        : `Final destination`}
-                    </Text>
-                  </View>
+                {stage === `stop_${idx}` && (
+                  <Ionicons name="location" size={20} color="#FF9800" />
                 )}
               </View>
-            </>
-          )}
+            ))}
+            
+            {/* Drop-off */}
+            <View style={styles.journeyRow}>
+              <View style={[styles.journeyDot, { backgroundColor: '#F44336' }]} />
+              <View style={styles.journeyContent}>
+                <Text style={[styles.journeyLabel, { color: theme.textSecondary }]}>Drop-off</Text>
+                <Text style={[styles.journeyAddress, { color: theme.text }]} numberOfLines={1}>{booking.dropoff_location}</Text>
+              </View>
+              {stage === 'dropoff' && (
+                <Ionicons name="location" size={20} color="#F44336" />
+              )}
+            </View>
+          </View>
+
+          {/* Fare Info */}
+          <View style={[styles.fareCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>FARE</Text>
+            <View style={styles.fareRow}>
+              <Text style={[styles.fareLabel, { color: theme.text }]}>Total</Text>
+              <Text style={[styles.fareValue, { color: '#D4A853' }]}>£{(booking.fare || 0).toFixed(2)}</Text>
+            </View>
+          </View>
         </ScrollView>
 
-        {/* Bottom Swipe Action */}
-        <View style={styles.bottomAction}>
-          {stage === 'enroute' && (
+        {/* Bottom Action */}
+        {swipeConfig && (
+          <View style={[styles.bottomAction, { backgroundColor: theme.background }]}>
             <SwipeButton 
-              text="Swipe on Arrival" 
-              onSwipeComplete={handleArrival}
-              color="#2196F3"
+              text={swipeConfig.text}
+              onSwipeComplete={swipeConfig.action}
+              disabled={loading}
             />
-          )}
-          {stage === 'arrived' && (
-            <SwipeButton 
-              text="Passenger On Board" 
-              onSwipeComplete={handleStartJourney}
-              color="#4CAF50"
-            />
-          )}
-          {stage === 'completing' && hasMoreStops && (
-            <SwipeButton 
-              text="Next Stop"
-              onSwipeComplete={handleNextStop}
-              color="#FF9800"
-            />
-          )}
-          {stage === 'completing' && !hasMoreStops && (
-            <SwipeButton 
-              text="Swipe To Complete" 
-              onSwipeComplete={handleComplete}
-              color="#2196F3"
-            />
-          )}
-        </View>
-
-        {/* Ride Menu */}
-        <RideMenu
-          visible={showMenu}
-          onClose={() => setShowMenu(false)}
-          booking={booking}
-          onCallPassenger={handleCallPassenger}
-          onTextPassenger={handleTextPassenger}
-          onRequestOfficeCall={handleRequestOfficeCall}
-          onShowDetails={() => setShowDetails(true)}
-          theme={theme}
-        />
-
-        {/* Ride Details Modal */}
-        <RideDetailsModal
-          visible={showDetails}
-          onClose={() => setShowDetails(false)}
-          booking={booking}
-          theme={theme}
-        />
+          </View>
+        )}
       </View>
     </Modal>
   );
@@ -629,429 +546,260 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingBottom: 15,
+    paddingHorizontal: 15,
   },
-  closeButton: {
-    padding: 4,
+  headerButton: {
+    padding: 5,
   },
-  headerTitle: {
-    fontSize: 20,
+  headerCenter: {
+    alignItems: 'center',
+  },
+  stageLabel: {
+    fontSize: 14,
+    color: '#D4A853',
     fontWeight: '600',
-    color: '#fff',
   },
-  onlineIndicator: {
+  customerName: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '700',
+  },
+  progressContainer: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  progressSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressStep: {
+    alignItems: 'center',
+  },
+  progressDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
+    backgroundColor: '#ddd',
+  },
+  progressDotActive: {
+    backgroundColor: '#D4A853',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  progressDotComplete: {
+    backgroundColor: '#4CAF50',
+  },
+  progressLabel: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  progressLine: {
+    width: 30,
+    height: 2,
+    backgroundColor: '#ddd',
+    marginHorizontal: 5,
+  },
+  progressLineComplete: {
     backgroundColor: '#4CAF50',
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 15,
   },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 16,
-  },
-  actionButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  alertButton: {
-    backgroundColor: '#E53935',
-  },
-  // Taxi Meter Styles - Customer-facing display (white background)
-  taxiMeter: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#D4A853',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  meterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 8,
-  },
-  meterLabel: {
-    color: '#1a3a5c',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 2,
-  },
-  meterPaymentBadge: {
-    backgroundColor: '#D4A853',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+  locationCard: {
     borderRadius: 12,
-  },
-  meterPaymentText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  meterValue: {
-    color: '#1a3a5c',
-    fontSize: 64,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    letterSpacing: 2,
-  },
-  meterDeposit: {
-    color: '#666',
-    fontSize: 14,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  infoCard: {
-    borderRadius: 12,
-    padding: 16,
+    padding: 15,
+    marginBottom: 15,
     borderWidth: 1,
   },
-  infoRow: {
+  locationHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  infoLabel: {
+  locationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  locationLabel: {
     fontSize: 12,
     fontWeight: '600',
-    textTransform: 'uppercase',
   },
-  notesButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  customerName: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  pickupSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFEBEE',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  timeText: {
-    color: '#E53935',
-    fontWeight: '600',
-  },
-  addressText: {
+  locationAddress: {
     fontSize: 16,
-    marginTop: 8,
-    lineHeight: 22,
-  },
-  stopsProgress: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  stopsProgressText: {
-    fontSize: 12,
     fontWeight: '600',
+    marginBottom: 5,
   },
-  // Completion styles
-  completionContainer: {
-    alignItems: 'center',
+  locationInstruction: {
+    fontSize: 13,
+    marginBottom: 15,
   },
-  priceCard: {
-    width: '100%',
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  priceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  priceValue: {
-    fontSize: 48,
-    fontWeight: '700',
-    marginVertical: 8,
-  },
-  depositNote: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  paymentMethodText: {
-    fontSize: 12,
-    marginTop: 8,
-  },
-  completionCard: {
-    width: '100%',
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-    marginBottom: 16,
-  },
-  completionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  customerAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ratingContainer: {
-    flex: 1,
-  },
-  customerNameLarge: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  stars: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  receiptButton: {
+  navigateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 8,
-    gap: 8,
-    width: '100%',
   },
-  receiptButtonText: {
+  navigateButtonText: {
     color: '#fff',
-    fontSize: 16,
     fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 15,
   },
-  // Bottom action
-  bottomAction: {
-    padding: 16,
-    paddingBottom: Platform.OS === 'android' ? 60 : 40,
-  },
-  // Swipe styles
-  swipeContainer: {
-    width: '100%',
-    height: 60,
-  },
-  swipeTrack: {
-    flex: 1,
-    borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  swipeButton: {
-    width: 50,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    zIndex: 1,
-  },
-  swipeText: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: -50,
-  },
-  // Minimized bar
-  minimizedBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  minimizedContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  minimizedText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Menu styles
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  menuContainer: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 40,
-  },
-  menuBackButton: {
-    marginBottom: 16,
-  },
-  menuTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 24,
-  },
-  menuItems: {
-    gap: 8,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+  journeyCard: {
     borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
     borderWidth: 1,
-    gap: 12,
   },
-  menuItemText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  // Details modal styles
-  detailsContainer: {
-    flex: 1,
-    marginTop: 50,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  detailsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  detailsTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  detailsContent: {
-    flex: 1,
-    padding: 16,
-  },
-  detailsSection: {
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    marginBottom: 12,
-  },
-  detailsSectionTitle: {
+  cardTitle: {
     fontSize: 12,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  detailsValue: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  detailsSubValue: {
-    fontSize: 14,
-    marginTop: 4,
+    marginBottom: 12,
   },
   journeyRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  locationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginTop: 4,
-    marginRight: 12,
+  journeyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
   },
   journeyContent: {
     flex: 1,
   },
   journeyLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontSize: 11,
   },
   journeyAddress: {
-    fontSize: 15,
-    marginTop: 2,
+    fontSize: 14,
+  },
+  fareCard: {
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    borderWidth: 1,
   },
   fareRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  balanceRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 8,
-    marginTop: 4,
+    alignItems: 'center',
   },
   fareLabel: {
     fontSize: 15,
   },
   fareValue: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
   },
   fareValueLarge: {
     fontSize: 24,
     fontWeight: '700',
   },
-  paymentMethod: {
-    fontSize: 12,
-    marginTop: 8,
+  fareDivider: {
+    height: 1,
+    marginVertical: 12,
   },
-  notesText: {
+  fareSectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 15,
+  },
+  paymentMethod: {
+    fontSize: 13,
+    marginTop: 10,
+  },
+  bottomAction: {
+    padding: 15,
+    paddingBottom: 30,
+  },
+  swipeContainer: {
+    height: 60,
+    width: '100%',
+  },
+  swipeTrack: {
+    flex: 1,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  swipeButton: {
+    position: 'absolute',
+    left: 5,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  swipeText: {
+    color: '#fff',
     fontSize: 15,
-    lineHeight: 22,
+    fontWeight: '600',
+  },
+  minimizedBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  minimizedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  minimizedText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  completionContainer: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 80,
+  },
+  completionHeader: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  completionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 15,
+  },
+  endJobButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 30,
+  },
+  endJobButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
   },
 });
 

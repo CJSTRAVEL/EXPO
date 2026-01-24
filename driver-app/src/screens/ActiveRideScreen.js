@@ -560,7 +560,7 @@ const ActiveRideScreen = ({
           </View>
 
           {/* Extra spacing for bottom button */}
-          <View style={{ height: 100 }} />
+          <View style={{ height: 150 }} />
         </ScrollView>
 
         {/* Bottom Swipe Action */}

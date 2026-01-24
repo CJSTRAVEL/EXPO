@@ -582,6 +582,64 @@ const PassengerPortalAdmin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Email Modal */}
+      <Dialog open={showEmailModal} onOpenChange={(open) => {
+        setShowEmailModal(open);
+        if (!open) {
+          setNewEmail("");
+          setSelectedPassenger(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="edit-email-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Edit Email Address
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {selectedPassenger && (
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">Editing email for:</p>
+                <p className="font-semibold">{selectedPassenger.name}</p>
+                <p className="text-sm text-muted-foreground">{selectedPassenger.phone}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="edit-email"
+                  type="email"
+                  placeholder="Enter email address"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="pl-10"
+                  data-testid="edit-email-input"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Leave empty to remove email. Passengers can login with email or phone.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEmailModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateEmail} disabled={saving} data-testid="save-email-btn">
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Update Email"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

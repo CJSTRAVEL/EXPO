@@ -45,11 +45,15 @@ const PassengerPortalAdmin = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.name || !newUser.phone || !newUser.password) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all required fields");
       return;
     }
     if (newUser.password.length < 6) {
       toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (newUser.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
+      toast.error("Please enter a valid email address");
       return;
     }
 
@@ -58,7 +62,7 @@ const PassengerPortalAdmin = () => {
       await axios.post(`${API}/admin/passengers`, newUser);
       toast.success("Passenger account created successfully");
       setShowCreateModal(false);
-      setNewUser({ name: "", phone: "", password: "" });
+      setNewUser({ name: "", phone: "", email: "", password: "" });
       fetchPassengers();
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to create account");

@@ -480,12 +480,12 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
     elements.append(terms_table)
     elements.append(Spacer(1, 20))
     
-    # ========== JOURNEYS TABLE ==========
+    # ========== JOURNEYS TABLE - Gold/Black ==========
     if bookings:
         # Table header
         journey_header = Table([[Paragraph("<b>JOURNEY DETAILS</b>", ParagraphStyle('jh', fontSize=11, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
         journey_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+            ('BACKGROUND', (0, 0), (-1, -1), header_black),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
@@ -541,9 +541,9 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
         
         journey_table = Table(table_data, colWidths=[30, 80, 230, 55, 55, 55])
         journey_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FDF8E8')),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('GRID', (0, 0), (-1, -1), 0.5, gold_accent),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ALIGN', (3, 0), (-1, -1), 'RIGHT'),
             ('TOPPADDING', (0, 0), (-1, -1), 6),

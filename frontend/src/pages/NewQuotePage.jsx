@@ -116,62 +116,122 @@ export default function NewQuotePage() {
 
   // Auto-calculate fare when vehicle type, route, or return journey changes
   useEffect(() => {
-    const calculateFare = async () => {
-      if (!formData.dropoff_location || !formData.vehicle_type_id) {
+    const calculateFareFromZones = () => {
+      if (!formData.dropoff_location || !formData.vehicle_type_id || fareZones.length === 0) {
         return;
       }
 
       setCalculatingFare(true);
-      try {
-        let calculatedFare = null;
-
-        // Check zone-based fares first
-        for (const zone of fareZones) {
-          if (zone.vehicle_fares && zone.vehicle_fares[formData.vehicle_type_id]) {
-            // Check if dropoff is in this zone (simplified check - just match text)
-            const dropoffLower = formData.dropoff_location.toLowerCase();
-            const zoneName = zone.name?.toLowerCase() || '';
-            
-            if (dropoffLower.includes(zoneName) || zoneName.includes(dropoffLower.split(',')[0])) {
-              calculatedFare = zone.vehicle_fares[formData.vehicle_type_id];
+      const dropoff = formData.dropoff_location.toLowerCase();
+      const isReturn = formData.return_journey;
+      
+      // Find matching zone
+      for (const zone of fareZones) {
+        if (zone.zone_type !== 'dropoff' && zone.zone_type !== 'both') {
+          continue;
+        }
+        
+        let zoneMatches = false;
+        
+        // Check postcodes
+        for (const postcode of (zone.postcodes || [])) {
+          const postcodeCheck = postcode.toLowerCase();
+          if (dropoff.includes(postcodeCheck)) {
+            zoneMatches = true;
+            break;
+          }
+        }
+        
+        // Check areas
+        if (!zoneMatches) {
+          for (const area of (zone.areas || [])) {
+            const areaCheck = area.toLowerCase();
+            if (dropoff.includes(areaCheck)) {
+              zoneMatches = true;
               break;
             }
           }
         }
-
-        // If no zone match, calculate based on mileage
-        if (!calculatedFare && routeInfo?.distance?.miles && mileRates) {
-          const distanceMiles = routeInfo.distance.miles;
+        
+        if (zoneMatches) {
+          // Get fare for selected vehicle type
+          const vehicleFares = zone.vehicle_fares || {};
+          let fare = vehicleFares[formData.vehicle_type_id];
           
-          // Get vehicle-specific rates or default
-          let baseFare = mileRates.base_fare || 0;
-          let pricePerMile = mileRates.price_per_mile || 0;
+          if (fare) {
+            // Double the fare if return journey is selected
+            if (isReturn) {
+              fare = fare * 2;
+            }
+            setFormData(prev => ({ ...prev, quoted_fare: fare.toFixed(2) }));
+            setCalculatingFare(false);
+            toast.success(`Fare auto-set from "${zone.name}" zone: £${fare.toFixed(2)}${isReturn ? ' (x2)' : ''}`);
+            return;
+          } else if (zone.fixed_fare) {
+            // Legacy support for old fixed_fare field
+            let legacyFare = zone.fixed_fare;
+            if (isReturn) {
+              legacyFare = legacyFare * 2;
+            }
+            setFormData(prev => ({ ...prev, quoted_fare: legacyFare.toFixed(2) }));
+            setCalculatingFare(false);
+            toast.success(`Fare auto-set from "${zone.name}" zone: £${legacyFare.toFixed(2)}${isReturn ? ' (x2)' : ''}`);
+            return;
+          }
+        }
+      }
+      
+      // No zone match - try to calculate based on miles if we have route distance
+      if (routeInfo && mileRates) {
+        // Extract numeric distance from routeInfo
+        let distanceMiles = 0;
+        if (routeInfo.distance) {
+          if (typeof routeInfo.distance === 'number') {
+            distanceMiles = routeInfo.distance;
+          } else if (routeInfo.distance.miles) {
+            distanceMiles = parseFloat(routeInfo.distance.miles) || 0;
+          } else if (routeInfo.distance.value) {
+            // Google API returns meters, convert to miles
+            distanceMiles = (parseFloat(routeInfo.distance.value) || 0) / 1609.34;
+          } else if (routeInfo.distance.text) {
+            // Try to parse from text like "25.3 mi" or "25.3 miles"
+            const match = routeInfo.distance.text.match(/[\d.]+/);
+            if (match) {
+              distanceMiles = parseFloat(match[0]) || 0;
+            }
+          }
+        }
+        
+        if (distanceMiles > 0) {
+          // Get vehicle-specific rates or use defaults
+          const vehicleRates = formData.vehicle_type_id && mileRates.vehicle_rates?.[formData.vehicle_type_id];
+          const baseFare = parseFloat(vehicleRates?.base_fare ?? mileRates.base_fare) || 0;
+          const pricePerMile = parseFloat(vehicleRates?.price_per_mile ?? mileRates.price_per_mile) || 0;
+          const minimumFare = parseFloat(vehicleRates?.minimum_fare ?? mileRates.minimum_fare) || 0;
           
-          if (mileRates.vehicle_rates && mileRates.vehicle_rates[formData.vehicle_type_id]) {
-            const vehicleRate = mileRates.vehicle_rates[formData.vehicle_type_id];
-            baseFare = vehicleRate.base_fare || baseFare;
-            pricePerMile = vehicleRate.price_per_mile || pricePerMile;
+          let fare = baseFare + (distanceMiles * pricePerMile);
+          
+          // Apply minimum fare
+          if (minimumFare && fare < minimumFare) {
+            fare = minimumFare;
           }
           
-          calculatedFare = baseFare + (distanceMiles * pricePerMile);
+          // Double for return journey
+          if (isReturn) {
+            fare = fare * 2;
+          }
+          
+          setFormData(prev => ({ ...prev, quoted_fare: fare.toFixed(2) }));
+          toast.success(`Fare calculated: £${fare.toFixed(2)} (${distanceMiles.toFixed(1)} miles${isReturn ? ' x2 return' : ''})`);
         }
-
-        // Apply return journey multiplier
-        if (calculatedFare && formData.return_journey) {
-          calculatedFare = calculatedFare * 2;
-        }
-
-        if (calculatedFare) {
-          setFormData(prev => ({ ...prev, quoted_fare: calculatedFare.toFixed(2) }));
-        }
-      } catch (error) {
-        console.error("Error calculating fare:", error);
-      } finally {
-        setCalculatingFare(false);
       }
+      
+      setCalculatingFare(false);
     };
 
-    calculateFare();
+    // Debounce the calculation
+    const debounce = setTimeout(calculateFareFromZones, 500);
+    return () => clearTimeout(debounce);
   }, [formData.vehicle_type_id, formData.dropoff_location, formData.return_journey, routeInfo, fareZones, mileRates]);
 
   const fetchQuote = async () => {

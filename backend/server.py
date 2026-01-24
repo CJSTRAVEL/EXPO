@@ -5457,39 +5457,41 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
     short_booking_id = booking.get("short_booking_id", booking_id[:8])
     booking_link = f"{app_url}/api/preview/{short_booking_id}"
     
-    # Get vehicle info
+    # Get vehicle info from driver's selected vehicle
     vehicle = await db.vehicles.find_one({"id": driver.get("selected_vehicle_id")})
     vehicle_make = vehicle.get("make", "") if vehicle else ""
     vehicle_model = vehicle.get("model", "") if vehicle else ""
+    vehicle_colour = vehicle.get("colour", vehicle.get("color", "")) if vehicle else ""
     vehicle_registration = vehicle.get("registration", driver.get("vehicle_number", "")) if vehicle else driver.get("vehicle_number", "")
     
     customer_phone = booking.get("customer_phone")
     customer_name = booking.get("customer_name", "Customer")
     
+    # Build common vehicle variables for SMS
+    vehicle_variables = {
+        "customer_name": customer_name,
+        "vehicle_make": vehicle_make,
+        "vehicle_model": vehicle_model,
+        "vehicle_colour": vehicle_colour,
+        "vehicle_registration": vehicle_registration,
+        "booking_link": booking_link
+    }
+    
     # Send SMS notifications based on status
     if customer_phone:
         if status == "on_way":
-            # Send 'on route' SMS
+            # Send 'on route' SMS with vehicle details
             await send_templated_sms(
                 phone=customer_phone,
                 template_type="driver_on_route",
-                variables={
-                    "customer_name": customer_name,
-                    "booking_link": booking_link
-                }
+                variables=vehicle_variables
             )
         elif status == "arrived":
-            # Send 'arrived' SMS
+            # Send 'arrived' SMS with vehicle details
             await send_templated_sms(
                 phone=customer_phone,
                 template_type="driver_arrived",
-                variables={
-                    "customer_name": customer_name,
-                    "vehicle_make": vehicle_make,
-                    "vehicle_model": vehicle_model,
-                    "vehicle_registration": vehicle_registration,
-                    "booking_link": booking_link
-                }
+                variables=vehicle_variables
             )
         elif status == "completed":
             # Schedule review SMS 15 minutes after completion

@@ -723,9 +723,24 @@ async def update_invoice_status(invoice_id: str, status_update: InvoiceStatusUpd
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # If marking as paid, add paid_at timestamp
+    # If marking as paid, add paid_at timestamp and mark bookings as invoiced
     if status_update.status == "paid":
         update_data["paid_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # Mark associated bookings as invoiced (removes them from invoice generation list)
+        if invoice.get("booking_ids"):
+            await db.bookings.update_many(
+                {"id": {"$in": invoice["booking_ids"]}},
+                {"$set": {"invoice_paid": True, "invoice_id": invoice["id"], "invoice_ref": invoice.get("invoice_ref")}}
+            )
+    
+    # If changing from paid to another status, restore bookings to generation list
+    if invoice.get("status") == "paid" and status_update.status != "paid":
+        if invoice.get("booking_ids"):
+            await db.bookings.update_many(
+                {"id": {"$in": invoice["booking_ids"]}},
+                {"$unset": {"invoice_paid": "", "invoice_id": "", "invoice_ref": ""}}
+            )
     
     await db.invoices.update_one(
         {"id": invoice_id},
@@ -733,6 +748,25 @@ async def update_invoice_status(invoice_id: str, status_update: InvoiceStatusUpd
     )
     
     return {"message": "Invoice status updated", "status": status_update.status}
+
+@router.delete("/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str):
+    """Delete an invoice and restore bookings to generation list"""
+    invoice = await db.invoices.find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Restore associated bookings to generation list (remove invoice_paid flag)
+    if invoice.get("booking_ids"):
+        await db.bookings.update_many(
+            {"id": {"$in": invoice["booking_ids"]}},
+            {"$unset": {"invoice_paid": "", "invoice_id": "", "invoice_ref": ""}}
+        )
+    
+    # Delete the invoice
+    await db.invoices.delete_one({"id": invoice_id})
+    
+    return {"message": "Invoice deleted successfully", "invoice_ref": invoice.get("invoice_ref")}
 
 @router.put("/invoices/{invoice_id}")
 async def update_invoice(invoice_id: str, invoice_update: InvoiceUpdate):

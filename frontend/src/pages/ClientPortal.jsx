@@ -886,7 +886,7 @@ const ClientPortal = () => {
                             </div>
                             <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
                               <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5" />
+                                <CalendarIcon className="w-3.5 h-3.5" />
                                 {safeFormatDate(invoice.created_at, "dd MMM yyyy", 'N/A')}
                               </span>
                               {invoice.due_date && (

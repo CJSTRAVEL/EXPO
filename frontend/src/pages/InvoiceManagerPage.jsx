@@ -463,6 +463,10 @@ const InvoiceManagerPage = () => {
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditInvoice(invoice); }}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Edit Invoice
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(invoice); }}>
                             <Download className="w-4 h-4 mr-2" />
                             Download PDF

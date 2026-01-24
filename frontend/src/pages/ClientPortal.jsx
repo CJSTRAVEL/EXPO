@@ -697,14 +697,14 @@ const ClientPortal = () => {
         {/* Pending Requests */}
         {activeTab === "requests" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Clock3 className="w-5 h-5 text-yellow-400" />
+            <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <Clock3 className="w-5 h-5 text-amber-500" />
               Pending Requests
             </h2>
             {requests.filter(r => r.status === 'pending').length === 0 ? (
-              <div className="text-center py-12 bg-[#1a1a1a] rounded-xl border border-[#2d2d2d]">
-                <Clock3 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No pending requests</p>
+              <div className="text-center py-12 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <Clock3 className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-600">No pending requests</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -713,12 +713,12 @@ const ClientPortal = () => {
                   .map((request) => (
                     <div
                       key={request.id}
-                      className="bg-[#1a1a1a] rounded-xl border border-yellow-500/30 p-4"
+                      className="bg-amber-50 rounded-xl border border-amber-200 p-4"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           {getStatusBadge(request.status)}
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                          <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
                               {safeFormatDate(request.pickup_datetime, "dd MMM yyyy HH:mm")}
@@ -729,14 +729,14 @@ const ClientPortal = () => {
                       <div className="space-y-2">
                         <div className="flex items-start gap-2">
                           <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
-                          <span className="text-gray-300 text-sm">{request.pickup_location}</span>
+                          <span className="text-slate-700 text-sm">{request.pickup_location}</span>
                         </div>
                         <div className="flex items-start gap-2">
                           <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />
-                          <span className="text-gray-300 text-sm">{request.dropoff_location}</span>
+                          <span className="text-slate-700 text-sm">{request.dropoff_location}</span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-3">
+                      <p className="text-xs text-slate-500 mt-3">
                         Submitted {safeFormatDate(request.created_at, "dd MMM yyyy 'at' HH:mm")}
                       </p>
                     </div>
@@ -747,8 +747,8 @@ const ClientPortal = () => {
             {/* Rejected Requests */}
             {requests.filter(r => r.status === 'rejected').length > 0 && (
               <div className="mt-8">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                  <XCircle className="w-5 h-5 text-red-400" />
+                <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+                  <XCircle className="w-5 h-5 text-red-500" />
                   Rejected Requests
                 </h2>
                 <div className="grid gap-4">
@@ -757,7 +757,7 @@ const ClientPortal = () => {
                     .map((request) => (
                       <div
                         key={request.id}
-                        className="bg-[#1a1a1a] rounded-xl border border-red-500/30 p-4"
+                        className="bg-red-50 rounded-xl border border-red-200 p-4"
                         data-testid={`rejected-request-${request.id}`}
                       >
                         <div className="flex items-start justify-between mb-4">

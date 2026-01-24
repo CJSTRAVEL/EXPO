@@ -24,10 +24,18 @@ const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.6;
 const SwipeButton = ({ onSwipeComplete, text, color = '#D4A853', disabled = false }) => {
   const pan = useRef(new Animated.Value(0)).current;
   const [swiping, setSwiping] = useState(false);
+  const onSwipeCompleteRef = useRef(onSwipeComplete);
+  
+  // Keep the callback reference updated
+  useEffect(() => {
+    onSwipeCompleteRef.current = onSwipeComplete;
+  }, [onSwipeComplete]);
 
-  const panResponder = useRef(
+  // Recreate PanResponder when disabled changes
+  const panResponder = useMemo(() => 
     PanResponder.create({
       onStartShouldSetPanResponder: () => !disabled,
+      onMoveShouldSetPanResponder: () => !disabled,
       onPanResponderGrant: () => {
         if (!disabled) setSwiping(true);
       },
@@ -43,7 +51,9 @@ const SwipeButton = ({ onSwipeComplete, text, color = '#D4A853', disabled = fals
             toValue: SCREEN_WIDTH - 100,
             useNativeDriver: false,
           }).start(() => {
-            onSwipeComplete();
+            if (onSwipeCompleteRef.current) {
+              onSwipeCompleteRef.current();
+            }
             pan.setValue(0);
           });
         } else {
@@ -53,8 +63,7 @@ const SwipeButton = ({ onSwipeComplete, text, color = '#D4A853', disabled = fals
           }).start();
         }
       },
-    })
-  ).current;
+    }), [disabled]);
 
   const backgroundColor = pan.interpolate({
     inputRange: [0, SWIPE_THRESHOLD],

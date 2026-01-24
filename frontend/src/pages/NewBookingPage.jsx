@@ -238,6 +238,47 @@ const NewBookingPage = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Load quote data if converting from a quote
+  useEffect(() => {
+    const loadQuoteData = async () => {
+      if (!fromQuoteId) return;
+      
+      setLoadingQuote(true);
+      try {
+        const response = await axios.get(`${API}/quotes/${fromQuoteId}`);
+        const quote = response.data;
+        
+        // Populate form with quote data
+        setFormData(prev => ({
+          ...prev,
+          first_name: quote.customer_first_name || "",
+          last_name: quote.customer_last_name || "",
+          customer_phone: quote.customer_phone || "",
+          customer_email: quote.customer_email || "",
+          pickup_location: quote.pickup_location || "",
+          dropoff_location: quote.dropoff_location || "",
+          additional_stops: quote.additional_stops || [],
+          booking_datetime: quote.quote_date ? new Date(quote.quote_date) : new Date(),
+          vehicle_type: quote.vehicle_type_id || "",
+          fare: quote.quoted_fare || "",
+          notes: quote.notes || "",
+          create_return: quote.return_journey || false,
+          return_datetime: quote.return_datetime ? new Date(quote.return_datetime) : null,
+          converted_from_quote_id: quote.id,
+        }));
+        
+        toast.info(`Quote ${quote.quote_number} loaded. Review and save to create booking.`);
+      } catch (error) {
+        console.error("Error loading quote:", error);
+        toast.error("Failed to load quote data");
+      } finally {
+        setLoadingQuote(false);
+      }
+    };
+    
+    loadQuoteData();
+  }, [fromQuoteId]);
+
   // Calculate route when pickup/dropoff changes
   useEffect(() => {
     const calculateRoute = async () => {

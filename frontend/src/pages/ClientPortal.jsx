@@ -69,12 +69,17 @@ const ClientPortal = () => {
     vehicle_type_name: "",
     notes: "",
     flight_number: "",
+    additional_stops: [],
     create_return: false,
     return_pickup_location: "",
+    return_additional_stops: [],
     return_dropoff_location: "",
     return_datetime: "",
     return_flight_number: "",
   });
+
+  // Vehicle selector state
+  const [showVehicleSelector, setShowVehicleSelector] = useState(false);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("clientToken");

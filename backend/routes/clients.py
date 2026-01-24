@@ -34,6 +34,7 @@ class ClientBase(BaseModel):
     notes: Optional[str] = None
     vat_registered: Optional[bool] = False
     vat_number: Optional[str] = None
+    vat_rate: Optional[str] = "20"  # "0" (No VAT), "exempt", "20" (20%)
 
 class ClientCreate(ClientBase):
     pass

@@ -91,10 +91,19 @@ const InvoiceManagerPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [invoiceDetails, setInvoiceDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [sendingReminder, setSendingReminder] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    invoice_ref: "",
+    subtotal: 0,
+    vat_rate: "20",
+    status: "unpaid",
+    notes: "",
+  });
 
   useEffect(() => {
     fetchInvoices();

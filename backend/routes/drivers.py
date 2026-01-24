@@ -14,16 +14,28 @@ from .shared import (
 router = APIRouter(tags=["Drivers"])
 
 
-# ========== MODELS ==========
+# Driver Models
 class DriverBase(BaseModel):
     name: str
     email: str
     phone: str
+    driver_types: List[str] = ["taxi"]  # Can be ["taxi"], ["psv"], or ["taxi", "psv"]
+    photo: Optional[str] = None  # Base64 encoded photo
+    # Shared documents
+    dbs_expiry: Optional[str] = None
+    school_badge_expiry: Optional[str] = None
+    # Taxi driver documents
+    taxi_licence_expiry: Optional[str] = None
+    driving_licence_expiry: Optional[str] = None
+    medical_due: Optional[str] = None
+    # PSV driver documents
+    cpc_expiry: Optional[str] = None
+    tacho_card_expiry: Optional[str] = None
+    # Legacy fields (keeping for backward compatibility)
     license_number: Optional[str] = None
     license_expiry: Optional[str] = None
     license_type: Optional[str] = None
     dbs_number: Optional[str] = None
-    dbs_expiry: Optional[str] = None
     national_insurance: Optional[str] = None
     address: Optional[str] = None
     emergency_contact: Optional[str] = None

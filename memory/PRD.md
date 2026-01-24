@@ -134,7 +134,6 @@ A private hire booking application with three main components:
 
 ### P1 - High Priority
 - [ ] SMS templates based on assigned vehicle type
-- [ ] Backend logic to auto-set `booking_source` to 'portal' for portal bookings
 - [ ] APK build with cache clear (on hold per user request)
 
 ### P2 - Medium Priority

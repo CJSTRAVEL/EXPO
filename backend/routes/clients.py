@@ -274,17 +274,27 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    query = {"client_id": client_id, "status": "completed"}
-    if start_date or end_date:
-        date_query = {}
-        if start_date:
-            date_query["$gte"] = start_date
-        if end_date:
-            date_query["$lte"] = end_date + "T23:59:59"
-        if date_query:
-            query["booking_datetime"] = date_query
+    # If specific booking IDs are provided, use those; otherwise query by date range
+    if request and request.booking_ids:
+        bookings = await db.bookings.find(
+            {"id": {"$in": request.booking_ids}, "client_id": client_id, "status": "completed"}, 
+            {"_id": 0}
+        ).sort("booking_datetime", 1).to_list(1000)
+    else:
+        query = {"client_id": client_id, "status": "completed"}
+        if start_date or end_date:
+            date_query = {}
+            if start_date:
+                date_query["$gte"] = start_date
+            if end_date:
+                date_query["$lte"] = end_date + "T23:59:59"
+            if date_query:
+                query["booking_datetime"] = date_query
+        
+        bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
     
-    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    # Store booking IDs for the invoice record
+    booking_ids = [b.get('id') for b in bookings]
     
     # Calculate totals
     subtotal = 0

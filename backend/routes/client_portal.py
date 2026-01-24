@@ -31,7 +31,8 @@ class ClientPortalRegister(BaseModel):
     company_name: Optional[str] = None
 
 class ClientPortalLogin(BaseModel):
-    phone: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
     password: str
 
 class ClientPortalResponse(BaseModel):

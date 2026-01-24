@@ -24,6 +24,7 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 ## What's Been Implemented
 
 ### January 2026
+- **Invoice Delete & Past Jobs** (VERIFIED): Delete invoice option, bookings move to Past Jobs when invoice paid, restore on delete
 - **Invoice Journey Selection** (VERIFIED): Checkbox selection when generating invoices + remove journey from Invoice Manager edit
 - **Invoice Template Redesign** (VERIFIED): Gold/black color scheme, company logo embedded, fixed layout (no overlap)
 - **Invoice Template Unification** (VERIFIED): Professional PDF template now used across both Admin and Client Portal downloads

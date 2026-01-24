@@ -88,17 +88,21 @@ const ClientPortal = () => {
     }
 
     try {
-      const [bookingsRes, requestsRes, invoicesRes, vehicleTypesRes] = await Promise.all([
+      const [bookingsRes, requestsRes, invoicesRes, vehicleTypesRes, zonesRes, ratesRes] = await Promise.all([
         axios.get(`${API}/client-portal/bookings`, { headers: getAuthHeaders() }),
         axios.get(`${API}/client-portal/booking-requests`, { headers: getAuthHeaders() }),
         axios.get(`${API}/client-portal/invoices`, { headers: getAuthHeaders() }).catch(() => ({ data: [] })),
         axios.get(`${API}/vehicle-types`).catch(() => ({ data: [] })),
+        axios.get(`${API}/settings/fare-zones`).catch(() => ({ data: [] })),
+        axios.get(`${API}/settings/mile-rates`).catch(() => ({ data: null })),
       ]);
 
       setBookings(bookingsRes.data);
       setRequests(requestsRes.data);
       setInvoices(invoicesRes.data);
       setVehicleTypes(vehicleTypesRes.data);
+      setFareZones(zonesRes.data || []);
+      setMileRates(ratesRes.data);
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem("clientToken");

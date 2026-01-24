@@ -2632,6 +2632,12 @@ async def approve_booking_request(request_id: str):
         notes=request_doc.get('notes', ''),
         flight_info=FlightInfo(flight_number=request_doc['flight_number']) if request_doc.get('flight_number') else None,
         booking_source=request_doc.get('booking_source', 'portal'),  # Auto-set from request or default to 'portal'
+        fare=request_doc.get('quoted_fare'),  # Transfer quoted fare from request
+        vehicle_type=request_doc.get('vehicle_type_id'),  # Transfer vehicle type
+        passenger_count=request_doc.get('passenger_count', 1),
+        luggage_count=request_doc.get('luggage_count', 0),
+        distance_miles=request_doc.get('distance_miles'),
+        duration_minutes=request_doc.get('duration_minutes'),
     )
     booking.booking_id = readable_id
     

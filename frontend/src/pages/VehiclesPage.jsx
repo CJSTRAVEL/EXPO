@@ -536,8 +536,15 @@ const VehiclesTab = ({ vehicles, vehicleTypes, onRefresh }) => {
     if (filterStatus === "active") matchesStatus = v.is_active !== false;
     if (filterStatus === "inactive") matchesStatus = v.is_active === false;
     if (filterStatus === "expiring") {
-      // Has any document expiring in 30 days
-      const docs = [v.insurance_expiry, v.tax_expiry, v.dcc_test_date_1, v.dcc_test_date_2];
+      // Has any document expiring in 30 days - check both taxi and PSV docs
+      const docs = [
+        v.insurance_expiry, 
+        v.tax_expiry, 
+        v.dcc_test_date_1, 
+        v.dcc_test_date_2,
+        v.dvsa_mot_expiry,
+        v.next_10_weekly
+      ];
       matchesStatus = docs.some(d => {
         if (!d) return false;
         const status = getDocumentStatus(d);

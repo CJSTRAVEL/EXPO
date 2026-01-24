@@ -81,13 +81,19 @@ async def register_passenger(data: PassengerRegister):
 @router.post("/passenger/login", response_model=PassengerResponse)
 async def login_passenger(data: PassengerLogin):
     """Login a passenger"""
-    passenger = await db.passengers.find_one({"phone": data.phone})
+    # Try to find passenger by phone or email
+    passenger = await db.passengers.find_one({
+        "$or": [
+            {"phone": data.identifier},
+            {"email": data.identifier}
+        ]
+    })
     
     if not passenger:
-        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     if passenger.get("password_hash") != hash_password(data.password):
-        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_token(passenger["id"], passenger["phone"])
     

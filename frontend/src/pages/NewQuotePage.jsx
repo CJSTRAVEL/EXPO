@@ -86,20 +86,27 @@ export default function NewQuotePage() {
   // Calculate route when locations change
   useEffect(() => {
     const calculateRoute = async () => {
-      if (!formData.pickup_location || !formData.dropoff_location) {
+      if (!formData.pickup_location || !formData.dropoff_location ||
+          formData.pickup_location.length < 5 || formData.dropoff_location.length < 5) {
         setRouteInfo(null);
         return;
       }
 
       try {
-        const response = await axios.post(`${API}/api/calculate-route`, {
-          origin: formData.pickup_location,
-          destination: formData.dropoff_location,
-          waypoints: formData.additional_stops?.length > 0 ? formData.additional_stops : undefined,
+        const response = await axios.get(`${API}/api/directions`, {
+          params: {
+            origin: formData.pickup_location,
+            destination: formData.dropoff_location
+          }
         });
-        setRouteInfo(response.data);
+        if (response.data.success) {
+          setRouteInfo(response.data);
+        } else {
+          setRouteInfo(null);
+        }
       } catch (error) {
         console.error("Error calculating route:", error);
+        setRouteInfo(null);
       }
     };
 

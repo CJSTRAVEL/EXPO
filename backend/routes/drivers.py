@@ -51,11 +51,23 @@ class DriverUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
+    driver_types: Optional[List[str]] = None
+    photo: Optional[str] = None
+    # Shared documents
+    dbs_expiry: Optional[str] = None
+    school_badge_expiry: Optional[str] = None
+    # Taxi driver documents
+    taxi_licence_expiry: Optional[str] = None
+    driving_licence_expiry: Optional[str] = None
+    medical_due: Optional[str] = None
+    # PSV driver documents
+    cpc_expiry: Optional[str] = None
+    tacho_card_expiry: Optional[str] = None
+    # Legacy fields
     license_number: Optional[str] = None
     license_expiry: Optional[str] = None
     license_type: Optional[str] = None
     dbs_number: Optional[str] = None
-    dbs_expiry: Optional[str] = None
     national_insurance: Optional[str] = None
     address: Optional[str] = None
     emergency_contact: Optional[str] = None

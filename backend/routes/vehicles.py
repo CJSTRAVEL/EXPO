@@ -17,6 +17,7 @@ class VehicleTypeBase(BaseModel):
     capacity: int
     luggage_capacity: Optional[int] = None
     base_rate: Optional[float] = None
+    category: Optional[str] = "both"  # "taxi", "psv", or "both"
 
 class VehicleTypeCreate(VehicleTypeBase):
     pass
@@ -27,6 +28,7 @@ class VehicleTypeUpdate(BaseModel):
     capacity: Optional[int] = None
     luggage_capacity: Optional[int] = None
     base_rate: Optional[float] = None
+    category: Optional[str] = None
 
 class VehicleType(VehicleTypeBase):
     id: str

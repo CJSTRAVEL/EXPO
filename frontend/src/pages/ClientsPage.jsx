@@ -47,7 +47,9 @@ const ClientsPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [editingClient, setEditingClient] = useState(null);
   const [clientBookings, setClientBookings] = useState([]);
+  const [pastJobs, setPastJobs] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [loadingPastJobs, setLoadingPastJobs] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [invoiceBookings, setInvoiceBookings] = useState([]);

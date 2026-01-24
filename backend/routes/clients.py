@@ -610,6 +610,7 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
         "vat_amount": vat_amount,
         "total": total,
         "journey_count": len(bookings),
+        "booking_ids": booking_ids,  # Store the booking IDs for this invoice
         "status": "unpaid",
         "due_date": due_date.isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat()

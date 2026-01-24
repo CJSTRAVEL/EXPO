@@ -1081,7 +1081,8 @@ const ClientsPage = () => {
               Cancel
             </Button>
             <Button 
-              onClick={handleGenerateInvoice} 
+              variant="outline"
+              onClick={() => handleGenerateInvoice(true)} 
               disabled={generatingInvoice || invoiceBookings.length === 0} 
               data-testid="download-invoice-btn"
             >
@@ -1093,7 +1094,24 @@ const ClientsPage = () => {
               ) : (
                 <>
                   <Download className="w-4 h-4 mr-2" />
-                  Download Invoice (£{invoiceTotal.toFixed(2)})
+                  Download PDF
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={() => handleGenerateInvoice(false)} 
+              disabled={generatingInvoice || invoiceBookings.length === 0} 
+              data-testid="generate-invoice-btn"
+            >
+              {generatingInvoice ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generate Invoice (£{invoiceTotal.toFixed(2)})
                 </>
               )}
             </Button>

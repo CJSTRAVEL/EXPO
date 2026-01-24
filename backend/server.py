@@ -3423,6 +3423,40 @@ async def update_passenger_password(passenger_id: str, data: dict):
     
     return {"message": "Password updated successfully"}
 
+@api_router.put("/admin/passengers/{passenger_id}/email")
+async def update_passenger_email(passenger_id: str, data: dict):
+    """Update a passenger's email (admin only)"""
+    passenger = await db.passengers.find_one({"id": passenger_id})
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    new_email = data.get('email')
+    
+    # If email is provided, validate it
+    if new_email:
+        import re
+        email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(email_pattern, new_email):
+            raise HTTPException(status_code=400, detail="Invalid email format")
+        
+        # Check if email is already used by another passenger
+        existing = await db.passengers.find_one({"email": new_email, "id": {"$ne": passenger_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use by another passenger")
+        
+        await db.passengers.update_one(
+            {"id": passenger_id},
+            {"$set": {"email": new_email}}
+        )
+    else:
+        # Remove email if empty/null
+        await db.passengers.update_one(
+            {"id": passenger_id},
+            {"$unset": {"email": ""}}
+        )
+    
+    return {"message": "Email updated successfully"}
+
 @api_router.delete("/admin/passengers/{passenger_id}")
 async def delete_passenger(passenger_id: str):
     """Delete a passenger account (admin only)"""

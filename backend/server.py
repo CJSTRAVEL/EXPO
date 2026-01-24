@@ -2631,6 +2631,7 @@ async def approve_booking_request(request_id: str):
         booking_datetime=datetime.fromisoformat(request_doc['pickup_datetime']) if isinstance(request_doc['pickup_datetime'], str) else request_doc['pickup_datetime'],
         notes=request_doc.get('notes', ''),
         flight_info=FlightInfo(flight_number=request_doc['flight_number']) if request_doc.get('flight_number') else None,
+        booking_source=request_doc.get('booking_source', 'portal'),  # Auto-set from request or default to 'portal'
     )
     booking.booking_id = readable_id
     

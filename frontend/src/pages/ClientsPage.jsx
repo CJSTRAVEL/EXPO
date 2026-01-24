@@ -550,6 +550,17 @@ const ClientsPage = () => {
                     Fare Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setNewPassword("");
+                      setShowPasswordModal(true);
+                    }} 
+                    data-testid="set-password-btn"
+                  >
+                    <Key className="w-4 h-4 mr-2" />
+                    Set Portal Password
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleOpenForm(selectedClient)} data-testid="edit-client-btn">
                     <Pencil className="w-4 h-4 mr-2" />
                     Edit Client

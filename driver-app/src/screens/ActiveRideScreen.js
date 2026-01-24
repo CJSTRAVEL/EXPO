@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
   // Bottom action
   bottomAction: {
     padding: 16,
-    paddingBottom: 30,
+    paddingBottom: Platform.OS === 'android' ? 60 : 40,
   },
   // Swipe styles
   swipeContainer: {

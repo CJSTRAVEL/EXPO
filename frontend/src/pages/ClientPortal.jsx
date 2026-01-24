@@ -924,155 +924,209 @@ const ClientPortal = () => {
       </main>
 
       {/* New Booking Dialog */}
-      <Dialog open={showNewBooking} onOpenChange={setShowNewBooking}>
-        <DialogContent className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-lg">
+      {/* New Booking Request Dialog */}
+      <Dialog open={showNewBooking} onOpenChange={(open) => {
+        if (!open) {
+          setNewBooking({
+            pickup_location: "",
+            dropoff_location: "",
+            pickup_datetime: "",
+            passenger_count: 1,
+            luggage_count: 0,
+            vehicle_type_id: "",
+            vehicle_type_name: "",
+            notes: "",
+            flight_number: "",
+            additional_stops: [],
+            create_return: false,
+            return_pickup_location: "",
+            return_additional_stops: [],
+            return_dropoff_location: "",
+            return_datetime: "",
+            return_flight_number: "",
+          });
+          setFlightData(null);
+          setReturnFlightData(null);
+          setEstimatedFare(null);
+          setRouteInfo(null);
+        }
+        setShowNewBooking(open);
+      }}>
+        <DialogContent className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-lg max-h-[90vh] overflow-y-auto" data-testid="request-form-modal">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-blue-400" />
-              New Booking Request
+            <DialogTitle className="flex items-center gap-2 text-blue-400">
+              <Plus className="w-5 h-5" />
+              Request a Booking
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmitBooking} className="space-y-4">
+          
+          <div className="space-y-4 py-4">
+            {/* Pickup Location */}
             <div className="space-y-2">
               <Label className="text-gray-300">Pickup Location *</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
-                <Input
-                  value={newBooking.pickup_location}
-                  onChange={(e) => setNewBooking({ ...newBooking, pickup_location: e.target.value })}
-                  placeholder="Enter pickup address"
-                  className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-gray-300">Drop-off Location *</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500" />
-                <Input
-                  value={newBooking.dropoff_location}
-                  onChange={(e) => setNewBooking({ ...newBooking, dropoff_location: e.target.value })}
-                  placeholder="Enter drop-off address"
-                  className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-gray-300">Pickup Date & Time *</Label>
-              <Input
-                type="datetime-local"
-                value={newBooking.pickup_datetime}
-                onChange={(e) => setNewBooking({ ...newBooking, pickup_datetime: e.target.value })}
+              <AddressAutocomplete
+                value={newBooking.pickup_location}
+                onChange={(value) => setNewBooking({ ...newBooking, pickup_location: value })}
+                placeholder="Start typing address..."
+                data-testid="request-pickup-input"
                 className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-gray-300">Passengers</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    type="number"
-                    min="1"
-                    max="16"
-                    value={newBooking.passenger_count}
-                    onChange={(e) => setNewBooking({ ...newBooking, passenger_count: parseInt(e.target.value) || 1 })}
-                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-300">Luggage</Label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    type="number"
-                    min="0"
-                    max="20"
-                    value={newBooking.luggage_count}
-                    onChange={(e) => setNewBooking({ ...newBooking, luggage_count: parseInt(e.target.value) || 0 })}
-                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {vehicleTypes.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-gray-300">Vehicle Type</Label>
-                <Select
-                  value={newBooking.vehicle_type_id}
-                  onValueChange={(value) => {
-                    const vt = vehicleTypes.find(v => v.id === value);
-                    setNewBooking({
-                      ...newBooking,
-                      vehicle_type_id: value,
-                      vehicle_type_name: vt?.name || "",
-                    });
-                  }}
-                >
-                  <SelectTrigger className="bg-[#2d2d2d] border-[#3d3d3d] text-white">
-                    <SelectValue placeholder="Select vehicle type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#2d2d2d] border-[#3d3d3d]">
-                    {vehicleTypes.map((vt) => (
-                      <SelectItem key={vt.id} value={vt.id} className="text-white">
-                        {vt.name} ({vt.capacity} seats)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label className="text-gray-300">Flight Number (if applicable)</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={newBooking.flight_number}
-                  onChange={(e) => {
-                    setNewBooking({ ...newBooking, flight_number: e.target.value.toUpperCase() });
-                    setFlightData(null);
-                    setFlightError(null);
-                  }}
-                  placeholder="e.g., BA1234"
-                  className="bg-[#2d2d2d] border-[#3d3d3d] text-white flex-1"
-                />
+            {/* Additional Stops */}
+            <div className="space-y-2 pl-4 border-l-2 border-blue-400/50">
+              <div className="flex items-center justify-between">
+                <Label className="text-blue-400 text-sm">Stops (in order)</Label>
                 <Button
                   type="button"
-                  onClick={handleFlightLookup}
-                  disabled={loadingFlight || !newBooking.flight_number}
-                  className="bg-blue-500 hover:bg-blue-600"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setNewBooking({ 
+                    ...newBooking, 
+                    additional_stops: [...newBooking.additional_stops, ""] 
+                  })}
+                  className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                  data-testid="request-add-stop-btn"
                 >
-                  {loadingFlight ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-1" />
-                      Look Up
-                    </>
-                  )}
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Stop
                 </Button>
               </div>
-              {flightError && (
-                <p className="text-red-400 text-xs">{flightError}</p>
+              {newBooking.additional_stops.length === 0 ? (
+                <p className="text-xs text-gray-500 italic">No intermediate stops - direct journey</p>
+              ) : (
+                newBooking.additional_stops.map((stop, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <span className="text-xs font-semibold text-blue-400 w-6">{index + 1}.</span>
+                    <div className="flex-1">
+                      <AddressAutocomplete
+                        value={stop}
+                        onChange={(value) => {
+                          const newStops = [...newBooking.additional_stops];
+                          newStops[index] = value;
+                          setNewBooking({ ...newBooking, additional_stops: newStops });
+                        }}
+                        placeholder={`Stop ${index + 1} address...`}
+                        data-testid={`request-stop-${index}-input`}
+                        className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      onClick={() => {
+                        const newStops = newBooking.additional_stops.filter((_, i) => i !== index);
+                        setNewBooking({ ...newBooking, additional_stops: newStops });
+                      }}
+                      data-testid={`request-remove-stop-${index}-btn`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
               )}
             </div>
 
-            {/* Flight Data Display */}
-            {flightData && !flightError && (
+            {/* Dropoff Location */}
+            <div className="space-y-2">
+              <Label className="text-gray-300">Final Drop-off Location *</Label>
+              <AddressAutocomplete
+                value={newBooking.dropoff_location}
+                onChange={(value) => setNewBooking({ ...newBooking, dropoff_location: value })}
+                placeholder="Start typing address..."
+                data-testid="request-dropoff-input"
+                className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
+              />
+            </div>
+
+            {/* Vehicle Type Selection */}
+            <div className="space-y-2">
+              <Label className="text-gray-300">Select Vehicle *</Label>
+              <Button
+                type="button"
+                variant="outline"
+                className={`w-full justify-between h-auto py-3 ${
+                  newBooking.vehicle_type_id 
+                    ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
+                    : 'bg-[#2d2d2d] border-[#3d3d3d] text-gray-400'
+                }`}
+                onClick={() => setShowVehicleSelector(true)}
+                data-testid="select-vehicle-btn"
+              >
+                <span className="flex items-center gap-2">
+                  <Car className="w-4 h-4" />
+                  {newBooking.vehicle_type_name || "Choose your vehicle"}
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Date/Time and PAX */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-gray-300">Pickup Date & Time *</Label>
+                <Input
+                  type="datetime-local"
+                  value={newBooking.pickup_datetime}
+                  onChange={(e) => setNewBooking({ ...newBooking, pickup_datetime: e.target.value })}
+                  className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                  required
+                  data-testid="request-datetime-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">Passengers</Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={newBooking.passenger_count}
+                    onChange={(e) => setNewBooking({ ...newBooking, passenger_count: parseInt(e.target.value) || 1 })}
+                    className="pl-10 bg-[#2d2d2d] border-[#3d3d3d] text-white"
+                    data-testid="request-pax-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Flight Number */}
+            <div className="space-y-2">
+              <Label className="text-gray-300 flex items-center gap-2">
+                <Plane className="w-4 h-4" />
+                Flight Number (optional)
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newBooking.flight_number}
+                  onChange={(e) => setNewBooking({ ...newBooking, flight_number: e.target.value.toUpperCase() })}
+                  placeholder="e.g. BA1234"
+                  className="bg-[#2d2d2d] border-[#3d3d3d] text-white uppercase"
+                  data-testid="request-flight-input"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleFlightLookup}
+                  disabled={!newBooking.flight_number || loadingFlight}
+                  className="border-[#3d3d3d] text-gray-300 hover:bg-[#3d3d3d]"
+                >
+                  {loadingFlight ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+              {flightError && (
+                <p className="text-xs text-red-400">{flightError}</p>
+              )}
+            </div>
+
+            {/* Flight Info Display */}
+            {flightData && (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-blue-400 text-sm font-medium flex items-center gap-1">
-                    <Plane className="w-4 h-4" />
-                    Live Flight Data {flightData.is_cached && "(cached)"}
-                  </span>
+                  <span className="text-sm font-semibold text-blue-400">{flightData.flight_number}</span>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                     flightData.flight_status === 'landed' ? 'bg-green-500/20 text-green-400' :
                     flightData.flight_status === 'active' ? 'bg-blue-500/20 text-blue-400' :
@@ -1095,16 +1149,10 @@ const ClientPortal = () => {
                   </div>
                 </div>
                 {flightData.arrival_scheduled && (
-                  <div className="text-xs text-gray-400">
-                    <span className="font-medium">Arrival:</span>{' '}
-                    {new Date(flightData.arrival_scheduled).toLocaleString()}
+                  <p className="text-xs text-gray-400">
+                    <span className="font-medium">Arrival:</span> {new Date(flightData.arrival_scheduled).toLocaleString()}
                     {flightData.arrival_terminal && ` - Terminal ${flightData.arrival_terminal}`}
-                  </div>
-                )}
-                {flightData.airline && (
-                  <div className="text-xs text-gray-400">
-                    <span className="font-medium">Airline:</span> {flightData.airline}
-                  </div>
+                  </p>
                 )}
               </div>
             )}
@@ -1122,13 +1170,13 @@ const ClientPortal = () => {
                       create_return: isChecked,
                       return_pickup_location: isChecked ? newBooking.dropoff_location : "",
                       return_dropoff_location: isChecked ? newBooking.pickup_location : "",
+                      return_additional_stops: [],
                       return_datetime: "",
                       return_flight_number: ""
                     });
                     setReturnFlightData(null);
-                    setReturnFlightError(null);
                   }}
-                  className="rounded"
+                  className="rounded border-blue-500"
                   data-testid="create-return-toggle"
                 />
                 <span className="text-sm font-semibold text-blue-400 flex items-center gap-2">
@@ -1143,31 +1191,29 @@ const ClientPortal = () => {
                     <p className="text-xs font-semibold text-blue-400">RETURN JOURNEY DETAILS</p>
                   </div>
                   
-                  {/* Return Pickup Location */}
+                  {/* Return Pickup */}
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Return Pickup Location</Label>
-                    <Input
+                    <Label className="text-gray-300">Return Pickup</Label>
+                    <AddressAutocomplete
                       value={newBooking.return_pickup_location}
-                      onChange={(e) => setNewBooking({ ...newBooking, return_pickup_location: e.target.value })}
-                      placeholder="Where to pick up for return..."
+                      onChange={(value) => setNewBooking({ ...newBooking, return_pickup_location: value })}
+                      placeholder="Return pickup address..."
                       className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                      data-testid="return-pickup-input"
                     />
                   </div>
 
-                  {/* Return Dropoff Location */}
+                  {/* Return Dropoff */}
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Return Drop-off Location</Label>
-                    <Input
+                    <Label className="text-gray-300">Return Drop-off</Label>
+                    <AddressAutocomplete
                       value={newBooking.return_dropoff_location}
-                      onChange={(e) => setNewBooking({ ...newBooking, return_dropoff_location: e.target.value })}
-                      placeholder="Where to drop off on return..."
+                      onChange={(value) => setNewBooking({ ...newBooking, return_dropoff_location: value })}
+                      placeholder="Return drop-off address..."
                       className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                      data-testid="return-dropoff-input"
                     />
                   </div>
 
-                  {/* Return Date & Time */}
+                  {/* Return DateTime */}
                   <div className="space-y-2">
                     <Label className="text-gray-300">Return Date & Time</Label>
                     <Input
@@ -1175,96 +1221,22 @@ const ClientPortal = () => {
                       value={newBooking.return_datetime}
                       onChange={(e) => setNewBooking({ ...newBooking, return_datetime: e.target.value })}
                       className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                      data-testid="return-datetime-input"
                     />
                   </div>
-
-                  {/* Return Flight Number */}
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Return Flight Number (if applicable)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newBooking.return_flight_number}
-                        onChange={(e) => {
-                          setNewBooking({ ...newBooking, return_flight_number: e.target.value.toUpperCase() });
-                          setReturnFlightData(null);
-                          setReturnFlightError(null);
-                        }}
-                        placeholder="e.g., BA1234"
-                        className="bg-[#2d2d2d] border-[#3d3d3d] text-white flex-1"
-                        data-testid="return-flight-input"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleReturnFlightLookup}
-                        disabled={loadingReturnFlight || !newBooking.return_flight_number}
-                        className="bg-blue-500 hover:bg-blue-600"
-                      >
-                        {loadingReturnFlight ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Search className="w-4 h-4 mr-1" />
-                            Look Up
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    {returnFlightError && (
-                      <p className="text-red-400 text-xs">{returnFlightError}</p>
-                    )}
-                  </div>
-
-                  {/* Return Flight Data Display */}
-                  {returnFlightData && !returnFlightError && (
-                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-green-400 text-sm font-medium flex items-center gap-1">
-                          <Plane className="w-4 h-4" />
-                          Return Flight {returnFlightData.is_cached && "(cached)"}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          returnFlightData.flight_status === 'landed' ? 'bg-green-500/20 text-green-400' :
-                          returnFlightData.flight_status === 'active' ? 'bg-blue-500/20 text-blue-400' :
-                          returnFlightData.flight_status === 'scheduled' ? 'bg-gray-500/20 text-gray-400' :
-                          returnFlightData.flight_status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
-                          {returnFlightData.flight_status?.toUpperCase() || 'UNKNOWN'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-500 text-xs">From</p>
-                          <p className="font-medium text-white">{returnFlightData.departure_airport}</p>
-                        </div>
-                        <Plane className="w-4 h-4 text-green-400" />
-                        <div>
-                          <p className="text-gray-500 text-xs">To</p>
-                          <p className="font-medium text-white">{returnFlightData.arrival_airport}</p>
-                        </div>
-                      </div>
-                      {returnFlightData.departure_scheduled && (
-                        <div className="text-xs text-gray-400">
-                          <span className="font-medium">Departure:</span>{' '}
-                          {new Date(returnFlightData.departure_scheduled).toLocaleString()}
-                          {returnFlightData.departure_terminal && ` - Terminal ${returnFlightData.departure_terminal}`}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
 
+            {/* Notes */}
             <div className="space-y-2">
-              <Label className="text-gray-300">Notes</Label>
+              <Label className="text-gray-300">Additional Notes</Label>
               <Textarea
                 value={newBooking.notes}
                 onChange={(e) => setNewBooking({ ...newBooking, notes: e.target.value })}
                 placeholder="Any special requirements..."
                 className="bg-[#2d2d2d] border-[#3d3d3d] text-white resize-none"
                 rows={3}
+                data-testid="request-notes-input"
               />
             </div>
 
@@ -1281,7 +1253,6 @@ const ClientPortal = () => {
                   )}
                 </div>
                 
-                {/* Fare Amount */}
                 <div className="text-center py-2">
                   {calculatingFare ? (
                     <p className="text-gray-400 text-sm">Calculating...</p>
@@ -1303,7 +1274,6 @@ const ClientPortal = () => {
                   )}
                 </div>
 
-                {/* Route Info */}
                 {routeInfo && (
                   <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-blue-500/20">
                     {routeInfo.distance && (
@@ -1330,32 +1300,90 @@ const ClientPortal = () => {
                 </p>
               </div>
             )}
+          </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowNewBooking(false)}
-                className="flex-1 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowNewBooking(false)}
+              className="border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitBooking}
+              disabled={submitting || !newBooking.pickup_location || !newBooking.dropoff_location || !newBooking.vehicle_type_id}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid="submit-booking-btn"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Request"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vehicle Selector Modal */}
+      <Dialog open={showVehicleSelector} onOpenChange={setShowVehicleSelector}>
+        <DialogContent className="bg-[#1a1a1a] border-blue-500/30 text-white max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="vehicle-selector-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-400">
+              <Car className="w-5 h-5" />
+              Select Your Vehicle
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            {vehicleTypes.map((vt) => (
+              <div
+                key={vt.id}
+                onClick={() => {
+                  setNewBooking({
+                    ...newBooking,
+                    vehicle_type_id: vt.id,
+                    vehicle_type_name: `${vt.name} (${vt.capacity} seats)`
+                  });
+                  setShowVehicleSelector(false);
+                }}
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  newBooking.vehicle_type_id === vt.id
+                    ? 'border-blue-500 bg-blue-500/10'
+                    : 'border-[#3d3d3d] hover:border-blue-500/50 bg-[#2d2d2d]'
+                }`}
+                data-testid={`vehicle-card-${vt.id}`}
               >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Request"
+                {vt.image_url && (
+                  <img 
+                    src={vt.image_url} 
+                    alt={vt.name}
+                    className="w-full h-32 object-cover rounded-lg mb-3"
+                  />
                 )}
-              </Button>
-            </div>
-          </form>
+                <h3 className="font-semibold text-white">{vt.name}</h3>
+                <p className="text-sm text-gray-400">Max {vt.capacity} passengers</p>
+                {vt.features && (
+                  <p className="text-xs text-gray-500 mt-1">{vt.features}</p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowVehicleSelector(false)}
+              className="border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

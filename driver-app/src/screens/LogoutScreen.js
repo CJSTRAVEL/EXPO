@@ -42,8 +42,8 @@ export default function LogoutScreen({ navigation }) {
   const handleLogout = () => {
     if (hasActiveBooking) {
       Alert.alert(
-        'Booking In Progress',
-        'You cannot logout while you have an active booking. Please complete or cancel the current booking first.',
+        'Journey In Progress',
+        'You cannot logout while a journey is actively in progress. Please complete or cancel the current journey first.',
         [{ text: 'OK' }]
       );
       return;

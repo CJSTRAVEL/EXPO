@@ -24,6 +24,7 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 ## What's Been Implemented
 
 ### January 2026
+- **SMS Templates with Vehicle Details** (VERIFIED): Added vehicle colour, make, model, registration to driver_on_route and driver_arrived SMS
 - **Invoice Delete & Past Jobs** (VERIFIED): Delete invoice option, bookings move to Past Jobs when invoice paid, restore on delete
 - **Invoice Journey Selection** (VERIFIED): Checkbox selection when generating invoices + remove journey from Invoice Manager edit
 - **Invoice Template Redesign** (VERIFIED): Gold/black color scheme, company logo embedded, fixed layout (no overlap)

@@ -1,6 +1,7 @@
 # CJ's Executive Travel - Product Requirements Document
 
 ## Changelog
+- **2026-01-24**: Added rejected booking requests display on both Passenger and Corporate portals with admin rejection reason (admin_notes field)
 - **2025-01-24**: Fixed walkaround submission bug - `AuthContext` was not exposing `token` to `useAuth()` hook, causing API auth to fail with `Bearer undefined`
 
 ## Project Overview
@@ -92,6 +93,15 @@ A private hire booking application with three main components:
 #### Corporate Portal Login Fix ✅
 - [x] Fixed registration endpoint to check email conflicts in addition to phone/mobile
 - [x] Registration now properly links to existing clients without passwords
+
+#### Rejected Requests Display on Portals ✅
+- [x] Passenger Portal: Added "Rejected Requests" section showing declined booking requests
+- [x] Corporate Portal: Added "Rejected Requests" section under "Pending Requests" tab
+- [x] Both portals display rejection reason from `admin_notes` field
+- [x] Shows default message "We were unable to accommodate this request..." when no admin notes provided
+- [x] Section only appears when there are rejected requests
+- [x] Added `XCircle` import fix to PassengerPortal.jsx
+- [x] Test data-testid attributes: `rejected-request-{id}`
 
 ### Session: Jan 23, 2026
 

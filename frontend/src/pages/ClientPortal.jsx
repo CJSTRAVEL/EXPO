@@ -1240,12 +1240,12 @@ const ClientPortal = () => {
 
             {/* Flight Info Display */}
             {flightData && (
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 space-y-2">
+              <div className="bg-[#D4A853]/10 border border-[#D4A853]/30 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-blue-400">{flightData.flight_number}</span>
+                  <span className="text-sm font-semibold text-[#D4A853]">{flightData.flight_number}</span>
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                     flightData.flight_status === 'landed' ? 'bg-green-500/20 text-green-400' :
-                    flightData.flight_status === 'active' ? 'bg-blue-500/20 text-blue-400' :
+                    flightData.flight_status === 'active' ? 'bg-[#D4A853]/20 text-[#D4A853]' :
                     flightData.flight_status === 'scheduled' ? 'bg-gray-500/20 text-gray-400' :
                     flightData.flight_status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
                     'bg-gray-500/20 text-gray-400'
@@ -1258,7 +1258,7 @@ const ClientPortal = () => {
                     <p className="text-gray-500 text-xs">From</p>
                     <p className="font-medium text-white">{flightData.departure_airport}</p>
                   </div>
-                  <Plane className="w-4 h-4 text-blue-400" />
+                  <Plane className="w-4 h-4 text-[#D4A853]" />
                   <div>
                     <p className="text-gray-500 text-xs">To</p>
                     <p className="font-medium text-white">{flightData.arrival_airport}</p>
@@ -1274,7 +1274,7 @@ const ClientPortal = () => {
             )}
 
             {/* Return Journey Toggle */}
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+            <div className="bg-[#D4A853]/10 border border-[#D4A853]/30 rounded-lg p-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -1292,19 +1292,19 @@ const ClientPortal = () => {
                     });
                     setReturnFlightData(null);
                   }}
-                  className="rounded border-blue-500"
+                  className="rounded border-[#D4A853]"
                   data-testid="create-return-toggle"
                 />
-                <span className="text-sm font-semibold text-blue-400 flex items-center gap-2">
+                <span className="text-sm font-semibold text-[#D4A853] flex items-center gap-2">
                   <ArrowLeftRight className="w-4 h-4" />
                   Create Return Journey
                 </span>
               </label>
               
               {newBooking.create_return && (
-                <div className="mt-4 pt-4 border-t border-blue-500/30 space-y-4">
-                  <div className="bg-blue-500/20 rounded px-2 py-1">
-                    <p className="text-xs font-semibold text-blue-400">RETURN JOURNEY DETAILS</p>
+                <div className="mt-4 pt-4 border-t border-[#D4A853]/30 space-y-4">
+                  <div className="bg-[#D4A853]/20 rounded px-2 py-1">
+                    <p className="text-xs font-semibold text-[#D4A853]">RETURN JOURNEY DETAILS</p>
                   </div>
                   
                   {/* Return Pickup */}

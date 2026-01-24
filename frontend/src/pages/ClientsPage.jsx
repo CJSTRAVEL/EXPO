@@ -41,6 +41,8 @@ const ClientsPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showFareSettingsModal, setShowFareSettingsModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const [editingClient, setEditingClient] = useState(null);
   const [clientBookings, setClientBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);

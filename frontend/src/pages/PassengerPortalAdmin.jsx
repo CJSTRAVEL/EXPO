@@ -712,6 +712,121 @@ const PassengerPortalAdmin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Name Modal */}
+      <Dialog open={showNameModal} onOpenChange={(open) => {
+        setShowNameModal(open);
+        if (!open) {
+          setNewName("");
+          setSelectedPassenger(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="edit-name-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-5 h-5" />
+              Edit Name
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {selectedPassenger && (
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">Editing name for:</p>
+                <p className="font-semibold">{selectedPassenger.name}</p>
+                <p className="text-sm text-muted-foreground">{selectedPassenger.phone}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="edit-name"
+                  type="text"
+                  placeholder="Enter full name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="pl-10"
+                  data-testid="edit-name-input"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNameModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateName} disabled={saving || !newName.trim()} data-testid="save-name-btn">
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Update Name"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Phone Modal */}
+      <Dialog open={showPhoneModal} onOpenChange={(open) => {
+        setShowPhoneModal(open);
+        if (!open) {
+          setNewPhone("");
+          setSelectedPassenger(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[400px]" data-testid="edit-phone-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Phone className="w-5 h-5" />
+              Edit Phone Number
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {selectedPassenger && (
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">Editing phone for:</p>
+                <p className="font-semibold">{selectedPassenger.name}</p>
+                <p className="text-sm text-muted-foreground">Current: {selectedPassenger.phone}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="edit-phone"
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  className="pl-10"
+                  data-testid="edit-phone-input"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">UK numbers starting with 0 will be converted to +44 format.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPhoneModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePhone} disabled={saving || !newPhone.trim()} data-testid="save-phone-btn">
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Update Phone"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

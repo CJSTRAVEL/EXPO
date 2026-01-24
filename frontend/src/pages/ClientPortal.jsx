@@ -1425,14 +1425,14 @@ const ClientPortal = () => {
 
             {/* Estimated Fare Display */}
             {(estimatedFare || calculatingFare || routeInfo || (newBooking.vehicle_type_id && newBooking.dropoff_location)) && (
-              <div className="bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-xl p-4 border border-blue-500/30 shadow-lg" data-testid="fare-estimate-card">
+              <div className="bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] rounded-xl p-4 border border-[#D4A853]/30 shadow-lg" data-testid="fare-estimate-card">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-blue-400 uppercase tracking-wide flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[#D4A853] uppercase tracking-wide flex items-center gap-2">
                     <Car className="w-4 h-4" />
                     Estimated Fare
                   </h4>
                   {calculatingFare && (
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#D4A853]" />
                   )}
                 </div>
                 
@@ -1445,7 +1445,7 @@ const ClientPortal = () => {
                         £{estimatedFare.toFixed(2)}
                       </p>
                       {newBooking.create_return && (
-                        <p className="text-xs text-blue-400 mt-1">Includes return journey</p>
+                        <p className="text-xs text-[#D4A853] mt-1">Includes return journey</p>
                       )}
                     </div>
                   ) : (
@@ -1457,7 +1457,7 @@ const ClientPortal = () => {
                 </div>
 
                 {routeInfo && (
-                  <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-blue-500/20">
+                  <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-[#D4A853]/20">
                     {routeInfo.distance && (
                       <div className="text-center">
                         <p className="text-lg font-semibold text-white">
@@ -1520,7 +1520,7 @@ const ClientPortal = () => {
             <Button
               onClick={handleSubmitBooking}
               disabled={submitting || !newBooking.pickup_location || !newBooking.dropoff_location || !newBooking.vehicle_type_id}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold"
               data-testid="submit-booking-btn"
             >
               {submitting ? (

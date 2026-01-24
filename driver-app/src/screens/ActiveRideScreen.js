@@ -430,13 +430,11 @@ const ActiveRideScreen = ({
             <View style={styles.completionContainer}>
               {/* Price Display */}
               <View style={[styles.priceCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>Balance Due</Text>
+                <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>BALANCE DUE</Text>
                 <Text style={[styles.priceValue, { color: '#D4A853' }]}>£{balanceDue.toFixed(2)}</Text>
-                {deposit > 0 && (
-                  <Text style={[styles.depositNote, { color: '#4CAF50' }]}>
-                    (£{deposit.toFixed(2)} deposit already paid)
-                  </Text>
-                )}
+                <Text style={[styles.depositNote, { color: deposit > 0 ? '#4CAF50' : theme.textSecondary }]}>
+                  Deposit: £{deposit.toFixed(2)}
+                </Text>
                 <Text style={[styles.paymentMethodText, { color: theme.textSecondary }]}>
                   Payment: {booking.payment_method || 'Cash'}
                 </Text>

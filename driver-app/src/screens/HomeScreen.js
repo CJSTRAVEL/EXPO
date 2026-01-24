@@ -833,43 +833,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  // Vehicle Marker Styles - Simple visible car icon
+  // Vehicle Marker Styles - Top-down car image
   vehicleMarkerContainer: {
-    alignItems: 'center',
-  },
-  vehicleMarkerOuter: {
     width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#D4A853',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 10,
-  },
-  vehicleMarkerInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1a3a5c',
+    height: 70,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  vehicleMarkerArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderTopWidth: 12,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#D4A853',
-    marginTop: -2,
+  vehicleMarkerImage: {
+    width: 45,
+    height: 65,
   },
   // Journey Progress Bar styles
   journeyProgressBar: {

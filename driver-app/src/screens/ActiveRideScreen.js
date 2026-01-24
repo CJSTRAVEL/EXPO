@@ -575,7 +575,7 @@ const ActiveRideScreen = ({
           )}
           {stage === 'arrived' && (
             <SwipeButton 
-              text="Next Pick Up" 
+              text="Passenger On Board" 
               onSwipeComplete={handleStartJourney}
               color="#4CAF50"
             />

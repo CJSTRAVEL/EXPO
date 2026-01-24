@@ -55,6 +55,7 @@ export default function NewQuotePage() {
 
   useEffect(() => {
     fetchVehicleTypes();
+    fetchFareSettings();
     if (isEditing) {
       fetchQuote();
     }
@@ -68,6 +69,103 @@ export default function NewQuotePage() {
       console.error("Error fetching vehicle types:", error);
     }
   };
+
+  const fetchFareSettings = async () => {
+    try {
+      const [zonesRes, ratesRes] = await Promise.all([
+        axios.get(`${API}/api/settings/fare-zones`),
+        axios.get(`${API}/api/settings/mile-rates`),
+      ]);
+      setFareZones(zonesRes.data || []);
+      setMileRates(ratesRes.data);
+    } catch (error) {
+      console.error("Error fetching fare settings:", error);
+    }
+  };
+
+  // Calculate route when locations change
+  useEffect(() => {
+    const calculateRoute = async () => {
+      if (!formData.pickup_location || !formData.dropoff_location) {
+        setRouteInfo(null);
+        return;
+      }
+
+      try {
+        const response = await axios.post(`${API}/api/calculate-route`, {
+          origin: formData.pickup_location,
+          destination: formData.dropoff_location,
+          waypoints: formData.additional_stops?.length > 0 ? formData.additional_stops : undefined,
+        });
+        setRouteInfo(response.data);
+      } catch (error) {
+        console.error("Error calculating route:", error);
+      }
+    };
+
+    const debounce = setTimeout(calculateRoute, 800);
+    return () => clearTimeout(debounce);
+  }, [formData.pickup_location, formData.dropoff_location, formData.additional_stops]);
+
+  // Auto-calculate fare when vehicle type, route, or return journey changes
+  useEffect(() => {
+    const calculateFare = async () => {
+      if (!formData.dropoff_location || !formData.vehicle_type_id) {
+        return;
+      }
+
+      setCalculatingFare(true);
+      try {
+        let calculatedFare = null;
+
+        // Check zone-based fares first
+        for (const zone of fareZones) {
+          if (zone.vehicle_fares && zone.vehicle_fares[formData.vehicle_type_id]) {
+            // Check if dropoff is in this zone (simplified check - just match text)
+            const dropoffLower = formData.dropoff_location.toLowerCase();
+            const zoneName = zone.name?.toLowerCase() || '';
+            
+            if (dropoffLower.includes(zoneName) || zoneName.includes(dropoffLower.split(',')[0])) {
+              calculatedFare = zone.vehicle_fares[formData.vehicle_type_id];
+              break;
+            }
+          }
+        }
+
+        // If no zone match, calculate based on mileage
+        if (!calculatedFare && routeInfo?.distance?.miles && mileRates) {
+          const distanceMiles = routeInfo.distance.miles;
+          
+          // Get vehicle-specific rates or default
+          let baseFare = mileRates.base_fare || 0;
+          let pricePerMile = mileRates.price_per_mile || 0;
+          
+          if (mileRates.vehicle_rates && mileRates.vehicle_rates[formData.vehicle_type_id]) {
+            const vehicleRate = mileRates.vehicle_rates[formData.vehicle_type_id];
+            baseFare = vehicleRate.base_fare || baseFare;
+            pricePerMile = vehicleRate.price_per_mile || pricePerMile;
+          }
+          
+          calculatedFare = baseFare + (distanceMiles * pricePerMile);
+        }
+
+        // Apply return journey multiplier
+        if (calculatedFare && formData.return_journey) {
+          calculatedFare = calculatedFare * 2;
+        }
+
+        if (calculatedFare) {
+          setFormData(prev => ({ ...prev, quoted_fare: calculatedFare.toFixed(2) }));
+        }
+      } catch (error) {
+        console.error("Error calculating fare:", error);
+      } finally {
+        setCalculatingFare(false);
+      }
+    };
+
+    calculateFare();
+  }, [formData.vehicle_type_id, formData.dropoff_location, formData.return_journey, routeInfo, fareZones, mileRates]);
 
   const fetchQuote = async () => {
     setLoading(true);

@@ -242,10 +242,39 @@ export default function WalkaroundHistoryScreen({ navigation }) {
   const [searchDate, setSearchDate] = useState('');
   const [searchVehicle, setSearchVehicle] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showVehiclePicker, setShowVehiclePicker] = useState(false);
+  const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
     fetchHistory();
+    fetchVehicles();
   }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch(`${API_URL}/vehicles`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      // Filter to only active vehicles and based on driver license type
+      const driverLicenseType = user?.license_type;
+      let filteredVehicles = (data || []).filter(v => v.is_active !== false);
+      
+      if (driverLicenseType && driverLicenseType !== 'both') {
+        filteredVehicles = filteredVehicles.filter(vehicle => {
+          const vehicleCategory = vehicle.vehicle_type?.category;
+          if (!vehicleCategory || vehicleCategory === 'both') return true;
+          return vehicleCategory === driverLicenseType;
+        });
+      }
+      
+      setVehicles(filteredVehicles);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+    }
+  };
 
   const fetchHistory = async () => {
     try {

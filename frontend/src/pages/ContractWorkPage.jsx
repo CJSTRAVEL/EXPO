@@ -1114,7 +1114,7 @@ const ContractWorkPage = () => {
                         <span>No Driver (Unassign)</span>
                       </div>
                     </SelectItem>
-                    {drivers.filter(d => d.status === "available" || d.id === assignBooking?.driver_id).map((driver) => (
+                    {drivers.filter(d => d.status !== "inactive" || d.id === assignBooking?.driver_id).map((driver) => (
                       <SelectItem key={driver.id} value={driver.id}>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
@@ -1125,7 +1125,7 @@ const ContractWorkPage = () => {
                         </div>
                       </SelectItem>
                     ))}
-                    {drivers.filter(d => d.status === "available").length === 0 && (
+                    {drivers.filter(d => d.status !== "inactive").length === 0 && (
                       <div className="p-2 text-sm text-muted-foreground text-center">
                         No available drivers
                       </div>

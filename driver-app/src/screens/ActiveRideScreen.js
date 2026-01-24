@@ -425,8 +425,8 @@ const ActiveRideScreen = ({
 
         {/* Content */}
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {stage === 'completing' ? (
-            // Journey Completion View
+          {stage === 'completing' && !hasMoreStops ? (
+            // Final Journey Completion View - Only show when at final destination
             <View style={styles.completionContainer}>
               {/* Price Display */}
               <View style={[styles.priceCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -437,6 +437,14 @@ const ActiveRideScreen = ({
                 </Text>
                 <Text style={[styles.paymentMethodText, { color: theme.textSecondary }]}>
                   Payment: {booking.payment_method || 'Cash'}
+                </Text>
+              </View>
+
+              {/* Final Destination Info */}
+              <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Final Drop Off</Text>
+                <Text style={[styles.addressText, { color: theme.text }]}>
+                  {booking.dropoff_location}
                 </Text>
               </View>
 

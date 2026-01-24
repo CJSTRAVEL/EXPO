@@ -157,6 +157,12 @@ const PassengerPortal = () => {
   const [returnFlightError, setReturnFlightError] = useState(null);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
+  // Fare calculation state
+  const [fareZones, setFareZones] = useState([]);
+  const [mileRates, setMileRates] = useState(null);
+  const [estimatedFare, setEstimatedFare] = useState(null);
+  const [calculatingFare, setCalculatingFare] = useState(false);
+  const [routeInfo, setRouteInfo] = useState(null);
   const [requestForm, setRequestForm] = useState({
     pickup_location: "",
     dropoff_location: "",

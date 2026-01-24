@@ -362,7 +362,87 @@ const PassengersPage = () => {
         passenger={selectedPassenger}
         bookings={bookings}
         onClose={() => setSelectedPassenger(null)}
+        onEdit={handleEditPassenger}
       />
+
+      {/* Edit Passenger Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-[450px]" data-testid="edit-passenger-modal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-primary" />
+              Edit Passenger Profile
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="edit-name"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="pl-10"
+                  placeholder="Enter passenger name"
+                  data-testid="edit-passenger-name"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="edit-phone"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="pl-10"
+                  placeholder="+44 7123 456789"
+                  data-testid="edit-passenger-phone"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Changing the phone number will update all associated bookings
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="pl-10"
+                  placeholder="passenger@email.com"
+                  data-testid="edit-passenger-email"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditModal(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSavePassenger} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

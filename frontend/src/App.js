@@ -16,6 +16,7 @@ import PassengerPortalAdmin from "@/pages/PassengerPortalAdmin";
 import CustomerLogin from "@/pages/CustomerLogin";
 import ClientPortal from "@/pages/ClientPortal";
 import ClientsPage from "@/pages/ClientsPage";
+import InvoiceManagerPage from "@/pages/InvoiceManagerPage";
 import ContractWorkPage from "@/pages/ContractWorkPage";
 import RequestsPage from "@/pages/RequestsPage";
 import VehiclesPage from "@/pages/VehiclesPage";

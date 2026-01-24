@@ -557,7 +557,10 @@ const InvoiceManagerPage = () => {
                   <span>£{(invoiceDetails.subtotal || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">VAT (20%)</span>
+                  <span className="text-slate-600">
+                    {invoiceDetails.vat_rate === '0' ? 'No VAT (0%)' : 
+                     invoiceDetails.vat_rate === 'exempt' ? 'VAT Exempt' : 'VAT (20%)'}
+                  </span>
                   <span>£{(invoiceDetails.vat_amount || 0).toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between">

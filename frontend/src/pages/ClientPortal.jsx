@@ -737,6 +737,62 @@ const ClientPortal = () => {
                   ))}
               </div>
             )}
+
+            {/* Rejected Requests */}
+            {requests.filter(r => r.status === 'rejected').length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
+                  <XCircle className="w-5 h-5 text-red-400" />
+                  Rejected Requests
+                </h2>
+                <div className="grid gap-4">
+                  {requests
+                    .filter(r => r.status === 'rejected')
+                    .map((request) => (
+                      <div
+                        key={request.id}
+                        className="bg-[#1a1a1a] rounded-xl border border-red-500/30 p-4"
+                        data-testid={`rejected-request-${request.id}`}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            {getStatusBadge(request.status)}
+                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <CalendarIcon className="w-3.5 h-3.5" />
+                                {safeFormatDate(request.pickup_datetime, "dd MMM yyyy HH:mm")}
+                              </span>
+                            </div>
+                          </div>
+                          <XCircle className="w-6 h-6 text-red-500" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
+                            <span className="text-gray-300 text-sm">{request.pickup_location}</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />
+                            <span className="text-gray-300 text-sm">{request.dropoff_location}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Rejection Reason */}
+                        <div className="mt-4 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                          <p className="text-xs font-semibold text-red-400 uppercase mb-1">Reason for Decline</p>
+                          <p className="text-sm text-gray-300">
+                            {request.admin_notes || "We were unable to accommodate this request. Please contact us for alternatives."}
+                          </p>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 mt-3">
+                          Submitted {safeFormatDate(request.created_at, "dd MMM yyyy 'at' HH:mm")}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

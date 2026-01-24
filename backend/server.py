@@ -3509,10 +3509,17 @@ async def create_passenger_admin(data: PassengerRegister):
     if existing:
         raise HTTPException(status_code=400, detail="Phone number already registered")
     
+    # Check if email already registered (if provided)
+    if data.email:
+        existing_email = await db.passengers.find_one({"email": data.email})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+    
     # Create passenger
     passenger = Passenger(
         name=data.name,
         phone=phone,
+        email=data.email if data.email else None,
         password_hash=hash_password(data.password)
     )
     

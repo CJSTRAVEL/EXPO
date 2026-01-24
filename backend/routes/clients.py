@@ -713,7 +713,16 @@ async def update_invoice(invoice_id: str, invoice_update: InvoiceUpdate):
     
     update_data = {k: v for k, v in invoice_update.model_dump().items() if v is not None}
     
-    # If VAT rate is changed, recalculate amounts
+    # If booking_ids is updated, recalculate subtotal from bookings
+    if "booking_ids" in update_data:
+        booking_ids = update_data["booking_ids"]
+        # Get the bookings to calculate new subtotal
+        bookings = await db.bookings.find({"id": {"$in": booking_ids}}, {"_id": 0, "fare": 1}).to_list(1000)
+        new_subtotal = sum(float(b.get("fare", 0) or 0) for b in bookings)
+        update_data["subtotal"] = new_subtotal
+        update_data["journey_count"] = len(booking_ids)
+    
+    # If VAT rate is changed or subtotal changed, recalculate amounts
     if "vat_rate" in update_data or "subtotal" in update_data:
         subtotal = update_data.get("subtotal", invoice.get("subtotal", 0))
         vat_rate_str = update_data.get("vat_rate", invoice.get("vat_rate", "20"))

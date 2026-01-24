@@ -720,7 +720,7 @@ const ClientPortal = () => {
                           {getStatusBadge(request.status)}
                           <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                             <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5" />
+                              <CalendarIcon className="w-3.5 h-3.5" />
                               {safeFormatDate(request.pickup_datetime, "dd MMM yyyy HH:mm")}
                             </span>
                           </div>

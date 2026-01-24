@@ -299,7 +299,12 @@ const ActiveRideScreen = ({
       return { label: 'Pickup', address: booking.pickup_location };
     }
     
-    // After arrival - navigate through stops then to final destination
+    if (stage === 'arrived') {
+      // At pickup location - show pickup (passenger is getting in)
+      return { label: 'Pickup', address: booking.pickup_location };
+    }
+    
+    // In 'completing' stage - navigate through stops then to final destination
     const stops = booking.additional_stops || [];
     if (currentStopIndex < stops.length) {
       return { label: `Stop ${currentStopIndex + 1}`, address: stops[currentStopIndex] };
@@ -313,7 +318,6 @@ const ActiveRideScreen = ({
     try {
       await updateBookingStatus(booking.id, 'arrived');
       setStage('arrived');
-      setCurrentStopIndex(0);
     } catch (error) {
       Alert.alert('Error', 'Failed to update status');
     } finally {
@@ -326,6 +330,7 @@ const ActiveRideScreen = ({
     try {
       await updateBookingStatus(booking.id, 'in_progress');
       setStage('completing');
+      setCurrentStopIndex(0); // Start at first stop
     } catch (error) {
       Alert.alert('Error', 'Failed to start journey');
     } finally {

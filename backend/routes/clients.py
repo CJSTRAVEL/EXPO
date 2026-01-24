@@ -931,11 +931,11 @@ async def download_invoice_pdf(invoice_id: str):
     elements.append(terms_table)
     elements.append(Spacer(1, 20))
     
-    # Journeys Table
+    # Journeys Table - Gold/Black
     if bookings:
         journey_header = Table([[Paragraph("<b>JOURNEY DETAILS</b>", ParagraphStyle('jh', fontSize=11, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
         journey_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+            ('BACKGROUND', (0, 0), (-1, -1), header_black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
@@ -974,9 +974,9 @@ async def download_invoice_pdf(invoice_id: str):
         
         journey_table = Table(table_data, colWidths=[30, 80, 230, 55, 55, 55])
         journey_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FDF8E8')),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('GRID', (0, 0), (-1, -1), 0.5, gold_accent),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ALIGN', (3, 0), (-1, -1), 'RIGHT'),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
@@ -985,10 +985,10 @@ async def download_invoice_pdf(invoice_id: str):
         elements.append(journey_table)
         elements.append(Spacer(1, 20))
     
-    # Banking Details
+    # Banking Details - Gold/Black
     bank_title = Table([[Paragraph("<b>BANKING DETAILS</b>", ParagraphStyle('bt', fontSize=10, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
     bank_title.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+        ('BACKGROUND', (0, 0), (-1, -1), header_black),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
@@ -1005,12 +1005,12 @@ async def download_invoice_pdf(invoice_id: str):
     ]
     bank_table = Table(bank_data, colWidths=[70, 130, 70, 130])
     bank_table.setStyle(TableStyle([
-        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BOX', (0, 0), (-1, -1), 1, gold_accent),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E8D5A3')),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FDF8E8')),
     ]))
     elements.append(bank_table)
     

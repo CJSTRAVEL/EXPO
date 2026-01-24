@@ -45,7 +45,11 @@ export default function WalkaroundHistoryScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCheck, setSelectedCheck] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [filter, setFilter] = useState('all'); // all, pass, fail
+  
+  // Search filters
+  const [searchDate, setSearchDate] = useState('');
+  const [searchVehicle, setSearchVehicle] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -82,12 +86,28 @@ export default function WalkaroundHistoryScreen({ navigation }) {
     return 'alert-circle';
   };
 
+  // Filter checks by date and vehicle
   const filteredChecks = checks.filter(check => {
-    if (filter === 'all') return true;
-    if (filter === 'pass') return check.overall_status === 'pass' || check.overall_status === 'passed';
-    if (filter === 'fail') return check.overall_status === 'fail' || check.overall_status === 'failed';
-    return true;
+    let matchesDate = true;
+    let matchesVehicle = true;
+    
+    if (searchDate) {
+      const checkDate = check.submitted_at ? check.submitted_at.slice(0, 10) : '';
+      matchesDate = checkDate === searchDate;
+    }
+    
+    if (searchVehicle) {
+      const vehicleReg = (check.vehicle_reg || '').toLowerCase();
+      matchesVehicle = vehicleReg.includes(searchVehicle.toLowerCase());
+    }
+    
+    return matchesDate && matchesVehicle;
   });
+
+  const clearFilters = () => {
+    setSearchDate('');
+    setSearchVehicle('');
+  };
 
   const openPDF = async (checkId) => {
     try {

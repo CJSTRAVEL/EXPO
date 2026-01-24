@@ -496,9 +496,9 @@ const ActiveRideScreen = ({
                     </View>
                   </View>
                   <Text style={styles.meterValue}>£{balanceDue.toFixed(2)}</Text>
-                  {deposit > 0 && (
-                    <Text style={styles.meterDeposit}>Deposit paid: £{deposit.toFixed(2)}</Text>
-                  )}
+                  <Text style={[styles.meterDeposit, deposit > 0 && { color: '#4CAF50' }]}>
+                    Deposit: £{deposit.toFixed(2)}
+                  </Text>
                 </View>
               )}
 

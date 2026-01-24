@@ -181,11 +181,13 @@ const Dashboard = () => {
             color={expiringDocs.filter(d => d.isExpired).length > 0 ? "warning" : "primary"}
           />
           <StatCard 
-            title="Revenue" 
-            value={`£${(stats?.revenue || 0).toFixed(2)}`}
-            icon={DollarSign}
-            subtitle="From completed trips"
-            color="success"
+            title="Vehicle Docs" 
+            value={expiringVehicleDocs.length}
+            icon={Truck}
+            subtitle={expiringVehicleDocs.filter(d => d.isExpired).length > 0 
+              ? `${expiringVehicleDocs.filter(d => d.isExpired).length} expired!` 
+              : "Within 30 days"}
+            color={expiringVehicleDocs.filter(d => d.isExpired).length > 0 ? "warning" : "success"}
           />
         </div>
 

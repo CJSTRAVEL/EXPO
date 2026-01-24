@@ -408,10 +408,10 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
     elements.append(billing_table)
     elements.append(Spacer(1, 20))
     
-    # Invoice Summary
+    # Invoice Summary - Gold/Black
     summary_title = Table([[Paragraph("<b>INVOICE SUMMARY</b>", ParagraphStyle('st', fontSize=11, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
     summary_title.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+        ('BACKGROUND', (0, 0), (-1, -1), header_black),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),

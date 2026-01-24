@@ -1268,14 +1268,81 @@ const ClientPortal = () => {
                   </div>
 
                   {/* Return DateTime */}
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Return Date & Time</Label>
-                    <Input
-                      type="datetime-local"
-                      value={newBooking.return_datetime}
-                      onChange={(e) => setNewBooking({ ...newBooking, return_datetime: e.target.value })}
-                      className="bg-[#2d2d2d] border-[#3d3d3d] text-white"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Return Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-full justify-start text-left font-normal bg-[#2d2d2d] border-[#3d3d3d] text-white hover:bg-[#3d3d3d] ${
+                              !newBooking.return_datetime && "text-gray-500"
+                            }`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {newBooking.return_datetime 
+                              ? format(new Date(newBooking.return_datetime), "EEE, dd MMM")
+                              : "Select date"
+                            }
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-[#2d2d2d] border-[#3d3d3d]" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={newBooking.return_datetime ? new Date(newBooking.return_datetime) : undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                const existingDate = newBooking.return_datetime ? new Date(newBooking.return_datetime) : null;
+                                const hours = existingDate ? existingDate.getHours() : 17;
+                                const minutes = existingDate ? existingDate.getMinutes() : 0;
+                                const newDate = setMinutes(setHours(date, hours), minutes);
+                                setNewBooking({ ...newBooking, return_datetime: newDate.toISOString() });
+                              }
+                            }}
+                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                            className="bg-[#2d2d2d] text-white"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-300">Return Time</Label>
+                      <Select
+                        value={newBooking.return_datetime 
+                          ? format(new Date(newBooking.return_datetime), "HH:mm")
+                          : ""
+                        }
+                        onValueChange={(time) => {
+                          const [hours, minutes] = time.split(":").map(Number);
+                          const date = newBooking.return_datetime 
+                            ? new Date(newBooking.return_datetime) 
+                            : new Date();
+                          const newDate = setMinutes(setHours(date, hours), minutes);
+                          setNewBooking({ ...newBooking, return_datetime: newDate.toISOString() });
+                        }}
+                      >
+                        <SelectTrigger className="bg-[#2d2d2d] border-[#3d3d3d] text-white">
+                          <SelectValue placeholder="Time">
+                            {newBooking.return_datetime 
+                              ? format(new Date(newBooking.return_datetime), "HH:mm")
+                              : "Select time"
+                            }
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#2d2d2d] border-[#3d3d3d] text-white max-h-[200px]">
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const hours = Math.floor(i / 2);
+                            const minutes = (i % 2) * 30;
+                            const time = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+                            return (
+                              <SelectItem key={time} value={time} className="text-white hover:bg-[#3d3d3d]">
+                                {time}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}

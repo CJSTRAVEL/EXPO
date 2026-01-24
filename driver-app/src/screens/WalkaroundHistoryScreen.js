@@ -38,6 +38,197 @@ const formatDate = (dateString) => {
   }
 };
 
+// Format date for display in filter
+const formatFilterDate = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  } catch (e) {
+    return '';
+  }
+};
+
+// Simple Calendar Component
+const SimpleCalendar = ({ selectedDate, onSelectDate, onClose, theme }) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const days = [];
+    // Add empty slots for days before the first day
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+    // Add actual days
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+  
+  const isSelected = (day) => {
+    if (!day || !selectedDate) return false;
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return date.toISOString().slice(0, 10) === selectedDate;
+  };
+  
+  const isToday = (day) => {
+    if (!day) return false;
+    const today = new Date();
+    return day === today.getDate() && 
+           currentMonth.getMonth() === today.getMonth() && 
+           currentMonth.getFullYear() === today.getFullYear();
+  };
+  
+  const handleSelectDate = (day) => {
+    if (!day) return;
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    onSelectDate(date.toISOString().slice(0, 10));
+    onClose();
+  };
+  
+  const prevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+  
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+  
+  return (
+    <View style={[calendarStyles.container, { backgroundColor: theme.card }]}>
+      {/* Header */}
+      <View style={calendarStyles.header}>
+        <TouchableOpacity onPress={prevMonth} style={calendarStyles.navButton}>
+          <Ionicons name="chevron-back" size={24} color={theme.text} />
+        </TouchableOpacity>
+        <Text style={[calendarStyles.monthText, { color: theme.text }]}>
+          {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </Text>
+        <TouchableOpacity onPress={nextMonth} style={calendarStyles.navButton}>
+          <Ionicons name="chevron-forward" size={24} color={theme.text} />
+        </TouchableOpacity>
+      </View>
+      
+      {/* Week days header */}
+      <View style={calendarStyles.weekDaysRow}>
+        {weekDays.map((day, index) => (
+          <Text key={index} style={[calendarStyles.weekDayText, { color: theme.textSecondary }]}>
+            {day}
+          </Text>
+        ))}
+      </View>
+      
+      {/* Days grid */}
+      <View style={calendarStyles.daysGrid}>
+        {getDaysInMonth(currentMonth).map((day, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              calendarStyles.dayCell,
+              isSelected(day) && { backgroundColor: theme.primary },
+              isToday(day) && !isSelected(day) && { backgroundColor: theme.primary + '30' },
+            ]}
+            onPress={() => handleSelectDate(day)}
+            disabled={!day}
+          >
+            <Text style={[
+              calendarStyles.dayText,
+              { color: day ? theme.text : 'transparent' },
+              isSelected(day) && { color: '#fff' },
+            ]}>
+              {day || ''}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      
+      {/* Close button */}
+      <TouchableOpacity 
+        style={[calendarStyles.closeButton, { borderTopColor: theme.border }]} 
+        onPress={onClose}
+      >
+        <Text style={[calendarStyles.closeButtonText, { color: theme.primary }]}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const calendarStyles = StyleSheet.create({
+  container: {
+    borderRadius: 12,
+    padding: 16,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  navButton: {
+    padding: 8,
+  },
+  monthText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  weekDaysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 8,
+  },
+  weekDayText: {
+    fontSize: 12,
+    fontWeight: '600',
+    width: 40,
+    textAlign: 'center',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  dayText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  closeButton: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
 export default function WalkaroundHistoryScreen({ navigation }) {
   const { theme } = useTheme();
   const { user } = useAuth();

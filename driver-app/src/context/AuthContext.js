@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { getStoredToken, loginDriver, logoutDriver, getProfile, updateStatus } from '../services/api';
+import { getStoredToken, loginDriver, logoutDriver, getProfile, updateStatus, getCurrentToken } from '../services/api';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -61,6 +61,7 @@ async function registerForPushNotificationsAsync() {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pushToken, setPushToken] = useState(null);

@@ -883,6 +883,39 @@ const ClientsPage = () => {
               </div>
             </div>
 
+            {/* VAT Settings */}
+            <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
+              <h4 className="font-medium text-slate-700">VAT Settings</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>VAT Rate</Label>
+                  <Select
+                    value={formData.vat_rate}
+                    onValueChange={(value) => setFormData({ ...formData, vat_rate: value })}
+                  >
+                    <SelectTrigger data-testid="client-vat-rate">
+                      <SelectValue placeholder="Select VAT rate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20">20% VAT</SelectItem>
+                      <SelectItem value="0">No VAT (0%)</SelectItem>
+                      <SelectItem value="exempt">VAT Exempt</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vat_number">VAT Number</Label>
+                  <Input
+                    id="vat_number"
+                    value={formData.vat_number}
+                    onChange={(e) => setFormData({ ...formData, vat_number: e.target.value })}
+                    placeholder="GB123456789"
+                    data-testid="client-vat-number"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Notes */}
             <div className="space-y-2">
               <Label htmlFor="notes">Notes</Label>

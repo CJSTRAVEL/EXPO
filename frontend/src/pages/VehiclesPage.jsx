@@ -199,6 +199,29 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
                   </div>
                 </div>
                 
+                {/* Category Badge */}
+                <div className="mb-2">
+                  <Badge 
+                    variant="outline" 
+                    className={vt.category === 'psv' 
+                      ? 'bg-purple-50 text-purple-700 border-purple-200' 
+                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }
+                  >
+                    {vt.category === 'psv' ? (
+                      <>
+                        <Truck className="w-3 h-3 mr-1" />
+                        PSV
+                      </>
+                    ) : (
+                      <>
+                        <Car className="w-3 h-3 mr-1" />
+                        Taxi
+                      </>
+                    )}
+                  </Badge>
+                </div>
+                
                 {vt.description && (
                   <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{vt.description}</p>
                 )}

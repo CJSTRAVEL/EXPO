@@ -673,18 +673,26 @@ async def get_invoice_details(invoice_id: str):
         invoice["client_email"] = client.get("email", "")
         invoice["client_address"] = client.get("address", "")
     
-    # Get bookings for this invoice period
-    query = {"client_id": invoice.get("client_id")}
-    if invoice.get("start_date") or invoice.get("end_date"):
-        date_query = {}
-        if invoice.get("start_date"):
-            date_query["$gte"] = invoice["start_date"]
-        if invoice.get("end_date"):
-            date_query["$lte"] = invoice["end_date"] + "T23:59:59"
-        if date_query:
-            query["booking_datetime"] = date_query
+    # Get bookings for this invoice - prefer booking_ids if available
+    if invoice.get("booking_ids"):
+        bookings = await db.bookings.find(
+            {"id": {"$in": invoice["booking_ids"]}}, 
+            {"_id": 0}
+        ).sort("booking_datetime", 1).to_list(1000)
+    else:
+        # Fallback to date range query for old invoices
+        query = {"client_id": invoice.get("client_id")}
+        if invoice.get("start_date") or invoice.get("end_date"):
+            date_query = {}
+            if invoice.get("start_date"):
+                date_query["$gte"] = invoice["start_date"]
+            if invoice.get("end_date"):
+                date_query["$lte"] = invoice["end_date"] + "T23:59:59"
+            if date_query:
+                query["booking_datetime"] = date_query
+        
+        bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
     
-    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
     invoice["bookings"] = bookings
     
     return invoice

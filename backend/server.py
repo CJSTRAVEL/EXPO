@@ -3457,6 +3457,54 @@ async def update_passenger_email(passenger_id: str, data: dict):
     
     return {"message": "Email updated successfully"}
 
+@api_router.put("/admin/passengers/{passenger_id}/name")
+async def update_passenger_name(passenger_id: str, data: dict):
+    """Update a passenger's name (admin only)"""
+    passenger = await db.passengers.find_one({"id": passenger_id})
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    new_name = data.get('name')
+    if not new_name or len(new_name.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Name must be at least 2 characters")
+    
+    await db.passengers.update_one(
+        {"id": passenger_id},
+        {"$set": {"name": new_name.strip()}}
+    )
+    
+    return {"message": "Name updated successfully"}
+
+@api_router.put("/admin/passengers/{passenger_id}/phone")
+async def update_passenger_phone(passenger_id: str, data: dict):
+    """Update a passenger's phone number (admin only)"""
+    passenger = await db.passengers.find_one({"id": passenger_id})
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Passenger not found")
+    
+    new_phone = data.get('phone')
+    if not new_phone or len(new_phone.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Please enter a valid phone number")
+    
+    # Normalize phone number
+    phone = new_phone.strip().replace(" ", "")
+    if phone.startswith("0"):
+        phone = "+44" + phone[1:]
+    elif not phone.startswith("+"):
+        phone = "+44" + phone
+    
+    # Check if phone is already used by another passenger
+    existing = await db.passengers.find_one({"phone": phone, "id": {"$ne": passenger_id}})
+    if existing:
+        raise HTTPException(status_code=400, detail="Phone number already in use by another passenger")
+    
+    await db.passengers.update_one(
+        {"id": passenger_id},
+        {"$set": {"phone": phone}}
+    )
+    
+    return {"message": "Phone number updated successfully"}
+
 @api_router.delete("/admin/passengers/{passenger_id}")
 async def delete_passenger(passenger_id: str):
     """Delete a passenger account (admin only)"""

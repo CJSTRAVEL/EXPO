@@ -40,6 +40,7 @@ const ClientsPage = () => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showFareSettingsModal, setShowFareSettingsModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [clientBookings, setClientBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
@@ -47,6 +48,17 @@ const ClientsPage = () => {
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [invoiceBookings, setInvoiceBookings] = useState([]);
   const [loadingInvoicePreview, setLoadingInvoicePreview] = useState(false);
+  const [loadingFareSettings, setLoadingFareSettings] = useState(false);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [globalFareZones, setGlobalFareZones] = useState([]);
+  const [globalMileRates, setGlobalMileRates] = useState(null);
+  
+  // Client fare settings
+  const [fareSettings, setFareSettings] = useState({
+    use_custom_fares: false,
+    custom_fare_zones: [],
+    custom_mile_rates: null
+  });
   
   // Invoice date range - default to current month
   const [invoiceDateRange, setInvoiceDateRange] = useState({
@@ -71,6 +83,8 @@ const ClientsPage = () => {
 
   useEffect(() => {
     fetchClients();
+    fetchVehicleTypes();
+    fetchGlobalFareSettings();
   }, []);
 
   useEffect(() => {

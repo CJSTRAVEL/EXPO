@@ -98,12 +98,14 @@ const InvoiceManagerPage = () => {
   const [sendingReminder, setSendingReminder] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editBookings, setEditBookings] = useState([]); // Bookings for the invoice being edited
   const [editForm, setEditForm] = useState({
     invoice_ref: "",
     subtotal: 0,
     vat_rate: "20",
     status: "unpaid",
     notes: "",
+    booking_ids: [],
   });
 
   useEffect(() => {

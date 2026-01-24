@@ -550,7 +550,7 @@ export default function HomeScreen({ navigation }) {
       {activeBooking && (
         <TouchableOpacity 
           style={styles.journeyProgressBar}
-          onPress={() => navigation.navigate('Jobs')}
+          onPress={() => navigation.navigate('Bookings', { openActiveBooking: activeBooking })}
           activeOpacity={0.9}
         >
           <View style={styles.journeyProgressContent}>

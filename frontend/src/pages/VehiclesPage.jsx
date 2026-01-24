@@ -254,6 +254,37 @@ const VehicleTypesTab = ({ vehicleTypes, onRefresh }) => {
                   data-testid="vehicle-type-capacity-input"
                 />
               </div>
+              
+              {/* License Category */}
+              <div className="space-y-2">
+                <Label htmlFor="vt-category">License Category *</Label>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger id="vt-category" data-testid="vehicle-type-category-select">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="taxi">
+                      <div className="flex items-center gap-2">
+                        <Car className="w-4 h-4" />
+                        Taxi (Private Hire)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="psv">
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-4 h-4" />
+                        PSV (Public Service Vehicle)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Determines which drivers can be assigned to bookings with this vehicle type
+                </p>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="vt-description">Description</Label>
                 <Textarea

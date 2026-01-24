@@ -93,11 +93,13 @@ const InvoiceManagerPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [invoiceDetails, setInvoiceDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [sendingReminder, setSendingReminder] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editBookings, setEditBookings] = useState([]); // Bookings for the invoice being edited
   const [editForm, setEditForm] = useState({
     invoice_ref: "",

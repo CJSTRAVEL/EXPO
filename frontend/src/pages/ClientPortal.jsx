@@ -1235,6 +1235,69 @@ const ClientPortal = () => {
               />
             </div>
 
+            {/* Estimated Fare Display */}
+            {(estimatedFare || calculatingFare || routeInfo) && (
+              <div className="bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-xl p-4 border border-blue-500/30 shadow-lg" data-testid="fare-estimate-card">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-blue-400 uppercase tracking-wide flex items-center gap-2">
+                    <Car className="w-4 h-4" />
+                    Estimated Fare
+                  </h4>
+                  {calculatingFare && (
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                  )}
+                </div>
+                
+                {/* Fare Amount */}
+                <div className="text-center py-2">
+                  {calculatingFare ? (
+                    <p className="text-gray-400 text-sm">Calculating...</p>
+                  ) : estimatedFare ? (
+                    <div>
+                      <p className="text-4xl font-bold text-white">
+                        £{estimatedFare.toFixed(2)}
+                      </p>
+                      {newBooking.create_return && (
+                        <p className="text-xs text-blue-400 mt-1">Includes return journey</p>
+                      )}
+                    </div>
+                  ) : newBooking.vehicle_type_id && newBooking.dropoff_location ? (
+                    <p className="text-gray-400 text-sm">Unable to calculate fare for this route</p>
+                  ) : (
+                    <p className="text-gray-400 text-sm">
+                      {!newBooking.vehicle_type_id ? "Select a vehicle to see fare" : "Enter drop-off location"}
+                    </p>
+                  )}
+                </div>
+
+                {/* Route Info */}
+                {routeInfo && (
+                  <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-blue-500/20">
+                    {routeInfo.distance && (
+                      <div className="text-center">
+                        <p className="text-lg font-semibold text-white">
+                          {routeInfo.distance.miles?.toFixed(1) || routeInfo.distance.text}
+                        </p>
+                        <p className="text-xs text-gray-400">miles</p>
+                      </div>
+                    )}
+                    {routeInfo.duration && (
+                      <div className="text-center">
+                        <p className="text-lg font-semibold text-white">
+                          {routeInfo.duration.text || `${routeInfo.duration.minutes} mins`}
+                        </p>
+                        <p className="text-xs text-gray-400">est. duration</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-500 text-center mt-3">
+                  * Final fare may vary based on actual route and waiting time
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <Button
                 type="button"

@@ -380,7 +380,7 @@ const BookingCard = ({ booking, theme, onStatusUpdate, onViewDetail }) => {
   );
 };
 
-export default function JobsScreen({ navigation }) {
+export default function JobsScreen({ navigation, route }) {
   const { theme } = useTheme();
   const { user } = useAuth();
   const [bookings, setBookings] = useState({ today: [], upcoming: [], past: [] });
@@ -411,6 +411,19 @@ export default function JobsScreen({ navigation }) {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  // Handle navigation param to auto-open active booking
+  useEffect(() => {
+    if (route?.params?.openActiveBooking) {
+      const booking = route.params.openActiveBooking;
+      if (['on_way', 'arrived', 'in_progress'].includes(booking.status)) {
+        setActiveRide(booking);
+        setRideMinimized(false);
+      }
+      // Clear the param to prevent re-opening on future navigations
+      navigation.setParams({ openActiveBooking: undefined });
+    }
+  }, [route?.params?.openActiveBooking]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

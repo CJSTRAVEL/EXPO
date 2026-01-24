@@ -457,11 +457,11 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
     elements.append(terms_table)
     elements.append(Spacer(1, 20))
     
-    # Journeys Table
+    # Journeys Table - Gold/Black
     if bookings:
         journey_header = Table([[Paragraph("<b>JOURNEY DETAILS</b>", ParagraphStyle('jh', fontSize=11, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
         journey_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+            ('BACKGROUND', (0, 0), (-1, -1), header_black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),

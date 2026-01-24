@@ -63,17 +63,24 @@ class ClientBookingRequestCreate(BaseModel):
 @router.post("/client-portal/register", response_model=ClientPortalResponse)
 async def register_client_portal(data: ClientPortalRegister):
     """Register for client portal access (creates pending request)"""
-    # Check for existing client by phone OR mobile
-    existing = await db.clients.find_one({
-        "$or": [
-            {"phone": data.phone},
-            {"mobile": data.phone}
-        ]
-    })
+    # Build query conditions
+    or_conditions = []
+    if data.phone:
+        or_conditions.append({"phone": data.phone})
+        or_conditions.append({"mobile": data.phone})
+    if data.email:
+        or_conditions.append({"email": data.email})
+        or_conditions.append({"contact_email": data.email})
+    
+    existing = None
+    if or_conditions:
+        existing = await db.clients.find_one({"$or": or_conditions})
+    
     if existing:
         if existing.get("password_hash"):
             raise HTTPException(status_code=400, detail="Account already exists. Please login.")
         else:
+            # Existing client without password - set up portal access
             await db.clients.update_one(
                 {"id": existing["id"]},
                 {"$set": {"password_hash": hash_password(data.password)}}
@@ -94,6 +101,7 @@ async def register_client_portal(data: ClientPortalRegister):
                 token=token
             )
     
+    # New registration - create pending request
     request_data = {
         "id": str(uuid.uuid4()),
         "name": data.name,

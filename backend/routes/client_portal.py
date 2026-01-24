@@ -60,7 +60,13 @@ class ClientBookingRequestCreate(BaseModel):
 @router.post("/client-portal/register", response_model=ClientPortalResponse)
 async def register_client_portal(data: ClientPortalRegister):
     """Register for client portal access (creates pending request)"""
-    existing = await db.clients.find_one({"phone": data.phone})
+    # Check for existing client by phone OR mobile
+    existing = await db.clients.find_one({
+        "$or": [
+            {"phone": data.phone},
+            {"mobile": data.phone}
+        ]
+    })
     if existing:
         if existing.get("password_hash"):
             raise HTTPException(status_code=400, detail="Account already exists. Please login.")
@@ -71,14 +77,14 @@ async def register_client_portal(data: ClientPortalRegister):
             )
             token = jwt.encode({
                 "client_id": existing["id"],
-                "phone": existing["phone"],
+                "phone": existing.get("phone") or existing.get("mobile"),
                 "exp": datetime.now(timezone.utc) + timedelta(days=30)
             }, JWT_SECRET, algorithm=JWT_ALGORITHM)
             
             return ClientPortalResponse(
                 id=existing["id"],
                 name=existing.get("contact_name") or existing.get("name", ""),
-                phone=existing["phone"],
+                phone=existing.get("phone") or existing.get("mobile"),
                 email=existing.get("email") or existing.get("contact_email"),
                 company_name=existing.get("name"),
                 account_no=existing.get("account_no"),

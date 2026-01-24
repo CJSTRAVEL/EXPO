@@ -46,8 +46,16 @@ class VehicleBase(BaseModel):
     mot_expiry: Optional[str] = None
     insurance_expiry: Optional[str] = None
     tax_expiry: Optional[str] = None
+    # Taxi-specific documents
+    dcc_test_date_1: Optional[str] = None
+    dcc_test_date_2: Optional[str] = None
+    # PSV-specific documents
+    dvsa_mot_expiry: Optional[str] = None
+    next_10_weekly: Optional[str] = None
     status: str = "active"
     notes: Optional[str] = None
+    is_active: bool = True
+    photo_url: Optional[str] = None
 
 class VehicleCreate(VehicleBase):
     pass
@@ -63,8 +71,16 @@ class VehicleUpdate(BaseModel):
     mot_expiry: Optional[str] = None
     insurance_expiry: Optional[str] = None
     tax_expiry: Optional[str] = None
+    # Taxi-specific documents
+    dcc_test_date_1: Optional[str] = None
+    dcc_test_date_2: Optional[str] = None
+    # PSV-specific documents
+    dvsa_mot_expiry: Optional[str] = None
+    next_10_weekly: Optional[str] = None
     status: Optional[str] = None
     notes: Optional[str] = None
+    is_active: Optional[bool] = None
+    photo_url: Optional[str] = None
 
 class Vehicle(VehicleBase):
     id: str

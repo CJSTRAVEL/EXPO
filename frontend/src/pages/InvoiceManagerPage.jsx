@@ -170,6 +170,48 @@ const InvoiceManagerPage = () => {
     }
   };
 
+  const handleEditInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setEditForm({
+      invoice_ref: invoice.invoice_ref || "",
+      subtotal: invoice.subtotal || 0,
+      vat_rate: invoice.vat_rate || "20",
+      status: invoice.status || "unpaid",
+      notes: invoice.notes || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveInvoice = async () => {
+    if (!selectedInvoice) return;
+    
+    setSaving(true);
+    try {
+      await axios.put(`${API}/invoices/${selectedInvoice.id}`, editForm);
+      toast.success("Invoice updated successfully");
+      setShowEditModal(false);
+      fetchInvoices();
+      // Also refresh details if viewing
+      if (invoiceDetails && invoiceDetails.id === selectedInvoice.id) {
+        fetchInvoiceDetails(selectedInvoice.id);
+      }
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      toast.error(error.response?.data?.detail || "Failed to update invoice");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Calculate VAT preview
+  const calculateVatPreview = () => {
+    const subtotal = parseFloat(editForm.subtotal) || 0;
+    const vatRate = editForm.vat_rate === "0" || editForm.vat_rate === "exempt" ? 0 : 0.20;
+    const vatAmount = subtotal * vatRate;
+    const total = subtotal + vatAmount;
+    return { subtotal, vatAmount, total };
+  };
+
   const handleDownloadInvoice = async (invoice) => {
     try {
       // Use the client portal download endpoint with client ID

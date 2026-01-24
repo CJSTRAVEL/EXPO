@@ -484,16 +484,16 @@ const ClientPortal = () => {
 
   const getStatusBadge = (status) => {
     const styles = {
-      pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-      approved: "bg-green-500/20 text-green-400 border-green-500/30",
-      confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
-      assigned: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      completed: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-      cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
-      rejected: "bg-red-500/20 text-red-400 border-red-500/30",
-      paid: "bg-green-500/20 text-green-400 border-green-500/30",
-      unpaid: "bg-red-500/20 text-red-400 border-red-500/30",
-      overdue: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+      pending: "bg-yellow-500/20 text-yellow-700 border-yellow-500/30",
+      approved: "bg-green-500/20 text-green-700 border-green-500/30",
+      confirmed: "bg-green-500/20 text-green-700 border-green-500/30",
+      assigned: "bg-[#D4A853]/20 text-[#9a7a3a] border-[#D4A853]/30",
+      completed: "bg-gray-500/20 text-gray-600 border-gray-500/30",
+      cancelled: "bg-red-500/20 text-red-700 border-red-500/30",
+      rejected: "bg-red-500/20 text-red-700 border-red-500/30",
+      paid: "bg-green-500/20 text-green-700 border-green-500/30",
+      unpaid: "bg-red-500/20 text-red-700 border-red-500/30",
+      overdue: "bg-orange-500/20 text-orange-700 border-orange-500/30",
     };
     const icons = {
       pending: Clock3,

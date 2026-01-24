@@ -201,8 +201,12 @@ async def create_client_booking_request(request: ClientBookingRequestCreate, cli
         "vehicle_type_name": request.vehicle_type_name,
         "notes": request.notes,
         "flight_number": request.flight_number,
+        "quoted_fare": request.quoted_fare,
+        "distance_miles": request.distance_miles,
+        "duration_minutes": request.duration_minutes,
         "status": "pending",
         "account_type": "client",
+        "booking_source": "portal",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     

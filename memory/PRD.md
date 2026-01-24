@@ -70,6 +70,29 @@ A private hire booking application with three main components:
 - [x] Route calculation via Google Directions API
 - [x] Test corporate account: `contact@testcompanyltd.com` / `password123`
 
+#### Quoted Fare on Dispatch Requests (P0) ✅
+- [x] Backend models updated to include `quoted_fare`, `distance_miles`, `duration_minutes` in booking requests
+- [x] Frontend portals now send estimated fare data when submitting booking requests
+- [x] Dispatch Requests page displays quoted fare badge (£) on each request card
+- [x] Shows vehicle type, distance, and duration info on request cards
+- [x] Backend sets `booking_source: "portal"` for all portal bookings
+
+#### Client-Specific Fare Model (P0) ✅
+- [x] Added `use_custom_fares`, `custom_fare_zones`, `custom_mile_rates` fields to client model
+- [x] Created API endpoints: `GET/PUT /api/clients/{id}/fare-settings`
+- [x] Admin Clients page: "Fare Settings" option in dropdown menu
+- [x] Fare Settings Modal with:
+  - Toggle to enable/disable custom fares
+  - "Copy from Global Settings" button
+  - Mileage rates (base fare, per mile, minimum)
+  - Vehicle-specific rate overrides
+  - Fare zones with postcodes, areas, and per-vehicle pricing
+- [x] Corporate Portal uses client-specific fares when calculating estimates
+
+#### Corporate Portal Login Fix ✅
+- [x] Fixed registration endpoint to check email conflicts in addition to phone/mobile
+- [x] Registration now properly links to existing clients without passwords
+
 ### Session: Jan 23, 2026
 
 #### Driver App Fixes (P0)

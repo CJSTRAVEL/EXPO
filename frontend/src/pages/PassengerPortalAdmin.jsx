@@ -120,6 +120,52 @@ const PassengerPortalAdmin = () => {
     }
   };
 
+  const handleUpdateName = async () => {
+    if (!newName || newName.trim().length < 2) {
+      toast.error("Please enter a valid name (at least 2 characters)");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/passengers/${selectedPassenger.id}/name`, {
+        name: newName.trim()
+      });
+      toast.success("Name updated successfully");
+      setShowNameModal(false);
+      setNewName("");
+      setSelectedPassenger(null);
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update name");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!newPhone || newPhone.trim().length < 5) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/passengers/${selectedPassenger.id}/phone`, {
+        phone: newPhone.trim()
+      });
+      toast.success("Phone number updated successfully");
+      setShowPhoneModal(false);
+      setNewPhone("");
+      setSelectedPassenger(null);
+      fetchPassengers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to update phone number");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleBlockPassenger = async (passenger) => {
     setSaving(true);
     try {

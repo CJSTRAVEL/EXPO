@@ -132,6 +132,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await logoutDriver();
     setUser(null);
+    setToken(null);
     setIsAuthenticated(false);
     setPushToken(null);
   };
@@ -151,6 +152,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        token,
         loading,
         isAuthenticated,
         pushToken,

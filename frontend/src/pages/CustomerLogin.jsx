@@ -90,7 +90,7 @@ const CustomerLogin = () => {
     try {
       const endpoint = isLogin ? "/passenger/login" : "/passenger/register";
       const payload = isLogin 
-        ? { phone: passengerData.phone, password: passengerData.password }
+        ? { identifier: passengerData.phone, password: passengerData.password }  // identifier can be phone or email
         : { name: passengerData.name, phone: passengerData.phone, email: passengerData.email || null, password: passengerData.password };
 
       const response = await axios.post(`${API}${endpoint}`, payload);

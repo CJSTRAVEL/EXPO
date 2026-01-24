@@ -198,6 +198,21 @@ const AddressAutocomplete = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Ensure pac-container has proper pointer-events and is above dialogs
+  useEffect(() => {
+    const ensurePacContainerClickable = () => {
+      document.querySelectorAll('.pac-container').forEach(el => {
+        el.style.pointerEvents = 'auto';
+      });
+    };
+    
+    // Run periodically to catch newly created containers
+    const interval = setInterval(ensurePacContainerClickable, 500);
+    ensurePacContainerClickable();
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSelect = (address) => {
     setInputValue(address.description);
     onChange(address.description);

@@ -829,25 +829,25 @@ const ClientPortal = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-red-500/20">
-                    <Clock3 className="w-5 h-5 text-red-400" />
+                    <Clock3 className="w-5 h-5 text-red-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{invoiceStats.unpaid}</p>
-                    <p className="text-xs text-gray-400">Unpaid</p>
+                    <p className="text-2xl font-bold text-slate-800">{invoiceStats.unpaid}</p>
+                    <p className="text-xs text-slate-500">Unpaid</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-yellow-500/20">
-                    <Banknote className="w-5 h-5 text-yellow-400" />
+                  <div className="p-2 rounded-lg bg-amber-500/20">
+                    <Banknote className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">£{invoiceStats.outstandingAmount.toFixed(2)}</p>
-                    <p className="text-xs text-gray-400">Outstanding</p>
+                    <p className="text-2xl font-bold text-slate-800">£{invoiceStats.outstandingAmount.toFixed(2)}</p>
+                    <p className="text-xs text-slate-500">Outstanding</p>
                   </div>
                 </div>
               </div>
@@ -855,15 +855,15 @@ const ClientPortal = () => {
 
             {/* Invoice List */}
             <div>
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                <Receipt className="w-5 h-5 text-blue-400" />
+              <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
+                <Receipt className="w-5 h-5 text-[#D4A853]" />
                 Your Invoices
               </h2>
               {invoices.length === 0 ? (
-                <div className="text-center py-12 bg-[#1a1a1a] rounded-xl border border-[#2d2d2d]">
-                  <Receipt className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No invoices yet</p>
-                  <p className="text-sm text-gray-500 mt-2">
+                <div className="text-center py-12 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <Receipt className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-600">No invoices yet</p>
+                  <p className="text-sm text-slate-500 mt-2">
                     Invoices will appear here after your bookings are completed
                   </p>
                 </div>
@@ -872,19 +872,19 @@ const ClientPortal = () => {
                   {invoices.map((invoice) => (
                     <div
                       key={invoice.id}
-                      className="bg-[#1a1a1a] rounded-xl border border-[#2d2d2d] p-4 hover:border-blue-500/30 transition-colors"
+                      className="bg-white rounded-xl border border-slate-200 p-4 hover:border-[#D4A853]/50 transition-colors shadow-sm"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-lg bg-blue-500/10">
-                            <FileText className="w-6 h-6 text-blue-400" />
+                          <div className="p-3 rounded-lg bg-[#D4A853]/10">
+                            <FileText className="w-6 h-6 text-[#D4A853]" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-white font-semibold">{invoice.invoice_ref}</span>
+                              <span className="text-slate-800 font-semibold">{invoice.invoice_ref}</span>
                               {getStatusBadge(invoice.status || 'unpaid')}
                             </div>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+                            <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5" />
                                 {safeFormatDate(invoice.created_at, "dd MMM yyyy", 'N/A')}
@@ -901,11 +901,11 @@ const ClientPortal = () => {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className="text-xl font-bold text-white">
+                            <p className="text-xl font-bold text-slate-800">
                               £{(invoice.total || 0).toFixed(2)}
                             </p>
                             {invoice.vat_amount && (
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-slate-500">
                                 Inc. VAT £{invoice.vat_amount.toFixed(2)}
                               </p>
                             )}
@@ -915,7 +915,7 @@ const ClientPortal = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => setShowInvoiceDetails(invoice)}
-                              className="text-gray-400 hover:text-white"
+                              className="text-slate-500 hover:text-slate-800"
                               data-testid={`view-invoice-${invoice.id}`}
                             >
                               <Eye className="w-4 h-4" />

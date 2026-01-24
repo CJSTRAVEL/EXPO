@@ -1755,26 +1755,9 @@ const AssignDriverDialog = ({ booking, drivers, vehicleTypes, onAssign, onClose,
           <DialogTitle>Assign Driver</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <p className="text-sm text-muted-foreground mb-2">
+          <p className="text-sm text-muted-foreground mb-4">
             Assign a driver to booking for {booking?.customer_name || `${booking?.first_name || ''} ${booking?.last_name || ''}`.trim()}
           </p>
-          
-          {/* Show vehicle type and filtering info */}
-          {booking?.vehicle_type && vehicleTypes && (
-            <div className="mb-4 p-2 bg-slate-50 rounded-lg border text-xs">
-              <span className="font-medium">Vehicle: </span>
-              {vehicleTypes.find(v => v.id === booking.vehicle_type)?.name || booking.vehicle_type}
-              {getBookingVehicleCategory() && (
-                <span className="ml-2 text-muted-foreground">
-                  ({getBookingVehicleCategory().toUpperCase()} - 
-                  {getBookingVehicleCategory() === 'psv' 
-                    ? ' PSV license required' 
-                    : ' Taxi or PSV license'}
-                  )
-                </span>
-              )}
-            </div>
-          )}
           
           {!showAddDriver ? (
             <>

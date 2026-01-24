@@ -149,6 +149,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
   },
+  warningCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 12,
+    width: '100%',
+  },
+  warningText: {
+    flex: 1,
+    color: '#92400e',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',

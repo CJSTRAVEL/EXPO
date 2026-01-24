@@ -86,7 +86,22 @@ export default function WalkaroundScreen({ navigation }) {
         },
       });
       const data = await response.json();
-      setVehicles(data.filter(v => v.is_active !== false));
+      
+      // Filter vehicles based on driver's license type
+      const driverLicenseType = user?.license_type;
+      let filteredVehicles = data.filter(v => v.is_active !== false);
+      
+      if (driverLicenseType && driverLicenseType !== 'both') {
+        filteredVehicles = filteredVehicles.filter(vehicle => {
+          const vehicleCategory = vehicle.vehicle_type?.category;
+          // If vehicle has no category or is "both", show it
+          if (!vehicleCategory || vehicleCategory === 'both') return true;
+          // Otherwise, match driver license type to vehicle category
+          return vehicleCategory === driverLicenseType;
+        });
+      }
+      
+      setVehicles(filteredVehicles);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
     } finally {

@@ -241,12 +241,14 @@ const DriverCard = ({ driver, onEdit, onDelete }) => {
 };
 
 const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     email: "",
     driver_types: ["taxi"],
     password: "",
+    photo: "",
     // Shared docs
     dbs_expiry: "",
     school_badge_expiry: "",
@@ -274,6 +276,7 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
         email: driver.email || "",
         driver_types: types,
         password: "",
+        photo: driver.photo || "",
         dbs_expiry: driver.dbs_expiry || "",
         school_badge_expiry: driver.school_badge_expiry || "",
         taxi_licence_expiry: driver.taxi_licence_expiry || "",
@@ -289,6 +292,7 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
         email: "",
         driver_types: ["taxi"],
         password: "",
+        photo: "",
         dbs_expiry: "",
         school_badge_expiry: "",
         taxi_licence_expiry: "",
@@ -299,6 +303,36 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
       });
     }
   }, [driver]);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Photo must be less than 2MB");
+        return;
+      }
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
+      }
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, photo: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = () => {
+    setFormData({ ...formData, photo: "" });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const toggleDriverType = (type) => {
     setFormData(prev => {

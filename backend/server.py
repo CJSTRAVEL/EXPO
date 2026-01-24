@@ -1079,6 +1079,7 @@ class VehicleTypeBase(BaseModel):
     description: Optional[str] = None
     has_trailer: bool = False
     photo_url: Optional[str] = None  # Photo/image URL
+    category: Optional[str] = "both"  # "taxi", "psv", or "both"
 
 class VehicleTypeCreate(VehicleTypeBase):
     pass
@@ -1089,6 +1090,7 @@ class VehicleTypeUpdate(BaseModel):
     description: Optional[str] = None
     has_trailer: Optional[bool] = None
     photo_url: Optional[str] = None
+    category: Optional[str] = None
 
 class VehicleType(VehicleTypeBase):
     model_config = ConfigDict(extra="ignore")

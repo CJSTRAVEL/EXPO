@@ -728,6 +728,268 @@ async def update_invoice(invoice_id: str, invoice_update: InvoiceUpdate):
     updated_invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
     return updated_invoice
 
+@router.get("/invoices/{invoice_id}/download")
+async def download_invoice_pdf(invoice_id: str):
+    """Download invoice as PDF"""
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Get client details
+    client = await db.clients.find_one({"id": invoice.get("client_id")}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Get bookings for this invoice period
+    query = {"client_id": invoice.get("client_id"), "status": "completed"}
+    if invoice.get("start_date") or invoice.get("end_date"):
+        date_query = {}
+        if invoice.get("start_date"):
+            date_query["$gte"] = invoice["start_date"]
+        if invoice.get("end_date"):
+            date_query["$lte"] = invoice["end_date"] + "T23:59:59"
+        if date_query:
+            query["booking_datetime"] = date_query
+    
+    bookings = await db.bookings.find(query, {"_id": 0}).sort("booking_datetime", 1).to_list(1000)
+    
+    # Use stored values from invoice
+    subtotal = invoice.get('subtotal', 0) or 0
+    vat_amount = invoice.get('vat_amount', 0) or 0
+    total = invoice.get('total', 0) or 0
+    client_vat_rate = invoice.get('vat_rate', '20')
+    
+    if client_vat_rate == '0' or client_vat_rate == 'exempt':
+        vat_rate = 0.0
+        vat_label = "VAT Exempt" if client_vat_rate == 'exempt' else "No VAT (0%)"
+    else:
+        vat_rate = 0.20
+        vat_label = "VAT @ 20%"
+    
+    # Calculate payment due date
+    payment_terms = client.get('payment_terms', 30)
+    created_at = invoice.get('created_at', datetime.now(timezone.utc).isoformat())
+    if isinstance(created_at, str):
+        created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+    else:
+        created_date = created_at
+    due_date = created_date + timedelta(days=payment_terms)
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=40, rightMargin=40, topMargin=40, bottomMargin=60)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    header_blue = colors.HexColor('#1a3a5c')
+    company_style = ParagraphStyle('company', parent=styles['Normal'], fontSize=16, fontName='Helvetica-Bold', textColor=header_blue)
+    normal_style = ParagraphStyle('normal', parent=styles['Normal'], fontSize=9, leading=12)
+    small_style = ParagraphStyle('small', parent=styles['Normal'], fontSize=8, leading=10, textColor=colors.grey)
+    label_style = ParagraphStyle('label', parent=styles['Normal'], fontSize=8, textColor=colors.grey)
+    value_style = ParagraphStyle('value', parent=styles['Normal'], fontSize=9, fontName='Helvetica-Bold')
+    
+    # Header
+    company_info = [
+        [Paragraph("<b>CJ's Executive Travel Limited</b>", company_style)],
+        [Paragraph("Unit 5 Peterlee SR8 2HY", normal_style)],
+        [Paragraph("Phone: +44 1917721223", normal_style)],
+        [Paragraph("Email: admin@cjstravel.uk", normal_style)],
+        [Paragraph("Web: cjstravel.uk", normal_style)],
+    ]
+    company_table = Table(company_info, colWidths=[250])
+    company_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    invoice_details = [
+        [Paragraph("ACCOUNT NO", label_style), Paragraph(client.get('account_no', ''), value_style)],
+        [Paragraph("REFERENCE", label_style), Paragraph(invoice.get('invoice_ref', ''), value_style)],
+        [Paragraph("TAX DATE", label_style), Paragraph(created_date.strftime('%d/%m/%Y'), value_style)],
+    ]
+    invoice_box = Table(invoice_details, colWidths=[70, 100])
+    invoice_box.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
+    ]))
+    
+    header_data = [[company_table, invoice_box]]
+    header_table = Table(header_data, colWidths=[340, 180])
+    header_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 20))
+    
+    # Billing details
+    billing_info = [
+        [Paragraph("<b>For the attention of:</b>", normal_style)],
+        [Paragraph(f"<b>{client.get('name', '')}</b>", value_style)],
+    ]
+    if client.get('contact_name'):
+        billing_info.append([Paragraph(client['contact_name'], normal_style)])
+    if client.get('address'):
+        for line in client['address'].split('\n'):
+            billing_info.append([Paragraph(line.strip(), normal_style)])
+    if client.get('town_city'):
+        billing_info.append([Paragraph(client['town_city'], normal_style)])
+    if client.get('post_code') or client.get('postcode'):
+        billing_info.append([Paragraph(client.get('post_code') or client.get('postcode', ''), normal_style)])
+    
+    billing_table = Table(billing_info, colWidths=[300])
+    billing_table.setStyle(TableStyle([
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(billing_table)
+    elements.append(Spacer(1, 20))
+    
+    # Invoice Summary
+    summary_title = Table([[Paragraph("<b>INVOICE SUMMARY</b>", ParagraphStyle('st', fontSize=11, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
+    summary_title.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(summary_title)
+    
+    summary_data = [[Paragraph(f"<b>Journeys:</b>", normal_style), Paragraph(f"{len(bookings)} Journeys", normal_style), Paragraph(f"Amount: £{subtotal:.2f}", normal_style)]]
+    summary_table = Table(summary_data, colWidths=[150, 200, 170])
+    summary_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 10))
+    
+    # Totals
+    totals_data = [
+        [Paragraph("Subtotal:", normal_style), Paragraph(f"£{subtotal:.2f}", value_style)],
+        [Paragraph(f"{vat_label}:", normal_style), Paragraph(f"£{vat_amount:.2f}", value_style)],
+        [Paragraph("<b>Total:</b>", value_style), Paragraph(f"<b>£{total:.2f}</b>", ParagraphStyle('total', fontSize=12, fontName='Helvetica-Bold'))],
+    ]
+    totals_table = Table(totals_data, colWidths=[100, 80])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
+        ('LINEABOVE', (0, 2), (-1, 2), 1, colors.black),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    totals_wrapper = Table([[Spacer(1, 1), totals_table]], colWidths=[340, 180])
+    elements.append(totals_wrapper)
+    elements.append(Spacer(1, 15))
+    
+    # Payment terms
+    terms_data = [[Paragraph(f"<b>Payment Terms:</b> {payment_terms} days", normal_style), 
+                   Paragraph(f"<b>Payment Due:</b> {due_date.strftime('%d/%m/%Y')}", normal_style)]]
+    terms_table = Table(terms_data, colWidths=[260, 260])
+    elements.append(terms_table)
+    elements.append(Spacer(1, 20))
+    
+    # Journeys Table
+    if bookings:
+        journey_header = Table([[Paragraph("<b>JOURNEY DETAILS</b>", ParagraphStyle('jh', fontSize=11, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
+        journey_header.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(journey_header)
+        
+        table_data = [[
+            Paragraph("<b>Item</b>", ParagraphStyle('th', fontSize=8, fontName='Helvetica-Bold')),
+            Paragraph("<b>Booker/Passenger</b>", ParagraphStyle('th', fontSize=8, fontName='Helvetica-Bold')),
+            Paragraph("<b>Journey/Tariff</b>", ParagraphStyle('th', fontSize=8, fontName='Helvetica-Bold')),
+            Paragraph("<b>Cost</b>", ParagraphStyle('th', fontSize=8, fontName='Helvetica-Bold')),
+            Paragraph("<b>Tax</b>", ParagraphStyle('th', fontSize=8, fontName='Helvetica-Bold')),
+            Paragraph("<b>Total</b>", ParagraphStyle('th', fontSize=8, fontName='Helvetica-Bold')),
+        ]]
+        
+        for idx, b in enumerate(bookings, 1):
+            fare = float(b.get('fare', 0) or 0)
+            tax = fare * vat_rate
+            item_total = fare + tax
+            
+            pickup = b.get('pickup_location', '')
+            dropoff = b.get('dropoff_location', '')
+            journey_text = f"P: {pickup}<br/>D: {dropoff}"
+            
+            passenger = f"{b.get('first_name', '')} {b.get('last_name', '')}".strip() or "N/A"
+            booking_ref = b.get('booking_id', '')
+            
+            table_data.append([
+                Paragraph(str(idx), small_style),
+                Paragraph(f"{booking_ref}<br/>{passenger}", small_style),
+                Paragraph(journey_text, small_style),
+                Paragraph(f"£{fare:.2f}", small_style),
+                Paragraph(f"£{tax:.2f}", small_style),
+                Paragraph(f"£{item_total:.2f}", small_style),
+            ])
+        
+        journey_table = Table(table_data, colWidths=[30, 80, 230, 55, 55, 55])
+        journey_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ALIGN', (3, 0), (-1, -1), 'RIGHT'),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(journey_table)
+        elements.append(Spacer(1, 20))
+    
+    # Banking Details
+    bank_title = Table([[Paragraph("<b>BANKING DETAILS</b>", ParagraphStyle('bt', fontSize=10, fontName='Helvetica-Bold', textColor=colors.white))]], colWidths=[520])
+    bank_title.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), header_blue),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(bank_title)
+    
+    bank_data = [
+        [Paragraph("Bank Name:", label_style), Paragraph("Starling Bank", normal_style),
+         Paragraph("Sort Code:", label_style), Paragraph("60-83-71", normal_style)],
+        [Paragraph("Account No:", label_style), Paragraph("15222155", normal_style),
+         Paragraph("BIC:", label_style), Paragraph("SRLGGB2L", normal_style)],
+        [Paragraph("IBAN:", label_style), Paragraph("GB31SRLG60837115222155", normal_style),
+         Paragraph("VAT No:", label_style), Paragraph("354626783", normal_style)],
+    ]
+    bank_table = Table(bank_data, colWidths=[70, 130, 70, 130])
+    bank_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
+    ]))
+    elements.append(bank_table)
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={invoice.get('invoice_ref', 'invoice')}.pdf"}
+    )
+
 @router.delete("/invoices/{invoice_id}")
 async def delete_invoice(invoice_id: str):
     """Delete an invoice"""

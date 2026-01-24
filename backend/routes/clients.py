@@ -513,6 +513,46 @@ async def update_invoice_status(invoice_id: str, status_update: InvoiceStatusUpd
     
     return {"message": "Invoice status updated", "status": status_update.status}
 
+@router.put("/invoices/{invoice_id}")
+async def update_invoice(invoice_id: str, invoice_update: InvoiceUpdate):
+    """Update invoice details"""
+    invoice = await db.invoices.find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    update_data = {k: v for k, v in invoice_update.model_dump().items() if v is not None}
+    
+    # If VAT rate is changed, recalculate amounts
+    if "vat_rate" in update_data or "subtotal" in update_data:
+        subtotal = update_data.get("subtotal", invoice.get("subtotal", 0))
+        vat_rate_str = update_data.get("vat_rate", invoice.get("vat_rate", "20"))
+        
+        if vat_rate_str == "0" or vat_rate_str == "exempt":
+            vat_rate = 0.0
+        else:
+            vat_rate = 0.20
+        
+        vat_amount = subtotal * vat_rate
+        total = subtotal + vat_amount
+        
+        update_data["subtotal"] = subtotal
+        update_data["vat_amount"] = vat_amount
+        update_data["total"] = total
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # If marking as paid, add paid_at timestamp
+    if update_data.get("status") == "paid" and invoice.get("status") != "paid":
+        update_data["paid_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.invoices.update_one(
+        {"id": invoice_id},
+        {"$set": update_data}
+    )
+    
+    updated_invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    return updated_invoice
+
 @router.delete("/invoices/{invoice_id}")
 async def delete_invoice(invoice_id: str):
     """Delete an invoice"""

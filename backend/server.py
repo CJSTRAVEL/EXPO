@@ -5769,6 +5769,147 @@ async def calculate_fare_from_locations(pickup: str, dropoff: str, vehicle_type_
         "message": "No matching zone - calculate based on distance"
     }
 
+# ========== QUOTE ENDPOINTS ==========
+
+@api_router.get("/quotes")
+async def get_quotes(status: Optional[str] = None):
+    """Get all quotes, optionally filtered by status"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    quotes = await db.quotes.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return quotes
+
+@api_router.get("/quotes/{quote_id}")
+async def get_quote(quote_id: str):
+    """Get a single quote by ID"""
+    quote = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    return quote
+
+@api_router.post("/quotes")
+async def create_quote(quote: QuoteCreate, authorization: str = Header(None)):
+    """Create a new quote"""
+    # Get current user from token
+    created_by_id = None
+    created_by_name = "System"
+    
+    if authorization:
+        try:
+            token = authorization.replace("Bearer ", "")
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            created_by_id = payload.get("sub")
+            # Get user name
+            user = await db.users.find_one({"id": created_by_id})
+            if user:
+                created_by_name = user.get("name") or user.get("email", "Admin")
+        except:
+            pass
+    
+    quote_number = await generate_quote_number()
+    quote_dict = quote.model_dump()
+    quote_dict["id"] = str(uuid.uuid4())
+    quote_dict["quote_number"] = quote_number
+    quote_dict["status"] = "pending"  # pending, converted, expired, cancelled
+    quote_dict["created_at"] = datetime.now(timezone.utc)
+    quote_dict["created_by_id"] = created_by_id
+    quote_dict["created_by_name"] = created_by_name
+    quote_dict["converted_booking_id"] = None
+    
+    await db.quotes.insert_one(quote_dict)
+    
+    # Remove _id from response
+    quote_dict.pop("_id", None)
+    return quote_dict
+
+@api_router.put("/quotes/{quote_id}")
+async def update_quote(quote_id: str, quote_update: QuoteUpdate):
+    """Update a quote"""
+    existing = await db.quotes.find_one({"id": quote_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    update_data = {k: v for k, v in quote_update.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.quotes.update_one(
+        {"id": quote_id},
+        {"$set": update_data}
+    )
+    
+    updated = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/quotes/{quote_id}")
+async def delete_quote(quote_id: str):
+    """Delete a quote"""
+    result = await db.quotes.delete_one({"id": quote_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    return {"message": "Quote deleted"}
+
+@api_router.post("/quotes/{quote_id}/convert")
+async def convert_quote_to_booking(quote_id: str, authorization: str = Header(None)):
+    """Convert a quote to a booking"""
+    quote = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    if quote.get("status") == "converted":
+        raise HTTPException(status_code=400, detail="Quote already converted to booking")
+    
+    # Get vehicle type name
+    vehicle_type_name = None
+    if quote.get("vehicle_type_id"):
+        vt = await db.vehicle_types.find_one({"id": quote["vehicle_type_id"]})
+        if vt:
+            vehicle_type_name = vt.get("name")
+    
+    # Create booking from quote data
+    booking_id = await generate_booking_id()
+    booking_dict = {
+        "id": str(uuid.uuid4()),
+        "booking_id": booking_id,
+        "first_name": quote.get("customer_first_name", ""),
+        "last_name": quote.get("customer_last_name", ""),
+        "customer_phone": quote.get("customer_phone", ""),
+        "customer_email": quote.get("customer_email"),
+        "pickup_location": quote.get("pickup_location", ""),
+        "dropoff_location": quote.get("dropoff_location", ""),
+        "additional_stops": quote.get("additional_stops"),
+        "booking_datetime": quote.get("quote_date"),
+        "vehicle_type_id": quote.get("vehicle_type_id"),
+        "vehicle_type": vehicle_type_name,
+        "fare": quote.get("quoted_fare"),
+        "notes": quote.get("notes"),
+        "status": "pending",
+        "is_return": False,
+        "created_at": datetime.now(timezone.utc),
+        "converted_from_quote_id": quote_id,
+        "converted_from_quote_number": quote.get("quote_number"),
+    }
+    
+    await db.bookings.insert_one(booking_dict)
+    
+    # Update quote status
+    await db.quotes.update_one(
+        {"id": quote_id},
+        {"$set": {
+            "status": "converted",
+            "converted_booking_id": booking_dict["id"],
+            "converted_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Remove _id from response
+    booking_dict.pop("_id", None)
+    return {
+        "message": "Quote converted to booking",
+        "booking": booking_dict
+    }
+
 # ========== AUTH ENDPOINTS MOVED TO routes/auth.py ==========
 
 # Include the router in the main app

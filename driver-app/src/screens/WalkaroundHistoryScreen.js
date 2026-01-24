@@ -405,19 +405,34 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   filterContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  filterRow: {
+    marginBottom: 10,
+  },
+  filterInput: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  filterTab: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
     alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 10,
   },
-  filterText: {
+  filterTextInput: {
+    flex: 1,
+    fontSize: 14,
+    padding: 0,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    gap: 6,
+  },
+  clearButtonText: {
     fontSize: 14,
     fontWeight: '500',
   },

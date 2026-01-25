@@ -145,8 +145,8 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
     const driverLat = driverLocation.lat;
     const driverLng = driverLocation.lng;
     
-    // Custom car icon URL
-    const carIconUrl = 'https://maps.google.com/mapfiles/kml/shapes/cabs.png';
+    // Professional black car icon
+    const carIconUrl = 'https://maps.google.com/mapfiles/kml/shapes/parking_lot_maps.png';
     
     // Build static map URL with sleek black route line
     let staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x320&scale=2&maptype=roadmap`;
@@ -160,11 +160,11 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
       staticMapUrl += `&path=color:0x000000ff%7Cweight:5%7Cenc:${routePolyline}`;
     }
     
-    // Add driver marker (car icon)
-    staticMapUrl += `&markers=anchor:center%7Cicon:${encodeURIComponent(carIconUrl)}%7C${driverLat},${driverLng}`;
+    // Add driver marker (professional black marker with car label)
+    staticMapUrl += `&markers=color:0x1a1a1a%7Clabel:🚗%7C${driverLat},${driverLng}`;
     
-    // Add pickup marker (black dot)
-    staticMapUrl += `&markers=color:0x000000%7Csize:small%7C${encodeURIComponent(pickupLocation)}`;
+    // Add pickup marker (green dot for destination)
+    staticMapUrl += `&markers=color:0x22c55e%7Csize:mid%7Clabel:P%7C${encodeURIComponent(pickupLocation)}`;
     
     staticMapUrl += `&key=${GOOGLE_MAPS_API_KEY}`;
 

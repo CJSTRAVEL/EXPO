@@ -2083,34 +2083,51 @@ If any information is incorrect, please contact us on +44 191 722 1223.
 CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjsdispatch.co.uk
         """
         
-        # Create message with improved headers for better deliverability
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = f"CJ's Executive Travel <{SMTP_FROM_EMAIL}>"
-        msg['To'] = customer_email
-        msg['Reply-To'] = "bookings@cjsdispatch.co.uk"
-        msg['X-Priority'] = '3'  # Normal priority
-        msg['X-Mailer'] = 'CJs Executive Travel Booking System'
-        msg['List-Unsubscribe'] = '<mailto:unsubscribe@cjsdispatch.co.uk>'
+        # Send email via Mailgun API
+        import requests
+        mailgun_api_key = os.environ.get('MAILGUN_API_KEY')
+        mailgun_domain = os.environ.get('MAILGUN_DOMAIN', 'cjsdispatch.co.uk')
         
-        # Add Message-ID for better deliverability
-        from email.utils import make_msgid
-        msg['Message-ID'] = make_msgid(domain='cjsdispatch.co.uk')
-        
-        # Attach both plain text and HTML versions
-        part1 = MIMEText(text_content, 'plain')
-        part2 = MIMEText(html_content, 'html')
-        msg.attach(part1)
-        msg.attach(part2)
-        
-        # Send email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(SMTP_FROM_EMAIL, customer_email, msg.as_string())
-        
-        logging.info(f"Email sent successfully to {customer_email}")
-        return True, "Email sent"
+        if mailgun_api_key:
+            # Use Mailgun API (better deliverability)
+            response = requests.post(
+                f"https://api.eu.mailgun.net/v3/{mailgun_domain}/messages",
+                auth=("api", mailgun_api_key),
+                data={
+                    "from": f"CJ's Executive Travel <bookings@{mailgun_domain}>",
+                    "to": customer_email,
+                    "subject": subject,
+                    "text": text_content,
+                    "html": html_content,
+                    "h:Reply-To": f"bookings@{mailgun_domain}"
+                }
+            )
+            if response.status_code == 200:
+                logging.info(f"Email sent successfully to {customer_email} via Mailgun API")
+                return True, "Email sent"
+            else:
+                logging.error(f"Mailgun API error: {response.text}")
+                raise Exception(f"Mailgun API error: {response.status_code}")
+        else:
+            # Fallback to SMTP
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = f"CJ's Executive Travel <{SMTP_FROM_EMAIL}>"
+            msg['To'] = customer_email
+            msg['Reply-To'] = "bookings@cjsdispatch.co.uk"
+            
+            part1 = MIMEText(text_content, 'plain')
+            part2 = MIMEText(html_content, 'html')
+            msg.attach(part1)
+            msg.attach(part2)
+            
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.sendmail(SMTP_FROM_EMAIL, customer_email, msg.as_string())
+            
+            logging.info(f"Email sent successfully to {customer_email} via SMTP")
+            return True, "Email sent"
         
     except Exception as e:
         logging.error(f"Email error: {str(e)}")

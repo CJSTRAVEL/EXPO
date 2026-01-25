@@ -2142,9 +2142,17 @@ const NewBookingPage = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-[#252525] border-[#3d3d3d] text-white">
                     <SelectItem value="none" className="text-white focus:bg-[#3d3d3d] focus:text-white">Unassigned</SelectItem>
-                    {drivers.filter(d => d.status === "available").map((driver) => (
+                    {drivers.filter(d => {
+                      // Always include currently assigned driver
+                      if (d.id === formData.driver_id) return true;
+                      // Include all active drivers (not inactive)
+                      if (d.status === 'inactive') return false;
+                      // Allow all drivers to be assigned
+                      return true;
+                    }).map((driver) => (
                       <SelectItem key={driver.id} value={driver.id} className="text-white focus:bg-[#3d3d3d] focus:text-white">
-                        {driver.name} - {driver.vehicle_type}
+                        {driver.name} ({driver.vehicle_type || 'N/A'})
+                        {driver.driver_types?.length > 0 && ` - ${driver.driver_types.map(t => t.toUpperCase()).join('/')}`}
                       </SelectItem>
                     ))}
                   </SelectContent>

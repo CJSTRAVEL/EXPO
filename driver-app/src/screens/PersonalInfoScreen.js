@@ -43,11 +43,18 @@ export default function PersonalInfoScreen({ navigation }) {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Avatar Header */}
         <View style={[styles.header, { backgroundColor: theme.headerBg }]}>
-          <View style={[styles.avatar, { backgroundColor: theme.secondary }]}>
-            <Text style={[styles.avatarText, { color: theme.primary }]}>
-              {user?.name?.charAt(0)?.toUpperCase() || 'D'}
-            </Text>
-          </View>
+          {user?.photo ? (
+            <Image
+              source={{ uri: user.photo.startsWith('data:') ? user.photo : `data:image/jpeg;base64,${user.photo}` }}
+              style={[styles.avatarImage, { borderColor: theme.secondary }]}
+            />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: theme.secondary }]}>
+              <Text style={[styles.avatarText, { color: theme.primary }]}>
+                {user?.name?.charAt(0)?.toUpperCase() || 'D'}
+              </Text>
+            </View>
+          )}
           <Text style={styles.headerName}>{user?.name || 'Driver'}</Text>
           <View style={[styles.statusBadge, { backgroundColor: user?.is_online ? theme.success : theme.offline }]}>
             <Text style={styles.statusText}>{user?.is_online ? 'Online' : 'Offline'}</Text>

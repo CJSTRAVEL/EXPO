@@ -264,6 +264,7 @@ function AppRoutes() {
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </main>
+            <LiveChat />
           </div>
         </ProtectedRoute>
       } />

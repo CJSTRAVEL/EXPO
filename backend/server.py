@@ -485,6 +485,10 @@ class BookingResponse(BaseModel):
     created_by_id: Optional[str] = None
     created_by_name: Optional[str] = None
     history: Optional[List[dict]] = None
+    # Repeat booking fields
+    repeat_group_id: Optional[str] = None
+    repeat_index: Optional[int] = None
+    repeat_total: Optional[int] = None
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

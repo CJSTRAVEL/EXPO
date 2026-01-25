@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import LiveChat from "@/components/LiveChat";
 import Dashboard from "@/pages/Dashboard";
 import DriversPage from "@/pages/DriversPage";
 import BookingsPage from "@/pages/BookingsPage";

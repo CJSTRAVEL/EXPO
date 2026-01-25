@@ -883,6 +883,12 @@ const NewBookingPage = () => {
       return_flight_number: "",
       return_airline: "",
       return_terminal: "",
+      repeat_booking: false,
+      repeat_type: "daily",
+      repeat_end_type: "occurrences",
+      repeat_occurrences: 5,
+      repeat_end_date: null,
+      repeat_days: [],
     });
     setRouteInfo(null);
     setFlightData(null);

@@ -156,6 +156,7 @@ export default function NewQuotePage() {
   useEffect(() => {
     fetchVehicleTypes();
     fetchFareSettings();
+    fetchPassengersAndClients();
     if (isEditing) {
       fetchQuote();
     }

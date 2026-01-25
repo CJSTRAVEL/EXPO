@@ -5213,7 +5213,8 @@ async def driver_login(login: DriverLogin):
             "phone": driver["phone"],
             "vehicle_type": driver["vehicle_type"],
             "vehicle_number": driver["vehicle_number"],
-            "status": driver["status"]
+            "status": driver["status"],
+            "photo": driver.get("photo")
         }
     }
 

@@ -23,7 +23,13 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 
 ## What's Been Implemented
 
-### January 2026
+### January 2026 (Latest)
+- **Repeat Booking Feature** (VERIFIED): Create recurring bookings on New Booking page and Contract Work page
+  - Daily, Weekly, or Custom Days repeat patterns
+  - End by number of occurrences (2-52) or end date
+  - Bookings linked via `repeat_group_id` field
+  - Backend endpoint: `POST /api/bookings/repeat`
+  - Test suite: `/app/backend/tests/test_repeat_bookings.py`
 - **SMS Templates with Vehicle Details** (VERIFIED): Added vehicle colour, make, model, registration to driver_on_route and driver_arrived SMS
 - **Invoice Delete & Past Jobs** (VERIFIED): Delete invoice option, bookings move to Past Jobs when invoice paid, restore on delete
 - **Invoice Journey Selection** (VERIFIED): Checkbox selection when generating invoices + remove journey from Invoice Manager edit
@@ -34,6 +40,7 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 - **Driver App Fixes**: Swipe-to-confirm bug fixed, logout rule implemented, UI redesign, "in-progress" bar linked
 - **Booking Logic Fixes**: `client_id` and `quoted_fare` now correctly transferred from requests to bookings
 - **Bug Fixes**: Client detail updates, driver assignment filtering, calendar icon bug in portal
+- **Driver App New Build** (PENDING USER VERIFICATION): Production AAB build `ab3bb23f-2cd6-45db-b9d3-f4d096d6692b` ready for Play Store upload
 
 ## Key Features
 - Multi-portal system (Admin, Client, Passenger)

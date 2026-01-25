@@ -6749,6 +6749,63 @@ async def create_default_admin():
         await db.admin_users.insert_one(default_admin)
         logger.info(f"Default admin created: admin@cjstravel.uk / admin123")
 
+@app.on_event("startup")
+async def create_database_indexes():
+    """Create database indexes for better query performance"""
+    try:
+        # Bookings indexes
+        await db.bookings.create_index("id", unique=True)
+        await db.bookings.create_index("booking_id", unique=True, sparse=True)
+        await db.bookings.create_index("status")
+        await db.bookings.create_index("driver_id")
+        await db.bookings.create_index("created_at")
+        await db.bookings.create_index("booking_datetime")
+        await db.bookings.create_index("client_id")
+        await db.bookings.create_index([("status", 1), ("booking_datetime", -1)])
+        
+        # Drivers indexes
+        await db.drivers.create_index("id", unique=True)
+        await db.drivers.create_index("email", unique=True)
+        await db.drivers.create_index("status")
+        await db.drivers.create_index("shift_status")
+        
+        # Vehicles indexes
+        await db.vehicles.create_index("id", unique=True)
+        await db.vehicles.create_index("registration", unique=True)
+        await db.vehicles.create_index("is_active")
+        await db.vehicles.create_index("current_driver_id")
+        
+        # Admin users indexes
+        await db.admin_users.create_index("id", unique=True)
+        await db.admin_users.create_index("email", unique=True)
+        
+        # Clients indexes
+        await db.clients.create_index("id", unique=True)
+        await db.clients.create_index("email", unique=True, sparse=True)
+        await db.clients.create_index("company_name")
+        
+        # Chat messages indexes
+        await db.chat_messages.create_index("booking_id")
+        await db.chat_messages.create_index("driver_id")
+        await db.chat_messages.create_index("created_at")
+        await db.chat_messages.create_index([("booking_id", 1), ("created_at", -1)])
+        
+        # Invoices indexes
+        await db.invoices.create_index("id", unique=True)
+        await db.invoices.create_index("invoice_number", unique=True)
+        await db.invoices.create_index("client_id")
+        await db.invoices.create_index("status")
+        
+        # Quotes indexes
+        await db.quotes.create_index("id", unique=True)
+        await db.quotes.create_index("quote_number", unique=True, sparse=True)
+        await db.quotes.create_index("status")
+        await db.quotes.create_index("created_at")
+        
+        logger.info("Database indexes created successfully")
+    except Exception as e:
+        logger.warning(f"Error creating indexes (may already exist): {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()

@@ -33,6 +33,13 @@ export default function NewQuotePage() {
   const [mileRates, setMileRates] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
   const [calculatingFare, setCalculatingFare] = useState(false);
+  
+  // Passenger/Client lookup
+  const [passengers, setPassengers] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [matchedContacts, setMatchedContacts] = useState([]);
+  const [showContactPopup, setShowContactPopup] = useState(false);
+  const searchTimeoutRef = useRef(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -53,6 +60,98 @@ export default function NewQuotePage() {
   });
 
   const [newStop, setNewStop] = useState("");
+
+  useEffect(() => {
+    fetchVehicleTypes();
+    fetchFareSettings();
+    fetchPassengersAndClients();
+    if (isEditing) {
+      fetchQuote();
+    }
+  }, [quoteId]);
+  
+  const fetchPassengersAndClients = async () => {
+    try {
+      const [passengersRes, clientsRes] = await Promise.all([
+        axios.get(`${API}/api/passengers`),
+        axios.get(`${API}/api/clients`)
+      ]);
+      setPassengers(passengersRes.data || []);
+      setClients(clientsRes.data || []);
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+    }
+  };
+
+  // Debounced contact search
+  const searchContacts = useCallback((query, field) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    if (!query || query.length < 2) {
+      setMatchedContacts([]);
+      setShowContactPopup(false);
+      return;
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      const queryLower = query.toLowerCase().trim();
+      
+      // Search passengers
+      const passengerMatches = passengers.filter(p => {
+        if (field === 'name') {
+          const fullName = (p.name || `${p.first_name || ''} ${p.last_name || ''}`).toLowerCase();
+          return fullName.includes(queryLower);
+        } else if (field === 'phone') {
+          const phone = (p.phone || p.customer_phone || '').replace(/\s+/g, '');
+          return phone.includes(query.replace(/\s+/g, ''));
+        }
+        return false;
+      }).map(p => ({ ...p, type: 'passenger' })).slice(0, 5);
+      
+      // Search clients
+      const clientMatches = clients.filter(c => {
+        if (field === 'name') {
+          const name = (c.name || c.contact_name || '').toLowerCase();
+          return name.includes(queryLower);
+        } else if (field === 'phone') {
+          const phone = (c.phone || c.contact_phone || '').replace(/\s+/g, '');
+          return phone.includes(query.replace(/\s+/g, ''));
+        }
+        return false;
+      }).map(c => ({ ...c, type: 'client' })).slice(0, 5);
+      
+      const allMatches = [...passengerMatches, ...clientMatches].slice(0, 8);
+      setMatchedContacts(allMatches);
+      setShowContactPopup(allMatches.length > 0);
+    }, 500);
+  }, [passengers, clients]);
+
+  const selectContact = (contact) => {
+    if (contact.type === 'passenger') {
+      const nameParts = (contact.name || `${contact.first_name || ''} ${contact.last_name || ''}`).trim().split(' ');
+      setFormData(prev => ({
+        ...prev,
+        customer_first_name: nameParts[0] || '',
+        customer_last_name: nameParts.slice(1).join(' ') || '',
+        customer_phone: contact.phone || contact.customer_phone || '',
+        customer_email: contact.email || ''
+      }));
+    } else if (contact.type === 'client') {
+      const nameParts = (contact.contact_name || contact.name || '').trim().split(' ');
+      setFormData(prev => ({
+        ...prev,
+        customer_first_name: nameParts[0] || '',
+        customer_last_name: nameParts.slice(1).join(' ') || '',
+        customer_phone: contact.contact_phone || contact.phone || '',
+        customer_email: contact.contact_email || contact.email || ''
+      }));
+    }
+    setMatchedContacts([]);
+    setShowContactPopup(false);
+    toast.success(`${contact.type === 'client' ? 'Client' : 'Passenger'} details loaded`);
+  };
 
   useEffect(() => {
     fetchVehicleTypes();

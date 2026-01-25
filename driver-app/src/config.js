@@ -1,7 +1,7 @@
 // API Configuration
 // In React Native/Expo, use Constants.expoConfig.extra for environment variables
 // For now, using the preview URL - will be configured via app.config.js for production
-export const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://execcarapp.preview.emergentagent.com/api';
+export const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://executive-travel-2.preview.emergentagent.com/api';
 
 // App Configuration
 export const APP_CONFIG = {

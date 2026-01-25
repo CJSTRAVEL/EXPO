@@ -1615,7 +1615,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 phone = '+44' + phone
         
         # Generate booking details link - use SSR preview URL for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://execcarapp.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://executive-travel-2.preview.emergentagent.com')
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags
             booking_link = f"{app_url}/api/preview/{short_booking_id}"
@@ -1731,7 +1731,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
     
     try:
         # Generate booking details link - use SSR preview URL (same as SMS) for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://execcarapp.preview.emergentagent.com')
+        app_url = os.environ.get('APP_URL', 'https://executive-travel-2.preview.emergentagent.com')
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags (same as SMS)
             booking_link = f"{app_url}/api/preview/{short_booking_id}"
@@ -5527,7 +5527,7 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
     )
     
     # Generate booking link
-    app_url = os.environ.get('APP_URL', 'https://execcarapp.preview.emergentagent.com')
+    app_url = os.environ.get('APP_URL', 'https://executive-travel-2.preview.emergentagent.com')
     short_booking_id = booking.get("short_booking_id", booking_id[:8])
     booking_link = f"{app_url}/api/preview/{short_booking_id}"
     
@@ -5602,7 +5602,7 @@ async def notify_passenger_arrival(booking_id: str, driver: dict = Depends(get_c
     vehicle_registration = vehicle.get("registration", driver.get("vehicle_number", "")) if vehicle else driver.get("vehicle_number", "")
     
     # Generate booking link
-    app_url = os.environ.get('APP_URL', 'https://execcarapp.preview.emergentagent.com')
+    app_url = os.environ.get('APP_URL', 'https://executive-travel-2.preview.emergentagent.com')
     short_booking_id = booking.get("short_booking_id", booking_id[:8])
     booking_link = f"{app_url}/api/preview/{short_booking_id}"
     

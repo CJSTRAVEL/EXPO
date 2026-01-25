@@ -5231,6 +5231,8 @@ async def get_driver_profile(driver: dict = Depends(get_current_driver)):
         "is_online": driver.get("is_online", False),
         "on_break": driver.get("on_break", False),
         "current_location": driver.get("current_location"),
+        # Driver photo
+        "photo": driver.get("photo"),
         # Document expiry dates
         "taxi_licence_expiry": driver.get("taxi_licence_expiry"),
         "dbs_expiry": driver.get("dbs_expiry"),

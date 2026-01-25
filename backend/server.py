@@ -5344,16 +5344,21 @@ async def get_current_driver(credentials: HTTPAuthorizationCredentials = Depends
         raise HTTPException(status_code=401, detail="Invalid token")
 
 @api_router.post("/driver/login")
-async def driver_login(login: DriverLogin):
-    """Driver login for mobile app"""
+@limiter.limit("5/minute")
+async def driver_login(request: Request, login: DriverLogin):
+    """Driver login for mobile app - Rate limited to 5 attempts per minute"""
     driver = await db.drivers.find_one({"email": login.email.lower()}, {"_id": 0})
     if not driver:
+        logger.warning(f"Failed login attempt for email: {login.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Check password
     password_hash = hashlib.sha256(login.password.encode()).hexdigest()
     if driver.get("password_hash") != password_hash:
+        logger.warning(f"Failed login attempt for driver: {login.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    logger.info(f"Successful driver login: {login.email}")
     
     # Generate JWT token
     token_data = {

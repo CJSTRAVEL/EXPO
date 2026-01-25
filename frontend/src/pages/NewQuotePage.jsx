@@ -685,12 +685,13 @@ export default function NewQuotePage() {
               <div className="space-y-2">
                 <Label>Additional Stops (Optional)</Label>
                 <div className="flex gap-2">
-                  <Input
-                    value={newStop}
-                    onChange={(e) => setNewStop(e.target.value)}
-                    placeholder="Add a stop"
-                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addStop())}
-                  />
+                  <div className="flex-1">
+                    <AddressAutocomplete
+                      value={newStop}
+                      onChange={(value) => setNewStop(value)}
+                      placeholder="Add a stop"
+                    />
+                  </div>
                   <Button type="button" variant="outline" onClick={addStop}>
                     <Plus className="h-4 w-4" />
                   </Button>

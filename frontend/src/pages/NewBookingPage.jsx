@@ -1321,9 +1321,9 @@ const NewBookingPage = () => {
                   value={formData.first_name}
                   onChange={(e) => {
                     setFormData({ ...formData, first_name: e.target.value });
-                    searchPassengers(e.target.value, 'name');
+                    debouncedSearchPassengers(e.target.value, 'name');
                   }}
-                  onFocus={() => formData.first_name && searchPassengers(formData.first_name, 'name')}
+                  onFocus={() => formData.first_name && formData.first_name.length >= 2 && searchPassengers(formData.first_name, 'name')}
                   placeholder="John"
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-first-name"

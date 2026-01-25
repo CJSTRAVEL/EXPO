@@ -1351,9 +1351,9 @@ const NewBookingPage = () => {
                   value={formData.customer_phone}
                   onChange={(e) => {
                     setFormData({ ...formData, customer_phone: e.target.value });
-                    searchPassengers(e.target.value, 'phone');
+                    debouncedSearchPassengers(e.target.value, 'phone');
                   }}
-                  onFocus={() => formData.customer_phone && searchPassengers(formData.customer_phone, 'phone')}
+                  onFocus={() => formData.customer_phone && formData.customer_phone.length >= 2 && searchPassengers(formData.customer_phone, 'phone')}
                   placeholder="+44 7700 900123"
                   className="h-9 bg-[#1a1a1a] border-[#3d3d3d] text-white placeholder:text-gray-500"
                   data-testid="booking-phone"

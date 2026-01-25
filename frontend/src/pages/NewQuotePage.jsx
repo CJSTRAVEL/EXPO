@@ -474,15 +474,56 @@ export default function NewQuotePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 relative">
                   <Label htmlFor="customer_first_name">First Name *</Label>
                   <Input
                     id="customer_first_name"
                     value={formData.customer_first_name}
-                    onChange={(e) => handleChange("customer_first_name", e.target.value)}
+                    onChange={(e) => {
+                      handleChange("customer_first_name", e.target.value);
+                      searchContacts(e.target.value, 'name');
+                    }}
+                    onFocus={() => formData.customer_first_name && formData.customer_first_name.length >= 2 && searchContacts(formData.customer_first_name, 'name')}
                     placeholder="John"
                     data-testid="quote-first-name"
                   />
+                  {/* Contact lookup popup */}
+                  {showContactPopup && matchedContacts.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
+                      <div className="p-2 bg-slate-50 border-b text-xs text-slate-600 font-medium">
+                        Matching Contacts
+                      </div>
+                      {matchedContacts.map((contact, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b last:border-b-0 flex items-center gap-3"
+                          onClick={() => selectContact(contact)}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            contact.type === 'client' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                          }`}>
+                            {contact.type === 'client' ? <Building2 className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {contact.type === 'client' 
+                                ? (contact.contact_name || contact.name) 
+                                : (contact.name || `${contact.first_name || ''} ${contact.last_name || ''}`)}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">
+                              {contact.type === 'client' ? contact.company_name : (contact.phone || contact.customer_phone)}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded ${
+                            contact.type === 'client' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                            {contact.type === 'client' ? 'Client' : 'Passenger'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="customer_last_name">Last Name *</Label>
@@ -495,7 +536,7 @@ export default function NewQuotePage() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="customer_phone" className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
                   Phone Number *
@@ -503,7 +544,11 @@ export default function NewQuotePage() {
                 <Input
                   id="customer_phone"
                   value={formData.customer_phone}
-                  onChange={(e) => handleChange("customer_phone", e.target.value)}
+                  onChange={(e) => {
+                    handleChange("customer_phone", e.target.value);
+                    searchContacts(e.target.value, 'phone');
+                  }}
+                  onFocus={() => formData.customer_phone && formData.customer_phone.length >= 2 && searchContacts(formData.customer_phone, 'phone')}
                   placeholder="+44 7700 900000"
                   data-testid="quote-phone"
                 />

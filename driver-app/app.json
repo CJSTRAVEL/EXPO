@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "uk.co.cjstravel.driver",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "config": {
         "googleMapsApiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
       },

@@ -546,8 +546,8 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Journey in Progress Bar - Above footer when there's an active booking */}
-      {activeBooking && (
+      {/* Journey in Progress Bar - Only show when job status is actually 'in_progress' */}
+      {activeBooking && activeBooking.status === 'in_progress' && (
         <TouchableOpacity 
           style={styles.journeyProgressBar}
           onPress={() => navigation.navigate('Bookings', { openActiveBooking: activeBooking })}

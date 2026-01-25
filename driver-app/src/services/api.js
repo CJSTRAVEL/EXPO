@@ -228,14 +228,28 @@ export const getWalkaroundHistory = async () => {
   return response.data;
 };
 
-// Admin Chat API
-export const sendAdminMessage = async (message) => {
-  const response = await api.post('/driver/admin-chat', { message });
+// Admin Chat API - Now uses booking-specific chats
+export const sendAdminMessage = async (bookingId, message) => {
+  const response = await api.post('/driver/chat/send', { 
+    booking_id: bookingId,
+    message,
+    sender_type: 'driver'
+  });
   return response.data;
 };
 
-export const getAdminMessages = async () => {
-  const response = await api.get('/driver/admin-chat');
+export const getAdminMessages = async (bookingId) => {
+  const response = await api.get(`/driver/chat/${bookingId}`);
+  return response.data;
+};
+
+export const getAllDriverChats = async () => {
+  const response = await api.get('/driver/all-chats');
+  return response.data;
+};
+
+export const markChatAsRead = async (bookingId) => {
+  const response = await api.post(`/driver/chat/${bookingId}/mark-read`);
   return response.data;
 };
 

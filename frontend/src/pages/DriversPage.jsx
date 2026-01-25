@@ -503,7 +503,7 @@ const DriverForm = ({ driver, onSave, onClose, isOpen }) => {
                   type="email"
                   value={formData.email || ""}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="driver@cjstravel.uk"
+                  placeholder="driver@cjsdispatch.co.uk"
                   data-testid="driver-email-input"
                 />
               </div>

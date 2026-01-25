@@ -74,7 +74,7 @@ def get_base_template(content: str) -> str:
                                 <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">Premium Chauffeur & Executive Travel Services</p>
                                 <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">County Durham, United Kingdom</p>
                                 <p style="color: #888888; margin: 0 0 15px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">
-                                    <a href="mailto:bookings@cjstravel.uk" style="color: #D4A853; text-decoration: none;">bookings@cjstravel.uk</a>
+                                    <a href="mailto:bookings@cjsdispatch.co.uk" style="color: #D4A853; text-decoration: none;">bookings@cjsdispatch.co.uk</a>
                                 </p>
                                 <p style="color: #666666; margin: 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
                                     This email was sent from our automated booking system.<br>
@@ -595,7 +595,7 @@ def send_email(to_email: str, subject: str, html_content: str) -> bool:
         smtp_username = os.environ.get('SMTP_USERNAME')
         smtp_password = os.environ.get('SMTP_PASSWORD')
         smtp_from = os.environ.get('SMTP_FROM_EMAIL', smtp_username)
-        reply_to = os.environ.get('SMTP_REPLY_TO', 'bookings@cjstravel.uk')
+        reply_to = os.environ.get('SMTP_REPLY_TO', 'bookings@cjsdispatch.co.uk')
         
         if not all([smtp_server, smtp_username, smtp_password]):
             logging.warning(f"SMTP not configured, cannot send email to {to_email}")
@@ -611,7 +611,7 @@ def send_email(to_email: str, subject: str, html_content: str) -> bool:
         msg['Reply-To'] = reply_to
         
         # Additional headers to improve deliverability
-        msg['Message-ID'] = make_msgid(domain='cjstravel.uk')
+        msg['Message-ID'] = make_msgid(domain='cjsdispatch.co.uk')
         msg['Date'] = formatdate(localtime=True)
         msg['X-Mailer'] = 'CJs Executive Travel Booking System'
         msg['X-Priority'] = '3'  # Normal priority
@@ -624,7 +624,7 @@ def send_email(to_email: str, subject: str, html_content: str) -> bool:
         plain_text = strip_html_to_text(html_content)
         
         # Add plain text footer
-        plain_text += "\n\n---\nCJ's Executive Travel Limited\nPremium Chauffeur & Executive Travel Services\nEmail: bookings@cjstravel.uk\n\nThis is an automated message from our booking system."
+        plain_text += "\n\n---\nCJ's Executive Travel Limited\nPremium Chauffeur & Executive Travel Services\nEmail: bookings@cjsdispatch.co.uk\n\nThis is an automated message from our booking system."
         
         # Attach both versions - plain text first, then HTML
         # Email clients will display HTML if available, plain text otherwise

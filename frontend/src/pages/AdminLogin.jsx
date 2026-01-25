@@ -60,7 +60,7 @@ const AdminLogin = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@cjstravel.uk"
+                  placeholder="admin@cjsdispatch.co.uk"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

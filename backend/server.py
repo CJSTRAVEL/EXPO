@@ -1515,7 +1515,7 @@ def generate_walkaround_pdf(check_data: dict) -> bytes:
     )
     elements.append(Paragraph("CJ's Executive Travel Limited", footer_style))
     elements.append(Paragraph("Portacabin 5, 3 Cook Way, Peterlee, SR8 2HY", footer_style))
-    elements.append(Paragraph("Tel: 0191 722 1223 | Email: admin@cjstravel.uk | Web: cjstravel.uk", footer_style))
+    elements.append(Paragraph("Tel: 0191 722 1223 | Email: admin@cjsdispatch.co.uk | Web: cjsdispatch.co.uk", footer_style))
     
     doc.build(elements)
     buffer.seek(0)
@@ -1930,11 +1930,11 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                         <table width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                                 <td style="text-align: center;">
-                                    <a href="https://cjstravel.uk/" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Home</a>
-                                    <a href="https://cjstravel.uk/testimonials" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Reviews</a>
+                                    <a href="https://cjsdispatch.co.uk/" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Home</a>
+                                    <a href="https://cjsdispatch.co.uk/testimonials" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Reviews</a>
                                     <a href="{portal_link}" style="color: #1a3a5c; text-decoration: none; padding: 0 12px; font-size: 13px; font-weight: bold;">My Bookings</a>
-                                    <a href="https://cjstravel.uk/about" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">About</a>
-                                    <a href="https://cjstravel.uk/contact-us" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Contact</a>
+                                    <a href="https://cjsdispatch.co.uk/about" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">About</a>
+                                    <a href="https://cjsdispatch.co.uk/contact-us" style="color: #333; text-decoration: none; padding: 0 12px; font-size: 13px;">Contact</a>
                                 </td>
                             </tr>
                         </table>
@@ -2041,7 +2041,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                             This is an automated email confirmation from CJs Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 191 722 1223.
                         </p>
                         <p style="margin: 15px 0 0 0; color: #888; font-size: 11px; text-align: center;">
-                            CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | <a href="https://cjstravel.uk" style="color: #1a3a5c;">cjstravel.uk</a>
+                            CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | <a href="https://cjsdispatch.co.uk" style="color: #1a3a5c;">cjsdispatch.co.uk</a>
                         </p>
                     </td>
                 </tr>
@@ -2080,7 +2080,7 @@ Access your bookings: {portal_link}
 This is an automated email from CJs Executive Travel Limited.
 If any information is incorrect, please contact us on +44 191 722 1223.
 
-CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstravel.uk
+CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjsdispatch.co.uk
         """
         
         # Create message
@@ -2110,7 +2110,7 @@ CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjstra
 
 
 # ========== DOCUMENT EXPIRY EMAIL REMINDERS ==========
-ADMIN_EMAIL = "admin@cjstravel.uk"
+ADMIN_EMAIL = "admin@cjsdispatch.co.uk"
 
 async def send_expiry_reminder_email(
     subject: str,
@@ -3458,8 +3458,8 @@ async def download_client_invoice(invoice_id: str, client: dict = Depends(get_cu
         [Paragraph("<b>CJ's Executive Travel Limited</b>", company_style)],
         [Paragraph("Unit 5 Peterlee SR8 2HY", normal_style)],
         [Paragraph("Phone: +44 1917721223", normal_style)],
-        [Paragraph("Email: admin@cjstravel.uk", normal_style)],
-        [Paragraph("Web: cjstravel.uk", normal_style)],
+        [Paragraph("Email: admin@cjsdispatch.co.uk", normal_style)],
+        [Paragraph("Web: cjsdispatch.co.uk", normal_style)],
     ]
     company_table = Table(company_info, colWidths=[250])
     company_table.setStyle(TableStyle([
@@ -4742,7 +4742,7 @@ async def driver_app_privacy():
         <h2>5. Data Security</h2>
         <p>We use encrypted transmission (HTTPS/TLS) and secure authentication.</p>
         <h2>6. Contact Us</h2>
-        <p>Email: privacy@cjstravel.uk | Phone: +44 191 722 1223</p>
+        <p>Email: privacy@cjsdispatch.co.uk | Phone: +44 191 722 1223</p>
         <p class="updated">Last Updated: January 2026</p>
     </div></div>
     <footer>&copy; 2026 CJ's Executive Travel Limited</footer>
@@ -4803,7 +4803,7 @@ async def driver_app_terms():
         <h2>8. Governing Law</h2>
         <p>These Terms are governed by the laws of England and Wales.</p>
         <h2>9. Contact</h2>
-        <p>Email: legal@cjstravel.uk | Phone: +44 191 722 1223</p>
+        <p>Email: legal@cjsdispatch.co.uk | Phone: +44 191 722 1223</p>
         <p class="updated">Last Updated: January 2026</p>
     </div></div>
     <footer>&copy; 2026 CJ's Executive Travel Limited</footer>
@@ -6780,7 +6780,7 @@ async def create_default_admin():
         logger.info("Creating default admin user...")
         default_admin = {
             "id": str(uuid.uuid4()),
-            "email": "admin@cjstravel.uk",
+            "email": "admin@cjsdispatch.co.uk",
             "name": "Admin",
             "role": "super_admin",
             "is_active": True,
@@ -6788,7 +6788,7 @@ async def create_default_admin():
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.admin_users.insert_one(default_admin)
-        logger.info(f"Default admin created: admin@cjstravel.uk / admin123")
+        logger.info(f"Default admin created: admin@cjsdispatch.co.uk / admin123")
 
 @app.on_event("startup")
 async def create_database_indexes():

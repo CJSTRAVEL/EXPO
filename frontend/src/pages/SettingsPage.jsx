@@ -406,7 +406,7 @@ const UsersManagementCard = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="john@cjstravel.uk"
+                  placeholder="john@cjsdispatch.co.uk"
                   required
                   data-testid="user-email-input"
                 />

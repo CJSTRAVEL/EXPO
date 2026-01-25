@@ -386,8 +386,8 @@ async def generate_client_invoice(client_id: str, request: InvoiceRequest = None
         [Paragraph("<b>CJ's Executive Travel Limited</b>", company_style)],
         [Paragraph("Unit 5 Peterlee SR8 2HY", normal_style)],
         [Paragraph("Phone: +44 1917721223", normal_style)],
-        [Paragraph("Email: admin@cjstravel.uk", normal_style)],
-        [Paragraph("Web: cjstravel.uk", normal_style)],
+        [Paragraph("Email: admin@cjsdispatch.co.uk", normal_style)],
+        [Paragraph("Web: cjsdispatch.co.uk", normal_style)],
     ]
     company_table = Table(company_info, colWidths=[200])
     company_table.setStyle(TableStyle([
@@ -919,8 +919,8 @@ async def download_invoice_pdf(invoice_id: str):
         [Paragraph("<b>CJ's Executive Travel Limited</b>", company_style)],
         [Paragraph("Unit 5 Peterlee SR8 2HY", normal_style)],
         [Paragraph("Phone: +44 1917721223", normal_style)],
-        [Paragraph("Email: admin@cjstravel.uk", normal_style)],
-        [Paragraph("Web: cjstravel.uk", normal_style)],
+        [Paragraph("Email: admin@cjsdispatch.co.uk", normal_style)],
+        [Paragraph("Web: cjsdispatch.co.uk", normal_style)],
     ]
     company_table = Table(company_info, colWidths=[200])
     company_table.setStyle(TableStyle([

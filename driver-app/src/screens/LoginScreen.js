@@ -130,11 +130,11 @@ export default function LoginScreen() {
   };
 
   const openPrivacyPolicy = () => {
-    Linking.openURL('https://cjstravel.uk/privacy-policy');
+    Linking.openURL('https://cjsdispatch.co.uk/privacy-policy');
   };
 
   const openTerms = () => {
-    Linking.openURL('https://cjstravel.uk/privacy-policy');
+    Linking.openURL('https://cjsdispatch.co.uk/privacy-policy');
   };
 
   return (

@@ -405,52 +405,54 @@ const BookingDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-100" data-testid="booking-details-page">
-      {/* Header */}
-      <div className="bg-white">
-        {/* Logo Bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <img 
-            src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" 
-            alt="CJ's Executive Travel" 
-            className="h-10 object-contain"
+      <div className="max-w-lg mx-auto bg-white min-h-screen shadow-sm">
+        {/* Header */}
+        <div className="bg-white">
+          {/* Logo Bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" 
+              alt="CJ's Executive Travel" 
+              className="h-10 object-contain"
+            />
+            <a href="tel:+447383185260" className="text-sm text-gray-600 flex items-center gap-1">
+              <Phone className="w-4 h-4" />
+              Help
+            </a>
+          </div>
+          
+          {/* Tracking Header */}
+          <TrackingHeader 
+            status={booking.status} 
+            bookingDatetime={booking.booking_datetime}
+            driverInfo={driver}
           />
-          <a href="tel:+447383185260" className="text-sm text-gray-600 flex items-center gap-1">
-            <Phone className="w-4 h-4" />
-            Help
-          </a>
         </div>
-        
-        {/* Tracking Header */}
-        <TrackingHeader 
-          status={booking.status} 
-          bookingDatetime={booking.booking_datetime}
+
+        {/* Map Section */}
+        <LiveTrackingMap 
+          bookingId={bookingId}
+          pickupLocation={booking.pickup_location}
+          dropoffLocation={booking.dropoff_location}
+          status={booking.status}
           driverInfo={driver}
         />
-      </div>
 
-      {/* Map Section */}
-      <LiveTrackingMap 
-        bookingId={bookingId}
-        pickupLocation={booking.pickup_location}
-        dropoffLocation={booking.dropoff_location}
-        status={booking.status}
-        driverInfo={driver}
-      />
+        {/* Driver Card */}
+        {driver && <DriverCard driver={driver} />}
 
-      {/* Driver Card */}
-      {driver && <DriverCard driver={driver} />}
+        {/* Journey Details */}
+        <div className="border-t">
+          <JourneyDetails booking={booking} />
+        </div>
 
-      {/* Journey Details */}
-      <div className="mt-2">
-        <JourneyDetails booking={booking} />
-      </div>
-
-      {/* Footer */}
-      <div className="bg-white mt-2 p-4 text-center text-sm text-gray-500">
-        <p>Powered by <strong>CJ's Executive Travel</strong></p>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-xs">Live updates every 10 seconds</span>
+        {/* Footer */}
+        <div className="bg-gray-50 border-t p-4 text-center text-sm text-gray-500">
+          <p>Powered by <strong>CJ's Executive Travel</strong></p>
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs">Live updates every 10 seconds</span>
+          </div>
         </div>
       </div>
     </div>

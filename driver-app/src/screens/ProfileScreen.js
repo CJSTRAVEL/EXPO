@@ -55,11 +55,18 @@ export default function ProfileScreen({ navigation }) {
     <ScrollView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>
-            {user?.name?.charAt(0)?.toUpperCase() || 'D'}
-          </Text>
-        </View>
+        {user?.photo ? (
+          <Image
+            source={{ uri: user.photo.startsWith('data:') ? user.photo : `data:image/jpeg;base64,${user.photo}` }}
+            style={styles.avatarImage}
+          />
+        ) : (
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>
+              {user?.name?.charAt(0)?.toUpperCase() || 'D'}
+            </Text>
+          </View>
+        )}
         <Text style={styles.name}>{user?.name || 'Driver'}</Text>
         <Text style={styles.email}>{user?.email || 'No email set'}</Text>
       </View>

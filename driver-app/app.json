@@ -2,7 +2,7 @@
   "expo": {
     "name": "CJ's Driver",
     "slug": "cjs-driver",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "uk.co.cjstravel.driver",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "config": {
         "googleMapsApiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"
       },
@@ -41,7 +41,7 @@
         "backgroundColor": "#1a3a5c"
       },
       "package": "uk.co.cjstravel.driver",
-      "versionCode": 10,
+      "versionCode": 11,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"

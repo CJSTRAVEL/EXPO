@@ -126,7 +126,7 @@ const LiveChat = () => {
       <audio ref={audioRef} src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp+dnZyam5ydnp+goaGhoaGhoKCfnp2cnJubm5ydnp+goaKio6OjoqGgnpybmpmZmZqbnZ+ho6Slpqalpnx0ZVtVUE5MT05QVFhcYGRnamxxdXl8f4GDhIWFhYWEg4F/fXt5eHd3d3h5e36Bg4WHiYqLi4uKiYeEgX56dnJuamdjX1xZV1VTUlFRUVJTVVdZXGBka29zenqFcmxjW1JJQjw4NTM0Njo/Q0dNUlleZGttcHN2eXx+gIKDhISDg4KBf318enl4d3d3eHp8f4KFh4mLjIyMi4qIhYJ+e3ZyblpVT0lDPjo4Nzc5Oz9DTldqa4FuaGBYUEhAOTQxLy8xNDlASE5WXGJnanBzdnl7foCChIWFhIOCgH98enl4eHh5e36BhIeKjI6PkI+OjIqGg396dnJuamZhXVpXVVRUVFVXWl1hZWxxdIBzb2hgWE9GPjgzMC8wMzg+RU1UW2JpbnJ2eXx+gIKDhISEg4KAfnx6eHd3d3h5fH+DhomMj5GSkpGPjYqGg355dXFtaGRgXFpYV1ZWV1ldYWVrcHWAc25nX1dORj44My8uLzI3PUVNVVxjam9zdnl8f4GDhIWFhIKAf3x6eHd3d3h6fYCEh4qNj5GSkpGPjYqGgn55dXBsaGRgXFpYVlVVVldaXmJnbHJ4gXNuZ19XTkY+ODMvLi8yNz1FTVZdZGtwd3t+gYOFhoaFg4F+e3l3dnd3eXt+goaJjI+RkpKRj42KhoJ9eXRwbGhjX1xZV1VVVVZYXGBkaW90eoFzbWZeVk1FODMvLS4xNjtCSlJaYWdtcnh7fn+BgoODgoF/fXt5eHd3eHp9gISHio2PkZKSkI+NiYWBfHh0cGxoZGBcWlhXV1dYW19jZ21ye4FybGVdVUxEPDUwLC0vMzlASU9XX2Zrc3d6fH6AgoODg4KAf3x6eHd3eHp9gISHi46QkpOTkY+MiYWBfHd0cGxoY19cWVdXV1hbX2Nmam91fIBvamJaUklBOjMuKywtMTY9RU1VXGNpbnR3en1/gYKDg4KBf317eXh4eHl7foGFiIuOkJKTk5GPjImFgXx4dHBsaGReW1lXV1dYW19jZ2xxd36AbmliWVBIPzgyLSoqLDE2PURMVFthZ21zdnh7foCCg4OCgYB+fHp4eHh5e36BhYiLjpCSkpKQj4yJhYF8eHRwbGhjX1xZV1dXWFtfY2dscXh/gG5pYVlQSD84Mi0qKiwxNj1ETFRbYWdtc3Z5fH6AgoODgoGAfnx6eHh4eXt+gYWIi46QkpKSkI+MiYWBfHh0cGxoY19cWVdXV1hbX2NnbHF4f4BuaWFZUEg/ODItKiosL3dz" preload="auto" />
 
       {/* Floating Chat Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-20 right-6 z-50">
         {!isOpen && (
           <Button
             onClick={() => setIsOpen(true)}

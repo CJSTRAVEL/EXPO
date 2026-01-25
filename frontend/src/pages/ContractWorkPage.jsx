@@ -76,6 +76,13 @@ const ContractWorkPage = () => {
     return_additional_stops: [],
     return_dropoff_location: "",
     return_datetime: null,
+    // Repeat booking
+    repeat_booking: false,
+    repeat_type: "daily",
+    repeat_end_type: "occurrences",
+    repeat_occurrences: 5,
+    repeat_end_date: null,
+    repeat_days: [],
   });
   const [showFlightInfo, setShowFlightInfo] = useState(false);
   const [returnDateOpen, setReturnDateOpen] = useState(false);

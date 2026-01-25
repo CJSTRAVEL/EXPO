@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -26,6 +26,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Email templates
 from email_templates import (
@@ -44,6 +47,20 @@ from emergentintegrations.payments.stripe.checkout import StripeCheckout, Checko
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Configure structured logging for production
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+    ]
+)
+logger = logging.getLogger("cjs_travel")
+
+# Rate Limiter setup
+limiter = Limiter(key_func=get_remote_address)
 
 # JWT Secret Key
 JWT_SECRET = os.environ.get('JWT_SECRET')

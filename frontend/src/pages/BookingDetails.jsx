@@ -228,7 +228,14 @@ const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
       setIsRefreshing(true);
       const response = await axios.get(`${API}/tracking/${bookingId}/driver-location`);
       if (response.data.has_driver && response.data.location) {
-        setDriverLocation(response.data.location);
+        // Handle both location formats (lat/lng or latitude/longitude)
+        const loc = response.data.location;
+        const normalizedLocation = {
+          lat: loc.lat || loc.latitude,
+          lng: loc.lng || loc.longitude,
+          updated_at: loc.updated_at
+        };
+        setDriverLocation(normalizedLocation);
         setDriverInfo(response.data.driver);
         setLastUpdated(new Date());
       }

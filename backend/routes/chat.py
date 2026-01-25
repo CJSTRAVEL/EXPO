@@ -123,15 +123,6 @@ async def mark_driver_chat_read(booking_id: str, driver: dict = Depends(get_curr
         {"$set": {"read": True}}
     )
     return {"marked_read": result.modified_count}
-    ).sort("created_at", 1).to_list(100)
-    
-    # Mark messages as read
-    await db.chat_messages.update_many(
-        {"booking_id": booking_id, "sender_type": "dispatch", "read": False},
-        {"$set": {"read": True}}
-    )
-    
-    return messages
 
 
 @router.post("/dispatch/chat/send")

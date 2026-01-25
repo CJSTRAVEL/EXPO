@@ -132,6 +132,13 @@ const NewBookingPage = () => {
     return_terminal: "",
     // Quote reference
     converted_from_quote_id: null,
+    // Repeat booking
+    repeat_booking: false,
+    repeat_type: "daily", // daily, weekly, custom
+    repeat_end_type: "occurrences", // occurrences or end_date
+    repeat_occurrences: 5,
+    repeat_end_date: null,
+    repeat_days: [], // For custom: [0,1,2,3,4,5,6] (Sun-Sat)
   });
 
   // Booking source options

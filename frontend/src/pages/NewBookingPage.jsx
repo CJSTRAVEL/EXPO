@@ -815,7 +815,7 @@ const NewBookingPage = () => {
         deposit_paid: formData.deposit_paid ? parseFloat(formData.deposit_paid) : null,
         deposit_date: formData.deposit_date ? formData.deposit_date.toISOString() : null,
         booking_source: formData.booking_source || null,
-        status: "pending",
+        status: formData.driver_id ? "assigned" : "pending",
         payment_method: formData.payment_method,
         driver_id: formData.driver_id || null,
         client_id: formData.client_id || null,

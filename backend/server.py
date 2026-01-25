@@ -4296,11 +4296,41 @@ async def get_driver_location_for_booking(booking_id: str):
     
     current_location = driver.get("current_location")
     
+    # Get route polyline from Google Directions API if we have driver location
+    route_polyline = None
+    eta_minutes = None
+    if current_location:
+        try:
+            import httpx
+            driver_lat = current_location.get('lat') or current_location.get('latitude')
+            driver_lng = current_location.get('lng') or current_location.get('longitude')
+            pickup = booking.get("pickup_location")
+            
+            if driver_lat and driver_lng and pickup:
+                google_api_key = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs')
+                directions_url = f"https://maps.googleapis.com/maps/api/directions/json?origin={driver_lat},{driver_lng}&destination={pickup}&mode=driving&key={google_api_key}"
+                
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(directions_url, timeout=5.0)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data.get('routes') and len(data['routes']) > 0:
+                            route = data['routes'][0]
+                            route_polyline = route.get('overview_polyline', {}).get('points')
+                            # Get ETA in minutes
+                            if route.get('legs') and len(route['legs']) > 0:
+                                duration_seconds = route['legs'][0].get('duration', {}).get('value', 0)
+                                eta_minutes = round(duration_seconds / 60)
+        except Exception as e:
+            print(f"Error fetching route: {e}")
+    
     # Return driver info and location
     return {
         "has_driver": True,
         "booking_status": booking.get("status"),
         "location": current_location,
+        "route_polyline": route_polyline,
+        "eta_minutes": eta_minutes,
         "driver": {
             "name": driver.get("name"),
             "phone": driver.get("phone"),

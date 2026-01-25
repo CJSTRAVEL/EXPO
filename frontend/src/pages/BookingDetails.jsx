@@ -145,20 +145,26 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
     const driverLat = driverLocation.lat;
     const driverLng = driverLocation.lng;
     
-    // Small car icon that works with Google Static Maps
-    // Using a simple professional car marker
-    const carIconUrl = 'https://chart.googleapis.com/chart?chst=d_map_pin_icon%26chld=car%257C1a3a5c';
+    // Calculate center point between driver and pickup for better framing
+    // We'll use a zoom level based on ETA - closer = more zoomed in
+    let zoomLevel = 11; // Default zoom
+    if (etaMinutes) {
+      if (etaMinutes <= 5) zoomLevel = 14;
+      else if (etaMinutes <= 10) zoomLevel = 13;
+      else if (etaMinutes <= 20) zoomLevel = 12;
+      else zoomLevel = 11;
+    }
     
-    // Build static map URL with sleek black route line
-    let staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x320&scale=2&maptype=roadmap`;
+    // Build static map URL with sleek route line
+    let staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x400&scale=2&maptype=roadmap`;
     
     // Add custom map styling for cleaner look (hide POIs, simplify)
     staticMapUrl += `&style=feature:poi%7Cvisibility:off`;
     staticMapUrl += `&style=feature:transit%7Cvisibility:off`;
     
-    // Add the route polyline if available (black line)
+    // Add the route polyline if available (navy blue line - CJ's brand color)
     if (routePolyline) {
-      staticMapUrl += `&path=color:0x1a3a5cff%7Cweight:5%7Cenc:${routePolyline}`;
+      staticMapUrl += `&path=color:0x1a3a5cff%7Cweight:6%7Cenc:${routePolyline}`;
     }
     
     // Add driver marker - navy blue to match CJ's branding
@@ -171,8 +177,8 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
 
     return (
       <div className="relative bg-gray-50">
-        {/* Map Container */}
-        <div className="relative h-72">
+        {/* Map Container - Taller for better view */}
+        <div className="relative h-80 md:h-96">
           <img
             src={staticMapUrl}
             alt="Live Driver Location"
@@ -181,9 +187,9 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
           
           {/* ETA Bubble - Uber style */}
           {etaMinutes && (
-            <div className="absolute top-4 left-4 bg-black text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-              <Car className="w-4 h-4" />
-              <span className="text-sm font-bold">{etaMinutes} min</span>
+            <div className="absolute top-4 left-4 bg-black text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
+              <Car className="w-5 h-5" />
+              <span className="text-base font-bold">{etaMinutes} min</span>
             </div>
           )}
           
@@ -191,30 +197,30 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
           <button 
             onClick={fetchDriverLocation}
             disabled={isRefreshing}
-            className="absolute top-4 right-4 bg-white p-2.5 rounded-full shadow-lg hover:bg-gray-50 transition-colors border border-gray-200"
+            className="absolute top-4 right-4 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors border border-gray-200"
           >
-            <RefreshCw className={`w-4 h-4 text-gray-700 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-5 h-5 text-gray-700 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
           
           {/* Bottom gradient overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent" />
         </div>
       </div>
     );
   }
 
-  // Fallback - show pickup location only
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x320&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&center=${encodeURIComponent(pickupLocation)}&zoom=14&markers=color:0x000000%7Csize:small%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+  // Fallback - show pickup location only (zoomed in)
+  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x400&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&center=${encodeURIComponent(pickupLocation)}&zoom=14&markers=color:0x22c55e%7Csize:mid%7Clabel:P%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
 
   return (
     <div className="relative bg-gray-50">
-      <div className="relative h-72">
+      <div className="relative h-80 md:h-96">
         <img
           src={staticMapUrl}
           alt="Pickup Location"
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent" />
       </div>
     </div>
   );

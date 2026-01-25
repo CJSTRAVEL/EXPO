@@ -73,7 +73,7 @@ export default function NewQuotePage() {
   const fetchPassengersAndClients = async () => {
     try {
       const [passengersRes, clientsRes] = await Promise.all([
-        axios.get(`${API}/api/passengers`),
+        axios.get(`${API}/api/admin/passengers`).catch(() => ({ data: [] })),
         axios.get(`${API}/api/clients`)
       ]);
       setPassengers(passengersRes.data || []);

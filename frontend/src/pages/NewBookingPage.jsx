@@ -963,10 +963,10 @@ const NewBookingPage = () => {
     if (formData.pickup_location && formData.dropoff_location) {
       const origin = encodeURIComponent(formData.pickup_location);
       const dest = encodeURIComponent(formData.dropoff_location);
-      return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs&origin=${origin}&destination=${dest}&mode=driving`;
+      return `https://www.google.com/maps/embed/v1/directions?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&origin=${origin}&destination=${dest}&mode=driving`;
     }
     // Default map centered on UK
-    return `https://www.google.com/maps/embed/v1/view?key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs&center=54.5,-1.5&zoom=8`;
+    return `https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=54.5,-1.5&zoom=8`;
   };
 
   return (

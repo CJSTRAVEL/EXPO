@@ -617,7 +617,7 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                         width="100%"
                         height="200"
                         style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                        src={`https://maps.googleapis.com/maps/api/staticmap?size=600x200&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(formData.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(formData.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(formData.pickup_location)}%7C${encodeURIComponent(formData.dropoff_location)}&key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs`}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?size=600x200&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(formData.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(formData.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(formData.pickup_location)}%7C${encodeURIComponent(formData.dropoff_location)}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`}
                       />
                     </div>
                   </div>
@@ -2073,7 +2073,7 @@ const BookingViewDialog = ({ booking, driver, vehicleTypes, onClose, onEdit, onA
                 width="100%"
                 height="150"
                 style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-                src={`https://maps.googleapis.com/maps/api/staticmap?size=600x150&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(booking.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(booking.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(booking.pickup_location)}%7C${encodeURIComponent(booking.dropoff_location)}&key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs`}
+                src={`https://maps.googleapis.com/maps/api/staticmap?size=600x150&maptype=roadmap&markers=color:green%7Clabel:A%7C${encodeURIComponent(booking.pickup_location)}&markers=color:red%7Clabel:B%7C${encodeURIComponent(booking.dropoff_location)}&path=color:0x0066ff%7Cweight:4%7C${encodeURIComponent(booking.pickup_location)}%7C${encodeURIComponent(booking.dropoff_location)}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`}
               />
             </div>
           </div>

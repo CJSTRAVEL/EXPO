@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Building2, Plus, Calendar, MapPin, User, Clock, Loader2, Search, X, FileText, CreditCard, MoreHorizontal, Edit, Trash2, CheckCircle, UserCheck, MessageSquare, MessageSquareX, Plane, ArrowLeftRight, Mail, UserX } from "lucide-react";
+import { Building2, Plus, Calendar, MapPin, User, Clock, Loader2, Search, X, FileText, CreditCard, MoreHorizontal, Edit, Trash2, CheckCircle, UserCheck, MessageSquare, MessageSquareX, Plane, ArrowLeftRight, Mail, UserX, Repeat, CalendarDays, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, addDays, addWeeks } from "date-fns";
 import { cn } from "@/lib/utils";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 

@@ -504,6 +504,8 @@ class BookingHistoryEntry(BaseModel):
 class BookingCreate(BookingBase):
     distance_miles: Optional[float] = None
     duration_minutes: Optional[int] = None
+    driver_id: Optional[str] = None  # Assign driver at creation
+    status: Optional[str] = None  # Allow status override at creation
     create_return: Optional[bool] = False  # Create a return booking
     return_pickup_location: Optional[str] = None  # Custom return pickup
     return_dropoff_location: Optional[str] = None  # Custom return dropoff

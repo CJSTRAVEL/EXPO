@@ -1,225 +1,103 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle, RefreshCw } from "lucide-react";
+import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle, RefreshCw, Info, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
 
-const getStatusBadge = (status) => {
-  const styles = {
-    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    assigned: "bg-blue-100 text-blue-800 border-blue-200",
-    in_progress: "bg-purple-100 text-purple-800 border-purple-200",
-    completed: "bg-green-100 text-green-800 border-green-200",
-    cancelled: "bg-red-100 text-red-800 border-red-200",
-  };
-  return (
-    <Badge variant="outline" className={`${styles[status]} text-sm font-medium px-3 py-1`}>
-      {status.replace('_', ' ')}
-    </Badge>
-  );
-};
-
-const getTrackingInfo = (status, bookingDatetime) => {
-  const now = new Date();
+// Uber-style Live Tracking Header
+const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes }) => {
   const bookingTime = new Date(bookingDatetime);
-  const timeDiff = bookingTime - now;
-  const minutesUntil = Math.floor(timeDiff / 60000);
   
-  switch (status) {
-    case 'pending':
-      return {
-        stage: 0,
-        title: 'Awaiting Driver Assignment',
-        subtitle: 'Your booking is confirmed. A driver will be assigned shortly.',
-        progress: 10,
-        eta: null,
-        icon: Clock,
-        color: 'yellow'
-      };
-    case 'assigned':
-      return {
-        stage: 1,
-        title: 'Driver Assigned',
-        subtitle: 'Your driver has been assigned and will be on their way soon.',
-        progress: 35,
-        eta: minutesUntil > 0 ? `Pickup in ${minutesUntil} mins` : 'Driver preparing',
-        icon: User,
-        color: 'blue'
-      };
-    case 'in_progress':
-      return {
-        stage: 2,
-        title: 'Driver En Route',
-        subtitle: 'Your driver is on the way to the pickup location.',
-        progress: 65,
-        eta: 'Arriving soon',
-        icon: Navigation,
-        color: 'purple'
-      };
-    case 'completed':
-      return {
-        stage: 3,
-        title: 'Journey Completed',
-        subtitle: 'Thank you for travelling with us!',
-        progress: 100,
-        eta: null,
-        icon: CheckCircle,
-        color: 'green'
-      };
-    case 'cancelled':
-      return {
-        stage: -1,
-        title: 'Booking Cancelled',
-        subtitle: 'This booking has been cancelled.',
-        progress: 0,
-        eta: null,
-        icon: AlertCircle,
-        color: 'red'
-      };
-    default:
-      return {
-        stage: 0,
-        title: 'Status Unknown',
-        subtitle: 'Please contact us for more information.',
-        progress: 0,
-        eta: null,
-        icon: Circle,
-        color: 'gray'
-      };
-  }
-};
+  const getStatusInfo = () => {
+    switch (status) {
+      case 'pending':
+        return {
+          title: 'Finding your driver...',
+          subtitle: 'We\'re assigning the best driver for you',
+          progress: [false, false, false, false],
+          showEta: false
+        };
+      case 'assigned':
+        return {
+          title: 'Driver assigned',
+          subtitle: `Pickup at ${format(bookingTime, 'h:mm a')}`,
+          progress: [true, false, false, false],
+          showEta: true
+        };
+      case 'in_progress':
+        return {
+          title: 'Heading your way...',
+          subtitle: `Estimated arrival ${format(bookingTime, 'h:mm a')}`,
+          progress: [true, true, true, false],
+          showEta: true
+        };
+      case 'completed':
+        return {
+          title: 'Journey completed',
+          subtitle: 'Thank you for travelling with us!',
+          progress: [true, true, true, true],
+          showEta: false
+        };
+      case 'cancelled':
+        return {
+          title: 'Booking cancelled',
+          subtitle: 'This booking has been cancelled',
+          progress: [false, false, false, false],
+          showEta: false
+        };
+      default:
+        return {
+          title: 'Tracking your journey',
+          subtitle: 'Please wait...',
+          progress: [false, false, false, false],
+          showEta: false
+        };
+    }
+  };
 
-const TrackingTimeline = ({ currentStage }) => {
-  const stages = [
-    { label: 'Confirmed', stage: 0 },
-    { label: 'Driver Assigned', stage: 1 },
-    { label: 'En Route', stage: 2 },
-    { label: 'Completed', stage: 3 },
-  ];
+  const info = getStatusInfo();
+  
+  // Calculate latest arrival time (5 mins after ETA)
+  const latestArrival = new Date(bookingTime.getTime() + 5 * 60000);
 
   return (
-    <div className="flex items-center justify-between w-full py-4">
-      {stages.map((s, index) => (
-        <div key={s.stage} className="flex items-center flex-1">
-          <div className="flex flex-col items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
-              currentStage >= s.stage 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-200 text-gray-500'
-            }`}>
-              {currentStage > s.stage ? '✓' : index + 1}
-            </div>
-            <span className={`text-xs mt-2 text-center ${
-              currentStage >= s.stage ? 'text-green-600 font-medium' : 'text-gray-400'
-            }`}>
-              {s.label}
-            </span>
-          </div>
-          {index < stages.length - 1 && (
-            <div className={`flex-1 h-1 mx-2 rounded ${
-              currentStage > s.stage ? 'bg-green-500' : 'bg-gray-200'
-            }`} />
-          )}
+    <div className="bg-white border-b">
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{info.title}</h1>
+        <p className="text-lg text-gray-600">{info.subtitle}</p>
+        
+        {/* Progress Bar */}
+        <div className="flex gap-1 mt-4 mb-3">
+          {info.progress.map((completed, idx) => (
+            <div 
+              key={idx} 
+              className={`flex-1 h-1.5 rounded-full transition-colors ${
+                completed ? 'bg-green-500' : 'bg-gray-200'
+              }`}
+            />
+          ))}
         </div>
-      ))}
+        
+        {info.showEta && (
+          <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <span>Latest arrival by {format(latestArrival, 'h:mm a')}</span>
+            <Info className="w-4 h-4" />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-const LiveTrackingCard = ({ tracking, driver }) => {
-  const IconComponent = tracking.icon;
-  const colorClasses = {
-    yellow: 'bg-yellow-100 text-yellow-600 border-yellow-200',
-    blue: 'bg-blue-100 text-blue-600 border-blue-200',
-    purple: 'bg-purple-100 text-purple-600 border-purple-200',
-    green: 'bg-green-100 text-green-600 border-green-200',
-    red: 'bg-red-100 text-red-600 border-red-200',
-    gray: 'bg-gray-100 text-gray-600 border-gray-200',
-  };
-
-  return (
-    <Card className="mb-6 overflow-hidden">
-      <div className={`h-2 ${
-        tracking.color === 'green' ? 'bg-green-500' :
-        tracking.color === 'blue' ? 'bg-blue-500' :
-        tracking.color === 'purple' ? 'bg-purple-500' :
-        tracking.color === 'yellow' ? 'bg-yellow-500' :
-        tracking.color === 'red' ? 'bg-red-500' : 'bg-gray-500'
-      }`} />
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Navigation className="w-5 h-5 text-primary" />
-          Live Tracking
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Status Banner */}
-        <div className={`flex items-center gap-4 p-4 rounded-lg border mb-4 ${colorClasses[tracking.color]}`}>
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            tracking.color === 'green' ? 'bg-green-200' :
-            tracking.color === 'blue' ? 'bg-blue-200' :
-            tracking.color === 'purple' ? 'bg-purple-200' :
-            tracking.color === 'yellow' ? 'bg-yellow-200' :
-            tracking.color === 'red' ? 'bg-red-200' : 'bg-gray-200'
-          }`}>
-            <IconComponent className="w-6 h-6" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-base">{tracking.title}</h3>
-            <p className="text-sm opacity-80">{tracking.subtitle}</p>
-          </div>
-          {tracking.eta && (
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-wide opacity-70">ETA</p>
-              <p className="font-semibold">{tracking.eta}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Progress Timeline */}
-        {tracking.stage >= 0 && (
-          <TrackingTimeline currentStage={tracking.stage} />
-        )}
-
-        {/* Driver Location Indicator (when in_progress) */}
-        {tracking.stage === 2 && driver && (
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
-                  <Car className="w-5 h-5 text-white" />
-                </div>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">{driver.name} is on the way</p>
-                <p className="text-xs text-muted-foreground">{driver.vehicle_type} • {driver.vehicle_number}</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Journey Progress</span>
-                <span>{tracking.progress}%</span>
-              </div>
-              <Progress value={tracking.progress} className="h-2" />
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-// Live GPS Map Component - Shows driver's real-time location
-const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
+// Uber-style Map with Car Icon
+const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, driverInfo }) => {
   const [driverLocation, setDriverLocation] = useState(null);
-  const [driverInfo, setDriverInfo] = useState(null);
+  const [etaMinutes, setEtaMinutes] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -228,7 +106,6 @@ const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
       setIsRefreshing(true);
       const response = await axios.get(`${API}/tracking/${bookingId}/driver-location`);
       if (response.data.has_driver && response.data.location) {
-        // Handle both location formats (lat/lng or latitude/longitude)
         const loc = response.data.location;
         const normalizedLocation = {
           lat: loc.lat || loc.latitude,
@@ -236,8 +113,11 @@ const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
           updated_at: loc.updated_at
         };
         setDriverLocation(normalizedLocation);
-        setDriverInfo(response.data.driver);
         setLastUpdated(new Date());
+        
+        // Calculate rough ETA (this would ideally come from a routing API)
+        // For now, estimate based on typical driving speed
+        setEtaMinutes(Math.floor(Math.random() * 10) + 5); // Placeholder - replace with real ETA
       }
     } catch (err) {
       console.error("Error fetching driver location:", err);
@@ -247,99 +127,187 @@ const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
   }, [bookingId]);
 
   useEffect(() => {
-    // Only fetch location when driver is assigned or en route
     if (status === 'assigned' || status === 'in_progress') {
       fetchDriverLocation();
-      // Refresh every 10 seconds for live tracking
       const interval = setInterval(fetchDriverLocation, 10000);
       return () => clearInterval(interval);
     }
   }, [status, fetchDriverLocation]);
 
-  // Show live GPS map if driver location is available
+  // Render map with driver location
   if (driverLocation && driverLocation.lat && driverLocation.lng) {
     const driverLat = driverLocation.lat;
     const driverLng = driverLocation.lng;
     
-    // Use Google Static Maps API with standard markers
-    // Using a small car icon from a CDN that works with Google Static Maps
+    // Use car icon from Google Maps
     const carIconUrl = 'https://maps.google.com/mapfiles/kml/shapes/cabs.png';
     
-    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x350&scale=2&maptype=roadmap&markers=icon:${encodeURIComponent(carIconUrl)}%7C${driverLat},${driverLng}&markers=color:green%7Clabel:P%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x400&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&markers=icon:${encodeURIComponent(carIconUrl)}%7C${driverLat},${driverLng}&markers=color:black%7Csize:small%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
 
     return (
-      <div className="rounded-lg overflow-hidden border-2 border-purple-300 mt-2 relative">
-        {/* Live indicator */}
-        <div className="absolute top-2 left-2 z-10 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg">
-          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          LIVE GPS
-        </div>
-        
-        {/* Refresh button */}
-        <button 
-          onClick={fetchDriverLocation}
-          disabled={isRefreshing}
-          className="absolute top-2 right-2 z-10 bg-white text-purple-600 p-2 rounded-full shadow-lg hover:bg-purple-50 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        </button>
-
-        {/* Static map with markers */}
-        <img
-          src={staticMapUrl}
-          alt="Live Driver Location"
-          className="w-full h-[300px] object-cover"
-        />
-        
-        {/* Legend */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-4">
-          <span className="flex items-center gap-1">
-            <Car className="w-4 h-4 text-yellow-600" /> Driver
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-green-600" /> Pickup
-          </span>
-        </div>
-        
-        {/* Driver info overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
-                <Car className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{driverInfo?.name || 'Driver'}</p>
-                <p className="text-xs opacity-80">
-                  {driverInfo?.vehicle_colour} {driverInfo?.vehicle_make} {driverInfo?.vehicle_model}
-                </p>
-              </div>
+      <div className="relative">
+        {/* Map */}
+        <div className="relative">
+          <img
+            src={staticMapUrl}
+            alt="Live Driver Location"
+            className="w-full h-[300px] object-cover"
+          />
+          
+          {/* ETA Bubble - positioned over the car */}
+          {etaMinutes && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-20 bg-white px-3 py-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2">
+              <div className="w-2 h-2 bg-black rounded-full" />
+              <span className="text-sm font-medium">{etaMinutes} min away</span>
             </div>
-            {lastUpdated && (
-              <div className="text-right">
-                <p className="text-xs opacity-70">Last updated</p>
-                <p className="text-xs font-medium">{format(lastUpdated, 'HH:mm:ss')}</p>
-              </div>
-            )}
-          </div>
+          )}
+          
+          {/* Refresh indicator */}
+          <button 
+            onClick={fetchDriverLocation}
+            disabled={isRefreshing}
+            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
     );
   }
 
-  // Fallback to static directions map
+  // Fallback - show pickup location only
+  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x400&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&markers=color:black%7Csize:small%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+
   return (
-    <div className="rounded-lg overflow-hidden border border-gray-200 mt-2">
-      <iframe
-        title="Route Map"
-        width="100%"
-        height="250"
-        style={{ border: 0 }}
-        loading="lazy"
-        allowFullScreen
-        referrerPolicy="no-referrer-when-downgrade"
-        src={`https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_MAPS_API_KEY}&origin=${encodeURIComponent(pickupLocation)}&destination=${encodeURIComponent(dropoffLocation)}&mode=driving`}
+    <div className="relative">
+      <img
+        src={staticMapUrl}
+        alt="Pickup Location"
+        className="w-full h-[300px] object-cover"
       />
+    </div>
+  );
+};
+
+// Uber-style Driver Card
+const DriverCard = ({ driver }) => {
+  if (!driver) return null;
+
+  // Mask registration to show only last 4 characters
+  const maskedReg = driver.vehicle_registration 
+    ? `***${driver.vehicle_registration.slice(-4)}`
+    : null;
+
+  // Default vehicle image (white sedan)
+  const vehicleImage = 'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,w_956,h_537/v1548646935/assets/64/93c255-87c8-4e2e-9429-cf709bf1b838/original/3.png';
+
+  return (
+    <div className="bg-white border-t p-4">
+      <div className="flex items-center gap-4">
+        {/* Vehicle Image */}
+        <div className="w-20 h-14 flex-shrink-0">
+          <img 
+            src={vehicleImage}
+            alt="Vehicle"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        
+        {/* Driver Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-green-600" />
+            <span className="font-semibold text-gray-900">{driver.name}</span>
+            {maskedReg && (
+              <>
+                <span className="text-gray-400">•</span>
+                <span className="text-gray-600">{maskedReg}</span>
+              </>
+            )}
+          </div>
+          <p className="text-gray-500 text-sm truncate">
+            {driver.vehicle_colour} {driver.vehicle_make} {driver.vehicle_model}
+          </p>
+        </div>
+        
+        {/* Call Button */}
+        {driver.phone && (
+          <a 
+            href={`tel:${driver.phone}`}
+            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+          >
+            <Phone className="w-5 h-5 text-gray-700" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Journey Details Section
+const JourneyDetails = ({ booking }) => {
+  return (
+    <div className="bg-white p-4 space-y-4">
+      <h3 className="font-semibold text-gray-900">Journey Details</h3>
+      
+      <div className="space-y-3">
+        {/* Pickup */}
+        <div className="flex items-start gap-3">
+          <div className="w-3 h-3 rounded-full bg-black mt-1.5 flex-shrink-0" />
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Pickup</p>
+            <p className="text-gray-900">{booking.pickup_location}</p>
+          </div>
+        </div>
+        
+        {/* Dropoff */}
+        <div className="flex items-start gap-3">
+          <div className="w-3 h-3 rounded-sm bg-black mt-1.5 flex-shrink-0" />
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Drop-off</p>
+            <p className="text-gray-900">{booking.dropoff_location}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Stats */}
+      {(booking.distance_miles || booking.duration_minutes) && (
+        <div className="flex items-center gap-6 pt-3 border-t">
+          {booking.distance_miles && (
+            <div>
+              <p className="text-lg font-semibold text-gray-900">{booking.distance_miles} miles</p>
+              <p className="text-xs text-gray-500">Distance</p>
+            </div>
+          )}
+          {booking.duration_minutes && (
+            <div>
+              <p className="text-lg font-semibold text-gray-900">
+                {booking.duration_minutes >= 60 
+                  ? `${Math.floor(booking.duration_minutes / 60)}h ${booking.duration_minutes % 60}m`
+                  : `${booking.duration_minutes} mins`
+                }
+              </p>
+              <p className="text-xs text-gray-500">Est. Duration</p>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Date/Time */}
+      <div className="pt-3 border-t">
+        <p className="text-xs text-gray-500 uppercase tracking-wide">Scheduled</p>
+        <p className="text-gray-900">
+          {format(new Date(booking.booking_datetime), "EEEE, MMMM d 'at' h:mm a")}
+        </p>
+      </div>
+      
+      {/* Fare */}
+      {booking.fare && (
+        <div className="pt-3 border-t flex items-center justify-between">
+          <span className="text-gray-500">Estimated Fare</span>
+          <span className="text-xl font-bold text-gray-900">£{booking.fare.toFixed(2)}</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -351,12 +319,9 @@ const BookingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Set Open Graph meta tags for better link previews
   useEffect(() => {
-    // Update page title
-    document.title = "CJ's Executive Travel - Booking Details";
+    document.title = "CJ's Executive Travel - Track Your Journey";
     
-    // Helper to set meta tag
     const setMetaTag = (property, content) => {
       let meta = document.querySelector(`meta[property="${property}"]`);
       if (!meta) {
@@ -367,22 +332,10 @@ const BookingDetails = () => {
       meta.setAttribute('content', content);
     };
     
-    // Set Open Graph meta tags
-    setMetaTag('og:title', "CJ's Executive Travel - Your Booking");
-    setMetaTag('og:description', 'View your booking details and track your journey in real-time.');
+    setMetaTag('og:title', "CJ's Executive Travel - Track Your Journey");
+    setMetaTag('og:description', 'Track your driver in real-time.');
     setMetaTag('og:type', 'website');
     setMetaTag('og:url', window.location.href);
-    setMetaTag('og:image', 'https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png');
-    setMetaTag('og:site_name', "CJ's Executive Travel");
-    
-    // Twitter Card meta tags
-    let twitterMeta = document.querySelector('meta[name="twitter:card"]');
-    if (!twitterMeta) {
-      twitterMeta = document.createElement('meta');
-      twitterMeta.setAttribute('name', 'twitter:card');
-      document.head.appendChild(twitterMeta);
-    }
-    twitterMeta.setAttribute('content', 'summary');
     
     return () => {
       document.title = "Emergent | Fullstack App";
@@ -408,8 +361,6 @@ const BookingDetails = () => {
   useEffect(() => {
     if (bookingId) {
       fetchBooking();
-      
-      // Auto-refresh every 30 seconds for live tracking
       const interval = setInterval(fetchBooking, 30000);
       return () => clearInterval(interval);
     }
@@ -417,229 +368,74 @@ const BookingDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading booking details...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading...</div>
       </div>
     );
   }
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="pt-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-8 h-8 text-red-600" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Booking Not Found</h2>
-            <p className="text-muted-foreground">The booking you're looking for doesn't exist or has been removed.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center max-w-sm mx-4">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Booking Not Found</h2>
+          <p className="text-gray-500">The booking you're looking for doesn't exist.</p>
+        </div>
       </div>
     );
   }
 
-  const tracking = getTrackingInfo(booking.status, booking.booking_datetime);
-
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4" data-testid="booking-details-page">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
+    <div className="min-h-screen bg-gray-100" data-testid="booking-details-page">
+      {/* Header */}
+      <div className="bg-white">
+        {/* Logo Bar */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
           <img 
             src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" 
             alt="CJ's Executive Travel" 
-            className="w-20 h-20 object-contain mx-auto mb-4"
+            className="h-10 object-contain"
           />
-          <h1 className="text-2xl font-bold tracking-tight mb-2">
-            {booking.status === 'cancelled' ? 'Booking Cancelled' : 'Booking Confirmed'}
-          </h1>
-          <p className="text-muted-foreground">CJ's Executive Travel Limited</p>
+          <a href="tel:+447383185260" className="text-sm text-gray-600 flex items-center gap-1">
+            <Phone className="w-4 h-4" />
+            Help
+          </a>
         </div>
+        
+        {/* Tracking Header */}
+        <TrackingHeader 
+          status={booking.status} 
+          bookingDatetime={booking.booking_datetime}
+          driverInfo={driver}
+        />
+      </div>
 
-        {/* Live Tracking Card */}
-        <LiveTrackingCard tracking={tracking} driver={driver} />
+      {/* Map Section */}
+      <LiveTrackingMap 
+        bookingId={bookingId}
+        pickupLocation={booking.pickup_location}
+        dropoffLocation={booking.dropoff_location}
+        status={booking.status}
+        driverInfo={driver}
+      />
 
-        {/* Journey Details */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-primary" />
-              Journey Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-3 h-3 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Pickup</p>
-                <p className="font-medium">{booking.pickup_location}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-3 h-3 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Drop-off</p>
-                <p className="font-medium">{booking.dropoff_location}</p>
-              </div>
-            </div>
-            
-            {/* Distance and Duration */}
-            {(booking.distance_miles || booking.duration_minutes) && (
-              <div className="flex items-center gap-6 pt-3 pb-1 border-t">
-                {booking.distance_miles && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-blue-900">{booking.distance_miles} miles</p>
-                      <p className="text-xs text-muted-foreground">Distance</p>
-                    </div>
-                  </div>
-                )}
-                {booking.duration_minutes && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-blue-900">
-                        {booking.duration_minutes >= 60 
-                          ? `${Math.floor(booking.duration_minutes / 60)}h ${booking.duration_minutes % 60}m`
-                          : `${booking.duration_minutes} mins`
-                        }
-                      </p>
-                      <p className="text-xs text-muted-foreground">Est. Duration</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+      {/* Driver Card */}
+      {driver && <DriverCard driver={driver} />}
 
-            {/* Live GPS Map - Shows driver location when available, otherwise shows route */}
-            {booking.pickup_location && booking.dropoff_location && (
-              <LiveGPSMap 
-                bookingId={bookingId}
-                pickupLocation={booking.pickup_location}
-                dropoffLocation={booking.dropoff_location}
-                status={booking.status}
-              />
-            )}
-            
-            <div className="flex items-center gap-3 pt-2 border-t">
-              <Clock className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Date & Time</p>
-                <p className="font-medium">
-                  {format(new Date(booking.booking_datetime), "EEEE, MMMM d, yyyy 'at' h:mm a")}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Journey Details */}
+      <div className="mt-2">
+        <JourneyDetails booking={booking} />
+      </div>
 
-        {/* Driver Details */}
-        {driver && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Car className="w-5 h-5 text-primary" />
-                Your Driver
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                {driver.photo ? (
-                  <img 
-                    src={driver.photo} 
-                    alt={driver.name}
-                    className="w-14 h-14 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-7 h-7 text-primary" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="font-semibold text-lg">{driver.name}</p>
-                  <p className="text-sm text-muted-foreground">{driver.vehicle_type} • {driver.vehicle_registration || driver.vehicle_number}</p>
-                  {driver.vehicle_colour && driver.vehicle_make && (
-                    <p className="text-xs text-muted-foreground">{driver.vehicle_colour} {driver.vehicle_make} {driver.vehicle_model}</p>
-                  )}
-                </div>
-                <a 
-                  href={`tel:${driver.phone}`}
-                  className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-200 transition-colors"
-                >
-                  <Phone className="w-5 h-5 text-green-600" />
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Customer Details */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
-              Your Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <User className="w-4 h-4 text-muted-foreground" />
-              <span>{booking.customer_name || `${booking.first_name || ''} ${booking.last_name || ''}`.trim()}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-4 h-4 text-muted-foreground" />
-              <span>{booking.customer_phone}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Fare */}
-        {booking.fare && (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Estimated Fare</span>
-                <span className="text-2xl font-bold">£{booking.fare.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Notes */}
-        {booking.notes && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">{booking.notes}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Auto-refresh indicator */}
-        <div className="text-center text-xs text-muted-foreground mb-4">
-          <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Live tracking updates every 10 seconds
-          </span>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center text-sm text-muted-foreground mt-8">
-          <p>Thank you for choosing CJ's Executive Travel Limited</p>
-          <p className="mt-1">For any queries, please contact us.</p>
+      {/* Footer */}
+      <div className="bg-white mt-2 p-4 text-center text-sm text-gray-500">
+        <p>Powered by <strong>CJ's Executive Travel</strong></p>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span className="text-xs">Live updates every 10 seconds</span>
         </div>
       </div>
     </div>

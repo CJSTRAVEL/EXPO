@@ -1,14 +1,21 @@
 # Admin Authentication Routes
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
+import logging
 
 from .shared import (
     db, hash_password, create_admin_token, get_current_admin,
     AdminUserBase, AdminUserCreate, AdminUser, AdminLoginRequest, AdminLoginResponse, AdminRole
 )
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("cjs_travel.auth")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -22,20 +29,25 @@ class AdminUserUpdate(BaseModel):
 
 
 @router.post("/login")
-async def admin_login(data: AdminLoginRequest):
-    """Admin user login"""
+@limiter.limit("5/minute")
+async def admin_login(request: Request, data: AdminLoginRequest):
+    """Admin user login - Rate limited to 5 attempts per minute"""
     user = await db.admin_users.find_one({"email": data.email}, {"_id": 0})
     
     if not user:
+        logger.warning(f"Failed admin login attempt for email: {data.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     if not user.get("is_active", True):
+        logger.warning(f"Login attempt on disabled account: {data.email}")
         raise HTTPException(status_code=401, detail="Account is disabled")
     
     password_hash = hash_password(data.password)
     if user.get("password_hash") != password_hash:
+        logger.warning(f"Failed admin login attempt for email: {data.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    logger.info(f"Successful admin login: {data.email}")
     token = create_admin_token(user["id"], user["email"], user.get("role", "operator"))
     
     return AdminLoginResponse(

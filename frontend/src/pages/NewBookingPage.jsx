@@ -494,6 +494,27 @@ const NewBookingPage = () => {
     setPassengerSearch({ query, field });
   }, [passengers, clients]);
 
+  // Debounced passenger search - waits 500ms after user stops typing
+  const searchTimeoutRef = useRef(null);
+  const debouncedSearchPassengers = useCallback((query, field) => {
+    // Clear any pending search
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // If query is too short, clear results immediately
+    if (!query || query.length < 2) {
+      setMatchedPassengers([]);
+      setShowPassengerPopup(false);
+      return;
+    }
+    
+    // Wait 500ms before searching
+    searchTimeoutRef.current = setTimeout(() => {
+      searchPassengers(query, field);
+    }, 500);
+  }, [searchPassengers]);
+
   // Fetch passenger's booking history
   const fetchPassengerHistory = async (passenger) => {
     setLoadingPassengerHistory(true);

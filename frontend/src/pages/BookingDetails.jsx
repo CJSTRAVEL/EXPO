@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle } from "lucide-react";
+import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
 
 const getStatusBadge = (status) => {
   const styles = {
@@ -215,6 +216,119 @@ const LiveTrackingCard = ({ tracking, driver }) => {
   );
 };
 
+// Live GPS Map Component - Shows driver's real-time location
+const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
+  const [driverLocation, setDriverLocation] = useState(null);
+  const [driverInfo, setDriverInfo] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchDriverLocation = useCallback(async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await axios.get(`${API}/tracking/${bookingId}/driver-location`);
+      if (response.data.has_driver && response.data.location) {
+        setDriverLocation(response.data.location);
+        setDriverInfo(response.data.driver);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error("Error fetching driver location:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [bookingId]);
+
+  useEffect(() => {
+    // Only fetch location when driver is assigned or en route
+    if (status === 'assigned' || status === 'in_progress') {
+      fetchDriverLocation();
+      // Refresh every 10 seconds for live tracking
+      const interval = setInterval(fetchDriverLocation, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [status, fetchDriverLocation]);
+
+  // Show live GPS map if driver location is available
+  if (driverLocation && driverLocation.lat && driverLocation.lng) {
+    // Build a map URL that shows driver location with pickup as destination
+    const driverLat = driverLocation.lat;
+    const driverLng = driverLocation.lng;
+    
+    // Create a static map with driver marker and destination
+    const mapUrl = `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_MAPS_API_KEY}&origin=${driverLat},${driverLng}&destination=${encodeURIComponent(pickupLocation)}&mode=driving`;
+
+    return (
+      <div className="rounded-lg overflow-hidden border-2 border-purple-300 mt-2 relative">
+        {/* Live indicator */}
+        <div className="absolute top-2 left-2 z-10 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2 shadow-lg">
+          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          LIVE GPS
+        </div>
+        
+        {/* Refresh button */}
+        <button 
+          onClick={fetchDriverLocation}
+          disabled={isRefreshing}
+          className="absolute top-2 right-2 z-10 bg-white text-purple-600 p-2 rounded-full shadow-lg hover:bg-purple-50 transition-colors"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </button>
+
+        <iframe
+          title="Live Driver Location"
+          width="100%"
+          height="300"
+          style={{ border: 0 }}
+          loading="lazy"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+          src={mapUrl}
+        />
+        
+        {/* Driver info overlay */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
+                <Car className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">{driverInfo?.name || 'Driver'}</p>
+                <p className="text-xs opacity-80">
+                  {driverInfo?.vehicle_colour} {driverInfo?.vehicle_make} {driverInfo?.vehicle_model}
+                </p>
+              </div>
+            </div>
+            {lastUpdated && (
+              <div className="text-right">
+                <p className="text-xs opacity-70">Last updated</p>
+                <p className="text-xs font-medium">{format(lastUpdated, 'HH:mm:ss')}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to static directions map
+  return (
+    <div className="rounded-lg overflow-hidden border border-gray-200 mt-2">
+      <iframe
+        title="Route Map"
+        width="100%"
+        height="250"
+        style={{ border: 0 }}
+        loading="lazy"
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+        src={`https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_MAPS_API_KEY}&origin=${encodeURIComponent(pickupLocation)}&destination=${encodeURIComponent(dropoffLocation)}&mode=driving`}
+      />
+    </div>
+  );
+};
+
 const BookingDetails = () => {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
@@ -390,20 +504,14 @@ const BookingDetails = () => {
               </div>
             )}
 
-            {/* Route Map */}
+            {/* Live GPS Map - Shows driver location when available, otherwise shows route */}
             {booking.pickup_location && booking.dropoff_location && (
-              <div className="rounded-lg overflow-hidden border border-gray-200 mt-2">
-                <iframe
-                  title="Route Map"
-                  width="100%"
-                  height="250"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://www.google.com/maps/embed/v1/directions?key=AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs&origin=${encodeURIComponent(booking.pickup_location)}&destination=${encodeURIComponent(booking.dropoff_location)}&mode=driving`}
-                />
-              </div>
+              <LiveGPSMap 
+                bookingId={bookingId}
+                pickupLocation={booking.pickup_location}
+                dropoffLocation={booking.dropoff_location}
+                status={booking.status}
+              />
             )}
             
             <div className="flex items-center gap-3 pt-2 border-t">
@@ -429,12 +537,23 @@ const BookingDetails = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-7 h-7 text-primary" />
-                </div>
+                {driver.photo ? (
+                  <img 
+                    src={driver.photo} 
+                    alt={driver.name}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="w-7 h-7 text-primary" />
+                  </div>
+                )}
                 <div className="flex-1">
                   <p className="font-semibold text-lg">{driver.name}</p>
-                  <p className="text-sm text-muted-foreground">{driver.vehicle_type} • {driver.vehicle_number}</p>
+                  <p className="text-sm text-muted-foreground">{driver.vehicle_type} • {driver.vehicle_registration || driver.vehicle_number}</p>
+                  {driver.vehicle_colour && driver.vehicle_make && (
+                    <p className="text-xs text-muted-foreground">{driver.vehicle_colour} {driver.vehicle_make} {driver.vehicle_model}</p>
+                  )}
                 </div>
                 <a 
                   href={`tel:${driver.phone}`}
@@ -498,7 +617,7 @@ const BookingDetails = () => {
         <div className="text-center text-xs text-muted-foreground mb-4">
           <span className="inline-flex items-center gap-1">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Live tracking updates every 30 seconds
+            Live tracking updates every 10 seconds
           </span>
         </div>
 

@@ -45,7 +45,7 @@
         "backgroundColor": "#1a3a5c"
       },
       "package": "uk.co.cjstravel.driver",
-      "versionCode": 12,
+      "versionCode": 13,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs"

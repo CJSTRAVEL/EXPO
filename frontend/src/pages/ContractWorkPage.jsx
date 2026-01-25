@@ -237,6 +237,12 @@ const ContractWorkPage = () => {
         return_additional_stops: [],
         return_dropoff_location: "",
         return_datetime: null,
+        repeat_booking: false,
+        repeat_type: "daily",
+        repeat_end_type: "occurrences",
+        repeat_occurrences: 5,
+        repeat_end_date: null,
+        repeat_days: [],
       });
       setShowFlightInfo(!!flightInfo.flight_number);
     } else {
@@ -268,6 +274,12 @@ const ContractWorkPage = () => {
         return_additional_stops: [],
         return_dropoff_location: "",
         return_datetime: null,
+        repeat_booking: false,
+        repeat_type: "daily",
+        repeat_end_type: "occurrences",
+        repeat_occurrences: 5,
+        repeat_end_date: null,
+        repeat_days: [],
       });
       setShowFlightInfo(false);
     }

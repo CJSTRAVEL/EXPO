@@ -4270,6 +4270,51 @@ async def get_booking_by_short_id(short_id: str):
         booking['booking_datetime'] = datetime.fromisoformat(booking['booking_datetime'])
     return booking
 
+@api_router.get("/tracking/{booking_id}/driver-location")
+async def get_driver_location_for_booking(booking_id: str):
+    """
+    Get live driver GPS location for a booking (public endpoint for passengers).
+    Returns driver location only when booking is assigned or in_progress.
+    """
+    # Find booking by UUID or short ID
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        booking = await db.bookings.find_one({"booking_id": booking_id.upper()}, {"_id": 0})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Only return location if booking has a driver assigned
+    driver_id = booking.get("driver_id")
+    if not driver_id:
+        return {"has_driver": False, "location": None, "driver": None}
+    
+    # Get driver with current location
+    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0, "password_hash": 0})
+    if not driver:
+        return {"has_driver": False, "location": None, "driver": None}
+    
+    current_location = driver.get("current_location")
+    
+    # Return driver info and location
+    return {
+        "has_driver": True,
+        "booking_status": booking.get("status"),
+        "location": current_location,
+        "driver": {
+            "name": driver.get("name"),
+            "phone": driver.get("phone"),
+            "vehicle_type": driver.get("vehicle_type"),
+            "vehicle_number": driver.get("vehicle_registration"),
+            "vehicle_colour": driver.get("vehicle_colour"),
+            "vehicle_make": driver.get("vehicle_make"),
+            "vehicle_model": driver.get("vehicle_model"),
+            "photo": driver.get("photo")
+        },
+        "pickup_location": booking.get("pickup_location"),
+        "dropoff_location": booking.get("dropoff_location")
+    }
+
 # SSR endpoint for booking preview - serves HTML with Open Graph meta tags
 # This endpoint is accessed via /api/preview/{short_id} for link previews
 @api_router.get("/preview/{short_id}", response_class=HTMLResponse)

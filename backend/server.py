@@ -171,7 +171,15 @@ async def get_current_passenger(credentials: HTTPAuthorizationCredentials = Depe
     return passenger
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(
+    title="CJ's Executive Travel API",
+    description="Private hire booking and dispatch system",
+    version="1.0.0"
+)
+
+# Add rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -192,6 +200,70 @@ api_router.include_router(external_router)
 api_router.include_router(clients_router)
 api_router.include_router(chat_router)
 api_router.include_router(payments_router)
+
+# =============================================================================
+# HEALTH CHECK ENDPOINT - For load balancer and monitoring
+# =============================================================================
+@api_router.get("/health")
+async def health_check():
+    """
+    Health check endpoint for load balancers and monitoring.
+    Returns status of all critical services.
+    """
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "1.0.0",
+        "services": {}
+    }
+    
+    # Check MongoDB connection
+    try:
+        await db.command("ping")
+        health_status["services"]["database"] = {"status": "healthy"}
+    except Exception as e:
+        health_status["services"]["database"] = {"status": "unhealthy", "error": str(e)}
+        health_status["status"] = "degraded"
+    
+    # Check environment variables
+    required_env_vars = ["JWT_SECRET", "MONGO_URL", "DB_NAME"]
+    missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+    if missing_vars:
+        health_status["services"]["config"] = {"status": "unhealthy", "missing": missing_vars}
+        health_status["status"] = "degraded"
+    else:
+        health_status["services"]["config"] = {"status": "healthy"}
+    
+    # Check SMS service (Vonage)
+    vonage_configured = all([
+        os.environ.get("VONAGE_API_KEY"),
+        os.environ.get("VONAGE_API_SECRET")
+    ])
+    health_status["services"]["sms"] = {"status": "healthy" if vonage_configured else "not_configured"}
+    
+    # Check Email service (SMTP)
+    smtp_configured = all([
+        os.environ.get("SMTP_SERVER"),
+        os.environ.get("SMTP_USERNAME"),
+        os.environ.get("SMTP_PASSWORD")
+    ])
+    health_status["services"]["email"] = {"status": "healthy" if smtp_configured else "not_configured"}
+    
+    return health_status
+
+@api_router.get("/health/ready")
+async def readiness_check():
+    """Kubernetes readiness probe - checks if app is ready to serve traffic"""
+    try:
+        await db.command("ping")
+        return {"status": "ready"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database not ready")
+
+@api_router.get("/health/live")
+async def liveness_check():
+    """Kubernetes liveness probe - checks if app is alive"""
+    return {"status": "alive"}
 
 # Enums
 class DriverStatus(str, Enum):

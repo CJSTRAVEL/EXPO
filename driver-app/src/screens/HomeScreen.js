@@ -114,7 +114,8 @@ export default function HomeScreen({ navigation }) {
   );
 
   useEffect(() => {
-    setIsShiftActive(user?.is_online || false);
+    // Don't auto-start shift on login - always start with shift stopped
+    setIsShiftActive(false);
     // Show/hide notification based on online status
     if (user?.is_online) {
       showOnlineNotification();

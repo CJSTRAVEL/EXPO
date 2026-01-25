@@ -3118,6 +3118,12 @@ const BookingsPage = () => {
                                       Assign Driver
                                     </DropdownMenuItem>
                                   )}
+                                  {booking.driver_id && (
+                                    <DropdownMenuItem onClick={() => openChat(booking)} data-testid={`chat-booking-${booking.id}`}>
+                                      <MessageCircle className="w-4 h-4 mr-2" />
+                                      Chat with Driver
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
                                     onClick={() => setDeleteBooking(booking)}

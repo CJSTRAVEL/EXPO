@@ -216,6 +216,16 @@ export const getDriverStats = async () => {
   return response.data;
 };
 
+export const getDriverEarnings = async () => {
+  const response = await api.get('/driver/earnings');
+  return response.data;
+};
+
+export const getDriverHistory = async () => {
+  const response = await api.get('/driver/history');
+  return response.data;
+};
+
 // Document Expiry Notifications API
 export const getDocumentNotifications = async () => {
   const response = await api.get('/driver/document-notifications');

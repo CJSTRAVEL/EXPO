@@ -198,8 +198,18 @@ const DriverCard = ({ driver }) => {
     ? `***${driver.vehicle_registration.slice(-4)}`
     : null;
 
-  // Default vehicle image (white sedan)
-  const vehicleImage = 'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,w_956,h_537/v1548646935/assets/64/93c255-87c8-4e2e-9429-cf709bf1b838/original/3.png';
+  // Vehicle image based on type or default white sedan
+  const getVehicleImage = () => {
+    const type = (driver.vehicle_type || '').toLowerCase();
+    if (type.includes('mpv') || type.includes('van')) {
+      return 'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,w_956,h_537/v1569012872/assets/4e/51a168-54d0-4a28-ae4f-e7ce8f948cc4/original/Final_Black.png';
+    }
+    if (type.includes('exec') || type.includes('luxury')) {
+      return 'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,w_956,h_537/v1555367310/assets/30/51e602-10bb-4e65-b122-e394d80a9c47/original/Final_Black.png';
+    }
+    // Default sedan
+    return 'https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,w_956,h_537/v1555367538/assets/31/ad21d7-595c-42e8-ac53-53966b4a5fee/original/Final_Black.png';
+  };
 
   return (
     <div className="bg-white border-t p-4">
@@ -207,9 +217,12 @@ const DriverCard = ({ driver }) => {
         {/* Vehicle Image */}
         <div className="w-20 h-14 flex-shrink-0">
           <img 
-            src={vehicleImage}
-            alt="Vehicle"
+            src={getVehicleImage()}
+            alt={driver.vehicle_type || 'Vehicle'}
             className="w-full h-full object-contain"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
           />
         </div>
         
@@ -226,7 +239,7 @@ const DriverCard = ({ driver }) => {
             )}
           </div>
           <p className="text-gray-500 text-sm truncate">
-            {driver.vehicle_colour} {driver.vehicle_make} {driver.vehicle_model}
+            {[driver.vehicle_colour, driver.vehicle_make, driver.vehicle_model].filter(Boolean).join(' ') || driver.vehicle_type || 'Executive Vehicle'}
           </p>
         </div>
         

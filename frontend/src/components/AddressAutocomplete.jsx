@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { MapPin, Loader2, Home } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // UK Postcode regex pattern - matches full postcodes like "SR8 5AB" or "SW1A1AA"

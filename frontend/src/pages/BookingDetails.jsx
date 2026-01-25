@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
 // Uber-style Live Tracking Header
 const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes }) => {

@@ -3,7 +3,7 @@ import { GoogleMap, useJsApiLoader, DrawingManager, Polygon } from "@react-googl
 import { Button } from "@/components/ui/button";
 import { Trash2, Undo, Save } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs";
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
 const libraries = ["drawing", "places"];
 

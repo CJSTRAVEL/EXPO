@@ -261,11 +261,11 @@ const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
     const driverLat = driverLocation.lat;
     const driverLng = driverLocation.lng;
     
-    // Custom car icon for driver marker
-    const driverIcon = 'https://customer-assets.emergentagent.com/job_cj-travel-app/artifacts/zce59a5u_Untitled%20design%20%2826%29.png';
+    // Use Google Static Maps API with standard markers
+    // Using a small car icon from a CDN that works with Google Static Maps
+    const carIconUrl = 'https://maps.google.com/mapfiles/kml/shapes/cabs.png';
     
-    // Use Google Static Maps API with custom driver icon and pickup marker
-    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x350&scale=2&maptype=roadmap&markers=icon:${encodeURIComponent(driverIcon)}%7C${driverLat},${driverLng}&markers=color:green%7Clabel:P%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x350&scale=2&maptype=roadmap&markers=icon:${encodeURIComponent(carIconUrl)}%7C${driverLat},${driverLng}&markers=color:green%7Clabel:P%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
 
     return (
       <div className="rounded-lg overflow-hidden border-2 border-purple-300 mt-2 relative">
@@ -294,7 +294,7 @@ const LiveGPSMap = ({ bookingId, pickupLocation, dropoffLocation, status }) => {
         {/* Legend */}
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <Car className="w-4 h-4 text-purple-600" /> Driver
+            <Car className="w-4 h-4 text-yellow-600" /> Driver
           </span>
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-green-600" /> Pickup

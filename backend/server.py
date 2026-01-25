@@ -783,9 +783,10 @@ async def lookup_postcode(postcode: str):
     try:
         async with httpx.AsyncClient() as http_client:
             # Use Getaddress.io autocomplete endpoint
+            getaddress_api_key = os.environ.get('GETADDRESS_API_KEY')
             response = await http_client.get(
                 f"https://api.getaddress.io/autocomplete/{clean_postcode}",
-                params={"api-key": "TI2GnnxHJU2hsaILMSOQjQ49750"},
+                params={"api-key": getaddress_api_key},
                 timeout=10.0
             )
             
@@ -4307,7 +4308,7 @@ async def get_driver_location_for_booking(booking_id: str):
             pickup = booking.get("pickup_location")
             
             if driver_lat and driver_lng and pickup:
-                google_api_key = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyBSL4bF8eGeiABUOK0GM8UoWBzqtUVfMIs')
+                google_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
                 directions_url = f"https://maps.googleapis.com/maps/api/directions/json?origin={driver_lat},{driver_lng}&destination={pickup}&mode=driving&key={google_api_key}"
                 
                 async with httpx.AsyncClient() as client:

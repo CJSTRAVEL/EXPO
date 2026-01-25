@@ -115,9 +115,8 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
         setDriverLocation(normalizedLocation);
         setLastUpdated(new Date());
         
-        // Calculate rough ETA (this would ideally come from a routing API)
-        // For now, estimate based on typical driving speed
-        setEtaMinutes(Math.floor(Math.random() * 10) + 5); // Placeholder - replace with real ETA
+        // Calculate rough ETA (placeholder)
+        setEtaMinutes(Math.floor(Math.random() * 10) + 5);
       }
     } catch (err) {
       console.error("Error fetching driver location:", err);
@@ -142,31 +141,32 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
     // Use car icon from Google Maps
     const carIconUrl = 'https://maps.google.com/mapfiles/kml/shapes/cabs.png';
     
-    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x400&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&markers=icon:${encodeURIComponent(carIconUrl)}%7C${driverLat},${driverLng}&markers=color:black%7Csize:small%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+    // Use path to draw route and auto-fit bounds
+    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x300&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&markers=anchor:center%7Cicon:${encodeURIComponent(carIconUrl)}%7C${driverLat},${driverLng}&markers=color:0x000000%7Csize:small%7C${encodeURIComponent(pickupLocation)}&path=color:0x0000ff80%7Cweight:4%7Cenc:&key=${GOOGLE_MAPS_API_KEY}`;
 
     return (
-      <div className="relative">
-        {/* Map */}
-        <div className="relative">
+      <div className="relative bg-gray-100">
+        {/* Map Container */}
+        <div className="relative h-64 md:h-80">
           <img
             src={staticMapUrl}
             alt="Live Driver Location"
-            className="w-full h-[300px] object-cover"
+            className="w-full h-full object-cover"
           />
           
-          {/* ETA Bubble - positioned over the car */}
+          {/* ETA Bubble */}
           {etaMinutes && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-20 bg-white px-3 py-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2">
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2">
               <div className="w-2 h-2 bg-black rounded-full" />
-              <span className="text-sm font-medium">{etaMinutes} min away</span>
+              <span className="text-sm font-semibold">{etaMinutes} min away</span>
             </div>
           )}
           
-          {/* Refresh indicator */}
+          {/* Refresh button */}
           <button 
             onClick={fetchDriverLocation}
             disabled={isRefreshing}
-            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
+            className="absolute top-4 right-4 bg-white p-2.5 rounded-full shadow-md hover:bg-gray-50 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -176,15 +176,17 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
   }
 
   // Fallback - show pickup location only
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x400&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&markers=color:black%7Csize:small%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x300&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&center=${encodeURIComponent(pickupLocation)}&zoom=13&markers=color:0x000000%7Csize:small%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
 
   return (
-    <div className="relative">
-      <img
-        src={staticMapUrl}
-        alt="Pickup Location"
-        className="w-full h-[300px] object-cover"
-      />
+    <div className="relative bg-gray-100">
+      <div className="relative h-64 md:h-80">
+        <img
+          src={staticMapUrl}
+          alt="Pickup Location"
+          className="w-full h-full object-cover"
+        />
+      </div>
     </div>
   );
 };

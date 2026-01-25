@@ -303,6 +303,18 @@ const ContractWorkPage = () => {
       return;
     }
 
+    // Validate repeat booking settings
+    if (formData.repeat_booking && !editingBooking) {
+      if (formData.repeat_type === "custom" && formData.repeat_days.length === 0) {
+        toast.error("Please select at least one day for custom repeat bookings.");
+        return;
+      }
+      if (formData.repeat_end_type === "end_date" && !formData.repeat_end_date) {
+        toast.error("Please select an end date for repeat bookings.");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       // Build flight_info object if any flight fields are filled
@@ -316,7 +328,7 @@ const ContractWorkPage = () => {
         };
       }
 
-      const payload = {
+      const basePayload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         customer_phone: formData.customer_phone,
@@ -327,7 +339,6 @@ const ContractWorkPage = () => {
         dropoff_location: formData.dropoff_location,
         additional_stops: formData.additional_stops.length > 0 ? formData.additional_stops : null,
         fare: parseFloat(formData.fare) || 0,
-        booking_datetime: formData.booking_datetime.toISOString(),
         notes: formData.notes,
         driver_id: formData.driver_id || null,
         client_id: formData.client_id,
@@ -349,10 +360,33 @@ const ContractWorkPage = () => {
       };
 
       if (editingBooking) {
-        await axios.put(`${API}/bookings/${editingBooking.id}`, payload);
+        await axios.put(`${API}/bookings/${editingBooking.id}`, {
+          ...basePayload,
+          booking_datetime: formData.booking_datetime.toISOString(),
+        });
         toast.success("Booking updated successfully");
+      } else if (formData.repeat_booking) {
+        // Handle repeat bookings
+        const repeatPayload = {
+          ...basePayload,
+          booking_datetime: formData.booking_datetime.toISOString(),
+          repeat_booking: true,
+          repeat_type: formData.repeat_type,
+          repeat_end_type: formData.repeat_end_type,
+          repeat_occurrences: formData.repeat_end_type === "occurrences" ? formData.repeat_occurrences : null,
+          repeat_end_date: formData.repeat_end_type === "end_date" && formData.repeat_end_date 
+            ? formData.repeat_end_date.toISOString() : null,
+          repeat_days: formData.repeat_type === "custom" ? formData.repeat_days : null,
+        };
+
+        const response = await axios.post(`${API}/bookings/repeat`, repeatPayload);
+        const { created_count } = response.data;
+        toast.success(`${created_count} repeat bookings created successfully!`);
       } else {
-        await axios.post(`${API}/bookings`, payload);
+        await axios.post(`${API}/bookings`, {
+          ...basePayload,
+          booking_datetime: formData.booking_datetime.toISOString(),
+        });
         toast.success("Contract booking created successfully");
       }
       

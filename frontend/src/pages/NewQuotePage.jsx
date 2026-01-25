@@ -663,21 +663,19 @@ export default function NewQuotePage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="pickup_location">Pickup Location *</Label>
-                  <Input
-                    id="pickup_location"
+                  <AddressAutocomplete
                     value={formData.pickup_location}
-                    onChange={(e) => handleChange("pickup_location", e.target.value)}
-                    placeholder="Enter pickup address"
+                    onChange={(value) => handleChange("pickup_location", value)}
+                    placeholder="Enter pickup address or postcode"
                     data-testid="quote-pickup"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dropoff_location">Drop Off Location *</Label>
-                  <Input
-                    id="dropoff_location"
+                  <AddressAutocomplete
                     value={formData.dropoff_location}
-                    onChange={(e) => handleChange("dropoff_location", e.target.value)}
-                    placeholder="Enter drop off address"
+                    onChange={(value) => handleChange("dropoff_location", value)}
+                    placeholder="Enter drop off address or postcode"
                     data-testid="quote-dropoff"
                   />
                 </div>

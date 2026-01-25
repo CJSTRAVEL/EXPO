@@ -6803,7 +6803,7 @@ async def create_database_indexes():
         
         # Invoices indexes
         await db.invoices.create_index("id", unique=True)
-        await db.invoices.create_index("invoice_number", unique=True)
+        await db.invoices.create_index([("invoice_number", 1)], unique=True, sparse=True)
         await db.invoices.create_index("client_id")
         await db.invoices.create_index("status")
         

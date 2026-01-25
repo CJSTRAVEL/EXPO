@@ -145,8 +145,8 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
     const driverLat = driverLocation.lat;
     const driverLng = driverLocation.lng;
     
-    // Professional black car icon
-    const carIconUrl = 'https://maps.google.com/mapfiles/kml/shapes/parking_lot_maps.png';
+    // CJ's Executive Travel logo as driver icon
+    const logoIconUrl = 'https://customer-assets.emergentagent.com/job_cj-travel-app/artifacts/r7l3b1ck_Logo%20With%20Border.png';
     
     // Build static map URL with sleek black route line
     let staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x320&scale=2&maptype=roadmap`;
@@ -160,8 +160,8 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
       staticMapUrl += `&path=color:0x000000ff%7Cweight:5%7Cenc:${routePolyline}`;
     }
     
-    // Add driver marker (professional black marker with car label)
-    staticMapUrl += `&markers=color:0x1a1a1a%7Clabel:🚗%7C${driverLat},${driverLng}`;
+    // Add driver marker with CJ's logo
+    staticMapUrl += `&markers=anchor:center%7Cicon:${encodeURIComponent(logoIconUrl)}%7C${driverLat},${driverLng}`;
     
     // Add pickup marker (green dot for destination)
     staticMapUrl += `&markers=color:0x22c55e%7Csize:mid%7Clabel:P%7C${encodeURIComponent(pickupLocation)}`;

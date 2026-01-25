@@ -2367,6 +2367,14 @@ const BookingsPage = () => {
   const [assignBooking, setAssignBooking] = useState(null);
   const [viewBooking, setViewBooking] = useState(null);
   
+  // Chat state
+  const [chatBooking, setChatBooking] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessage, setChatMessage] = useState("");
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [sendingChat, setSendingChat] = useState(false);
+  const chatEndRef = useRef(null);
+  
   // Search and filter states
   const [searchText, setSearchText] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState(null);

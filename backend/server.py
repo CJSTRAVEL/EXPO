@@ -3954,6 +3954,244 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     response_data['linked_booking_id'] = return_booking_id
     return response_data
 
+# ========== REPEAT BOOKING MODEL ==========
+class RepeatBookingCreate(BaseModel):
+    # Base booking fields
+    first_name: str
+    last_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    pickup_location: str
+    dropoff_location: str
+    additional_stops: Optional[List[str]] = None
+    booking_datetime: datetime
+    notes: Optional[str] = None
+    driver_notes: Optional[str] = None
+    fare: Optional[float] = None
+    deposit_paid: Optional[float] = None
+    deposit_date: Optional[datetime] = None
+    booking_source: Optional[str] = None
+    status: Optional[str] = "pending"
+    payment_method: Optional[str] = "cash"
+    driver_id: Optional[str] = None
+    client_id: Optional[str] = None
+    flight_info: Optional[FlightInfo] = None
+    distance_miles: Optional[float] = None
+    duration_minutes: Optional[int] = None
+    vehicle_type: Optional[str] = None
+    passenger_count: Optional[int] = 1
+    luggage_count: Optional[int] = 0
+    # Return booking fields
+    create_return: Optional[bool] = False
+    return_pickup_location: Optional[str] = None
+    return_additional_stops: Optional[List[str]] = None
+    return_dropoff_location: Optional[str] = None
+    return_datetime: Optional[datetime] = None
+    # Repeat booking fields
+    repeat_booking: bool = True
+    repeat_type: str = "daily"  # daily, weekly, custom
+    repeat_end_type: str = "occurrences"  # occurrences or end_date
+    repeat_occurrences: Optional[int] = 5
+    repeat_end_date: Optional[datetime] = None
+    repeat_days: Optional[List[int]] = None  # For custom: [0,1,2,3,4,5,6] (Sun-Sat)
+
+@api_router.post("/bookings/repeat")
+async def create_repeat_bookings(repeat_data: RepeatBookingCreate, background_tasks: BackgroundTasks):
+    """Create multiple bookings based on repeat schedule"""
+    
+    # Calculate all booking dates
+    booking_dates = []
+    start_date = repeat_data.booking_datetime
+    current_date = start_date
+    max_bookings = 52  # Maximum limit
+    
+    if repeat_data.repeat_end_type == "occurrences":
+        count = min(repeat_data.repeat_occurrences or 5, max_bookings)
+        
+        if repeat_data.repeat_type == "daily":
+            for i in range(count):
+                booking_dates.append(current_date + timedelta(days=i))
+        
+        elif repeat_data.repeat_type == "weekly":
+            for i in range(count):
+                booking_dates.append(current_date + timedelta(weeks=i))
+        
+        elif repeat_data.repeat_type == "custom" and repeat_data.repeat_days:
+            # Custom days - find matching days of the week
+            days_added = 0
+            check_date = current_date
+            while days_added < count and days_added < max_bookings:
+                # Get day of week (0=Monday in Python, but we use 0=Sunday like JS)
+                day_of_week = (check_date.weekday() + 1) % 7  # Convert to Sun=0
+                if day_of_week in repeat_data.repeat_days:
+                    booking_dates.append(check_date)
+                    days_added += 1
+                check_date = check_date + timedelta(days=1)
+    
+    elif repeat_data.repeat_end_type == "end_date" and repeat_data.repeat_end_date:
+        end_date = repeat_data.repeat_end_date
+        
+        if repeat_data.repeat_type == "daily":
+            while current_date <= end_date and len(booking_dates) < max_bookings:
+                booking_dates.append(current_date)
+                current_date = current_date + timedelta(days=1)
+        
+        elif repeat_data.repeat_type == "weekly":
+            while current_date <= end_date and len(booking_dates) < max_bookings:
+                booking_dates.append(current_date)
+                current_date = current_date + timedelta(weeks=1)
+        
+        elif repeat_data.repeat_type == "custom" and repeat_data.repeat_days:
+            check_date = current_date
+            while check_date <= end_date and len(booking_dates) < max_bookings:
+                day_of_week = (check_date.weekday() + 1) % 7  # Convert to Sun=0
+                if day_of_week in repeat_data.repeat_days:
+                    booking_dates.append(check_date)
+                check_date = check_date + timedelta(days=1)
+    
+    if not booking_dates:
+        raise HTTPException(status_code=400, detail="No valid booking dates generated")
+    
+    # Create bookings for each date
+    created_bookings = []
+    repeat_group_id = str(uuid.uuid4())  # Link all repeat bookings together
+    
+    for idx, booking_date in enumerate(booking_dates):
+        readable_booking_id = await generate_booking_id()
+        
+        # Calculate return datetime if applicable (same time difference as original)
+        return_dt = None
+        if repeat_data.create_return and repeat_data.return_datetime:
+            time_diff = repeat_data.return_datetime - start_date
+            return_dt = booking_date + time_diff
+        
+        booking_obj = Booking(
+            first_name=repeat_data.first_name,
+            last_name=repeat_data.last_name,
+            customer_phone=repeat_data.customer_phone,
+            customer_email=repeat_data.customer_email,
+            pickup_location=repeat_data.pickup_location,
+            dropoff_location=repeat_data.dropoff_location,
+            additional_stops=repeat_data.additional_stops,
+            booking_datetime=booking_date,
+            notes=repeat_data.notes,
+            driver_notes=repeat_data.driver_notes,
+            fare=repeat_data.fare,
+            deposit_paid=repeat_data.deposit_paid,
+            deposit_date=repeat_data.deposit_date,
+            booking_source=repeat_data.booking_source,
+            client_id=repeat_data.client_id,
+            flight_info=repeat_data.flight_info,
+            vehicle_type=repeat_data.vehicle_type,
+            passenger_count=repeat_data.passenger_count,
+            luggage_count=repeat_data.luggage_count,
+        )
+        booking_obj.booking_id = readable_booking_id
+        
+        doc = booking_obj.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['booking_datetime'] = doc['booking_datetime'].isoformat()
+        doc['sms_sent'] = False
+        doc['email_sent'] = False
+        doc['customer_name'] = f"{repeat_data.first_name} {repeat_data.last_name}"
+        doc['repeat_group_id'] = repeat_group_id
+        doc['repeat_index'] = idx + 1
+        doc['repeat_total'] = len(booking_dates)
+        
+        # Convert flight_info to dict if present
+        if doc.get('flight_info'):
+            doc['flight_info'] = doc['flight_info'] if isinstance(doc['flight_info'], dict) else doc['flight_info'].model_dump() if hasattr(doc['flight_info'], 'model_dump') else doc['flight_info']
+        
+        # Initialize history
+        doc['history'] = [{
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "action": "created",
+            "user_id": None,
+            "user_name": "System",
+            "user_type": "admin",
+            "details": f"Repeat booking {readable_booking_id} created ({idx + 1}/{len(booking_dates)})"
+        }]
+        
+        await db.bookings.insert_one(doc)
+        
+        # Create return booking if requested
+        if repeat_data.create_return and return_dt:
+            return_readable_id = await generate_booking_id()
+            
+            return_pickup = repeat_data.return_pickup_location or repeat_data.dropoff_location
+            return_dropoff = repeat_data.return_dropoff_location or repeat_data.pickup_location
+            
+            return_booking = Booking(
+                first_name=repeat_data.first_name,
+                last_name=repeat_data.last_name,
+                customer_phone=repeat_data.customer_phone,
+                pickup_location=return_pickup,
+                dropoff_location=return_dropoff,
+                additional_stops=repeat_data.return_additional_stops,
+                booking_datetime=return_dt,
+                notes=f"Return journey - {repeat_data.notes}" if repeat_data.notes else "Return journey",
+                fare=repeat_data.fare,
+                client_id=repeat_data.client_id,
+                is_return=True,
+                linked_booking_id=booking_obj.id,
+            )
+            return_booking.booking_id = return_readable_id
+            
+            return_doc = return_booking.model_dump()
+            return_doc['created_at'] = return_doc['created_at'].isoformat()
+            return_doc['booking_datetime'] = return_doc['booking_datetime'].isoformat()
+            return_doc['sms_sent'] = False
+            return_doc['customer_name'] = f"{repeat_data.first_name} {repeat_data.last_name}"
+            return_doc['repeat_group_id'] = repeat_group_id
+            return_doc['repeat_index'] = idx + 1
+            return_doc['repeat_total'] = len(booking_dates)
+            
+            await db.bookings.insert_one(return_doc)
+            
+            # Update original booking with link to return
+            await db.bookings.update_one(
+                {"id": booking_obj.id},
+                {"$set": {"linked_booking_id": return_booking.id}}
+            )
+        
+        created_bookings.append({
+            "id": booking_obj.id,
+            "booking_id": readable_booking_id,
+            "booking_datetime": booking_date.isoformat()
+        })
+    
+    # Send notification only for the first booking
+    if created_bookings:
+        first_booking = created_bookings[0]
+        full_name = f"{repeat_data.first_name} {repeat_data.last_name}"
+        background_tasks.add_task(
+            send_notifications_and_update_booking,
+            first_booking["id"],
+            repeat_data.customer_phone,
+            repeat_data.customer_email,
+            full_name,
+            repeat_data.pickup_location,
+            repeat_data.dropoff_location,
+            repeat_data.distance_miles,
+            repeat_data.duration_minutes,
+            first_booking["booking_datetime"],
+            first_booking["booking_id"],
+            None,
+            None,
+            repeat_data.customer_phone,
+            None,
+            repeat_data.additional_stops
+        )
+    
+    logging.info(f"Created {len(created_bookings)} repeat bookings with group ID {repeat_group_id}")
+    
+    return {
+        "created_count": len(created_bookings),
+        "repeat_group_id": repeat_group_id,
+        "booking_ids": [b["booking_id"] for b in created_bookings],
+        "bookings": created_bookings
+    }
+
 async def send_notifications_and_update_booking(booking_id: str, phone: str, email: str, name: str,
                                        pickup: str = None, dropoff: str = None,
                                        distance_miles: float = None, duration_minutes: int = None,

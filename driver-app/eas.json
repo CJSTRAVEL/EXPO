@@ -26,7 +26,7 @@
       },
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://executive-travel-2.preview.emergentagent.com/api"
+        "EXPO_PUBLIC_BACKEND_URL": "https://cj-travel-app.preview.emergentagent.com/api"
       }
     },
     "production": {

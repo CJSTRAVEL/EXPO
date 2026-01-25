@@ -2083,11 +2083,19 @@ If any information is incorrect, please contact us on +44 191 722 1223.
 CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | cjsdispatch.co.uk
         """
         
-        # Create message
+        # Create message with improved headers for better deliverability
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = f"CJ's Executive Travel <{SMTP_FROM_EMAIL}>"
         msg['To'] = customer_email
+        msg['Reply-To'] = "bookings@cjsdispatch.co.uk"
+        msg['X-Priority'] = '3'  # Normal priority
+        msg['X-Mailer'] = 'CJs Executive Travel Booking System'
+        msg['List-Unsubscribe'] = '<mailto:unsubscribe@cjsdispatch.co.uk>'
+        
+        # Add Message-ID for better deliverability
+        from email.utils import make_msgid
+        msg['Message-ID'] = make_msgid(domain='cjsdispatch.co.uk')
         
         # Attach both plain text and HTML versions
         part1 = MIMEText(text_content, 'plain')

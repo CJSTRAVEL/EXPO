@@ -3363,6 +3363,97 @@ const BookingsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Chat Dialog */}
+      <Dialog open={!!chatBooking} onOpenChange={(open) => !open && setChatBooking(null)}>
+        <DialogContent className="sm:max-w-[500px] h-[600px] flex flex-col" data-testid="chat-dialog">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-primary" />
+              Chat with Driver
+              {chatBooking && (
+                <Badge variant="outline" className="ml-2">
+                  {chatBooking.booking_id}
+                </Badge>
+              )}
+            </DialogTitle>
+            {chatBooking?.driver_id && (
+              <p className="text-sm text-muted-foreground">
+                Driver: {getDriverName(chatBooking.driver_id)}
+              </p>
+            )}
+          </DialogHeader>
+
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto border rounded-lg p-3 bg-muted/30 min-h-0">
+            {loadingChat ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : chatMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <MessageCircle className="w-12 h-12 mb-2 opacity-30" />
+                <p className="text-sm">No messages yet</p>
+                <p className="text-xs">Send a message to start the conversation</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {chatMessages.map((msg, index) => (
+                  <div
+                    key={msg.id || index}
+                    className={cn(
+                      "flex flex-col max-w-[80%] rounded-lg p-3",
+                      msg.sender_type === "dispatch"
+                        ? "ml-auto bg-primary text-primary-foreground"
+                        : "mr-auto bg-background border"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium opacity-80">
+                        {msg.sender_type === "dispatch" ? "Dispatch" : msg.sender_name || "Driver"}
+                      </span>
+                      <span className="text-xs opacity-60">
+                        {msg.created_at ? format(new Date(msg.created_at), "HH:mm") : ""}
+                      </span>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+            )}
+          </div>
+
+          {/* Chat Input */}
+          <div className="flex-shrink-0 flex gap-2 pt-2">
+            <Input
+              placeholder="Type a message..."
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendChatMessage();
+                }
+              }}
+              disabled={sendingChat}
+              className="flex-1"
+              data-testid="chat-input"
+            />
+            <Button
+              onClick={sendChatMessage}
+              disabled={!chatMessage.trim() || sendingChat}
+              data-testid="send-chat-btn"
+            >
+              {sendingChat ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

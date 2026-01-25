@@ -77,10 +77,10 @@
 
 ```bash
 # Health check
-curl https://your-domain.com/api/health
+curl https://cjsdispatch.co.uk/api/health
 
 # Test booking creation
-curl -X POST https://your-domain.com/api/bookings \
+curl -X POST https://cjsdispatch.co.uk/api/bookings \
   -H "Content-Type: application/json" \
   -d '{"test": true}'
 

@@ -48,6 +48,78 @@ async def get_chat_messages(booking_id: str, driver: dict = Depends(get_current_
     messages = await db.chat_messages.find(
         {"booking_id": booking_id},
         {"_id": 0}
+
+
+@router.get("/driver/all-chats")
+async def get_all_driver_chats(driver: dict = Depends(get_current_driver)):
+    """Get all chat conversations for a driver across all their bookings"""
+    # Get all bookings for this driver that have chat messages
+    driver_bookings = await db.bookings.find(
+        {"driver_id": driver["id"]},
+        {"_id": 0, "id": 1, "booking_id": 1, "customer_name": 1, "first_name": 1, "last_name": 1, "pickup_location": 1}
+    ).to_list(100)
+    
+    booking_ids = [b["id"] for b in driver_bookings]
+    
+    # Get latest message for each booking
+    pipeline = [
+        {"$match": {"booking_id": {"$in": booking_ids}}},
+        {"$sort": {"created_at": -1}},
+        {"$group": {
+            "_id": "$booking_id",
+            "last_message": {"$first": "$message"},
+            "last_message_at": {"$first": "$created_at"},
+            "last_sender_type": {"$first": "$sender_type"},
+            "unread_count": {
+                "$sum": {
+                    "$cond": [
+                        {"$and": [
+                            {"$eq": ["$sender_type", "dispatch"]},
+                            {"$eq": ["$read", False]}
+                        ]},
+                        1,
+                        0
+                    ]
+                }
+            }
+        }},
+        {"$sort": {"last_message_at": -1}}
+    ]
+    
+    chat_summaries = await db.chat_messages.aggregate(pipeline).to_list(50)
+    
+    # Build response with booking info
+    result = []
+    for chat in chat_summaries:
+        booking_id = chat["_id"]
+        booking = next((b for b in driver_bookings if b["id"] == booking_id), None)
+        if not booking:
+            continue
+            
+        customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
+        
+        result.append({
+            "booking_id": booking_id,
+            "booking_id_short": booking.get("booking_id", booking_id[:8]),
+            "customer_name": customer_name,
+            "pickup_location": booking.get("pickup_location", ""),
+            "last_message": chat.get("last_message", ""),
+            "last_message_at": chat.get("last_message_at"),
+            "last_sender_type": chat.get("last_sender_type"),
+            "unread_count": chat.get("unread_count", 0)
+        })
+    
+    return result
+
+
+@router.post("/driver/chat/{booking_id}/mark-read")
+async def mark_driver_chat_read(booking_id: str, driver: dict = Depends(get_current_driver)):
+    """Mark all dispatch messages in a chat as read by driver"""
+    result = await db.chat_messages.update_many(
+        {"booking_id": booking_id, "sender_type": "dispatch", "read": False},
+        {"$set": {"read": True}}
+    )
+    return {"marked_read": result.modified_count}
     ).sort("created_at", 1).to_list(100)
     
     # Mark messages as read

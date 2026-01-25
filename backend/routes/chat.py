@@ -48,6 +48,9 @@ async def get_chat_messages(booking_id: str, driver: dict = Depends(get_current_
     messages = await db.chat_messages.find(
         {"booking_id": booking_id},
         {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    
+    return messages
 
 
 @router.get("/driver/all-chats")

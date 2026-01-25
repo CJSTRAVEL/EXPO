@@ -1799,6 +1799,265 @@ const NewBookingPage = () => {
                 </div>
               </div>
             )}
+
+            {/* Repeat Booking Toggle */}
+            <div className="flex items-center gap-3 pt-2 border-t border-[#3d3d3d]">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox"
+                  checked={formData.repeat_booking}
+                  onChange={(e) => {
+                    setFormData({ 
+                      ...formData, 
+                      repeat_booking: e.target.checked,
+                      // Reset repeat fields when toggling off
+                      repeat_type: e.target.checked ? formData.repeat_type : "daily",
+                      repeat_end_type: e.target.checked ? formData.repeat_end_type : "occurrences",
+                      repeat_occurrences: e.target.checked ? formData.repeat_occurrences : 5,
+                      repeat_end_date: e.target.checked ? formData.repeat_end_date : null,
+                      repeat_days: e.target.checked ? formData.repeat_days : [],
+                    });
+                  }}
+                  className="rounded border-[#3d3d3d] bg-[#1a1a1a]"
+                  data-testid="booking-repeat-toggle"
+                />
+                <span className="text-sm font-medium text-gray-300 flex items-center gap-1">
+                  <Repeat className="w-4 h-4 text-[#D4A853]" />
+                  Repeat Booking
+                </span>
+              </label>
+            </div>
+
+            {/* Repeat Booking Options */}
+            {formData.repeat_booking && (
+              <div className="bg-[#D4A853]/10 rounded-lg p-4 space-y-4 border border-[#D4A853]/30">
+                <div className="bg-[#D4A853]/20 -mx-4 -mt-4 px-4 py-2 border-b border-[#D4A853]/30">
+                  <span className="text-sm font-bold text-[#D4A853] uppercase tracking-wide flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" />
+                    Repeat Schedule
+                  </span>
+                </div>
+
+                {/* Repeat Type */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#D4A853]">Repeat Pattern</Label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "daily", label: "Daily" },
+                      { value: "weekly", label: "Weekly" },
+                      { value: "custom", label: "Custom Days" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, repeat_type: option.value, repeat_days: [] })}
+                        className={cn(
+                          "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
+                          formData.repeat_type === option.value
+                            ? "bg-[#D4A853] text-black border-[#D4A853]"
+                            : "bg-[#1a1a1a] text-gray-300 border-[#3d3d3d] hover:border-[#D4A853]/50"
+                        )}
+                        data-testid={`repeat-type-${option.value}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Days Selection */}
+                {formData.repeat_type === "custom" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-[#D4A853]">Select Days</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 0, label: "Sun" },
+                        { value: 1, label: "Mon" },
+                        { value: 2, label: "Tue" },
+                        { value: 3, label: "Wed" },
+                        { value: 4, label: "Thu" },
+                        { value: 5, label: "Fri" },
+                        { value: 6, label: "Sat" },
+                      ].map((day) => (
+                        <button
+                          key={day.value}
+                          type="button"
+                          onClick={() => {
+                            const newDays = formData.repeat_days.includes(day.value)
+                              ? formData.repeat_days.filter((d) => d !== day.value)
+                              : [...formData.repeat_days, day.value].sort((a, b) => a - b);
+                            setFormData({ ...formData, repeat_days: newDays });
+                          }}
+                          className={cn(
+                            "w-12 h-10 rounded-lg text-sm font-medium transition-all border",
+                            formData.repeat_days.includes(day.value)
+                              ? "bg-[#D4A853] text-black border-[#D4A853]"
+                              : "bg-[#1a1a1a] text-gray-300 border-[#3d3d3d] hover:border-[#D4A853]/50"
+                          )}
+                          data-testid={`repeat-day-${day.value}`}
+                        >
+                          {day.label}
+                        </button>
+                      ))}
+                    </div>
+                    {formData.repeat_days.length === 0 && (
+                      <p className="text-xs text-red-400">Please select at least one day</p>
+                    )}
+                  </div>
+                )}
+
+                {/* End Condition */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#D4A853]">End After</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="repeat_end_type"
+                        value="occurrences"
+                        checked={formData.repeat_end_type === "occurrences"}
+                        onChange={(e) => setFormData({ ...formData, repeat_end_type: e.target.value })}
+                        className="text-[#D4A853] bg-[#1a1a1a] border-[#3d3d3d]"
+                      />
+                      <span className="text-sm text-gray-300">Number of bookings</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="repeat_end_type"
+                        value="end_date"
+                        checked={formData.repeat_end_type === "end_date"}
+                        onChange={(e) => setFormData({ ...formData, repeat_end_type: e.target.value })}
+                        className="text-[#D4A853] bg-[#1a1a1a] border-[#3d3d3d]"
+                      />
+                      <span className="text-sm text-gray-300">End date</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Number of Occurrences */}
+                {formData.repeat_end_type === "occurrences" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-[#D4A853]">Number of Bookings</Label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setFormData({ 
+                          ...formData, 
+                          repeat_occurrences: Math.max(2, formData.repeat_occurrences - 1) 
+                        })}
+                        className="h-9 w-9 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min="2"
+                        max="52"
+                        value={formData.repeat_occurrences}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          repeat_occurrences: Math.min(52, Math.max(2, parseInt(e.target.value) || 2)) 
+                        })}
+                        className="w-20 h-9 text-center bg-[#1a1a1a] border-[#3d3d3d] text-white"
+                        data-testid="repeat-occurrences-input"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setFormData({ 
+                          ...formData, 
+                          repeat_occurrences: Math.min(52, formData.repeat_occurrences + 1) 
+                        })}
+                        className="h-9 w-9 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm text-gray-400">bookings</span>
+                    </div>
+                    <p className="text-xs text-gray-500">Maximum 52 bookings per repeat series</p>
+                  </div>
+                )}
+
+                {/* End Date */}
+                {formData.repeat_end_type === "end_date" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-[#D4A853]">End Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="w-full h-9 justify-start text-left font-normal bg-[#1a1a1a] border-[#3d3d3d] text-white hover:bg-[#2d2d2d]"
+                          data-testid="repeat-end-date-btn"
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4 text-[#D4A853]" />
+                          {formData.repeat_end_date 
+                            ? format(formData.repeat_end_date, "MMMM do, yyyy")
+                            : "Select end date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-white border border-gray-200 shadow-lg" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={formData.repeat_end_date}
+                          onSelect={(date) => setFormData({ ...formData, repeat_end_date: date })}
+                          disabled={(date) => date <= formData.booking_datetime}
+                          className="bg-white rounded-md"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
+                {/* Preview of Bookings */}
+                <div className="pt-3 border-t border-[#D4A853]/30">
+                  <div className="bg-[#1a1a1a] rounded-md p-3 flex items-start gap-2 border border-[#3d3d3d]">
+                    <div className="w-5 h-5 bg-[#D4A853] rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CalendarDays className="w-3 h-3 text-black" />
+                    </div>
+                    <div className="text-sm text-gray-300">
+                      <span className="font-medium text-white">
+                        {(() => {
+                          // Calculate number of bookings that will be created
+                          let count = 0;
+                          const startDate = formData.booking_datetime;
+                          
+                          if (formData.repeat_end_type === "occurrences") {
+                            count = formData.repeat_occurrences;
+                          } else if (formData.repeat_end_date) {
+                            // Estimate based on pattern
+                            const days = Math.ceil((formData.repeat_end_date - startDate) / (1000 * 60 * 60 * 24));
+                            if (formData.repeat_type === "daily") {
+                              count = Math.min(52, days + 1);
+                            } else if (formData.repeat_type === "weekly") {
+                              count = Math.min(52, Math.floor(days / 7) + 1);
+                            } else if (formData.repeat_type === "custom" && formData.repeat_days.length > 0) {
+                              count = Math.min(52, Math.floor(days * formData.repeat_days.length / 7) + 1);
+                            }
+                          }
+                          
+                          return count > 0 ? `${count} bookings` : "No bookings";
+                        })()}
+                      </span>
+                      {" "}will be created{" "}
+                      {formData.repeat_type === "daily" && "every day"}
+                      {formData.repeat_type === "weekly" && "every week (same day)"}
+                      {formData.repeat_type === "custom" && formData.repeat_days.length > 0 && (
+                        <>
+                          on {formData.repeat_days.map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d]).join(", ")}
+                        </>
+                      )}
+                      {formData.repeat_end_type === "end_date" && formData.repeat_end_date && (
+                        <> until {format(formData.repeat_end_date, "MMM d, yyyy")}</>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </Section>
 
           {/* WHAT Section */}

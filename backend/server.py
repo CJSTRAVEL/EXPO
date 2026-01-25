@@ -4209,18 +4209,29 @@ async def create_repeat_bookings(repeat_data: RepeatBookingCreate, background_ta
         doc['repeat_index'] = idx + 1
         doc['repeat_total'] = len(booking_dates)
         
+        # If driver_id is provided, set status to assigned
+        if repeat_data.driver_id:
+            doc['driver_id'] = repeat_data.driver_id
+            doc['status'] = 'assigned'
+        
         # Convert flight_info to dict if present
         if doc.get('flight_info'):
             doc['flight_info'] = doc['flight_info'] if isinstance(doc['flight_info'], dict) else doc['flight_info'].model_dump() if hasattr(doc['flight_info'], 'model_dump') else doc['flight_info']
         
         # Initialize history
+        history_details = f"Repeat booking {readable_booking_id} created ({idx + 1}/{len(booking_dates)})"
+        if repeat_data.driver_id:
+            driver = await db.drivers.find_one({"id": repeat_data.driver_id}, {"_id": 0, "name": 1})
+            if driver:
+                history_details += f" - Assigned to {driver.get('name', 'Unknown')}"
+        
         doc['history'] = [{
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "action": "created",
             "user_id": None,
             "user_name": "System",
             "user_type": "admin",
-            "details": f"Repeat booking {readable_booking_id} created ({idx + 1}/{len(booking_dates)})"
+            "details": history_details
         }]
         
         await db.bookings.insert_one(doc)

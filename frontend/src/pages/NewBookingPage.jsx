@@ -747,6 +747,18 @@ const NewBookingPage = () => {
       }
     }
 
+    // Validate repeat booking settings
+    if (formData.repeat_booking) {
+      if (formData.repeat_type === "custom" && formData.repeat_days.length === 0) {
+        toast.error("Please select at least one day for custom repeat bookings.");
+        return;
+      }
+      if (formData.repeat_end_type === "end_date" && !formData.repeat_end_date) {
+        toast.error("Please select an end date for repeat bookings.");
+        return;
+      }
+    }
+
     // Validate fare if Stripe payment is selected
     if (formData.payment_method === "stripe") {
       if (!formData.fare || parseFloat(formData.fare) <= 0) {
@@ -767,7 +779,7 @@ const NewBookingPage = () => {
         };
       }
 
-      const payload = {
+      const basePayload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         customer_phone: formData.customer_phone,
@@ -777,7 +789,6 @@ const NewBookingPage = () => {
         pickup_location: formData.pickup_location,
         dropoff_location: formData.dropoff_location,
         additional_stops: formData.additional_stops.length > 0 ? formData.additional_stops : null,
-        booking_datetime: formData.booking_datetime.toISOString(),
         notes: formData.notes,
         driver_notes: formData.driver_notes,
         fare: formData.fare ? parseFloat(formData.fare) : null,
@@ -798,6 +809,34 @@ const NewBookingPage = () => {
         return_dropoff_location: formData.create_return ? formData.return_dropoff_location : null,
         return_datetime: formData.create_return && formData.return_datetime 
           ? formData.return_datetime.toISOString() : null,
+      };
+
+      // Handle repeat bookings
+      if (formData.repeat_booking) {
+        const repeatPayload = {
+          ...basePayload,
+          booking_datetime: formData.booking_datetime.toISOString(),
+          repeat_booking: true,
+          repeat_type: formData.repeat_type,
+          repeat_end_type: formData.repeat_end_type,
+          repeat_occurrences: formData.repeat_end_type === "occurrences" ? formData.repeat_occurrences : null,
+          repeat_end_date: formData.repeat_end_type === "end_date" && formData.repeat_end_date 
+            ? formData.repeat_end_date.toISOString() : null,
+          repeat_days: formData.repeat_type === "custom" ? formData.repeat_days : null,
+        };
+
+        const response = await axios.post(`${API}/bookings/repeat`, repeatPayload);
+        const { created_count, booking_ids } = response.data;
+        
+        toast.success(`${created_count} repeat bookings created successfully!`);
+        navigate("/bookings");
+        return;
+      }
+
+      // Single booking
+      const payload = {
+        ...basePayload,
+        booking_datetime: formData.booking_datetime.toISOString(),
       };
 
       const response = await axios.post(`${API}/bookings`, payload);

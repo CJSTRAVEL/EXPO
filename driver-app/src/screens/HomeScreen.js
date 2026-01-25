@@ -73,7 +73,7 @@ export default function HomeScreen({ navigation }) {
   const { theme } = useTheme();
   const [location, setLocation] = useState(null);
   const [heading, setHeading] = useState(0);
-  const [isShiftActive, setIsShiftActive] = useState(user?.is_online || false);
+  const [isShiftActive, setIsShiftActive] = useState(false); // Always start with shift stopped
   const [loading, setLoading] = useState(true);
   const [startingShift, setStartingShift] = useState(false);
   const [shiftStartTime, setShiftStartTime] = useState(null);

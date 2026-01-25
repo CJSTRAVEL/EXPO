@@ -8,11 +8,12 @@ import {
   Platform,
   SafeAreaView,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { getDriverStats } from '../services/api';
+import { getDriverStats, getDriverEarnings, getDriverHistory } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -20,21 +21,36 @@ export default function DashboardScreen({ navigation }) {
   const { user } = useAuth();
   const { theme } = useTheme();
   const [stats, setStats] = useState(null);
+  const [earnings, setEarnings] = useState(null);
+  const [recentJobs, setRecentJobs] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [dateRange, setDateRange] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadStats();
+    loadAllData();
     setDateRange(getDateRange());
   }, [selectedPeriod]);
 
-  const loadStats = async () => {
+  const loadAllData = async () => {
     try {
-      const data = await getDriverStats();
-      setStats(data);
+      const [statsData, earningsData, historyData] = await Promise.all([
+        getDriverStats(),
+        getDriverEarnings(),
+        getDriverHistory()
+      ]);
+      setStats(statsData);
+      setEarnings(earningsData);
+      setRecentJobs(historyData?.slice(0, 5) || []);
     } catch (error) {
-      console.log('Error loading stats:', error);
+      console.log('Error loading dashboard data:', error);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAllData();
+    setRefreshing(false);
   };
 
   const getDateRange = () => {
@@ -46,6 +62,26 @@ export default function DashboardScreen({ navigation }) {
     
     const format = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `${format(startOfWeek)} - ${format(endOfWeek)}`;
+  };
+
+  const getCurrentStats = () => {
+    if (!stats) return { total: 0, completed: 0, pending: 0 };
+    switch (selectedPeriod) {
+      case 'today': return stats.today || { total: 0, completed: 0, pending: 0 };
+      case 'week': return stats.week || { total: 0, completed: 0 };
+      case 'month': return stats.month || { total: 0, completed: 0 };
+      default: return stats.week || { total: 0, completed: 0 };
+    }
+  };
+
+  const getCurrentEarnings = () => {
+    if (!earnings) return { amount: 0, jobs: 0 };
+    switch (selectedPeriod) {
+      case 'today': return earnings.today || { amount: 0, jobs: 0 };
+      case 'week': return earnings.week || { amount: 0, jobs: 0 };
+      case 'month': return earnings.month || { amount: 0, jobs: 0 };
+      default: return earnings.week || { amount: 0, jobs: 0 };
+    }
   };
 
   const QuickActionButton = ({ icon, label, onPress, color }) => (
@@ -60,75 +96,54 @@ export default function DashboardScreen({ navigation }) {
     </TouchableOpacity>
   );
 
-  const StatCard = ({ label, value, color, small }) => (
-    <View style={[
-      small ? styles.statCardSmall : styles.statCard, 
-      { backgroundColor: color + '15' }
-    ]}>
+  const StatCard = ({ label, value, subValue, icon, color }) => (
+    <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+      <View style={[styles.statIconContainer, { backgroundColor: (color || theme.primary) + '15' }]}>
+        <Ionicons name={icon} size={24} color={color || theme.primary} />
+      </View>
+      <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{label}</Text>
-      <Text style={[styles.statValue, { color: color || theme.text }]}>{value}</Text>
+      {subValue && (
+        <Text style={[styles.statSubValue, { color: color || theme.primary }]}>{subValue}</Text>
+      )}
     </View>
   );
 
-  const getExpiryColor = (daysUntil) => {
-    if (daysUntil <= 0) return theme.danger;
-    if (daysUntil <= 30) return theme.danger;
-    if (daysUntil <= 60) return theme.warning;
-    if (daysUntil <= 90) return '#facc15';
-    return theme.success;
-  };
-
-  const getExpiryStatusText = (daysUntil) => {
-    if (daysUntil <= 0) return 'EXPIRED';
-    if (daysUntil === 1) return '1 day left';
-    return `${daysUntil} days`;
-  };
-
-  const DocumentCard = ({ document }) => {
-    const color = getExpiryColor(document.days_until_expiry);
-    const statusText = getExpiryStatusText(document.days_until_expiry);
-    const isExpired = document.days_until_expiry <= 0;
-    const isUrgent = document.days_until_expiry <= 30;
-    
+  const RecentJobItem = ({ job }) => {
     const formatDate = (dateStr) => {
-      try {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      } catch {
-        return dateStr;
-      }
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
     return (
-      <View style={[styles.documentCard, { backgroundColor: theme.card, borderLeftColor: color }]}>
-        <View style={styles.documentInfo}>
-          <View style={styles.documentHeader}>
-            <Ionicons 
-              name={isExpired ? 'alert-circle' : 'document-text-outline'} 
-              size={20} 
-              color={color} 
-            />
-            <Text style={[styles.documentName, { color: theme.text }]}>{document.name}</Text>
-          </View>
-          <Text style={[styles.documentExpiry, { color: theme.textSecondary }]}>
-            Expires: {formatDate(document.expiry_date)}
+      <TouchableOpacity 
+        style={[styles.jobItem, { backgroundColor: theme.card }]}
+        onPress={() => navigation.navigate('BookingDetail', { booking: job })}
+      >
+        <View style={styles.jobInfo}>
+          <Text style={[styles.jobId, { color: theme.primary }]}>{job.booking_id}</Text>
+          <Text style={[styles.jobCustomer, { color: theme.text }]} numberOfLines={1}>
+            {job.customer_name || `${job.first_name || ''} ${job.last_name || ''}`.trim()}
+          </Text>
+          <Text style={[styles.jobLocation, { color: theme.textSecondary }]} numberOfLines={1}>
+            {job.pickup_location}
           </Text>
         </View>
-        <View style={[styles.documentBadge, { backgroundColor: color + '20' }]}>
-          <Text style={[styles.documentBadgeText, { color: color }]}>{statusText}</Text>
+        <View style={styles.jobMeta}>
+          <Text style={[styles.jobDate, { color: theme.textSecondary }]}>
+            {formatDate(job.completed_at || job.booking_datetime)}
+          </Text>
+          {job.fare && (
+            <Text style={[styles.jobFare, { color: theme.success }]}>£{job.fare.toFixed(2)}</Text>
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const bookingsData = stats?.weekly_bookings || [0, 0, 1, 0, 0, 0, 0];
-  const maxBookings = Math.max(...bookingsData, 1);
-
-  // Sort documents by days until expiry (most urgent first)
-  const sortedDocuments = stats?.documents 
-    ? [...stats.documents].sort((a, b) => a.days_until_expiry - b.days_until_expiry)
-    : [];
+  const currentStats = getCurrentStats();
+  const currentEarnings = getCurrentEarnings();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -137,224 +152,150 @@ export default function DashboardScreen({ navigation }) {
         <Text style={styles.headerTitle}>Dashboard</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+        }
+      >
         {/* Greeting */}
         <View style={styles.greetingSection}>
           <Text style={[styles.greeting, { color: theme.text }]}>
             Hello, {user?.name?.split(' ')[0] || 'Driver'}!
           </Text>
           <Text style={[styles.subGreeting, { color: theme.textSecondary }]}>
-            Your weekly booking summary
+            Your performance summary
           </Text>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.quickActionsRow}>
           <QuickActionButton 
-            icon="trending-up-outline" 
+            icon="list-outline" 
+            label="My Jobs" 
+            onPress={() => navigation.navigate('Jobs')}
+            color={theme.primary}
+          />
+          <QuickActionButton 
+            icon="time-outline" 
             label="History" 
             onPress={() => navigation.navigate('History')}
             color={theme.info}
           />
           <QuickActionButton 
             icon="wallet-outline" 
-            label="Payments" 
+            label="Earnings" 
             onPress={() => navigation.navigate('Earnings')}
             color={theme.success}
           />
         </View>
 
-        {/* Date Range Selector */}
-        <View style={styles.dateRangeContainer}>
-          <TouchableOpacity 
-            style={[styles.periodButton, selectedPeriod === 'today' && { backgroundColor: theme.primary }]}
-            onPress={() => setSelectedPeriod('today')}
-          >
-            <Ionicons 
-              name="today-outline" 
-              size={16} 
-              color={selectedPeriod === 'today' ? '#fff' : theme.textSecondary} 
-            />
-            <Text style={[
-              styles.periodButtonText, 
-              { color: selectedPeriod === 'today' ? '#fff' : theme.textSecondary }
-            ]}>Today</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.dateRangeButton, { backgroundColor: theme.card }]}
-          >
-            <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
-            <Text style={[styles.dateRangeText, { color: theme.text }]}>{dateRange}</Text>
-          </TouchableOpacity>
+        {/* Period Selector */}
+        <View style={styles.periodSelector}>
+          {['today', 'week', 'month'].map((period) => (
+            <TouchableOpacity
+              key={period}
+              style={[
+                styles.periodButton,
+                selectedPeriod === period && { backgroundColor: theme.primary }
+              ]}
+              onPress={() => setSelectedPeriod(period)}
+            >
+              <Text style={[
+                styles.periodButtonText,
+                { color: selectedPeriod === period ? '#fff' : theme.textSecondary }
+              ]}>
+                {period.charAt(0).toUpperCase() + period.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Bookings Section */}
-        <View style={[styles.section, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Bookings</Text>
-          
-          <View style={styles.statsGrid}>
-            <StatCard 
-              label="Bookings" 
-              value={stats?.total_bookings || '0'} 
-              color={theme.info}
-            />
-            <StatCard 
-              label="Income" 
-              value={stats?.total_income ? `£${stats.total_income.toFixed(2)}` : '-'} 
-              color={theme.success}
-            />
-          </View>
-          
-          <View style={styles.statsGridSmall}>
-            <StatCard label="Cash" value={stats?.cash || '-'} color={theme.info} small />
-            <StatCard label="Card" value={stats?.card || '-'} color={theme.info} small />
-            <StatCard label="Account" value={stats?.account || '-'} color={theme.info} small />
-          </View>
-
-          {/* Chart */}
-          <View style={styles.chartContainer}>
-            <View style={styles.chartLegend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: theme.info }]} />
-                <Text style={[styles.legendText, { color: theme.textSecondary }]}>Bookings</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: theme.success }]} />
-                <Text style={[styles.legendText, { color: theme.textSecondary }]}>Income</Text>
-              </View>
-            </View>
-            
-            <View style={styles.chart}>
-              <View style={styles.chartYAxis}>
-                {[maxBookings, Math.ceil(maxBookings * 0.75), Math.ceil(maxBookings * 0.5), Math.ceil(maxBookings * 0.25), 0].map((val, i) => (
-                  <Text key={i} style={[styles.chartYLabel, { color: theme.textSecondary }]}>{val}</Text>
-                ))}
-              </View>
-              <View style={styles.chartBars}>
-                {weekDays.map((day, index) => (
-                  <View key={day} style={styles.chartBarContainer}>
-                    <View style={styles.barGroup}>
-                      <View 
-                        style={[
-                          styles.chartBar, 
-                          { 
-                            backgroundColor: theme.info,
-                            height: (bookingsData[index] / maxBookings) * 80 || 0
-                          }
-                        ]} 
-                      />
-                    </View>
-                    <Text style={[styles.chartXLabel, { color: theme.textSecondary }]}>{day}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
+        {/* Stats Cards */}
+        <View style={styles.statsRow}>
+          <StatCard 
+            label="Jobs Completed"
+            value={currentStats.completed || 0}
+            icon="checkmark-circle-outline"
+            color={theme.success}
+          />
+          <StatCard 
+            label="Total Bookings"
+            value={currentStats.total || 0}
+            icon="car-outline"
+            color={theme.info}
+          />
         </View>
 
-        {/* 24hr Shift Metrics */}
-        <View style={[styles.section, { backgroundColor: theme.card }]}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Shift Metrics</Text>
-            <View style={[styles.periodBadge, { backgroundColor: theme.primary + '20' }]}>
-              <Ionicons name="time-outline" size={12} color={theme.primary} />
-              <Text style={[styles.periodBadgeText, { color: theme.primary }]}>Last 24hrs</Text>
-            </View>
-          </View>
-          
-          <View style={styles.statsGrid}>
+        <View style={styles.statsRow}>
+          <StatCard 
+            label="Earnings"
+            value={`£${(currentEarnings.amount || 0).toFixed(2)}`}
+            subValue={`${currentEarnings.jobs || 0} paid jobs`}
+            icon="cash-outline"
+            color={theme.success}
+          />
+          {selectedPeriod === 'today' && (
             <StatCard 
-              label="Bookings" 
-              value={stats?.shift_24hr?.total_bookings || '0'} 
-              color={theme.info}
-            />
-            <StatCard 
-              label="Income" 
-              value={stats?.shift_24hr?.total_income ? `£${stats.shift_24hr.total_income.toFixed(2)}` : '-'} 
-              color={theme.success}
-            />
-          </View>
-          
-          <View style={styles.statsGrid}>
-            <StatCard 
-              label="Total Shift Time" 
-              value={stats?.shift_24hr?.total_shift_time || '-'} 
-              color={theme.info}
-            />
-            <StatCard 
-              label="Active Time" 
-              value={stats?.shift_24hr?.active_shift_time || '-'} 
-              color="#facc15"
-            />
-          </View>
-          
-          <View style={styles.statsGrid}>
-            <StatCard 
-              label="On Job Time" 
-              value={stats?.shift_24hr?.on_job_time || '-'} 
-              color={theme.success}
-            />
-            <StatCard 
-              label="On Break Time" 
-              value={stats?.shift_24hr?.on_break_time || '-'} 
+              label="Pending"
+              value={currentStats.pending || 0}
+              icon="hourglass-outline"
               color={theme.warning}
             />
-          </View>
-        </View>
-
-        {/* Driver Documents Section */}
-        <View style={[styles.section, { backgroundColor: theme.card }]}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Document Expiry</Text>
-            <TouchableOpacity style={styles.refreshButton} onPress={loadStats}>
-              <Ionicons name="refresh-outline" size={18} color={theme.textSecondary} />
-            </TouchableOpacity>
-          </View>
-          
-          {sortedDocuments.length > 0 ? (
-            <>
-              {/* Expiry Legend */}
-              <View style={styles.expiryLegend}>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: theme.danger }]} />
-                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>≤30 days</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: theme.warning }]} />
-                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>31-60 days</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#facc15' }]} />
-                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>61-90 days</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: theme.success }]} />
-                  <Text style={[styles.legendText, { color: theme.textSecondary }]}>&gt;90 days</Text>
-                </View>
-              </View>
-
-              {/* Document List */}
-              <View style={styles.documentsList}>
-                {sortedDocuments.map((doc, index) => (
-                  <DocumentCard key={index} document={doc} />
-                ))}
-              </View>
-            </>
-          ) : (
-            <View style={styles.noDocuments}>
-              <Ionicons name="document-outline" size={40} color={theme.textSecondary} />
-              <Text style={[styles.noDocumentsText, { color: theme.textSecondary }]}>
-                No document expiry dates on file
-              </Text>
-              <Text style={[styles.noDocumentsSubtext, { color: theme.textSecondary }]}>
-                Contact dispatch to update your documents
-              </Text>
-            </View>
           )}
         </View>
 
-        <View style={{ height: 24 }} />
+        {/* All Time Stats */}
+        <View style={[styles.section, { backgroundColor: theme.card }]}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>All Time</Text>
+          <View style={styles.allTimeStats}>
+            <View style={styles.allTimeStat}>
+              <Text style={[styles.allTimeValue, { color: theme.primary }]}>
+                {stats?.all_time?.completed || 0}
+              </Text>
+              <Text style={[styles.allTimeLabel, { color: theme.textSecondary }]}>Completed</Text>
+            </View>
+            <View style={[styles.allTimeDivider, { backgroundColor: theme.border }]} />
+            <View style={styles.allTimeStat}>
+              <Text style={[styles.allTimeValue, { color: theme.info }]}>
+                {stats?.all_time?.total || 0}
+              </Text>
+              <Text style={[styles.allTimeLabel, { color: theme.textSecondary }]}>Total Jobs</Text>
+            </View>
+            <View style={[styles.allTimeDivider, { backgroundColor: theme.border }]} />
+            <View style={styles.allTimeStat}>
+              <Text style={[styles.allTimeValue, { color: theme.success }]}>
+                £{(earnings?.all_time?.amount || 0).toFixed(2)}
+              </Text>
+              <Text style={[styles.allTimeLabel, { color: theme.textSecondary }]}>Earnings</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Recent Jobs */}
+        <View style={[styles.section, { backgroundColor: theme.card }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Jobs</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('History')}>
+              <Text style={[styles.seeAllText, { color: theme.primary }]}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {recentJobs.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="car-outline" size={40} color={theme.textSecondary} />
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+                No completed jobs yet
+              </Text>
+            </View>
+          ) : (
+            recentJobs.map((job, index) => (
+              <RecentJobItem key={job.id || index} job={job} />
+            ))
+          )}
+        </View>
+
+        <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -365,26 +306,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerBar: {
-    paddingTop: Platform.OS === 'ios' ? 0 : 40,
-    paddingBottom: 16,
     paddingHorizontal: 16,
-    alignItems: 'center',
+    paddingVertical: 12,
+    paddingTop: Platform.OS === 'android' ? 12 : 0,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    fontStyle: 'italic',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#fff',
   },
   greetingSection: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
+    padding: 16,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    fontStyle: 'italic',
   },
   subGreeting: {
     fontSize: 14,
@@ -392,14 +328,14 @@ const styles = StyleSheet.create({
   },
   quickActionsRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingHorizontal: 12,
     marginBottom: 16,
   },
   quickAction: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 16,
+    padding: 12,
+    marginHorizontal: 4,
     borderRadius: 12,
   },
   quickActionIcon: {
@@ -414,223 +350,136 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  dateRangeContainer: {
+  periodSelector: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    gap: 12,
     marginBottom: 16,
   },
   periodButton: {
-    flexDirection: 'row',
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 4,
+    borderRadius: 8,
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    gap: 6,
   },
   periodButtonText: {
     fontSize: 14,
-    fontWeight: '500',
-  },
-  dateRangeButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 24,
-    gap: 8,
-  },
-  dateRangeText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  section: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 16,
-    padding: 16,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  periodBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  periodBadgeText: {
-    fontSize: 11,
     fontWeight: '600',
   },
-  refreshButton: {
-    padding: 4,
-  },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    gap: 12,
+    paddingHorizontal: 12,
     marginBottom: 12,
-  },
-  statsGridSmall: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
   },
   statCard: {
     flex: 1,
     padding: 16,
+    marginHorizontal: 4,
     borderRadius: 12,
+    alignItems: 'center',
   },
-  statCardSmall: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
   },
   statLabel: {
     fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 4,
+    marginTop: 4,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  statSubValue: {
+    fontSize: 11,
+    marginTop: 2,
   },
-  chartContainer: {
-    marginTop: 8,
+  section: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
   },
-  chartLegend: {
+  sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  legendItem: {
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  allTimeStats: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    gap: 6,
+    paddingVertical: 8,
   },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  allTimeStat: {
+    alignItems: 'center',
+    flex: 1,
   },
-  legendText: {
+  allTimeValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  allTimeLabel: {
+    fontSize: 11,
+    marginTop: 4,
+  },
+  allTimeDivider: {
+    width: 1,
+    height: 40,
+  },
+  jobItem: {
+    flexDirection: 'row',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  jobInfo: {
+    flex: 1,
+  },
+  jobId: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  jobCustomer: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  jobLocation: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  jobMeta: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  jobDate: {
     fontSize: 11,
   },
-  chart: {
-    flexDirection: 'row',
-    height: 120,
-  },
-  chartYAxis: {
-    width: 24,
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingRight: 4,
-    paddingBottom: 20,
-  },
-  chartYLabel: {
-    fontSize: 10,
-  },
-  chartBars: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  chartBarContainer: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  barGroup: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 2,
-    height: 80,
-  },
-  chartBar: {
-    width: 16,
-    borderRadius: 4,
-    minHeight: 4,
-  },
-  chartXLabel: {
-    fontSize: 10,
-    marginTop: 4,
-    position: 'absolute',
-    bottom: -16,
-  },
-  // Document Expiry Styles
-  expiryLegend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 12,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  documentsList: {
-    gap: 10,
-  },
-  documentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    backgroundColor: 'transparent',
-  },
-  documentInfo: {
-    flex: 1,
-  },
-  documentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  documentName: {
-    fontSize: 15,
+  jobFare: {
+    fontSize: 14,
     fontWeight: '600',
-  },
-  documentExpiry: {
-    fontSize: 12,
-    marginLeft: 28,
-  },
-  documentBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  documentBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  noDocuments: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  noDocumentsText: {
-    fontSize: 15,
-    fontWeight: '500',
-    marginTop: 12,
-  },
-  noDocumentsSubtext: {
-    fontSize: 13,
     marginTop: 4,
-    textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyText: {
+    fontSize: 14,
+    marginTop: 8,
   },
 });

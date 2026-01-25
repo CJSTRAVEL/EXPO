@@ -2409,6 +2409,55 @@ const BookingsPage = () => {
     fetchData();
   }, []);
 
+  // Chat functions
+  const openChat = async (booking) => {
+    setChatBooking(booking);
+    setLoadingChat(true);
+    try {
+      const response = await axios.get(`${API}/dispatch/chat/${booking.id}`);
+      setChatMessages(response.data || []);
+    } catch (error) {
+      console.error("Error loading chat:", error);
+      setChatMessages([]);
+    } finally {
+      setLoadingChat(false);
+    }
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatMessage.trim() || !chatBooking) return;
+    
+    setSendingChat(true);
+    try {
+      await axios.post(`${API}/dispatch/chat/send`, {
+        booking_id: chatBooking.id,
+        message: chatMessage,
+        sender_type: "dispatch"
+      });
+      
+      // Refresh chat messages
+      const response = await axios.get(`${API}/dispatch/chat/${chatBooking.id}`);
+      setChatMessages(response.data || []);
+      setChatMessage("");
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (error) {
+      toast.error("Failed to send message");
+    } finally {
+      setSendingChat(false);
+    }
+  };
+
+  // Auto-scroll chat to bottom when messages change
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages]);
+
   const getDriverName = (driverId) => {
     const driver = drivers.find(d => d.id === driverId);
     return driver ? driver.name : "Unassigned";

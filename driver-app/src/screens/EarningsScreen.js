@@ -53,13 +53,13 @@ export default function EarningsScreen() {
         <View style={[styles.featuredCard, { backgroundColor: theme.primary }]}>
           <Text style={styles.featuredLabel}>Today's Earnings</Text>
           <Text style={styles.featuredValue}>
-            £{earnings?.today?.earnings?.toFixed(2) || '0.00'}
+            £{earnings?.today?.amount?.toFixed(2) || '0.00'}
           </Text>
           <View style={styles.featuredStats}>
             <View style={styles.featuredStat}>
               <Ionicons name="car" size={16} color="rgba(255,255,255,0.8)" />
               <Text style={styles.featuredStatText}>
-                {earnings?.today?.trips || 0} trips
+                {earnings?.today?.jobs || 0} trips
               </Text>
             </View>
           </View>
@@ -77,14 +77,14 @@ export default function EarningsScreen() {
             <View style={styles.periodStats}>
               <View style={styles.periodStat}>
                 <Text style={[styles.periodStatValue, { color: theme.text }]}>
-                  £{earnings?.this_week?.earnings?.toFixed(2) || '0.00'}
+                  £{earnings?.week?.amount?.toFixed(2) || '0.00'}
                 </Text>
                 <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Earnings</Text>
               </View>
               <View style={[styles.periodDivider, { backgroundColor: theme.border }]} />
               <View style={styles.periodStat}>
                 <Text style={[styles.periodStatValue, { color: theme.text }]}>
-                  {earnings?.this_week?.trips || 0}
+                  {earnings?.week?.jobs || 0}
                 </Text>
                 <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Trips</Text>
             </View>
@@ -99,14 +99,14 @@ export default function EarningsScreen() {
           <View style={styles.periodStats}>
             <View style={styles.periodStat}>
               <Text style={[styles.periodStatValue, { color: theme.text }]}>
-                £{earnings?.all_time?.earnings?.toFixed(2) || '0.00'}
+                £{earnings?.all_time?.amount?.toFixed(2) || '0.00'}
               </Text>
               <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Total Earnings</Text>
             </View>
             <View style={[styles.periodDivider, { backgroundColor: theme.border }]} />
             <View style={styles.periodStat}>
               <Text style={[styles.periodStatValue, { color: theme.text }]}>
-                {earnings?.all_time?.trips || 0}
+                {earnings?.all_time?.jobs || 0}
               </Text>
               <Text style={[styles.periodStatLabel, { color: theme.textSecondary }]}>Total Trips</Text>
             </View>

@@ -3946,6 +3946,11 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     
     # Create the booking object (exclude return-specific fields)
     booking_data = booking.model_dump(exclude={'create_return', 'return_datetime'})
+    
+    # If driver_id is provided, set status to assigned
+    if booking_data.get('driver_id'):
+        booking_data['status'] = 'assigned'
+    
     booking_obj = Booking(**booking_data)
     booking_obj.booking_id = readable_booking_id
     
@@ -3965,13 +3970,25 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     doc['created_by_name'] = "System"
     
     # Initialize history with creation entry
+    history_action = "created"
+    history_details = f"Booking {readable_booking_id} created"
+    
+    # If driver assigned at creation, add to history
+    if booking.driver_id:
+        driver = await db.drivers.find_one({"id": booking.driver_id}, {"_id": 0})
+        if driver:
+            history_action = "created_with_driver"
+            history_details = f"Booking {readable_booking_id} created and assigned to {driver.get('name', 'Unknown')}"
+            # Update driver status to busy
+            await db.drivers.update_one({"id": booking.driver_id}, {"$set": {"status": "busy"}})
+    
     doc['history'] = [{
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "action": "created",
+        "action": history_action,
         "user_id": None,
         "user_name": "System",
         "user_type": "admin",
-        "details": f"Booking {readable_booking_id} created"
+        "details": history_details
     }]
     
     await db.bookings.insert_one(doc)

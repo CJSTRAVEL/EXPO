@@ -30,6 +30,12 @@ Build a private hire booking application named "CJ's Executive Travel" with:
   - Vehicle allocation dialog with dropdown selection
   - Date navigation (previous/next day, calendar picker, today button)
   - Click-to-allocate on empty vehicle timeline slots
+  - **Auto-Schedule Feature** (VERIFIED): One-click intelligent booking assignment
+    - PSV jobs only assigned to PSV vehicles
+    - Taxi jobs with >6 passengers can use PSV vehicles
+    - 15-minute buffer enforced between jobs
+    - Bin packing optimization to minimize vehicles used
+    - Shows results summary with assignments and failures
 - **WhatsApp Notifications via Twilio** (VERIFIED): Template-based messaging with SMS fallback
   - Integration with Twilio API for WhatsApp delivery
   - Backend proxy for Google Places autocomplete (secure API key handling)

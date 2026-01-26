@@ -1891,7 +1891,7 @@ const SettingsPage = () => {
             <div className="grid gap-6 max-w-4xl">
               <ProfileCard user={user} onUpdate={updateProfile} />
               <PasswordCard onUpdate={updateProfile} />
-              {isSuperAdmin && <UsersManagementCard />}
+              {isAdmin && <UsersManagementCard />}
             </div>
           </TabsContent>
 

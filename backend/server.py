@@ -4574,8 +4574,8 @@ async def booking_preview_page(short_id: str):
     <!-- Standard Meta Tags -->
     <meta name="description" content="{description}">
     
-    <!-- Auto-redirect to full booking page after brief delay -->
-    <meta http-equiv="refresh" content="0; url={full_booking_url}">
+    <!-- Auto-redirect to full booking page after 2 second delay -->
+    <meta http-equiv="refresh" content="2; url={full_booking_url}">
     
     <style>
         * {{
@@ -4585,7 +4585,7 @@ async def booking_preview_page(short_id: str):
         }}
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            background: #000000;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -4593,78 +4593,105 @@ async def booking_preview_page(short_id: str):
             padding: 20px;
         }}
         .card {{
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 500px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 50px 40px;
+            max-width: 420px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             text-align: center;
+            border: 1px solid #333;
         }}
-        .logo {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #1a365d;
-            margin-bottom: 8px;
-        }}
-        .tagline {{
-            color: #718096;
-            font-size: 14px;
+        .logo-container {{
             margin-bottom: 30px;
         }}
-        .booking-id {{
-            background: #edf2f7;
-            color: #1a365d;
-            padding: 8px 20px;
-            border-radius: 20px;
+        .logo-container img {{
+            height: 80px;
+            width: auto;
+        }}
+        .logo-text {{
+            font-size: 22px;
             font-weight: bold;
+            color: #D4A853;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }}
+        .booking-id {{
+            background: linear-gradient(135deg, #D4A853 0%, #B8942E 100%);
+            color: #000000;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 18px;
             display: inline-block;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(212, 168, 83, 0.3);
         }}
         .detail {{
             text-align: left;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            padding: 18px;
+            background: #252525;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 3px solid #D4A853;
         }}
         .detail-label {{
-            font-size: 12px;
-            color: #718096;
+            font-size: 11px;
+            color: #888;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
         }}
         .detail-value {{
-            color: #2d3748;
+            color: #ffffff;
             font-size: 15px;
+            font-weight: 500;
         }}
         .loading {{
-            margin-top: 25px;
-            color: #718096;
-            font-size: 14px;
+            margin-top: 30px;
+            color: #D4A853;
+            font-size: 15px;
+            font-weight: 500;
         }}
         .spinner {{
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #e2e8f0;
-            border-top-color: #1a365d;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #333;
+            border-top-color: #D4A853;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-right: 10px;
+            margin-right: 12px;
             vertical-align: middle;
         }}
         @keyframes spin {{
             to {{ transform: rotate(360deg); }}
         }}
-        .link {{
+        .progress-bar {{
             margin-top: 20px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }}
+        .progress-fill {{
+            height: 100%;
+            background: linear-gradient(90deg, #D4A853, #B8942E);
+            animation: progress 2s ease-in-out forwards;
+            border-radius: 2px;
+        }}
+        @keyframes progress {{
+            from {{ width: 0%; }}
+            to {{ width: 100%; }}
+        }}
+        .link {{
+            margin-top: 25px;
         }}
         .link a {{
-            color: #1a365d;
+            color: #D4A853;
             text-decoration: none;
             font-weight: 500;
+            font-size: 13px;
         }}
         .link a:hover {{
             text-decoration: underline;
@@ -4673,8 +4700,9 @@ async def booking_preview_page(short_id: str):
 </head>
 <body>
     <div class="card">
-        <div class="logo">CJ's Executive Travel</div>
-        <div class="tagline">Professional Private Hire Services</div>
+        <div class="logo-container">
+            <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" />
+        </div>
         
         <div class="booking-id">Booking {booking_id}</div>
         

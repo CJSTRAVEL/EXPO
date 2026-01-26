@@ -1,58 +1,42 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { MapPin, Loader2, Home } from "lucide-react";
+import { MapPin, Loader2, Home, Building2 } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // UK Postcode regex pattern - matches full postcodes like "SR8 5AB" or "SW1A1AA"
 const UK_POSTCODE_REGEX = /^([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
 
-// Global flag to track if Google Maps script is loading/loaded
-let googleMapsLoading = false;
-let googleMapsLoaded = false;
-const loadCallbacks = [];
+// Generate a session token for grouping autocomplete requests
+const generateSessionToken = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
-const loadGoogleMapsScript = (callback) => {
-  // Already loaded
-  if (googleMapsLoaded && window.google?.maps?.places) {
-    callback();
-    return;
+// Fetch address suggestions from backend proxy
+const fetchPlaceSuggestions = async (input, sessionToken) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/places/autocomplete?input=${encodeURIComponent(input)}&sessiontoken=${sessionToken}`
+    );
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error("Places API error:", data.error);
+      return null;
+    }
+    
+    return data.predictions || [];
+  } catch (error) {
+    console.error("Places autocomplete error:", error);
+    return null;
   }
-  
-  // Add to callbacks queue
-  loadCallbacks.push(callback);
-  
-  // Already loading, wait for it
-  if (googleMapsLoading) {
-    return;
-  }
-  
-  // Check if already available
-  if (window.google?.maps?.places) {
-    googleMapsLoaded = true;
-    loadCallbacks.forEach(cb => cb());
-    loadCallbacks.length = 0;
-    return;
-  }
-  
-  // Start loading
-  googleMapsLoading = true;
-  
-  const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-  script.async = true;
-  script.onload = () => {
-    googleMapsLoaded = true;
-    googleMapsLoading = false;
-    loadCallbacks.forEach(cb => cb());
-    loadCallbacks.length = 0;
-  };
-  script.onerror = () => {
-    googleMapsLoading = false;
-    console.error("Failed to load Google Maps script");
-  };
-  document.head.appendChild(script);
 };
 
 // Fetch real addresses for a UK postcode via backend API
@@ -72,7 +56,8 @@ const fetchPostcodeAddresses = async (postcode) => {
       return {
         description: fullAddress,
         mainText: addr.line_1 || '',
-        secondaryText: [addr.town_or_city, addr.postcode].filter(p => p).join(', ')
+        secondaryText: [addr.town_or_city, addr.postcode].filter(p => p).join(', '),
+        isPostcode: true
       };
     });
     
@@ -92,15 +77,14 @@ const AddressAutocomplete = ({
   "data-testid": dataTestId 
 }) => {
   const inputRef = useRef(null);
-  const autocompleteRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [postcodeData, setPostcodeData] = useState(null);
+  const [placeSuggestions, setPlaceSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
   const dropdownRef = useRef(null);
-  const initedRef = useRef(false);
   const onChangeRef = useRef(onChange);
-  const isSelectingRef = useRef(false); // Track when Google selection is happening
+  const sessionTokenRef = useRef(generateSessionToken());
 
   // Keep onChange ref updated
   useEffect(() => {
@@ -109,74 +93,43 @@ const AddressAutocomplete = ({
 
   const isValidPostcode = useCallback((text) => UK_POSTCODE_REGEX.test(text.trim()), []);
 
-  // Load Google Maps and initialize autocomplete
-  useEffect(() => {
-    if (initedRef.current) return;
-    
-    const initAutocomplete = () => {
-      if (!inputRef.current || !window.google?.maps?.places) return;
-      if (autocompleteRef.current) return; // Already initialized
-      
-      try {
-        initedRef.current = true;
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-          types: ["geocode", "establishment", "address"],
-          componentRestrictions: { country: "gb" },
-          fields: ["formatted_address", "name", "address_components"],
-        });
-
-        autocompleteRef.current.addListener("place_changed", () => {
-          const place = autocompleteRef.current.getPlace();
-          const address = place?.formatted_address || place?.name || "";
-          if (address) {
-            isSelectingRef.current = true;
-            setInputValue(address);
-            onChangeRef.current(address);
-            setShowDropdown(false);
-            setPostcodeData(null);
-            // Reset the flag after a short delay
-            setTimeout(() => {
-              isSelectingRef.current = false;
-            }, 100);
-          }
-        });
-      } catch (error) {
-        console.error("Error initializing Google Maps Autocomplete:", error);
-      }
-    };
-
-    loadGoogleMapsScript(initAutocomplete);
-  }, []); // No dependencies - only run once
-
-  // Postcode lookup
+  // Lookup addresses when input changes
   useEffect(() => {
     const lookup = async () => {
       const trimmed = inputValue.trim();
       
+      if (!trimmed || trimmed.length < 2) {
+        setPostcodeData(null);
+        setPlaceSuggestions([]);
+        setShowDropdown(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      // Check if it's a valid UK postcode format
       if (isValidPostcode(trimmed)) {
-        setIsLoading(true);
-        // Hide Google dropdown
-        document.querySelectorAll('.pac-container').forEach(el => {
-          el.style.visibility = 'hidden';
-        });
-        
         const data = await fetchPostcodeAddresses(trimmed);
         if (data?.addresses?.length) {
           setPostcodeData(data);
+          setPlaceSuggestions([]);
           setShowDropdown(true);
         } else {
           setPostcodeData(null);
-          setShowDropdown(false);
+          // Fall back to place search for postcodes not found
+          const suggestions = await fetchPlaceSuggestions(trimmed, sessionTokenRef.current);
+          setPlaceSuggestions(suggestions || []);
+          setShowDropdown((suggestions || []).length > 0);
         }
-        setIsLoading(false);
       } else {
+        // Regular address search
         setPostcodeData(null);
-        setShowDropdown(false);
-        // Show Google dropdown again
-        document.querySelectorAll('.pac-container').forEach(el => {
-          el.style.visibility = 'visible';
-        });
+        const suggestions = await fetchPlaceSuggestions(trimmed, sessionTokenRef.current);
+        setPlaceSuggestions(suggestions || []);
+        setShowDropdown((suggestions || []).length > 0);
       }
+      
+      setIsLoading(false);
     };
 
     const timer = setTimeout(lookup, 300);
@@ -186,10 +139,6 @@ const AddressAutocomplete = ({
   // Click outside handler
   useEffect(() => {
     const handler = (e) => {
-      // Don't close if clicking on Google Places autocomplete dropdown
-      if (e.target.closest('.pac-container')) {
-        return;
-      }
       if (!dropdownRef.current?.contains(e.target) && !inputRef.current?.contains(e.target)) {
         setShowDropdown(false);
       }
@@ -198,65 +147,41 @@ const AddressAutocomplete = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Ensure pac-container has proper pointer-events and is above dialogs
-  useEffect(() => {
-    const ensurePacContainerClickable = () => {
-      document.querySelectorAll('.pac-container').forEach(el => {
-        el.style.pointerEvents = 'auto';
-      });
-    };
-    
-    // Run periodically to catch newly created containers
-    const interval = setInterval(ensurePacContainerClickable, 500);
-    ensurePacContainerClickable();
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSelect = (address) => {
-    setInputValue(address.description);
-    onChange(address.description);
+  const handleSelect = (item) => {
+    const address = item.description || item.mainText;
+    setInputValue(address);
+    onChange(address);
     setShowDropdown(false);
     setPostcodeData(null);
-  };
-
-  // Handle input change - update local state and notify parent
-  const handleInputChange = (e) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
-    onChange(newValue);
+    setPlaceSuggestions([]);
+    // Generate new session token after selection
+    sessionTokenRef.current = generateSessionToken();
   };
 
   // Track if we're currently typing to avoid sync issues
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef(null);
 
-  // Only sync from parent when value prop changes externally (e.g., form reset or flight lookup)
+  // Only sync from parent when value prop changes externally
   useEffect(() => {
-    // Don't sync if user is actively typing or Google selection just happened
-    if (isTypingRef.current || isSelectingRef.current) return;
+    if (isTypingRef.current) return;
     
-    // Sync when parent value differs from local state
-    // This handles form reset, flight lookup auto-fill, etc.
     if (value !== undefined && value !== inputValue) {
       setInputValue(value || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // Updated input change handler that tracks typing state
-  const handleInputChangeWithTracking = (e) => {
+  const handleInputChange = (e) => {
     const newValue = e.target.value;
     isTypingRef.current = true;
     setInputValue(newValue);
     onChange(newValue);
     
-    // Clear previous timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
     
-    // Reset typing flag after a short delay
     typingTimeoutRef.current = setTimeout(() => {
       isTypingRef.current = false;
     }, 500);
@@ -273,9 +198,12 @@ const AddressAutocomplete = ({
         top: rect.bottom + 4,
         left: rect.left,
         width: rect.width,
+        zIndex: 99999
       });
     }
   }, [showDropdown]);
+
+  const hasResults = (postcodeData?.addresses?.length > 0) || (placeSuggestions.length > 0);
 
   return (
     <div className="relative">
@@ -288,8 +216,8 @@ const AddressAutocomplete = ({
         ref={inputRef}
         type="text"
         value={inputValue}
-        onChange={handleInputChangeWithTracking}
-        onFocus={() => postcodeData?.addresses?.length && setShowDropdown(true)}
+        onChange={handleInputChange}
+        onFocus={() => hasResults && setShowDropdown(true)}
         placeholder={placeholder}
         className={`pl-10 ${className}`}
         id={id}
@@ -297,30 +225,61 @@ const AddressAutocomplete = ({
         autoComplete="off"
       />
       
-      {showDropdown && postcodeData?.addresses?.length > 0 && (
+      {showDropdown && hasResults && (
         <div 
           ref={dropdownRef}
           style={dropdownStyle}
-          className="z-[99999] bg-white border border-gray-300 rounded-lg shadow-2xl max-h-80 overflow-y-auto"
+          className="bg-white border border-gray-300 rounded-lg shadow-2xl max-h-80 overflow-y-auto"
         >
-          <div className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold sticky top-0">
-            📍 {postcodeData.addresses.length} addresses at {postcodeData.postcode}
-          </div>
-          {postcodeData.addresses.map((address, index) => (
-            <button
-              key={index}
-              type="button"
-              className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
-              onClick={() => handleSelect(address)}
-              onMouseDown={(e) => e.preventDefault()}
-            >
-              <Home className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <span className="font-medium text-sm block truncate">{address.mainText}</span>
-                <span className="text-xs text-gray-500 block truncate">{address.secondaryText}</span>
+          {/* Postcode results */}
+          {postcodeData?.addresses?.length > 0 && (
+            <>
+              <div className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold sticky top-0">
+                📍 {postcodeData.addresses.length} addresses at {postcodeData.postcode}
               </div>
-            </button>
-          ))}
+              {postcodeData.addresses.map((address, index) => (
+                <button
+                  key={`postcode-${index}`}
+                  type="button"
+                  className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+                  onClick={() => handleSelect(address)}
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <Home className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-sm block truncate">{address.mainText}</span>
+                    <span className="text-xs text-gray-500 block truncate">{address.secondaryText}</span>
+                  </div>
+                </button>
+              ))}
+            </>
+          )}
+          
+          {/* Google Places results */}
+          {placeSuggestions.length > 0 && !postcodeData?.addresses?.length && (
+            <>
+              <div className="px-3 py-2 bg-gray-700 text-white text-xs font-semibold sticky top-0">
+                🔍 Address suggestions
+              </div>
+              {placeSuggestions.map((suggestion, index) => (
+                <button
+                  key={`place-${index}`}
+                  type="button"
+                  className="w-full px-3 py-2.5 text-left hover:bg-gray-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+                  onClick={() => handleSelect(suggestion)}
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <Building2 className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-sm block truncate">{suggestion.main_text || suggestion.description}</span>
+                    {suggestion.secondary_text && (
+                      <span className="text-xs text-gray-500 block truncate">{suggestion.secondary_text}</span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>

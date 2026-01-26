@@ -922,6 +922,94 @@ async def lookup_postcode(postcode: str):
         logging.error(f"Postcode lookup error: {e}")
         return {"postcode": postcode, "addresses": [], "error": str(e)}
 
+# ========== GOOGLE PLACES AUTOCOMPLETE PROXY ==========
+@api_router.get("/places/autocomplete")
+async def places_autocomplete(input: str, sessiontoken: Optional[str] = None):
+    """Proxy for Google Places Autocomplete API - keeps API key server-side"""
+    try:
+        google_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+        if not google_api_key:
+            logging.error("GOOGLE_MAPS_API_KEY not configured")
+            return {"predictions": [], "error": "Google Maps API not configured"}
+        
+        async with httpx.AsyncClient() as http_client:
+            params = {
+                "input": input,
+                "key": google_api_key,
+                "components": "country:gb",
+                "types": "geocode|establishment"
+            }
+            if sessiontoken:
+                params["sessiontoken"] = sessiontoken
+            
+            response = await http_client.get(
+                "https://maps.googleapis.com/maps/api/place/autocomplete/json",
+                params=params,
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "OK":
+                    predictions = []
+                    for pred in data.get("predictions", []):
+                        predictions.append({
+                            "description": pred.get("description"),
+                            "place_id": pred.get("place_id"),
+                            "main_text": pred.get("structured_formatting", {}).get("main_text"),
+                            "secondary_text": pred.get("structured_formatting", {}).get("secondary_text")
+                        })
+                    return {"predictions": predictions}
+                elif data.get("status") == "ZERO_RESULTS":
+                    return {"predictions": []}
+                else:
+                    logging.error(f"Google Places API error: {data.get('status')} - {data.get('error_message', '')}")
+                    return {"predictions": [], "error": data.get("error_message", data.get("status"))}
+            else:
+                logging.error(f"Google Places API HTTP error: {response.status_code}")
+                return {"predictions": [], "error": "API request failed"}
+                
+    except Exception as e:
+        logging.error(f"Places autocomplete error: {e}")
+        return {"predictions": [], "error": str(e)}
+
+@api_router.get("/places/details/{place_id}")
+async def places_details(place_id: str):
+    """Get place details from Google Places API"""
+    try:
+        google_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+        if not google_api_key:
+            return {"error": "Google Maps API not configured"}
+        
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(
+                "https://maps.googleapis.com/maps/api/place/details/json",
+                params={
+                    "place_id": place_id,
+                    "key": google_api_key,
+                    "fields": "formatted_address,name,address_components,geometry"
+                },
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "OK":
+                    result = data.get("result", {})
+                    return {
+                        "formatted_address": result.get("formatted_address"),
+                        "name": result.get("name"),
+                        "location": result.get("geometry", {}).get("location")
+                    }
+                else:
+                    return {"error": data.get("error_message", data.get("status"))}
+            else:
+                return {"error": "API request failed"}
+                
+    except Exception as e:
+        logging.error(f"Places details error: {e}")
+        return {"error": str(e)}
+
 # ========== FLIGHT TRACKING ENDPOINT ==========
 class FlightInfoResponse(BaseModel):
     flight_number: Optional[str] = None

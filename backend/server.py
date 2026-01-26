@@ -4084,7 +4084,7 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
         None,  # status
         None,  # driver_name
         booking.customer_phone,  # customer_phone
-        None,  # vehicle_type
+        booking.vehicle_type,  # vehicle_type
         booking.additional_stops  # additional_stops
     )
     

@@ -25,6 +25,7 @@ import AdminLogin from "@/pages/AdminLogin";
 import SettingsPage from "@/pages/SettingsPage";
 import QuotesPage from "@/pages/QuotesPage";
 import NewQuotePage from "@/pages/NewQuotePage";
+import SchedulingPage from "@/pages/SchedulingPage";
 import "@/App.css";
 
 const API = process.env.REACT_APP_BACKEND_URL;

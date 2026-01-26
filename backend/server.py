@@ -81,9 +81,11 @@ VONAGE_API_KEY = os.environ.get('VONAGE_API_KEY')
 VONAGE_API_SECRET = os.environ.get('VONAGE_API_SECRET')
 VONAGE_FROM_NUMBER = os.environ.get('VONAGE_FROM_NUMBER', 'HireFleet')
 
-# Vonage WhatsApp Configuration
-VONAGE_WHATSAPP_NUMBER = os.environ.get('VONAGE_WHATSAPP_NUMBER', '447383185260')
-VONAGE_WHATSAPP_ENABLED = os.environ.get('VONAGE_WHATSAPP_ENABLED', 'true').lower() == 'true'
+# Meta WhatsApp Cloud API Configuration
+META_WHATSAPP_ACCESS_TOKEN = os.environ.get('META_WHATSAPP_ACCESS_TOKEN')
+META_WHATSAPP_PHONE_NUMBER_ID = os.environ.get('META_WHATSAPP_PHONE_NUMBER_ID')
+META_WHATSAPP_BUSINESS_ID = os.environ.get('META_WHATSAPP_BUSINESS_ID')
+META_WHATSAPP_ENABLED = os.environ.get('META_WHATSAPP_ENABLED', 'false').lower() == 'true'
 
 # SMTP Email Configuration
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp-mail.outlook.com')
@@ -92,7 +94,7 @@ SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 SMTP_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL')
 
-# Initialize Vonage client
+# Initialize Vonage client for SMS fallback
 vonage_client = None
 if VONAGE_API_KEY and VONAGE_API_SECRET:
     try:
@@ -100,10 +102,14 @@ if VONAGE_API_KEY and VONAGE_API_SECRET:
         auth = Auth(api_key=VONAGE_API_KEY, api_secret=VONAGE_API_SECRET)
         vonage_client = Vonage(auth=auth)
         logging.info("Vonage SMS client initialized successfully")
-        if VONAGE_WHATSAPP_ENABLED:
-            logging.info(f"WhatsApp enabled with number: {VONAGE_WHATSAPP_NUMBER}")
     except Exception as e:
         logging.error(f"Failed to initialize Vonage client: {e}")
+
+# Log Meta WhatsApp status
+if META_WHATSAPP_ENABLED and META_WHATSAPP_ACCESS_TOKEN and META_WHATSAPP_PHONE_NUMBER_ID:
+    logging.info(f"Meta WhatsApp Cloud API enabled (Phone ID: {META_WHATSAPP_PHONE_NUMBER_ID})")
+else:
+    logging.info("Meta WhatsApp Cloud API not configured")
 
 # Check SMTP configuration
 smtp_configured = bool(SMTP_USERNAME and SMTP_PASSWORD and SMTP_FROM_EMAIL)

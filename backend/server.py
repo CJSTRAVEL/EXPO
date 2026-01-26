@@ -203,6 +203,12 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Root-level health check for Kubernetes
+@app.get("/health")
+async def root_health():
+    """Root health check for Kubernetes probes"""
+    return {"status": "healthy"}
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 

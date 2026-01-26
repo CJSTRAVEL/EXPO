@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { MapPin, Loader2, Home, Building2 } from "lucide-react";
 
@@ -66,6 +67,16 @@ const fetchPostcodeAddresses = async (postcode) => {
     console.error("Postcode lookup error:", error);
     return null;
   }
+};
+
+// Dropdown component rendered via portal
+const DropdownPortal = ({ children, style }) => {
+  return createPortal(
+    <div style={style} className="address-autocomplete-dropdown">
+      {children}
+    </div>,
+    document.body
+  );
 };
 
 const AddressAutocomplete = ({ 
@@ -139,9 +150,10 @@ const AddressAutocomplete = ({
   // Click outside handler
   useEffect(() => {
     const handler = (e) => {
-      if (!dropdownRef.current?.contains(e.target) && !inputRef.current?.contains(e.target)) {
-        setShowDropdown(false);
-      }
+      const dropdownEl = document.querySelector('.address-autocomplete-dropdown');
+      if (dropdownEl?.contains(e.target)) return;
+      if (inputRef.current?.contains(e.target)) return;
+      setShowDropdown(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -193,17 +205,69 @@ const AddressAutocomplete = ({
   useEffect(() => {
     if (showDropdown && inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
-      // Use minimum width of 350px or input width, whichever is larger
-      const dropdownWidth = Math.max(rect.width, 350);
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate optimal width (min 380px, max viewport - 40px padding)
+      let dropdownWidth = Math.max(rect.width, 380);
+      dropdownWidth = Math.min(dropdownWidth, viewportWidth - 40);
+      
+      // Calculate left position - ensure dropdown doesn't go off-screen
+      let leftPos = rect.left;
+      if (leftPos + dropdownWidth > viewportWidth - 20) {
+        leftPos = viewportWidth - dropdownWidth - 20;
+      }
+      if (leftPos < 20) leftPos = 20;
+      
       setDropdownStyle({
         position: 'fixed',
         top: rect.bottom + 4,
-        left: rect.left,
+        left: leftPos,
         width: dropdownWidth,
-        minWidth: '350px',
-        zIndex: 99999
+        maxHeight: '320px',
+        overflowY: 'auto',
+        zIndex: 999999,
+        backgroundColor: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
       });
     }
+  }, [showDropdown]);
+
+  // Update position on scroll/resize
+  useEffect(() => {
+    if (!showDropdown) return;
+    
+    const updatePosition = () => {
+      if (inputRef.current) {
+        const rect = inputRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        
+        let dropdownWidth = Math.max(rect.width, 380);
+        dropdownWidth = Math.min(dropdownWidth, viewportWidth - 40);
+        
+        let leftPos = rect.left;
+        if (leftPos + dropdownWidth > viewportWidth - 20) {
+          leftPos = viewportWidth - dropdownWidth - 20;
+        }
+        if (leftPos < 20) leftPos = 20;
+        
+        setDropdownStyle(prev => ({
+          ...prev,
+          top: rect.bottom + 4,
+          left: leftPos,
+          width: dropdownWidth
+        }));
+      }
+    };
+    
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [showDropdown]);
 
   const hasResults = (postcodeData?.addresses?.length > 0) || (placeSuggestions.length > 0);
@@ -229,28 +293,24 @@ const AddressAutocomplete = ({
       />
       
       {showDropdown && hasResults && (
-        <div 
-          ref={dropdownRef}
-          style={dropdownStyle}
-          className="bg-white border border-gray-300 rounded-lg shadow-2xl max-h-80 overflow-y-auto"
-        >
+        <DropdownPortal style={dropdownStyle}>
           {/* Postcode results */}
           {postcodeData?.addresses?.length > 0 && (
             <>
-              <div className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold sticky top-0">
+              <div className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold sticky top-0 rounded-t-lg">
                 📍 {postcodeData.addresses.length} addresses at {postcodeData.postcode}
               </div>
               {postcodeData.addresses.map((address, index) => (
                 <button
                   key={`postcode-${index}`}
                   type="button"
-                  className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+                  className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0 last:rounded-b-lg"
                   onClick={() => handleSelect(address)}
                   onMouseDown={(e) => e.preventDefault()}
                 >
                   <Home className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0 flex-1 overflow-hidden">
-                    <span className="font-medium text-sm block">{address.mainText}</span>
+                  <div className="flex-1">
+                    <span className="font-medium text-sm block text-gray-900">{address.mainText}</span>
                     <span className="text-xs text-gray-500 block">{address.secondaryText}</span>
                   </div>
                 </button>
@@ -261,20 +321,20 @@ const AddressAutocomplete = ({
           {/* Google Places results */}
           {placeSuggestions.length > 0 && !postcodeData?.addresses?.length && (
             <>
-              <div className="px-3 py-2 bg-gray-700 text-white text-xs font-semibold sticky top-0">
+              <div className="px-3 py-2 bg-gray-700 text-white text-xs font-semibold sticky top-0 rounded-t-lg">
                 🔍 Address suggestions
               </div>
               {placeSuggestions.map((suggestion, index) => (
                 <button
                   key={`place-${index}`}
                   type="button"
-                  className="w-full px-3 py-2.5 text-left hover:bg-gray-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+                  className="w-full px-3 py-2.5 text-left hover:bg-gray-50 flex items-start gap-2 border-b border-gray-100 last:border-0 last:rounded-b-lg"
                   onClick={() => handleSelect(suggestion)}
                   onMouseDown={(e) => e.preventDefault()}
                 >
                   <Building2 className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0 flex-1 overflow-hidden">
-                    <span className="font-medium text-sm block">{suggestion.main_text || suggestion.description}</span>
+                  <div className="flex-1">
+                    <span className="font-medium text-sm block text-gray-900">{suggestion.main_text || suggestion.description}</span>
                     {suggestion.secondary_text && (
                       <span className="text-xs text-gray-500 block">{suggestion.secondary_text}</span>
                     )}
@@ -283,7 +343,7 @@ const AddressAutocomplete = ({
               ))}
             </>
           )}
-        </div>
+        </DropdownPortal>
       )}
     </div>
   );

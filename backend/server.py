@@ -872,9 +872,12 @@ async def lookup_postcode(postcode: str):
     clean_postcode = postcode.replace(" ", "").upper()
     
     try:
+        getaddress_api_key = os.environ.get('GETADDRESS_API_KEY')
+        if not getaddress_api_key:
+            logging.error("GETADDRESS_API_KEY not configured in environment")
+            return {"postcode": postcode, "addresses": [], "error": "Postcode lookup not configured"}
+        
         async with httpx.AsyncClient() as http_client:
-            # Use Getaddress.io autocomplete endpoint
-            getaddress_api_key = os.environ.get('GETADDRESS_API_KEY')
             response = await http_client.get(
                 f"https://api.getaddress.io/autocomplete/{clean_postcode}",
                 params={"api-key": getaddress_api_key},
@@ -912,6 +915,9 @@ async def lookup_postcode(postcode: str):
                     "postcode": formatted_postcode,
                     "addresses": addresses
                 }
+            elif response.status_code == 401:
+                logging.error(f"Getaddress.io authentication failed - check API key")
+                return {"postcode": postcode, "addresses": [], "error": "API authentication failed"}
             elif response.status_code == 404:
                 return {"postcode": postcode, "addresses": [], "error": "Postcode not found"}
             else:

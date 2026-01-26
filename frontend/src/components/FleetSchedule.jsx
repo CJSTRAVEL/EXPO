@@ -319,7 +319,7 @@ const FleetSchedule = () => {
             Dismiss
           </Button>
         </div>
-      )
+      )}
 
       {/* Unassigned Bookings */}
       {unassignedBookings.length > 0 && (

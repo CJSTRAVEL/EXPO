@@ -238,8 +238,88 @@ const FleetSchedule = () => {
             <div className="w-4 h-4 bg-amber-500 rounded"></div>
             <span>Unassigned ({unassignedBookings.length})</span>
           </div>
+          
+          {/* Auto Schedule Button */}
+          {unassignedBookings.length > 0 && (
+            <Button
+              onClick={handleAutoSchedule}
+              disabled={autoScheduling}
+              className="bg-[#D4A853] hover:bg-[#c49843] text-white ml-2"
+              data-testid="auto-schedule-btn"
+            >
+              {autoScheduling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Scheduling...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Auto Schedule
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Auto Schedule Result */}
+      {autoScheduleResult && (
+        <div className={`rounded-lg p-4 ${autoScheduleResult.failed > 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
+          <h4 className="font-semibold mb-2">
+            Auto-Schedule Results
+          </h4>
+          <div className="grid grid-cols-3 gap-4 text-sm mb-3">
+            <div>
+              <span className="text-gray-500">Assigned:</span>
+              <span className="ml-2 font-bold text-green-600">{autoScheduleResult.assigned}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Failed:</span>
+              <span className="ml-2 font-bold text-red-600">{autoScheduleResult.failed}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Vehicles Used:</span>
+              <span className="ml-2 font-bold">{autoScheduleResult.vehicles_used}</span>
+            </div>
+          </div>
+          
+          {autoScheduleResult.assignments?.length > 0 && (
+            <div className="mb-2">
+              <p className="text-xs text-gray-500 mb-1">Assignments:</p>
+              <div className="flex flex-wrap gap-2">
+                {autoScheduleResult.assignments.map((a, i) => (
+                  <Badge key={i} variant="outline" className="bg-green-100 text-green-800 text-xs">
+                    {a.booking_id} → {a.vehicle_registration} @ {a.time}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {autoScheduleResult.failures?.length > 0 && (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Failed to assign:</p>
+              <div className="flex flex-wrap gap-2">
+                {autoScheduleResult.failures.map((f, i) => (
+                  <Badge key={i} variant="outline" className="bg-red-100 text-red-800 text-xs">
+                    {f.booking_id} @ {f.time} - {f.reason}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAutoScheduleResult(null)}
+            className="mt-2 text-xs"
+          >
+            Dismiss
+          </Button>
+        </div>
+      )
 
       {/* Unassigned Bookings */}
       {unassignedBookings.length > 0 && (

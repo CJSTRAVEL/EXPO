@@ -193,11 +193,14 @@ const AddressAutocomplete = ({
   useEffect(() => {
     if (showDropdown && inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
+      // Use minimum width of 350px or input width, whichever is larger
+      const dropdownWidth = Math.max(rect.width, 350);
       setDropdownStyle({
         position: 'fixed',
         top: rect.bottom + 4,
         left: rect.left,
-        width: rect.width,
+        width: dropdownWidth,
+        minWidth: '350px',
         zIndex: 99999
       });
     }

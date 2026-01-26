@@ -5290,8 +5290,12 @@ async def auto_assign_vehicles(date: str = None):
     start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
     end_of_day = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
     
+    # Build date string patterns to match various formats
+    date_str = target_date.strftime("%Y-%m-%d")
+    
+    # Find bookings by regex matching the date portion
     unassigned_bookings = await db.bookings.find({
-        "booking_datetime": {"$gte": start_of_day.isoformat(), "$lte": end_of_day.isoformat()},
+        "booking_datetime": {"$regex": f"^{date_str}"},
         "vehicle_id": None,
         "status": {"$nin": ["completed", "cancelled"]}
     }, {"_id": 0}).to_list(500)

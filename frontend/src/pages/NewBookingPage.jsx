@@ -2547,7 +2547,7 @@ const NewBookingPage = () => {
             </Button>
             <Button
               type="button"
-              onClick={handleSubmit}
+              onClick={handleReadyToSubmit}
               disabled={saving}
               className="flex-[2] h-11 gap-2 bg-[#D4A853] hover:bg-[#c49743] text-black font-semibold"
               data-testid="booking-save-btn"
@@ -2555,9 +2555,9 @@ const NewBookingPage = () => {
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Save className="w-4 h-4" />
+                <Check className="w-4 h-4" />
               )}
-              {saving ? "Saving..." : "Save Booking"}
+              {saving ? "Saving..." : "Ready to Submit?"}
             </Button>
           </div>
         </div>

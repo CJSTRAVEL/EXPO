@@ -24,6 +24,16 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 ## What's Been Implemented
 
 ### January 2026 (Latest)
+- **Fleet Scheduling Page** (VERIFIED): Dedicated scheduling page at `/scheduling` for vehicle allocation
+  - Timeline view with all vehicles grouped by type
+  - Unassigned bookings section for the selected date
+  - Vehicle allocation dialog with dropdown selection
+  - Date navigation (previous/next day, calendar picker, today button)
+  - Click-to-allocate on empty vehicle timeline slots
+- **WhatsApp Notifications via Twilio** (VERIFIED): Template-based messaging with SMS fallback
+  - Integration with Twilio API for WhatsApp delivery
+  - Backend proxy for Google Places autocomplete (secure API key handling)
+  - Root `/health` endpoint for Kubernetes deployment
 - **Repeat Booking Feature** (VERIFIED): Create recurring bookings on New Booking page and Contract Work page
   - Daily, Weekly, or Custom Days repeat patterns
   - End by number of occurrences (2-52) or end date

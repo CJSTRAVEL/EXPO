@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -31,7 +32,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, ArrowRightLeft, Trash2, Eye, Edit, FileText } from "lucide-react";
+import { Plus, Search, ArrowRightLeft, Trash2, Eye, Edit, FileText, Calendar } from "lucide-react";
+import FleetSchedule from "@/components/FleetSchedule";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 

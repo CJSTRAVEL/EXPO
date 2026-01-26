@@ -620,6 +620,7 @@ class BookingResponse(BaseModel):
     repeat_group_id: Optional[str] = None
     repeat_index: Optional[int] = None
     repeat_total: Optional[int] = None
+    vehicle_id: Optional[str] = None
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

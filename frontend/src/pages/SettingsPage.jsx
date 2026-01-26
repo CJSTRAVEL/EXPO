@@ -216,7 +216,7 @@ const PasswordCard = ({ onUpdate }) => {
 
 // User Management Card (Super Admin Only)
 const UsersManagementCard = () => {
-  const { user: currentUser, isSuperAdmin } = useAuth();
+  const { user: currentUser, isSuperAdmin, isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

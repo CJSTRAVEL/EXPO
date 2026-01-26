@@ -2713,7 +2713,9 @@ const NewBookingPage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Vehicle</p>
-                  <p className="font-medium text-white">{formData.vehicle_type || "Any"}</p>
+                  <p className="font-medium text-white">
+                    {vehicleTypes.find(v => v.id === formData.vehicle_type)?.name || formData.vehicle_type || "Any"}
+                  </p>
                 </div>
               </div>
             </div>

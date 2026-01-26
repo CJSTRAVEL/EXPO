@@ -547,6 +547,8 @@ const BookingDetails = () => {
             status={booking.status} 
             bookingDatetime={booking.booking_datetime}
             driverInfo={driver}
+            driverStatus={driver?.shift_status}
+            returnBooking={returnBooking}
           />
         </div>
 

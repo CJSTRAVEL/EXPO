@@ -5317,7 +5317,7 @@ async def auto_assign_vehicles(date: str = None):
     
     # First, load existing assigned bookings for the day to track vehicle schedules
     assigned_bookings = await db.bookings.find({
-        "booking_datetime": {"$gte": start_of_day.isoformat(), "$lte": end_of_day.isoformat()},
+        "booking_datetime": {"$regex": f"^{date_str}"},
         "vehicle_id": {"$ne": None},
         "status": {"$nin": ["completed", "cancelled"]}
     }, {"_id": 0}).to_list(500)

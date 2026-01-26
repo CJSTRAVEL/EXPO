@@ -41,6 +41,8 @@ const FleetSchedule = () => {
   const [loading, setLoading] = useState(true);
   const [allocateDialog, setAllocateDialog] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [autoScheduling, setAutoScheduling] = useState(false);
+  const [autoScheduleResult, setAutoScheduleResult] = useState(null);
 
   useEffect(() => {
     fetchData();

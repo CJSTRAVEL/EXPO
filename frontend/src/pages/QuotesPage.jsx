@@ -345,6 +345,12 @@ export default function QuotesPage() {
           </TableBody>
         </Table>
       </div>
+        </TabsContent>
+
+        <TabsContent value="scheduling" className="mt-6">
+          <FleetSchedule />
+        </TabsContent>
+      </Tabs>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteQuote} onOpenChange={() => setDeleteQuote(null)}>

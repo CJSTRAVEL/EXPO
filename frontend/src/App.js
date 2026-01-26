@@ -255,6 +255,7 @@ function AppRoutes() {
                 <Route path="/quotes" element={<QuotesPage />} />
                 <Route path="/quotes/new" element={<NewQuotePage />} />
                 <Route path="/quotes/:quoteId/edit" element={<NewQuotePage />} />
+                <Route path="/scheduling" element={<SchedulingPage />} />
                 <Route path="/requests" element={<RequestsPage />} />
                 <Route path="/contract-work" element={<ContractWorkPage />} />
                 <Route path="/clients" element={<ClientsPage />} />

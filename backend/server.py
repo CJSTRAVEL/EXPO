@@ -257,16 +257,16 @@ async def health_check():
     ])
     health_status["services"]["sms"] = {"status": "healthy" if vonage_configured else "not_configured"}
     
-    # Check Meta WhatsApp Cloud API
-    meta_whatsapp_configured = all([
-        os.environ.get("META_WHATSAPP_ACCESS_TOKEN"),
-        os.environ.get("META_WHATSAPP_PHONE_NUMBER_ID"),
-        os.environ.get("META_WHATSAPP_ENABLED", "false").lower() == "true"
+    # Check Twilio WhatsApp
+    twilio_whatsapp_configured = all([
+        os.environ.get("TWILIO_ACCOUNT_SID"),
+        os.environ.get("TWILIO_AUTH_TOKEN"),
+        os.environ.get("TWILIO_WHATSAPP_ENABLED", "false").lower() == "true"
     ])
     health_status["services"]["whatsapp"] = {
-        "status": "healthy" if meta_whatsapp_configured else "not_configured",
-        "provider": "meta_cloud_api" if meta_whatsapp_configured else None,
-        "enabled": os.environ.get("META_WHATSAPP_ENABLED", "false").lower() == "true"
+        "status": "healthy" if twilio_whatsapp_configured else "not_configured",
+        "provider": "twilio" if twilio_whatsapp_configured else None,
+        "number": os.environ.get("TWILIO_WHATSAPP_NUMBER") if twilio_whatsapp_configured else None
     }
     
     # Check Email service (SMTP)

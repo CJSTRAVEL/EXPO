@@ -3975,9 +3975,11 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     # Create the booking object (exclude return-specific fields)
     booking_data = booking.model_dump(exclude={'create_return', 'return_datetime'})
     
-    # If driver_id is provided, set status to assigned
+    # If driver_id is provided, set status to assigned, otherwise use pending
     if booking_data.get('driver_id'):
         booking_data['status'] = 'assigned'
+    elif not booking_data.get('status'):
+        booking_data['status'] = 'pending'
     
     booking_obj = Booking(**booking_data)
     booking_obj.booking_id = readable_booking_id

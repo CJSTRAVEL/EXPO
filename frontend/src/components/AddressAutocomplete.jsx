@@ -120,9 +120,9 @@ const AddressAutocomplete = ({
       try {
         initedRef.current = true;
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-          types: ["geocode", "establishment"],
+          types: ["geocode", "establishment", "address"],
           componentRestrictions: { country: "gb" },
-          fields: ["formatted_address", "name"],
+          fields: ["formatted_address", "name", "address_components"],
         });
 
         autocompleteRef.current.addListener("place_changed", () => {

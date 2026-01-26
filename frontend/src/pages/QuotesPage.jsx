@@ -153,9 +153,9 @@ export default function QuotesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quotes & Scheduling</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Quotes</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage quotes and fleet scheduling
+            Manage quotes and convert them to bookings
           </p>
         </div>
         <Button asChild className="bg-[#D4A853] hover:bg-[#c49843] text-white">
@@ -166,189 +166,169 @@ export default function QuotesPage() {
         </Button>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="quotes" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="quotes" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Quotes
-          </TabsTrigger>
-          <TabsTrigger value="scheduling" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Scheduling
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="quotes" className="mt-6">
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, phone, location, or quote number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                data-testid="search-quotes"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]" data-testid="status-filter">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Quotes Table */}
-          <div className="border rounded-lg bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quote #</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Route</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Fare</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created By</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredQuotes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {searchTerm || statusFilter !== "all"
-                        ? "No quotes match your search"
-                        : "No quotes yet. Create your first quote!"}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-              filteredQuotes.map((quote) => (
-                <TableRow key={quote.id} data-testid={`quote-row-${quote.id}`}>
-                  <TableCell className="font-medium">
-                    {quote.quote_number || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">
-                        {quote.customer_first_name} {quote.customer_last_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {quote.customer_phone}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {quote.quote_date ? (
-                      <div>
-                        <p>{format(new Date(quote.quote_date), "dd MMM yyyy")}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {quote.quote_time || format(new Date(quote.quote_date), "HH:mm")}
-                        </p>
-                      </div>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-[200px]">
-                      <p className="text-sm truncate" title={quote.pickup_location}>
-                        📍 {quote.pickup_location}
-                      </p>
-                      {quote.additional_stops?.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          +{quote.additional_stops.length} stop(s)
-                        </p>
-                      )}
-                      <p className="text-sm truncate" title={quote.dropoff_location}>
-                        🎯 {quote.dropoff_location}
-                      </p>
-                      {quote.return_journey && (
-                        <Badge variant="outline" className="text-xs mt-1">
-                          Return
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{getVehicleTypeName(quote.vehicle_type_id)}</TableCell>
-                  <TableCell>
-                    {quote.quoted_fare ? `£${quote.quoted_fare.toFixed(2)}` : "—"}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                  <TableCell>
-                    <p className="text-sm">{quote.created_by_name || "—"}</p>
-                    {quote.created_at && (
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(quote.created_at), "dd/MM/yy")}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {quote.status === "pending" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleConvertToBooking(quote)}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          data-testid={`convert-quote-${quote.id}`}
-                        >
-                          <ArrowRightLeft className="w-4 h-4 mr-1" />
-                          Convert
-                        </Button>
-                      )}
-                      {quote.status === "converted" && quote.converted_booking_id && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                        >
-                          <Link to={`/bookings/${quote.converted_booking_id}`}>
-                            <Eye className="w-4 h-4 mr-1" />
-                            View Booking
-                          </Link>
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                      >
-                        <Link to={`/quotes/${quote.id}/edit`}>
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteQuote(quote)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, phone, location, or quote number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+            data-testid="search-quotes"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]" data-testid="status-filter">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="converted">Converted</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-        </TabsContent>
 
-        <TabsContent value="scheduling" className="mt-6">
-          <FleetSchedule />
-        </TabsContent>
-      </Tabs>
+      {/* Quotes Table */}
+      <div className="border rounded-lg bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Quote #</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Date & Time</TableHead>
+              <TableHead>Route</TableHead>
+              <TableHead>Vehicle</TableHead>
+              <TableHead>Fare</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created By</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredQuotes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  {searchTerm || statusFilter !== "all"
+                    ? "No quotes match your search"
+                    : "No quotes yet. Create your first quote!"}
+                </TableCell>
+              </TableRow>
+            ) : (
+          filteredQuotes.map((quote) => (
+            <TableRow key={quote.id} data-testid={`quote-row-${quote.id}`}>
+              <TableCell className="font-medium">
+                {quote.quote_number || "—"}
+              </TableCell>
+              <TableCell>
+                <div>
+                  <p className="font-medium">
+                    {quote.customer_first_name} {quote.customer_last_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {quote.customer_phone}
+                  </p>
+                </div>
+              </TableCell>
+              <TableCell>
+                {quote.quote_date ? (
+                  <div>
+                    <p>{format(new Date(quote.quote_date), "dd MMM yyyy")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {quote.quote_time || format(new Date(quote.quote_date), "HH:mm")}
+                    </p>
+                  </div>
+                ) : (
+                  "—"
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="max-w-[200px]">
+                  <p className="text-sm truncate" title={quote.pickup_location}>
+                    📍 {quote.pickup_location}
+                  </p>
+                  {quote.additional_stops?.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      +{quote.additional_stops.length} stop(s)
+                    </p>
+                  )}
+                  <p className="text-sm truncate" title={quote.dropoff_location}>
+                    🎯 {quote.dropoff_location}
+                  </p>
+                  {quote.return_journey && (
+                    <Badge variant="outline" className="text-xs mt-1">
+                      Return
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>{getVehicleTypeName(quote.vehicle_type_id)}</TableCell>
+              <TableCell>
+                {quote.quoted_fare ? `£${quote.quoted_fare.toFixed(2)}` : "—"}
+              </TableCell>
+              <TableCell>{getStatusBadge(quote.status)}</TableCell>
+              <TableCell>
+                <p className="text-sm">{quote.created_by_name || "—"}</p>
+                {quote.created_at && (
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(quote.created_at), "dd/MM/yy")}
+                  </p>
+                )}
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-2">
+                  {quote.status === "pending" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleConvertToBooking(quote)}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      data-testid={`convert-quote-${quote.id}`}
+                    >
+                      <ArrowRightLeft className="w-4 h-4 mr-1" />
+                      Convert
+                    </Button>
+                  )}
+                  {quote.status === "converted" && quote.converted_booking_id && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/bookings/${quote.converted_booking_id}`}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        View Booking
+                      </Link>
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to={`/quotes/${quote.id}/edit`}>
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteQuote(quote)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteQuote} onOpenChange={() => setDeleteQuote(null)}>

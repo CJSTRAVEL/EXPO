@@ -4728,7 +4728,11 @@ async def booking_preview_page(short_id: str):
         
         <div class="loading">
             <span class="spinner"></span>
-            Loading full booking details...
+            Loading your journey details...
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
         </div>
         
         <div class="link">
@@ -4737,8 +4741,10 @@ async def booking_preview_page(short_id: str):
     </div>
     
     <script>
-        // JavaScript redirect as backup
-        window.location.href = "{full_booking_url}";
+        // JavaScript redirect as backup after 2 seconds
+        setTimeout(function() {{
+            window.location.href = "{full_booking_url}";
+        }}, 2000);
     </script>
 </body>
 </html>"""

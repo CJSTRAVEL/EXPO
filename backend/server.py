@@ -1886,9 +1886,9 @@ def send_sms_only(phone: str, message_text: str):
         return False, str(e)
 
 def send_message_with_fallback(phone: str, message_text: str):
-    """Send message via WhatsApp first (Meta Cloud API), fallback to SMS if WhatsApp fails"""
-    # Try WhatsApp first (Meta Cloud API)
-    if META_WHATSAPP_ENABLED:
+    """Send message via WhatsApp first (Twilio), fallback to SMS if WhatsApp fails"""
+    # Try WhatsApp first (Twilio)
+    if TWILIO_WHATSAPP_ENABLED:
         success, result = send_whatsapp_message(phone, message_text)
         if success:
             return True, result, "whatsapp"

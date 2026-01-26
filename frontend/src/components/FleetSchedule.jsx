@@ -84,7 +84,10 @@ const FleetSchedule = () => {
   const vehiclesByType = useMemo(() => {
     const grouped = {};
     vehicles.forEach(v => {
-      const typeName = vehicleTypes.find(vt => vt.id === v.vehicle_type)?.name || 'Unknown';
+      // Handle both nested vehicle_type object and vehicle_type_id
+      const typeName = v.vehicle_type?.name || 
+                       vehicleTypes.find(vt => vt.id === v.vehicle_type_id)?.name || 
+                       'Unknown';
       if (!grouped[typeName]) {
         grouped[typeName] = [];
       }

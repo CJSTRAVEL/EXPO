@@ -1711,7 +1711,8 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 phone = '+44' + phone
         
         # Generate booking details link - use SSR preview URL for proper link previews
-        app_url = os.environ.get('APP_URL', 'https://cjsdispatch.co.uk')
+        # Force production URL for cjsdispatch.co.uk deployment
+        app_url = "https://cjsdispatch.co.uk"
         if short_booking_id:
             # Use the SSR preview endpoint which has proper OG meta tags
             booking_link = f"{app_url}/api/preview/{short_booking_id}"

@@ -440,6 +440,7 @@ const BookingDetails = () => {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
   const [driver, setDriver] = useState(null);
+  const [returnBooking, setReturnBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -471,9 +472,20 @@ const BookingDetails = () => {
       const response = await axios.get(`${API}/bookings/${bookingId}`);
       setBooking(response.data);
       
+      // Fetch driver if assigned
       if (response.data.driver_id) {
         const driverRes = await axios.get(`${API}/drivers/${response.data.driver_id}`);
         setDriver(driverRes.data);
+      }
+      
+      // Fetch linked return booking if exists
+      if (response.data.linked_booking_id) {
+        try {
+          const returnRes = await axios.get(`${API}/bookings/${response.data.linked_booking_id}`);
+          setReturnBooking(returnRes.data);
+        } catch (e) {
+          console.log('Return booking not found');
+        }
       }
     } catch (err) {
       setError("Booking not found");

@@ -1803,56 +1803,50 @@ async def get_checklist_items():
 
 # ========== CLIENT ENDPOINTS MOVED TO routes/clients.py ==========
 
-# ========== WHATSAPP HELPER FUNCTION ==========
+# ========== META WHATSAPP CLOUD API HELPER ==========
 def send_whatsapp_message(phone: str, message_text: str):
-    """Send WhatsApp message via Vonage Messages API"""
-    if not vonage_client:
-        logging.warning("Vonage client not initialized")
-        return False, "WhatsApp service not configured"
-    
-    if not VONAGE_WHATSAPP_ENABLED:
-        logging.info("WhatsApp disabled, skipping")
+    """Send WhatsApp message via Meta WhatsApp Cloud API"""
+    if not META_WHATSAPP_ENABLED:
+        logging.info("Meta WhatsApp disabled, skipping")
         return False, "WhatsApp disabled"
+    
+    if not META_WHATSAPP_ACCESS_TOKEN or not META_WHATSAPP_PHONE_NUMBER_ID:
+        logging.warning("Meta WhatsApp not configured")
+        return False, "WhatsApp not configured"
     
     try:
         import httpx
         
-        # Format phone number (ensure it has country code, no +)
-        formatted_phone = phone.strip()
-        if formatted_phone.startswith('+'):
-            formatted_phone = formatted_phone[1:]
-        elif formatted_phone.startswith('0'):
-            formatted_phone = '44' + formatted_phone[1:]
-        elif not formatted_phone.startswith('44'):
-            formatted_phone = '44' + formatted_phone
+        # Format phone number (remove + and any spaces)
+        formatted_phone = phone.strip().replace('+', '').replace(' ', '').replace('-', '')
         
-        # Vonage Messages API endpoint for WhatsApp
-        url = "https://api.nexmo.com/v1/messages"
+        # Meta WhatsApp Cloud API endpoint
+        url = f"https://graph.facebook.com/v18.0/{META_WHATSAPP_PHONE_NUMBER_ID}/messages"
         
-        payload = {
-            "message_type": "text",
-            "text": message_text,
-            "to": formatted_phone,
-            "from": VONAGE_WHATSAPP_NUMBER,
-            "channel": "whatsapp"
+        headers = {
+            "Authorization": f"Bearer {META_WHATSAPP_ACCESS_TOKEN}",
+            "Content-Type": "application/json"
         }
         
-        # Use basic auth with API key and secret
-        auth = (VONAGE_API_KEY, VONAGE_API_SECRET)
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": formatted_phone,
+            "type": "text",
+            "text": {
+                "body": message_text
+            }
+        }
         
-        response = httpx.post(
-            url,
-            json=payload,
-            auth=auth,
-            headers={"Content-Type": "application/json"},
-            timeout=30.0
-        )
+        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
         
-        if response.status_code in [200, 202]:
+        if response.status_code == 200:
             data = response.json()
-            message_uuid = data.get("message_uuid", "unknown")
-            logging.info(f"WhatsApp sent successfully to {formatted_phone}, uuid: {message_uuid}")
-            return True, f"WhatsApp sent (uuid: {message_uuid})"
+            messages = data.get("messages", [])
+            if messages:
+                message_id = messages[0].get("id", "unknown")
+                logging.info(f"WhatsApp sent successfully to {formatted_phone}, id: {message_id}")
+                return True, f"WhatsApp sent (id: {message_id})"
+            return True, "WhatsApp sent"
         else:
             error_msg = response.text
             logging.warning(f"WhatsApp failed ({response.status_code}): {error_msg}")

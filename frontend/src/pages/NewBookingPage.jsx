@@ -834,6 +834,7 @@ const NewBookingPage = () => {
         payment_method: formData.payment_method,
         driver_id: formData.driver_id || null,
         client_id: formData.client_id || null,
+        vehicle_type: formData.vehicle_type || null,
         flight_info: flight_info,
         distance_miles: routeInfo?.distance?.miles || null,
         duration_minutes: routeInfo?.duration?.minutes || null,

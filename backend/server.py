@@ -2000,11 +2000,7 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                      pickup: str = None, dropoff: str = None, 
                      distance_miles: float = None, duration_minutes: int = None,
                      booking_datetime: str = None, short_booking_id: str = None):
-    """Send booking confirmation via WhatsApp (primary) or SMS (fallback)"""
-    if not vonage_client:
-        logging.warning("Vonage client not initialized, skipping notification")
-        return False, "Notification service not configured"
-    
+    """Send booking confirmation via WhatsApp template (primary) or SMS (fallback)"""
     try:
         # Format phone number (ensure it has country code)
         phone = customer_phone.strip()
@@ -2015,34 +2011,58 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
             else:
                 phone = '+44' + phone
         
-        # Generate booking details link - use SSR preview URL for proper link previews
-        # Force production URL for cjsdispatch.co.uk deployment
+        # Generate booking details link
         app_url = "https://cjsdispatch.co.uk"
         if short_booking_id:
-            # Use the SSR preview endpoint which has proper OG meta tags
             booking_link = f"{app_url}/api/preview/{short_booking_id}"
         else:
             booking_link = f"{app_url}/booking/{booking_id}"
         
-        message_text = (
-            f"Hello {customer_name}, Your booking is confirmed.\n\n"
-            f"{booking_link}\n\n"
-            f"Please open the link to check your details.\n\n"
-            f"Thank You CJ's Executive Travel Limited."
-        )
+        # Format datetime for display
+        datetime_display = booking_datetime if booking_datetime else "TBC"
+        if isinstance(booking_datetime, str) and "T" in booking_datetime:
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(booking_datetime.replace("Z", "+00:00"))
+                datetime_display = dt.strftime("%d %b %Y, %H:%M")
+            except:
+                pass
         
-        # Use WhatsApp with SMS fallback
-        success, result, channel = send_message_with_fallback(phone, message_text)
+        # Try WhatsApp template first
+        if TWILIO_WHATSAPP_ENABLED and TWILIO_TEMPLATE_BOOKING_CONFIRMATION:
+            success, result = send_whatsapp_booking_confirmation(
+                phone=phone,
+                customer_name=customer_name,
+                booking_id=short_booking_id or booking_id,
+                pickup=pickup or "See booking details",
+                datetime_str=datetime_display,
+                booking_link=booking_link
+            )
+            if success:
+                logging.info(f"Booking confirmation WhatsApp sent to {phone}")
+                return True, "Sent via WhatsApp"
+            else:
+                logging.info(f"WhatsApp failed ({result}), falling back to SMS")
         
-        if success:
-            logging.info(f"Booking notification sent via {channel} to {phone}")
-            return True, f"Sent via {channel}"
-        else:
-            logging.error(f"Failed to send notification: {result}")
-            return False, result
+        # Fallback to SMS
+        if vonage_client:
+            message_text = (
+                f"Hello {customer_name}, Your booking is confirmed.\n\n"
+                f"{booking_link}\n\n"
+                f"Please open the link to check your details.\n\n"
+                f"Thank You CJ's Executive Travel Limited."
+            )
+            success, result = send_sms_only(phone, message_text)
+            if success:
+                logging.info(f"Booking confirmation SMS sent to {phone}")
+                return True, "Sent via SMS"
+            else:
+                return False, result
+        
+        return False, "No notification service configured"
             
     except Exception as e:
-        logging.error(f"SMS error: {str(e)}")
+        logging.error(f"Notification error: {str(e)}")
         return False, str(e)
 
 

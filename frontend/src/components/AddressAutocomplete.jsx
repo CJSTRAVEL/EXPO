@@ -249,9 +249,9 @@ const AddressAutocomplete = ({
                   onMouseDown={(e) => e.preventDefault()}
                 >
                   <Home className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <span className="font-medium text-sm block truncate">{address.mainText}</span>
-                    <span className="text-xs text-gray-500 block truncate">{address.secondaryText}</span>
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <span className="font-medium text-sm block">{address.mainText}</span>
+                    <span className="text-xs text-gray-500 block">{address.secondaryText}</span>
                   </div>
                 </button>
               ))}
@@ -273,10 +273,10 @@ const AddressAutocomplete = ({
                   onMouseDown={(e) => e.preventDefault()}
                 >
                   <Building2 className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <span className="font-medium text-sm block truncate">{suggestion.main_text || suggestion.description}</span>
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <span className="font-medium text-sm block">{suggestion.main_text || suggestion.description}</span>
                     {suggestion.secondary_text && (
-                      <span className="text-xs text-gray-500 block truncate">{suggestion.secondary_text}</span>
+                      <span className="text-xs text-gray-500 block">{suggestion.secondary_text}</span>
                     )}
                   </div>
                 </button>

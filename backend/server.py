@@ -6703,6 +6703,55 @@ async def stripe_webhook(request: Request):
         logging.error(f"Error handling Stripe webhook: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ========== VONAGE WHATSAPP WEBHOOKS ==========
+
+@api_router.post("/webhooks/vonage/inbound")
+async def vonage_inbound_webhook(request: Request):
+    """Handle incoming WhatsApp messages from Vonage"""
+    try:
+        body = await request.json()
+        logging.info(f"Vonage inbound webhook received: {body}")
+        
+        # Extract message details
+        message_from = body.get("from", {}).get("number", "unknown")
+        message_text = body.get("text", "")
+        message_type = body.get("message_type", "text")
+        
+        # Log the incoming message
+        logging.info(f"WhatsApp message from {message_from}: {message_text}")
+        
+        # You can add logic here to handle incoming messages
+        # For example, auto-replies, booking inquiries, etc.
+        
+        return {"status": "ok"}
+    except Exception as e:
+        logging.error(f"Error handling Vonage inbound webhook: {e}")
+        return {"status": "error", "message": str(e)}
+
+@api_router.post("/webhooks/vonage/status")
+async def vonage_status_webhook(request: Request):
+    """Handle WhatsApp message status updates from Vonage"""
+    try:
+        body = await request.json()
+        logging.info(f"Vonage status webhook received: {body}")
+        
+        # Extract status details
+        message_uuid = body.get("message_uuid", "unknown")
+        status = body.get("status", "unknown")
+        to_number = body.get("to", {}).get("number", "unknown")
+        timestamp = body.get("timestamp", "")
+        
+        # Log delivery status
+        logging.info(f"WhatsApp message {message_uuid} to {to_number}: {status}")
+        
+        # You can update message delivery status in database if needed
+        # Status values: submitted, delivered, read, rejected, undeliverable
+        
+        return {"status": "ok"}
+    except Exception as e:
+        logging.error(f"Error handling Vonage status webhook: {e}")
+        return {"status": "error", "message": str(e)}
+
 # ========== FARE SETTINGS ENDPOINTS ==========
 
 class FareZone(BaseModel):

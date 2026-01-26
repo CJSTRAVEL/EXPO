@@ -736,15 +736,15 @@ const NewBookingPage = () => {
     }
   };
 
-  // Handle form submission
-  const handleSubmit = async () => {
+  // Validate form before showing confirmation
+  const validateForm = () => {
     if (!formData.first_name || !formData.customer_phone) {
       toast.error("Please enter passenger name and phone");
-      return;
+      return false;
     }
     if (!formData.pickup_location || !formData.dropoff_location) {
       toast.error("Please enter pickup and drop-off locations");
-      return;
+      return false;
     }
 
     // Validate booking date is not in the past
@@ -752,7 +752,7 @@ const NewBookingPage = () => {
     const bookingDate = new Date(formData.booking_datetime);
     if (bookingDate < now) {
       toast.error("Cannot create a booking in the past. Please select a future date and time.");
-      return;
+      return false;
     }
 
     // Validate return date if creating return journey
@@ -760,11 +760,11 @@ const NewBookingPage = () => {
       const returnDate = new Date(formData.return_datetime);
       if (returnDate < now) {
         toast.error("Return journey date cannot be in the past.");
-        return;
+        return false;
       }
       if (returnDate < bookingDate) {
         toast.error("Return journey must be after the outbound journey.");
-        return;
+        return false;
       }
     }
 
@@ -772,11 +772,11 @@ const NewBookingPage = () => {
     if (formData.repeat_booking) {
       if (formData.repeat_type === "custom" && formData.repeat_days.length === 0) {
         toast.error("Please select at least one day for custom repeat bookings.");
-        return;
+        return false;
       }
       if (formData.repeat_end_type === "end_date" && !formData.repeat_end_date) {
         toast.error("Please select an end date for repeat bookings.");
-        return;
+        return false;
       }
     }
 
@@ -784,9 +784,23 @@ const NewBookingPage = () => {
     if (formData.payment_method === "stripe") {
       if (!formData.fare || parseFloat(formData.fare) <= 0) {
         toast.error("Please enter a fare amount for card payment");
-        return;
+        return false;
       }
     }
+    
+    return true;
+  };
+
+  // Show confirmation modal
+  const handleReadyToSubmit = () => {
+    if (validateForm()) {
+      setShowConfirmModal(true);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    setShowConfirmModal(false);
 
     setSaving(true);
     try {

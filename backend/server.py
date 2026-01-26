@@ -4041,6 +4041,7 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
             notes=f"Return journey - {booking.notes}" if booking.notes else "Return journey",
             fare=booking.fare,
             client_id=booking.client_id,
+            vehicle_type=booking.vehicle_type,  # Copy vehicle type from original booking
             flight_info=booking.return_flight_info,  # Add return flight info
             is_return=True,
             linked_booking_id=booking_obj.id,

@@ -85,6 +85,7 @@ const NewBookingPage = () => {
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [loadingQuote, setLoadingQuote] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({

@@ -81,6 +81,10 @@ VONAGE_API_KEY = os.environ.get('VONAGE_API_KEY')
 VONAGE_API_SECRET = os.environ.get('VONAGE_API_SECRET')
 VONAGE_FROM_NUMBER = os.environ.get('VONAGE_FROM_NUMBER', 'HireFleet')
 
+# Vonage WhatsApp Configuration
+VONAGE_WHATSAPP_NUMBER = os.environ.get('VONAGE_WHATSAPP_NUMBER', '447383185260')
+VONAGE_WHATSAPP_ENABLED = os.environ.get('VONAGE_WHATSAPP_ENABLED', 'true').lower() == 'true'
+
 # SMTP Email Configuration
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp-mail.outlook.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
@@ -96,6 +100,8 @@ if VONAGE_API_KEY and VONAGE_API_SECRET:
         auth = Auth(api_key=VONAGE_API_KEY, api_secret=VONAGE_API_SECRET)
         vonage_client = Vonage(auth=auth)
         logging.info("Vonage SMS client initialized successfully")
+        if VONAGE_WHATSAPP_ENABLED:
+            logging.info(f"WhatsApp enabled with number: {VONAGE_WHATSAPP_NUMBER}")
     except Exception as e:
         logging.error(f"Failed to initialize Vonage client: {e}")
 

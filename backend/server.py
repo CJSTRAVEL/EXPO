@@ -1810,58 +1810,44 @@ async def get_checklist_items():
 
 # ========== CLIENT ENDPOINTS MOVED TO routes/clients.py ==========
 
-# ========== META WHATSAPP CLOUD API HELPER ==========
+# ========== TWILIO WHATSAPP HELPER ==========
 def send_whatsapp_message(phone: str, message_text: str):
-    """Send WhatsApp message via Meta WhatsApp Cloud API"""
-    if not META_WHATSAPP_ENABLED:
-        logging.info("Meta WhatsApp disabled, skipping")
+    """Send WhatsApp message via Twilio"""
+    if not TWILIO_WHATSAPP_ENABLED:
+        logging.info("Twilio WhatsApp disabled, skipping")
         return False, "WhatsApp disabled"
     
-    if not META_WHATSAPP_ACCESS_TOKEN or not META_WHATSAPP_PHONE_NUMBER_ID:
-        logging.warning("Meta WhatsApp not configured")
+    if not twilio_client:
+        logging.warning("Twilio client not initialized")
         return False, "WhatsApp not configured"
     
     try:
-        import httpx
+        # Format phone number for WhatsApp (must be in E.164 format)
+        formatted_phone = phone.strip().replace(' ', '').replace('-', '')
+        if formatted_phone.startswith('+'):
+            formatted_phone = formatted_phone[1:]
+        if formatted_phone.startswith('0'):
+            formatted_phone = '44' + formatted_phone[1:]
+        if not formatted_phone.startswith('44'):
+            formatted_phone = '44' + formatted_phone
         
-        # Format phone number (remove + and any spaces)
-        formatted_phone = phone.strip().replace('+', '').replace(' ', '').replace('-', '')
+        # Twilio WhatsApp format: whatsapp:+phonenumber
+        to_whatsapp = f"whatsapp:+{formatted_phone}"
+        from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
         
-        # Meta WhatsApp Cloud API endpoint
-        url = f"https://graph.facebook.com/v18.0/{META_WHATSAPP_PHONE_NUMBER_ID}/messages"
+        message = twilio_client.messages.create(
+            body=message_text,
+            from_=from_whatsapp,
+            to=to_whatsapp
+        )
         
-        headers = {
-            "Authorization": f"Bearer {META_WHATSAPP_ACCESS_TOKEN}",
-            "Content-Type": "application/json"
-        }
+        logging.info(f"WhatsApp sent via Twilio to {formatted_phone}, SID: {message.sid}")
+        return True, f"WhatsApp sent (SID: {message.sid})"
         
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": formatted_phone,
-            "type": "text",
-            "text": {
-                "body": message_text
-            }
-        }
-        
-        response = httpx.post(url, headers=headers, json=payload, timeout=30.0)
-        
-        if response.status_code == 200:
-            data = response.json()
-            messages = data.get("messages", [])
-            if messages:
-                message_id = messages[0].get("id", "unknown")
-                logging.info(f"WhatsApp sent successfully to {formatted_phone}, id: {message_id}")
-                return True, f"WhatsApp sent (id: {message_id})"
-            return True, "WhatsApp sent"
-        else:
-            error_msg = response.text
-            logging.warning(f"WhatsApp failed ({response.status_code}): {error_msg}")
-            return False, f"WhatsApp failed: {error_msg}"
-            
     except Exception as e:
-        logging.error(f"WhatsApp error: {str(e)}")
-        return False, str(e)
+        error_msg = str(e)
+        logging.warning(f"Twilio WhatsApp error: {error_msg}")
+        return False, error_msg
 
 def send_sms_only(phone: str, message_text: str):
     """Send SMS only (used as fallback)"""

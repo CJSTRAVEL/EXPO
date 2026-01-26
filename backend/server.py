@@ -5249,6 +5249,191 @@ async def delete_booking(booking_id: str):
         raise HTTPException(status_code=404, detail="Booking not found")
     return {"message": "Booking deleted successfully"}
 
+@api_router.post("/scheduling/auto-assign")
+async def auto_assign_vehicles(date: str = None):
+    """
+    Auto-assign vehicles to bookings for a given date.
+    
+    Rules:
+    1. PSV jobs (category='psv') can only be done in PSV vehicles
+    2. Taxi jobs with more than 6 passengers can be done in PSV vehicles
+    3. No overlapping times - always allow 15 minutes buffer between jobs
+    4. Use the least amount of vehicles possible (bin packing optimization)
+    """
+    from datetime import timedelta
+    
+    # Parse the date or use today
+    if date:
+        try:
+            target_date = datetime.fromisoformat(date.replace('Z', '+00:00')).date()
+        except:
+            target_date = datetime.strptime(date, "%Y-%m-%d").date()
+    else:
+        target_date = datetime.now(timezone.utc).date()
+    
+    # Get all vehicle types
+    vehicle_types = await db.vehicle_types.find({}, {"_id": 0}).to_list(100)
+    vehicle_type_map = {vt['id']: vt for vt in vehicle_types}
+    
+    # Identify PSV vehicle type IDs
+    psv_type_ids = {vt['id'] for vt in vehicle_types if vt.get('category') == 'psv'}
+    taxi_type_ids = {vt['id'] for vt in vehicle_types if vt.get('category') == 'taxi'}
+    
+    # Get all active vehicles
+    all_vehicles = await db.vehicles.find({"is_active": True}, {"_id": 0}).to_list(100)
+    
+    # Separate vehicles by type
+    psv_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') in psv_type_ids]
+    taxi_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') in taxi_type_ids]
+    
+    # Get all unassigned bookings for the target date
+    start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_of_day = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+    
+    unassigned_bookings = await db.bookings.find({
+        "booking_datetime": {"$gte": start_of_day.isoformat(), "$lte": end_of_day.isoformat()},
+        "vehicle_id": None,
+        "status": {"$nin": ["completed", "cancelled"]}
+    }, {"_id": 0}).to_list(500)
+    
+    if not unassigned_bookings:
+        return {"message": "No unassigned bookings for this date", "assigned": 0, "failed": 0}
+    
+    # Sort bookings by datetime
+    def parse_booking_time(b):
+        dt = b.get('booking_datetime')
+        if isinstance(dt, str):
+            return datetime.fromisoformat(dt.replace('Z', '+00:00'))
+        return dt
+    
+    unassigned_bookings.sort(key=parse_booking_time)
+    
+    # Track vehicle schedules: {vehicle_id: [(start_time, end_time), ...]}
+    vehicle_schedules = {}
+    
+    # First, load existing assigned bookings for the day to track vehicle schedules
+    assigned_bookings = await db.bookings.find({
+        "booking_datetime": {"$gte": start_of_day.isoformat(), "$lte": end_of_day.isoformat()},
+        "vehicle_id": {"$ne": None},
+        "status": {"$nin": ["completed", "cancelled"]}
+    }, {"_id": 0}).to_list(500)
+    
+    BUFFER_MINUTES = 15
+    DEFAULT_DURATION = 60  # Default job duration if not specified
+    
+    for booking in assigned_bookings:
+        vid = booking.get('vehicle_id')
+        if not vid:
+            continue
+        booking_time = parse_booking_time(booking)
+        duration = booking.get('duration_minutes') or DEFAULT_DURATION
+        end_time = booking_time + timedelta(minutes=duration + BUFFER_MINUTES)
+        
+        if vid not in vehicle_schedules:
+            vehicle_schedules[vid] = []
+        vehicle_schedules[vid].append((booking_time, end_time))
+    
+    def can_fit_booking(vehicle_id, booking_start, booking_duration):
+        """Check if a booking can fit in a vehicle's schedule without overlap"""
+        booking_end = booking_start + timedelta(minutes=booking_duration + BUFFER_MINUTES)
+        
+        if vehicle_id not in vehicle_schedules:
+            return True
+        
+        for (existing_start, existing_end) in vehicle_schedules[vehicle_id]:
+            # Check for overlap
+            if not (booking_end <= existing_start or booking_start >= existing_end):
+                return False
+        return True
+    
+    def add_to_schedule(vehicle_id, booking_start, booking_duration):
+        """Add a booking to a vehicle's schedule"""
+        booking_end = booking_start + timedelta(minutes=booking_duration + BUFFER_MINUTES)
+        if vehicle_id not in vehicle_schedules:
+            vehicle_schedules[vehicle_id] = []
+        vehicle_schedules[vehicle_id].append((booking_start, booking_end))
+    
+    def get_vehicle_utilization(vehicle_id):
+        """Get total minutes scheduled for a vehicle"""
+        if vehicle_id not in vehicle_schedules:
+            return 0
+        total = 0
+        for (start, end) in vehicle_schedules[vehicle_id]:
+            total += (end - start).total_seconds() / 60
+        return total
+    
+    assignments = []
+    failed = []
+    
+    for booking in unassigned_bookings:
+        booking_time = parse_booking_time(booking)
+        duration = booking.get('duration_minutes') or DEFAULT_DURATION
+        passengers = booking.get('passengers') or 1
+        booking_vehicle_type = booking.get('vehicle_type')
+        
+        # Determine if this is a PSV job
+        is_psv_job = booking_vehicle_type in psv_type_ids
+        
+        # Determine eligible vehicles
+        if is_psv_job:
+            # PSV jobs can only use PSV vehicles
+            eligible_vehicles = psv_vehicles
+        elif passengers > 6:
+            # Taxi jobs with >6 passengers can use PSV vehicles
+            eligible_vehicles = taxi_vehicles + psv_vehicles
+        else:
+            # Regular taxi jobs prefer taxi vehicles, but can use PSV if needed
+            eligible_vehicles = taxi_vehicles + psv_vehicles
+        
+        # Sort eligible vehicles by current utilization (prefer fuller vehicles - bin packing)
+        eligible_vehicles_sorted = sorted(
+            eligible_vehicles, 
+            key=lambda v: get_vehicle_utilization(v['id']),
+            reverse=True  # Prefer vehicles with more bookings (fill them up)
+        )
+        
+        assigned = False
+        for vehicle in eligible_vehicles_sorted:
+            if can_fit_booking(vehicle['id'], booking_time, duration):
+                # Assign this vehicle
+                add_to_schedule(vehicle['id'], booking_time, duration)
+                
+                # Update booking in database
+                await db.bookings.update_one(
+                    {"id": booking['id']},
+                    {"$set": {"vehicle_id": vehicle['id']}}
+                )
+                
+                assignments.append({
+                    "booking_id": booking.get('booking_id'),
+                    "vehicle_registration": vehicle.get('registration'),
+                    "vehicle_id": vehicle['id'],
+                    "time": booking_time.strftime("%H:%M")
+                })
+                assigned = True
+                break
+        
+        if not assigned:
+            failed.append({
+                "booking_id": booking.get('booking_id'),
+                "reason": "No available vehicle with suitable time slot",
+                "time": booking_time.strftime("%H:%M"),
+                "passengers": passengers,
+                "is_psv": is_psv_job
+            })
+    
+    # Calculate vehicles used
+    vehicles_used = len([vid for vid in vehicle_schedules if vehicle_schedules[vid]])
+    
+    return {
+        "message": f"Auto-scheduling complete for {target_date}",
+        "assigned": len(assignments),
+        "failed": len(failed),
+        "vehicles_used": vehicles_used,
+        "assignments": assignments,
+        "failures": failed
+    }
+
 @api_router.post("/bookings/{booking_id}/assign/{driver_id}", response_model=BookingResponse)
 async def assign_driver_to_booking(booking_id: str, driver_id: str):
     booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})

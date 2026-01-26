@@ -5294,11 +5294,18 @@ async def auto_assign_vehicles(date: str = None):
     date_str = target_date.strftime("%Y-%m-%d")
     
     # Find bookings by regex matching the date portion
+    # Check for vehicle_id being None, null, or not existing
     unassigned_bookings = await db.bookings.find({
         "booking_datetime": {"$regex": f"^{date_str}"},
-        "vehicle_id": None,
+        "$or": [
+            {"vehicle_id": None},
+            {"vehicle_id": {"$exists": False}},
+            {"vehicle_id": ""}
+        ],
         "status": {"$nin": ["completed", "cancelled"]}
     }, {"_id": 0}).to_list(500)
+    
+    logging.info(f"Auto-schedule for {date_str}: found {len(unassigned_bookings)} unassigned bookings")
     
     if not unassigned_bookings:
         return {"message": "No unassigned bookings for this date", "assigned": 0, "failed": 0}

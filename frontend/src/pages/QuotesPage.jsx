@@ -155,9 +155,9 @@ export default function QuotesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quotes</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Quotes & Scheduling</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage customer quotes and convert to bookings
+            Manage quotes and fleet scheduling
           </p>
         </div>
         <Button asChild className="bg-[#D4A853] hover:bg-[#c49843] text-white">
@@ -168,58 +168,72 @@ export default function QuotesPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, phone, location, or quote number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-            data-testid="search-quotes"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]" data-testid="status-filter">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="converted">Converted</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Tabs */}
+      <Tabs defaultValue="quotes" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="quotes" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Quotes
+          </TabsTrigger>
+          <TabsTrigger value="scheduling" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Scheduling
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Quotes Table */}
-      <div className="border rounded-lg bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Quote #</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Date & Time</TableHead>
-              <TableHead>Route</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Fare</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredQuotes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  {searchTerm || statusFilter !== "all"
-                    ? "No quotes match your search"
-                    : "No quotes yet. Create your first quote!"}
-                </TableCell>
-              </TableRow>
-            ) : (
+        <TabsContent value="quotes" className="mt-6">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone, location, or quote number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="search-quotes"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]" data-testid="status-filter">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="converted">Converted</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Quotes Table */}
+          <div className="border rounded-lg bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Quote #</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Route</TableHead>
+                  <TableHead>Vehicle</TableHead>
+                  <TableHead>Fare</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created By</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredQuotes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      {searchTerm || statusFilter !== "all"
+                        ? "No quotes match your search"
+                        : "No quotes yet. Create your first quote!"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
               filteredQuotes.map((quote) => (
                 <TableRow key={quote.id} data-testid={`quote-row-${quote.id}`}>
                   <TableCell className="font-medium">

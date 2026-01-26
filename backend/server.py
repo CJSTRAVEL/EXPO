@@ -247,6 +247,15 @@ async def health_check():
     ])
     health_status["services"]["sms"] = {"status": "healthy" if vonage_configured else "not_configured"}
     
+    # Check WhatsApp service
+    whatsapp_enabled = os.environ.get("VONAGE_WHATSAPP_ENABLED", "false").lower() == "true"
+    whatsapp_number = os.environ.get("VONAGE_WHATSAPP_NUMBER")
+    health_status["services"]["whatsapp"] = {
+        "status": "healthy" if (vonage_configured and whatsapp_enabled and whatsapp_number) else "not_configured",
+        "enabled": whatsapp_enabled,
+        "number": whatsapp_number if whatsapp_enabled else None
+    }
+    
     # Check Email service (SMTP)
     smtp_configured = all([
         os.environ.get("SMTP_SERVER"),

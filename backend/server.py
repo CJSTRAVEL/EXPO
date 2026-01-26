@@ -81,11 +81,21 @@ VONAGE_API_KEY = os.environ.get('VONAGE_API_KEY')
 VONAGE_API_SECRET = os.environ.get('VONAGE_API_SECRET')
 VONAGE_FROM_NUMBER = os.environ.get('VONAGE_FROM_NUMBER', 'HireFleet')
 
-# Meta WhatsApp Cloud API Configuration
-META_WHATSAPP_ACCESS_TOKEN = os.environ.get('META_WHATSAPP_ACCESS_TOKEN')
-META_WHATSAPP_PHONE_NUMBER_ID = os.environ.get('META_WHATSAPP_PHONE_NUMBER_ID')
-META_WHATSAPP_BUSINESS_ID = os.environ.get('META_WHATSAPP_BUSINESS_ID')
-META_WHATSAPP_ENABLED = os.environ.get('META_WHATSAPP_ENABLED', 'false').lower() == 'true'
+# Twilio WhatsApp Configuration
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_WHATSAPP_NUMBER = os.environ.get('TWILIO_WHATSAPP_NUMBER', '+447383185260')
+TWILIO_WHATSAPP_ENABLED = os.environ.get('TWILIO_WHATSAPP_ENABLED', 'false').lower() == 'true'
+
+# Initialize Twilio client for WhatsApp
+twilio_client = None
+if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+    try:
+        from twilio.rest import Client as TwilioClient
+        twilio_client = TwilioClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        logging.info(f"Twilio client initialized (WhatsApp: {TWILIO_WHATSAPP_NUMBER})")
+    except Exception as e:
+        logging.error(f"Failed to initialize Twilio client: {e}")
 
 # SMTP Email Configuration
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp-mail.outlook.com')
@@ -104,12 +114,6 @@ if VONAGE_API_KEY and VONAGE_API_SECRET:
         logging.info("Vonage SMS client initialized successfully")
     except Exception as e:
         logging.error(f"Failed to initialize Vonage client: {e}")
-
-# Log Meta WhatsApp status
-if META_WHATSAPP_ENABLED and META_WHATSAPP_ACCESS_TOKEN and META_WHATSAPP_PHONE_NUMBER_ID:
-    logging.info(f"Meta WhatsApp Cloud API enabled (Phone ID: {META_WHATSAPP_PHONE_NUMBER_ID})")
-else:
-    logging.info("Meta WhatsApp Cloud API not configured")
 
 # Check SMTP configuration
 smtp_configured = bool(SMTP_USERNAME and SMTP_PASSWORD and SMTP_FROM_EMAIL)

@@ -1817,8 +1817,98 @@ async def get_checklist_items():
 # ========== CLIENT ENDPOINTS MOVED TO routes/clients.py ==========
 
 # ========== TWILIO WHATSAPP HELPER ==========
+def send_whatsapp_template(phone: str, template_sid: str, variables: dict):
+    """Send WhatsApp message via Twilio using approved templates"""
+    if not TWILIO_WHATSAPP_ENABLED:
+        logging.info("Twilio WhatsApp disabled, skipping")
+        return False, "WhatsApp disabled"
+    
+    if not twilio_client:
+        logging.warning("Twilio client not initialized")
+        return False, "WhatsApp not configured"
+    
+    if not template_sid:
+        logging.warning("Template SID not provided")
+        return False, "Template not configured"
+    
+    try:
+        import json
+        
+        # Format phone number for WhatsApp (must be in E.164 format)
+        formatted_phone = phone.strip().replace(' ', '').replace('-', '')
+        if formatted_phone.startswith('+'):
+            formatted_phone = formatted_phone[1:]
+        if formatted_phone.startswith('0'):
+            formatted_phone = '44' + formatted_phone[1:]
+        if not formatted_phone.startswith('44'):
+            formatted_phone = '44' + formatted_phone
+        
+        # Twilio WhatsApp format
+        to_whatsapp = f"whatsapp:+{formatted_phone}"
+        from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+        
+        # Convert variables dict to JSON string
+        content_variables = json.dumps(variables)
+        
+        message = twilio_client.messages.create(
+            from_=from_whatsapp,
+            to=to_whatsapp,
+            content_sid=template_sid,
+            content_variables=content_variables
+        )
+        
+        logging.info(f"WhatsApp template sent via Twilio to {formatted_phone}, SID: {message.sid}")
+        return True, f"WhatsApp sent (SID: {message.sid})"
+        
+    except Exception as e:
+        error_msg = str(e)
+        logging.warning(f"Twilio WhatsApp error: {error_msg}")
+        return False, error_msg
+
+def send_whatsapp_booking_confirmation(phone: str, customer_name: str, booking_id: str, pickup: str, datetime_str: str, booking_link: str):
+    """Send booking confirmation WhatsApp"""
+    variables = {
+        "1": customer_name,
+        "2": booking_id,
+        "3": pickup,
+        "4": datetime_str,
+        "5": booking_link
+    }
+    return send_whatsapp_template(phone, TWILIO_TEMPLATE_BOOKING_CONFIRMATION, variables)
+
+def send_whatsapp_driver_on_route(phone: str, customer_name: str, vehicle: str, registration: str, eta_minutes: str, tracking_link: str):
+    """Send driver on route WhatsApp"""
+    variables = {
+        "1": customer_name,
+        "2": vehicle,
+        "3": registration,
+        "4": str(eta_minutes),
+        "5": tracking_link
+    }
+    return send_whatsapp_template(phone, TWILIO_TEMPLATE_DRIVER_ON_ROUTE, variables)
+
+def send_whatsapp_driver_arrived(phone: str, customer_name: str, vehicle: str, registration: str):
+    """Send driver arrived WhatsApp"""
+    variables = {
+        "1": customer_name,
+        "2": vehicle,
+        "3": registration
+    }
+    return send_whatsapp_template(phone, TWILIO_TEMPLATE_DRIVER_ARRIVED, variables)
+
+def send_whatsapp_journey_completed(phone: str, customer_name: str, booking_id: str, pickup: str, dropoff: str, review_link: str = "https://g.page/r/CWTNnmIB_EejEBM/review"):
+    """Send journey completed WhatsApp"""
+    variables = {
+        "1": customer_name,
+        "2": booking_id,
+        "3": pickup,
+        "4": dropoff,
+        "5": review_link
+    }
+    return send_whatsapp_template(phone, TWILIO_TEMPLATE_JOURNEY_COMPLETED, variables)
+
 def send_whatsapp_message(phone: str, message_text: str):
-    """Send WhatsApp message via Twilio"""
+    """Send WhatsApp message via Twilio - for freeform messages within 24hr window"""
     if not TWILIO_WHATSAPP_ENABLED:
         logging.info("Twilio WhatsApp disabled, skipping")
         return False, "WhatsApp disabled"

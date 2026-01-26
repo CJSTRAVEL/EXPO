@@ -2562,6 +2562,264 @@ const NewBookingPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Confirmation Modal */}
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#1a1a1a] border-[#3d3d3d] text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Check className="w-6 h-6 text-[#D4A853]" />
+              <span>Booking Summary</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Customer Info */}
+            <div className="bg-[#252525] rounded-lg p-4 border border-[#3d3d3d]">
+              <h3 className="text-sm font-semibold text-[#D4A853] mb-3 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Customer Information
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400">Name</p>
+                  <p className="font-medium text-white">{formData.first_name} {formData.last_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Phone</p>
+                  <p className="font-medium text-white">{formData.customer_phone}</p>
+                </div>
+                {formData.customer_email && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-400">Email</p>
+                    <p className="font-medium text-white">{formData.customer_email}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Journey Details */}
+            <div className="bg-[#252525] rounded-lg p-4 border border-[#3d3d3d]">
+              <h3 className="text-sm font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Journey Details
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-white text-xs font-bold">A</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Pickup</p>
+                    <p className="text-sm font-medium text-white">{formData.pickup_location}</p>
+                  </div>
+                </div>
+                
+                {formData.additional_stops && formData.additional_stops.length > 0 && (
+                  formData.additional_stops.map((stop, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">{index + 1}</span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Stop {index + 1}</p>
+                        <p className="text-sm font-medium text-white">{stop}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-white text-xs font-bold">B</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Dropoff</p>
+                    <p className="text-sm font-medium text-white">{formData.dropoff_location}</p>
+                  </div>
+                </div>
+
+                {routeInfo && (
+                  <div className="flex items-center gap-6 pt-3 mt-3 border-t border-[#3d3d3d]">
+                    {routeInfo.distance && (
+                      <div className="flex items-center gap-2">
+                        <Navigation className="w-4 h-4 text-blue-400" />
+                        <span className="text-sm text-gray-300">{routeInfo.distance.text}</span>
+                      </div>
+                    )}
+                    {routeInfo.duration && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-blue-400" />
+                        <span className="text-sm text-gray-300">{routeInfo.duration.text}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Date & Time */}
+            <div className="bg-[#252525] rounded-lg p-4 border border-[#3d3d3d]">
+              <h3 className="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Date & Time
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400">Pickup Date</p>
+                  <p className="font-medium text-white">
+                    {formData.booking_datetime ? format(formData.booking_datetime, "EEE, dd MMM yyyy") : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Pickup Time</p>
+                  <p className="font-medium text-white">
+                    {formData.booking_datetime ? format(formData.booking_datetime, "HH:mm") : "-"}
+                  </p>
+                </div>
+              </div>
+              {formData.create_return && formData.return_datetime && (
+                <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-[#3d3d3d]">
+                  <div>
+                    <p className="text-xs text-gray-400">Return Date</p>
+                    <p className="font-medium text-white">
+                      {format(formData.return_datetime, "EEE, dd MMM yyyy")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Return Time</p>
+                    <p className="font-medium text-white">
+                      {format(formData.return_datetime, "HH:mm")}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Booking Details */}
+            <div className="bg-[#252525] rounded-lg p-4 border border-[#3d3d3d]">
+              <h3 className="text-sm font-semibold text-[#D4A853] mb-3 flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Booking Details
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400">Passengers</p>
+                  <p className="font-medium text-lg text-white">{formData.passenger_count || 1}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Luggage</p>
+                  <p className="font-medium text-lg text-white">{formData.luggage_count || 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Vehicle</p>
+                  <p className="font-medium text-white">{formData.vehicle_type || "Any"}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Driver Assignment */}
+            {formData.driver_id && (
+              <div className="bg-green-900/30 rounded-lg p-4 border border-green-700">
+                <h3 className="text-sm font-semibold text-green-400 mb-2 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Driver Assigned
+                </h3>
+                <p className="text-white">
+                  {drivers.find(d => d.id === formData.driver_id)?.name || "Driver selected"}
+                </p>
+              </div>
+            )}
+
+            {/* Payment Info */}
+            {(formData.fare || formData.payment_method) && (
+              <div className="bg-[#252525] rounded-lg p-4 border border-[#3d3d3d]">
+                <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Payment
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {formData.fare && (
+                    <div>
+                      <p className="text-xs text-gray-400">Fare</p>
+                      <p className="font-medium text-lg text-white">£{parseFloat(formData.fare).toFixed(2)}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-gray-400">Payment Method</p>
+                    <p className="font-medium text-white capitalize">{formData.payment_method || "Cash"}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {(formData.notes || formData.driver_notes) && (
+              <div className="bg-[#252525] rounded-lg p-4 border border-[#3d3d3d]">
+                <h3 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Notes
+                </h3>
+                {formData.notes && (
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-400">Booking Notes</p>
+                    <p className="text-sm text-white">{formData.notes}</p>
+                  </div>
+                )}
+                {formData.driver_notes && (
+                  <div>
+                    <p className="text-xs text-gray-400">Driver Notes</p>
+                    <p className="text-sm text-white">{formData.driver_notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SMS Notification Info */}
+            <div className="bg-blue-900/30 rounded-lg p-3 border border-blue-700">
+              <div className="flex items-center gap-2 text-blue-300 text-sm">
+                <MessageSquare className="w-4 h-4" />
+                <span>SMS confirmation will be sent to <strong>{formData.customer_phone}</strong></span>
+              </div>
+              {formData.customer_email && (
+                <div className="flex items-center gap-2 text-blue-300 text-sm mt-1">
+                  <Mail className="w-4 h-4" />
+                  <span>Email confirmation will be sent to <strong>{formData.customer_email}</strong></span>
+                </div>
+              )}
+              {formData.driver_id && (
+                <div className="flex items-center gap-2 text-green-300 text-sm mt-1">
+                  <Bell className="w-4 h-4" />
+                  <span>Booking will be sent to driver's app</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmModal(false)}
+              className="flex-1 border-[#3d3d3d] text-gray-300 hover:bg-[#2d2d2d]"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="flex-1 bg-[#D4A853] hover:bg-[#c49743] text-black font-semibold"
+            >
+              {saving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {saving ? "Saving..." : "Save Booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

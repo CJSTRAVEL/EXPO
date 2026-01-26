@@ -243,10 +243,10 @@ const UsersManagementCard = () => {
   };
 
   useEffect(() => {
-    if (isSuperAdmin) {
+    if (isAdmin) {
       fetchUsers();
     }
-  }, [isSuperAdmin]);
+  }, [isAdmin]);
 
   const resetForm = () => {
     setFormData({ name: "", email: "", password: "", role: "dispatcher", is_active: true });

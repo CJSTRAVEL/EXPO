@@ -1788,12 +1788,67 @@ async def get_checklist_items():
 
 # ========== CLIENT ENDPOINTS MOVED TO routes/clients.py ==========
 
-# ========== SMS HELPER FUNCTION ==========
-def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str, 
-                     pickup: str = None, dropoff: str = None, 
-                     distance_miles: float = None, duration_minutes: int = None,
-                     booking_datetime: str = None, short_booking_id: str = None):
-    """Send SMS confirmation for new booking"""
+# ========== WHATSAPP HELPER FUNCTION ==========
+def send_whatsapp_message(phone: str, message_text: str):
+    """Send WhatsApp message via Vonage Messages API"""
+    if not vonage_client:
+        logging.warning("Vonage client not initialized")
+        return False, "WhatsApp service not configured"
+    
+    if not VONAGE_WHATSAPP_ENABLED:
+        logging.info("WhatsApp disabled, skipping")
+        return False, "WhatsApp disabled"
+    
+    try:
+        import httpx
+        
+        # Format phone number (ensure it has country code, no +)
+        formatted_phone = phone.strip()
+        if formatted_phone.startswith('+'):
+            formatted_phone = formatted_phone[1:]
+        elif formatted_phone.startswith('0'):
+            formatted_phone = '44' + formatted_phone[1:]
+        elif not formatted_phone.startswith('44'):
+            formatted_phone = '44' + formatted_phone
+        
+        # Vonage Messages API endpoint for WhatsApp
+        url = "https://api.nexmo.com/v1/messages"
+        
+        payload = {
+            "message_type": "text",
+            "text": message_text,
+            "to": formatted_phone,
+            "from": VONAGE_WHATSAPP_NUMBER,
+            "channel": "whatsapp"
+        }
+        
+        # Use basic auth with API key and secret
+        auth = (VONAGE_API_KEY, VONAGE_API_SECRET)
+        
+        response = httpx.post(
+            url,
+            json=payload,
+            auth=auth,
+            headers={"Content-Type": "application/json"},
+            timeout=30.0
+        )
+        
+        if response.status_code in [200, 202]:
+            data = response.json()
+            message_uuid = data.get("message_uuid", "unknown")
+            logging.info(f"WhatsApp sent successfully to {formatted_phone}, uuid: {message_uuid}")
+            return True, f"WhatsApp sent (uuid: {message_uuid})"
+        else:
+            error_msg = response.text
+            logging.warning(f"WhatsApp failed ({response.status_code}): {error_msg}")
+            return False, f"WhatsApp failed: {error_msg}"
+            
+    except Exception as e:
+        logging.error(f"WhatsApp error: {str(e)}")
+        return False, str(e)
+
+def send_sms_only(phone: str, message_text: str):
+    """Send SMS only (used as fallback)"""
     if not vonage_client:
         logging.warning("Vonage client not initialized, skipping SMS")
         return False, "SMS service not configured"
@@ -1801,6 +1856,58 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
     try:
         from vonage_sms import SmsMessage
         
+        # Format phone number
+        formatted_phone = phone.strip()
+        if not formatted_phone.startswith('+'):
+            if formatted_phone.startswith('0'):
+                formatted_phone = '+44' + formatted_phone[1:]
+            else:
+                formatted_phone = '+44' + formatted_phone
+        
+        response = vonage_client.sms.send(
+            SmsMessage(
+                to=formatted_phone,
+                from_=VONAGE_FROM_NUMBER,
+                text=message_text
+            )
+        )
+        
+        if response.messages[0].status == "0":
+            logging.info(f"SMS sent successfully to {formatted_phone}")
+            return True, "SMS sent"
+        else:
+            logging.error(f"SMS failed: {response.messages[0].error_text}")
+            return False, response.messages[0].error_text
+            
+    except Exception as e:
+        logging.error(f"SMS error: {str(e)}")
+        return False, str(e)
+
+def send_message_with_fallback(phone: str, message_text: str):
+    """Send message via WhatsApp first, fallback to SMS if WhatsApp fails"""
+    # Try WhatsApp first
+    if VONAGE_WHATSAPP_ENABLED:
+        success, result = send_whatsapp_message(phone, message_text)
+        if success:
+            return True, result, "whatsapp"
+        else:
+            logging.info(f"WhatsApp failed, falling back to SMS: {result}")
+    
+    # Fallback to SMS
+    success, result = send_sms_only(phone, message_text)
+    return success, result, "sms"
+
+# ========== SMS HELPER FUNCTION ==========
+def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str, 
+                     pickup: str = None, dropoff: str = None, 
+                     distance_miles: float = None, duration_minutes: int = None,
+                     booking_datetime: str = None, short_booking_id: str = None):
+    """Send booking confirmation via WhatsApp (primary) or SMS (fallback)"""
+    if not vonage_client:
+        logging.warning("Vonage client not initialized, skipping notification")
+        return False, "Notification service not configured"
+    
+    try:
         # Format phone number (ensure it has country code)
         phone = customer_phone.strip()
         if not phone.startswith('+'):
@@ -1826,20 +1933,15 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
             f"Thank You CJ's Executive Travel Limited."
         )
         
-        response = vonage_client.sms.send(
-            SmsMessage(
-                to=phone,
-                from_=VONAGE_FROM_NUMBER,
-                text=message_text
-            )
-        )
+        # Use WhatsApp with SMS fallback
+        success, result, channel = send_message_with_fallback(phone, message_text)
         
-        if response.messages[0].status == "0":
-            logging.info(f"SMS sent successfully to {phone}")
-            return True, "SMS sent"
+        if success:
+            logging.info(f"Booking notification sent via {channel} to {phone}")
+            return True, f"Sent via {channel}"
         else:
-            logging.error(f"SMS failed: {response.messages[0].error_text}")
-            return False, response.messages[0].error_text
+            logging.error(f"Failed to send notification: {result}")
+            return False, result
             
     except Exception as e:
         logging.error(f"SMS error: {str(e)}")

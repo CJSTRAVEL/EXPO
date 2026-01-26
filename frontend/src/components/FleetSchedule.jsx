@@ -151,6 +151,41 @@ const FleetSchedule = () => {
   const goToNextDay = () => setSelectedDate(prev => addDays(prev, 1));
   const goToToday = () => setSelectedDate(new Date());
 
+  // Auto-schedule all unassigned bookings
+  const handleAutoSchedule = async () => {
+    if (unassignedBookings.length === 0) {
+      toast.info("No unassigned bookings to schedule");
+      return;
+    }
+    
+    setAutoScheduling(true);
+    setAutoScheduleResult(null);
+    
+    try {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const response = await axios.post(`${API}/api/scheduling/auto-assign?date=${dateStr}`);
+      const result = response.data;
+      
+      setAutoScheduleResult(result);
+      
+      if (result.assigned > 0) {
+        toast.success(`Successfully assigned ${result.assigned} booking(s) to ${result.vehicles_used} vehicle(s)`);
+      }
+      
+      if (result.failed > 0) {
+        toast.warning(`${result.failed} booking(s) could not be assigned`);
+      }
+      
+      // Refresh data
+      fetchData();
+    } catch (error) {
+      console.error("Error auto-scheduling:", error);
+      toast.error("Failed to auto-schedule bookings");
+    } finally {
+      setAutoScheduling(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

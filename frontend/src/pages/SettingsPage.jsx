@@ -1858,7 +1858,7 @@ const FareSettingsSection = () => {
 
 // Main Settings Page
 const SettingsPage = () => {
-  const { user, updateProfile, isSuperAdmin } = useAuth();
+  const { user, updateProfile, isSuperAdmin, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState("account");
 
   return (

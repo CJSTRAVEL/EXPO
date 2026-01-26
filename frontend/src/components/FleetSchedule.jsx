@@ -369,9 +369,9 @@ const FleetSchedule = () => {
                         className="absolute inset-0 flex items-center justify-center text-xs text-gray-400 cursor-pointer hover:bg-blue-50 transition-colors"
                         onClick={() => {
                           // Find unassigned bookings matching this vehicle type
-                          const vehicleType = vehicleTypes.find(vt => vt.id === vehicle.vehicle_type);
+                          const vehicleTypeId = vehicle.vehicle_type_id || vehicle.vehicle_type?.id;
                           const matchingBookings = unassignedBookings.filter(b => 
-                            b.vehicle_type === vehicle.vehicle_type || !b.vehicle_type
+                            b.vehicle_type === vehicleTypeId || !b.vehicle_type
                           );
                           if (matchingBookings.length > 0) {
                             setAllocateDialog({ ...matchingBookings[0], targetVehicle: vehicle });
@@ -379,7 +379,7 @@ const FleetSchedule = () => {
                           }
                         }}
                       >
-                        {unassignedBookings.some(b => b.vehicle_type === vehicle.vehicle_type || !b.vehicle_type) 
+                        {unassignedBookings.some(b => b.vehicle_type === (vehicle.vehicle_type_id || vehicle.vehicle_type?.id) || !b.vehicle_type) 
                           ? "Click to allocate booking" 
                           : "No bookings"
                         }

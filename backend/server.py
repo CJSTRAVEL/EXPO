@@ -1967,14 +1967,12 @@ async def get_sms_template(template_type: str):
     return defaults.get(template_type, "")
 
 async def send_templated_sms(phone: str, template_type: str, variables: dict):
-    """Send SMS using a template with variable substitution"""
+    """Send templated message via WhatsApp (primary) or SMS (fallback)"""
     if not vonage_client:
-        logging.warning("Vonage client not initialized, skipping SMS")
-        return False, "SMS service not configured"
+        logging.warning("Vonage client not initialized, skipping notification")
+        return False, "Notification service not configured"
     
     try:
-        from vonage_sms import SmsMessage
-        
         # Get template
         template = await get_sms_template(template_type)
         if not template:
@@ -1986,30 +1984,25 @@ async def send_templated_sms(phone: str, template_type: str, variables: dict):
             message_text = message_text.replace("{" + key + "}", str(value) if value else "")
         
         # Format phone number
-        phone = phone.strip()
-        if not phone.startswith('+'):
-            if phone.startswith('0'):
-                phone = '+44' + phone[1:]
+        formatted_phone = phone.strip()
+        if not formatted_phone.startswith('+'):
+            if formatted_phone.startswith('0'):
+                formatted_phone = '+44' + formatted_phone[1:]
             else:
-                phone = '+44' + phone
+                formatted_phone = '+44' + formatted_phone
         
-        response = vonage_client.sms.send(
-            SmsMessage(
-                to=phone,
-                from_=VONAGE_FROM_NUMBER,
-                text=message_text
-            )
-        )
+        # Use WhatsApp with SMS fallback
+        success, result, channel = send_message_with_fallback(formatted_phone, message_text)
         
-        if response.messages[0].status == "0":
-            logging.info(f"Templated SMS ({template_type}) sent to {phone}")
-            return True, "SMS sent"
+        if success:
+            logging.info(f"Templated notification ({template_type}) sent via {channel} to {formatted_phone}")
+            return True, f"Sent via {channel}"
         else:
-            logging.error(f"SMS failed: {response.messages[0].error_text}")
-            return False, response.messages[0].error_text
+            logging.error(f"Failed to send templated notification: {result}")
+            return False, result
             
     except Exception as e:
-        logging.error(f"SMS error: {str(e)}")
+        logging.error(f"Notification error: {str(e)}")
         return False, str(e)
 
 

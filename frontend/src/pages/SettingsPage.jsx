@@ -305,7 +305,7 @@ const UsersManagementCard = () => {
     }
   };
 
-  if (!isSuperAdmin) return null;
+  if (!isAdmin) return null;
 
   return (
     <>

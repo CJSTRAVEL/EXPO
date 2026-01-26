@@ -6706,7 +6706,70 @@ async def stripe_webhook(request: Request):
         logging.error(f"Error handling Stripe webhook: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ========== VONAGE WHATSAPP WEBHOOKS ==========
+# ========== META WHATSAPP CLOUD API WEBHOOKS ==========
+
+META_WHATSAPP_VERIFY_TOKEN = os.environ.get('META_WHATSAPP_VERIFY_TOKEN', 'cjs_whatsapp_verify_2026')
+
+@api_router.get("/webhooks/meta/whatsapp")
+async def meta_whatsapp_verify(request: Request):
+    """Verify webhook for Meta WhatsApp Cloud API"""
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+    
+    logging.info(f"Meta WhatsApp webhook verification: mode={mode}, token={token}")
+    
+    if mode == "subscribe" and token == META_WHATSAPP_VERIFY_TOKEN:
+        logging.info("Meta WhatsApp webhook verified successfully")
+        return PlainTextResponse(challenge)
+    else:
+        logging.warning(f"Meta WhatsApp webhook verification failed - token mismatch")
+        raise HTTPException(status_code=403, detail="Verification failed")
+
+@api_router.post("/webhooks/meta/whatsapp")
+async def meta_whatsapp_webhook(request: Request):
+    """Handle incoming WhatsApp messages and status updates from Meta"""
+    try:
+        body = await request.json()
+        logging.info(f"Meta WhatsApp webhook received: {body}")
+        
+        # Process the webhook payload
+        if body.get("object") == "whatsapp_business_account":
+            entries = body.get("entry", [])
+            
+            for entry in entries:
+                changes = entry.get("changes", [])
+                
+                for change in changes:
+                    value = change.get("value", {})
+                    
+                    # Handle incoming messages
+                    messages = value.get("messages", [])
+                    for message in messages:
+                        from_phone = message.get("from")
+                        message_type = message.get("type")
+                        
+                        if message_type == "text":
+                            text_body = message.get("text", {}).get("body", "")
+                            logging.info(f"WhatsApp message from {from_phone}: {text_body}")
+                        else:
+                            logging.info(f"WhatsApp {message_type} from {from_phone}")
+                    
+                    # Handle message status updates
+                    statuses = value.get("statuses", [])
+                    for status in statuses:
+                        message_id = status.get("id")
+                        status_value = status.get("status")  # sent, delivered, read, failed
+                        recipient = status.get("recipient_id")
+                        logging.info(f"WhatsApp message {message_id} to {recipient}: {status_value}")
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        logging.error(f"Error handling Meta WhatsApp webhook: {e}")
+        return {"status": "error", "message": str(e)}
+
+# ========== VONAGE WHATSAPP WEBHOOKS (Legacy) ==========
 
 @api_router.post("/webhooks/vonage/inbound")
 async def vonage_inbound_webhook(request: Request):

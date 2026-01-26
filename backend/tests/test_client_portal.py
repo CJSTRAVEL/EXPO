@@ -8,7 +8,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://chauffeurhub-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://limo-dispatch-1.preview.emergentagent.com')
 
 # Test data
 TEST_CLIENT_PHONE = f"07700{uuid.uuid4().hex[:6]}"  # Unique phone for each test run

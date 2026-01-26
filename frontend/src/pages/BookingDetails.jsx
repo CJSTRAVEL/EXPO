@@ -1,61 +1,106 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle, RefreshCw, Info, Shield } from "lucide-react";
+import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle, RefreshCw, Info, Shield, Calendar, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, differenceInDays, differenceInHours } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
+// Calculate days until journey
+const getDaysUntilJourney = (bookingDatetime) => {
+  const now = new Date();
+  const journeyDate = new Date(bookingDatetime);
+  const days = differenceInDays(journeyDate, now);
+  const hours = differenceInHours(journeyDate, now) % 24;
+  
+  if (days < 0) return null; // Journey in past
+  if (days === 0) {
+    if (hours <= 0) return "Your journey is starting soon!";
+    return `Your journey is in ${hours} hour${hours !== 1 ? 's' : ''}`;
+  }
+  if (days === 1) return "Not long now, 1 day until your journey";
+  return `Not long now, ${days} days until your journey`;
+};
+
 // Uber-style Live Tracking Header
-const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes }) => {
+const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes, driverStatus, returnBooking }) => {
   const bookingTime = new Date(bookingDatetime);
+  const daysUntil = getDaysUntilJourney(bookingDatetime);
   
   const getStatusInfo = () => {
+    // Check if driver has a specific status (on_route, arrived, etc.)
+    const isDriverOnRoute = driverStatus === 'on_route' || driverStatus === 'on-route';
+    const isDriverArrived = driverStatus === 'arrived' || driverStatus === 'at_pickup';
+    
     switch (status) {
       case 'pending':
         return {
-          title: 'Finding your driver...',
-          subtitle: 'We\'re assigning the best driver for you',
-          progress: [false, false, false, false],
-          showEta: false
+          title: 'Booking Confirmed',
+          subtitle: daysUntil || `Pickup scheduled for ${format(bookingTime, 'EEE, d MMM yyyy')} at ${format(bookingTime, 'h:mm a')}`,
+          progress: [true, false, false, false],
+          showEta: false,
+          showCountdown: true
         };
       case 'assigned':
+        if (isDriverArrived) {
+          return {
+            title: 'Driver Arrived',
+            subtitle: 'Your driver is waiting at the pickup location',
+            progress: [true, true, true, false],
+            showEta: false,
+            showCountdown: false
+          };
+        }
+        if (isDriverOnRoute) {
+          return {
+            title: 'Driver On Route',
+            subtitle: etaMinutes ? `Arriving in approximately ${etaMinutes} minutes` : 'Your driver is on the way',
+            progress: [true, true, false, false],
+            showEta: true,
+            showCountdown: false
+          };
+        }
         return {
-          title: 'Driver assigned',
-          subtitle: `Pickup at ${format(bookingTime, 'h:mm a')}`,
-          progress: [true, false, false, false],
-          showEta: true
+          title: 'Driver Assigned',
+          subtitle: daysUntil || `Pickup at ${format(bookingTime, 'h:mm a')} on ${format(bookingTime, 'EEE, d MMM')}`,
+          progress: [true, true, false, false],
+          showEta: false,
+          showCountdown: true
         };
       case 'in_progress':
         return {
-          title: 'Heading your way...',
-          subtitle: `Estimated arrival ${format(bookingTime, 'h:mm a')}`,
+          title: 'Journey In Progress',
+          subtitle: 'Enjoy your ride!',
           progress: [true, true, true, false],
-          showEta: true
+          showEta: false,
+          showCountdown: false
         };
       case 'completed':
         return {
-          title: 'Journey completed',
+          title: 'Journey Completed',
           subtitle: 'Thank you for travelling with us!',
           progress: [true, true, true, true],
-          showEta: false
+          showEta: false,
+          showCountdown: false
         };
       case 'cancelled':
         return {
-          title: 'Booking cancelled',
+          title: 'Booking Cancelled',
           subtitle: 'This booking has been cancelled',
           progress: [false, false, false, false],
-          showEta: false
+          showEta: false,
+          showCountdown: false
         };
       default:
         return {
-          title: 'Tracking your journey',
-          subtitle: 'Please wait...',
-          progress: [false, false, false, false],
-          showEta: false
+          title: 'Booking Confirmed',
+          subtitle: daysUntil || 'Your journey details are below',
+          progress: [true, false, false, false],
+          showEta: false,
+          showCountdown: true
         };
     }
   };
@@ -68,7 +113,20 @@ const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes }) => 
   return (
     <div className="bg-white border-b">
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">{info.title}</h1>
+        <div className="flex items-center gap-3 mb-2">
+          {status === 'pending' || (status === 'assigned' && !driverStatus) ? (
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          ) : driverStatus === 'arrived' || driverStatus === 'at_pickup' ? (
+            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+              <Car className="w-5 h-5 text-white" />
+            </div>
+          ) : driverStatus === 'on_route' || driverStatus === 'on-route' ? (
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center animate-pulse">
+              <Navigation className="w-5 h-5 text-white" />
+            </div>
+          ) : null}
+          <h1 className="text-2xl font-bold text-gray-900">{info.title}</h1>
+        </div>
         <p className="text-lg text-gray-600">{info.subtitle}</p>
         
         {/* Progress Bar */}
@@ -83,10 +141,26 @@ const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes }) => 
           ))}
         </div>
         
-        {info.showEta && (
+        {info.showEta && etaMinutes && (
           <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <span>Latest arrival by {format(latestArrival, 'h:mm a')}</span>
-            <Info className="w-4 h-4" />
+            <Clock className="w-4 h-4" />
+            <span>ETA: {etaMinutes} minutes</span>
+          </div>
+        )}
+        
+        {/* Return Booking Info */}
+        {returnBooking && (
+          <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="flex items-center gap-2 text-amber-800 font-medium mb-2">
+              <ArrowRight className="w-4 h-4" />
+              <span>Return Journey</span>
+            </div>
+            <p className="text-sm text-amber-700">
+              {format(new Date(returnBooking.booking_datetime), 'EEE, d MMM yyyy')} at {format(new Date(returnBooking.booking_datetime), 'h:mm a')}
+            </p>
+            <p className="text-xs text-amber-600 mt-1">
+              {returnBooking.pickup_location} → {returnBooking.dropoff_location}
+            </p>
           </div>
         )}
       </div>

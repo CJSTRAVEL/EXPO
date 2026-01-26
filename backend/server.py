@@ -253,13 +253,16 @@ async def health_check():
     ])
     health_status["services"]["sms"] = {"status": "healthy" if vonage_configured else "not_configured"}
     
-    # Check WhatsApp service
-    whatsapp_enabled = os.environ.get("VONAGE_WHATSAPP_ENABLED", "false").lower() == "true"
-    whatsapp_number = os.environ.get("VONAGE_WHATSAPP_NUMBER")
+    # Check Meta WhatsApp Cloud API
+    meta_whatsapp_configured = all([
+        os.environ.get("META_WHATSAPP_ACCESS_TOKEN"),
+        os.environ.get("META_WHATSAPP_PHONE_NUMBER_ID"),
+        os.environ.get("META_WHATSAPP_ENABLED", "false").lower() == "true"
+    ])
     health_status["services"]["whatsapp"] = {
-        "status": "healthy" if (vonage_configured and whatsapp_enabled and whatsapp_number) else "not_configured",
-        "enabled": whatsapp_enabled,
-        "number": whatsapp_number if whatsapp_enabled else None
+        "status": "healthy" if meta_whatsapp_configured else "not_configured",
+        "provider": "meta_cloud_api" if meta_whatsapp_configured else None,
+        "enabled": os.environ.get("META_WHATSAPP_ENABLED", "false").lower() == "true"
     }
     
     # Check Email service (SMTP)

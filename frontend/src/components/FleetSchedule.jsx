@@ -104,6 +104,44 @@ const FleetSchedule = () => {
     return bookings.filter(b => b.vehicle_id === vehicleId);
   };
 
+  // Calculate timeline summary
+  const timelineSummary = useMemo(() => {
+    const assignedBookings = bookings.filter(b => b.vehicle_id);
+    const vehiclesWithBookings = new Set(assignedBookings.map(b => b.vehicle_id));
+    
+    // Group by vehicle for summary
+    const vehicleSummary = {};
+    assignedBookings.forEach(b => {
+      const vehicle = vehicles.find(v => v.id === b.vehicle_id);
+      if (vehicle) {
+        if (!vehicleSummary[vehicle.id]) {
+          vehicleSummary[vehicle.id] = {
+            registration: vehicle.registration,
+            make: vehicle.make,
+            model: vehicle.model,
+            bookings: []
+          };
+        }
+        vehicleSummary[vehicle.id].bookings.push(b);
+      }
+    });
+    
+    // Sort bookings by time within each vehicle
+    Object.values(vehicleSummary).forEach(v => {
+      v.bookings.sort((a, b) => {
+        const timeA = parseISO(a.booking_datetime);
+        const timeB = parseISO(b.booking_datetime);
+        return timeA - timeB;
+      });
+    });
+    
+    return {
+      totalBookings: assignedBookings.length,
+      vehiclesUsed: vehiclesWithBookings.size,
+      vehicleSummary
+    };
+  }, [bookings, vehicles]);
+
   // Calculate booking position and width on timeline
   const getBookingStyle = (booking) => {
     if (!booking.booking_datetime) return null;

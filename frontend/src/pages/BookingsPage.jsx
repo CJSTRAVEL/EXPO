@@ -390,6 +390,13 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
       <DialogContent 
         className="sm:max-w-[550px]" 
         data-testid="booking-form-modal"
+        onPointerDownOutside={(e) => {
+          // Prevent any pointer event handling when clicking on address autocomplete dropdown
+          if (e.target.closest('.address-autocomplete-dropdown')) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
         onInteractOutside={(e) => {
           // Prevent closing when clicking on address autocomplete dropdown
           if (e.target.closest('.address-autocomplete-dropdown')) {

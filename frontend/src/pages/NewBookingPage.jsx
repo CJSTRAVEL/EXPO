@@ -73,6 +73,78 @@ const InfoCard = ({ label, value, icon: Icon }) => (
   </div>
 );
 
+// Availability indicator component for traffic light system (Dark Theme)
+const AvailabilityIndicator = ({ availability, label, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-[#3d3d3d] bg-[#1a1a1a] p-3">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 text-[#D4A853] animate-spin" />
+          <span className="text-sm text-gray-400">Checking availability...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!availability) return null;
+  
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'green':
+        return {
+          bg: 'bg-green-900/30 border-green-700',
+          icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+          textColor: 'text-green-400',
+          badge: 'bg-green-900/50 text-green-400 border border-green-700'
+        };
+      case 'amber':
+        return {
+          bg: 'bg-amber-900/30 border-amber-700',
+          icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
+          textColor: 'text-amber-400',
+          badge: 'bg-amber-900/50 text-amber-400 border border-amber-700'
+        };
+      case 'red':
+        return {
+          bg: 'bg-red-900/30 border-red-700',
+          icon: <XCircle className="h-5 w-5 text-red-500" />,
+          textColor: 'text-red-400',
+          badge: 'bg-red-900/50 text-red-400 border border-red-700'
+        };
+      default:
+        return {
+          bg: 'bg-[#1a1a1a] border-[#3d3d3d]',
+          icon: null,
+          textColor: 'text-gray-400',
+          badge: 'bg-[#2d2d2d] text-gray-400'
+        };
+    }
+  };
+  
+  const config = getStatusConfig(availability.status);
+  
+  return (
+    <div className={`rounded-lg border p-3 ${config.bg}`}>
+      <div className="flex items-start gap-3">
+        {config.icon}
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className={`font-medium text-sm ${config.textColor}`}>
+              {label}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.badge}`}>
+              {availability.status === 'green' ? 'Available' : availability.status === 'amber' ? 'Limited' : 'Unavailable'}
+            </span>
+          </div>
+          <p className={`text-sm mt-1 ${config.textColor}`}>
+            {availability.message}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const NewBookingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

@@ -349,15 +349,55 @@ const FleetSchedule = ({ fullView = false }) => {
           </Button>
         </div>
         
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded"></div>
-            <span>Assigned</span>
+        <div className="flex items-center gap-4 text-sm flex-wrap">
+          {/* Color Legend */}
+          <div className="flex items-center gap-3 border-r pr-4">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-purple-500 rounded"></div>
+              <span className="text-xs">Contract</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-500 rounded"></div>
+              <span className="text-xs">Airport</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-indigo-500 rounded"></div>
+              <span className="text-xs">Corporate</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+              <span className="text-xs">Standard</span>
+            </div>
           </div>
+          
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-amber-500 rounded"></div>
-            <span>Unassigned ({unassignedBookings.length})</span>
+            <div className="w-3 h-3 bg-amber-500 rounded"></div>
+            <span className="text-xs">Unassigned ({unassignedBookings.length})</span>
           </div>
+          
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 border-l pl-4">
+            <Button variant="outline" size="icon" className="h-7 w-7" onClick={zoomOut} disabled={zoomLevel <= 0.5}>
+              <ZoomOut className="h-3 w-3" />
+            </Button>
+            <span className="text-xs w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+            <Button variant="outline" size="icon" className="h-7 w-7" onClick={zoomIn} disabled={zoomLevel >= 2}>
+              <ZoomIn className="h-3 w-3" />
+            </Button>
+          </div>
+          
+          {/* Full Timeline Button */}
+          {!fullView && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/scheduling/full')}
+              className="ml-2"
+            >
+              <Maximize2 className="h-4 w-4 mr-1" />
+              Full 24h View
+            </Button>
+          )}
           
           {/* Auto Schedule Button */}
           {unassignedBookings.length > 0 && (

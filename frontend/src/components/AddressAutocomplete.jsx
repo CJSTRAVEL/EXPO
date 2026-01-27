@@ -186,6 +186,7 @@ const AddressAutocomplete = ({
 
   const handleSelect = (item) => {
     const address = item.description || item.mainText;
+    justSelectedRef.current = true; // Prevent search from re-running
     setInputValue(address);
     onChange(address);
     setShowDropdown(false);

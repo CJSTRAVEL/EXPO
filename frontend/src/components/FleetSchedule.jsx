@@ -341,7 +341,7 @@ const FleetSchedule = ({ fullView = false }) => {
       const driver = driverId ? drivers.find(d => d.id === driverId) : null;
       
       if (driver) {
-        toast.success(`${driver.first_name} assigned to ${vehicle?.displayName || vehicle?.registration}`);
+        toast.success(`${driver.name || driver.first_name} assigned to ${vehicle?.displayName || vehicle?.registration}`);
       } else {
         toast.info(`Driver removed from ${vehicle?.displayName || vehicle?.registration}`);
       }

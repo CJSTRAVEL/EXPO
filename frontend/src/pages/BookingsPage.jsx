@@ -839,6 +839,15 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
               </div>
             </div>
 
+            {/* Availability Indicator */}
+            {formData.vehicle_type && (
+              <AvailabilityIndicator 
+                availability={outboundAvailability} 
+                label="Schedule Availability"
+                isLoading={checkingAvailability}
+              />
+            )}
+
             {/* Deposit Paid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

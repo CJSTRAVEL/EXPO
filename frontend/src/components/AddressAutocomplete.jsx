@@ -70,9 +70,9 @@ const fetchPostcodeAddresses = async (postcode) => {
 };
 
 // Dropdown component rendered via portal
-const DropdownPortal = ({ children, style }) => {
+const DropdownPortal = ({ children, style, id }) => {
   return createPortal(
-    <div style={style} className="address-autocomplete-dropdown">
+    <div id={id} style={style} className="address-autocomplete-dropdown">
       {children}
     </div>,
     document.body

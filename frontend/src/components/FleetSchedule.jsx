@@ -252,18 +252,28 @@ const FleetSchedule = ({ fullView = false }) => {
   // Handle drop on vehicle row
   const handleDrop = async (e, vehicleId) => {
     e.preventDefault();
+    e.currentTarget.classList.remove('bg-blue-100', 'ring-2', 'ring-blue-400');
+    
     if (!draggedBooking) return;
+    
+    // Don't do anything if dropping on same vehicle
+    if (draggedBooking.vehicle_id === vehicleId) {
+      setDraggedBooking(null);
+      return;
+    }
     
     try {
       await axios.put(`${API}/api/bookings/${draggedBooking.id}`, {
         vehicle_id: vehicleId
       });
-      toast.success(`Booking ${draggedBooking.booking_id} moved to vehicle`);
+      const vehicle = vehicles.find(v => v.id === vehicleId);
+      toast.success(`Booking ${draggedBooking.booking_id} moved to ${vehicle?.registration || 'vehicle'}`);
       setDraggedBooking(null);
       fetchData();
     } catch (error) {
       console.error("Error moving booking:", error);
       toast.error("Failed to move booking");
+      setDraggedBooking(null);
     }
   };
 

@@ -5533,8 +5533,17 @@ async def auto_assign_vehicles(date: str = None):
         
         # PRIORITY 1: Match specific vehicle type if specified
         if booking_vehicle_type:
-            # Filter vehicles that match the specific vehicle type requested
-            matching_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') == booking_vehicle_type]
+            # Special case: Trailer bookings can use 16 Minibus vehicles
+            MINIBUS_16_TYPE_ID = '4bacbb8f-cf05-46a4-b225-3a0e4b76563e'
+            MINIBUS_TRAILER_TYPE_ID = 'a4fb3bd4-58b8-46d1-86ec-67dcb985485b'
+            
+            # If booking is for Trailer, also allow 16 Minibus vehicles
+            search_type_ids = [booking_vehicle_type]
+            if booking_vehicle_type == MINIBUS_TRAILER_TYPE_ID:
+                search_type_ids.append(MINIBUS_16_TYPE_ID)
+            
+            # Filter vehicles that match the specific vehicle type(s) requested
+            matching_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') in search_type_ids]
             
             if matching_vehicles:
                 # Sort by utilization (bin packing - prefer fuller vehicles)

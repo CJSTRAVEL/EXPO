@@ -5259,6 +5259,165 @@ async def delete_booking(booking_id: str):
         raise HTTPException(status_code=404, detail="Booking not found")
     return {"message": "Booking deleted successfully"}
 
+
+class AvailabilityCheckRequest(BaseModel):
+    date: str  # YYYY-MM-DD
+    time: str  # HH:MM
+    duration_minutes: Optional[int] = 60
+    vehicle_type_id: Optional[str] = None
+
+
+@api_router.post("/scheduling/check-availability")
+async def check_schedule_availability(request: AvailabilityCheckRequest):
+    """
+    Check if there's availability in the schedule for a given time/date/vehicle type.
+    
+    Returns:
+    - status: 'green' | 'amber' | 'red'
+    - available_vehicles: list of available vehicles
+    - message: explanation
+    - amber_suggestions: suggested times if amber
+    """
+    from datetime import timedelta
+    
+    DEFAULT_DURATION = 60
+    BUFFER_MINUTES = 15
+    
+    # Parse date and time
+    try:
+        target_date = datetime.strptime(request.date, "%Y-%m-%d").date()
+        target_time = datetime.strptime(request.time, "%H:%M").time()
+        target_datetime = datetime.combine(target_date, target_time)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date or time format")
+    
+    duration = request.duration_minutes or DEFAULT_DURATION
+    
+    # Get all vehicles
+    all_vehicles = await db.vehicles.find({}, {"_id": 0}).to_list(100)
+    
+    # Get all vehicle types
+    vehicle_types = await db.vehicle_types.find({}, {"_id": 0}).to_list(50)
+    vehicle_type_map = {vt['id']: vt for vt in vehicle_types}
+    
+    # Filter vehicles by type if specified
+    if request.vehicle_type_id:
+        # Special case: Trailer bookings can use 16 Minibus
+        MINIBUS_16_TYPE_ID = '4bacbb8f-cf05-46a4-b225-3a0e4b76563e'
+        MINIBUS_TRAILER_TYPE_ID = 'a4fb3bd4-58b8-46d1-86ec-67dcb985485b'
+        
+        if request.vehicle_type_id == MINIBUS_TRAILER_TYPE_ID:
+            eligible_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') in [MINIBUS_TRAILER_TYPE_ID, MINIBUS_16_TYPE_ID]]
+        else:
+            eligible_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') == request.vehicle_type_id]
+    else:
+        eligible_vehicles = all_vehicles
+    
+    if not eligible_vehicles:
+        return {
+            "status": "red",
+            "available_vehicles": [],
+            "message": "No vehicles of this type available",
+            "amber_suggestions": []
+        }
+    
+    # Get bookings for the target date
+    date_start = datetime.combine(target_date, datetime.min.time())
+    date_end = date_start + timedelta(days=1)
+    
+    bookings = await db.bookings.find({
+        "booking_datetime": {
+            "$gte": date_start.isoformat(),
+            "$lt": date_end.isoformat()
+        },
+        "vehicle_id": {"$ne": None}
+    }, {"_id": 0}).to_list(500)
+    
+    # Build schedule for each eligible vehicle
+    vehicle_schedules = {v['id']: [] for v in eligible_vehicles}
+    
+    for booking in bookings:
+        if booking.get('vehicle_id') in vehicle_schedules:
+            try:
+                booking_dt = datetime.fromisoformat(booking['booking_datetime'].replace('Z', '+00:00')).replace(tzinfo=None)
+                booking_duration = booking.get('duration_minutes') or DEFAULT_DURATION
+                vehicle_schedules[booking['vehicle_id']].append({
+                    'start': booking_dt,
+                    'end': booking_dt + timedelta(minutes=booking_duration + BUFFER_MINUTES)
+                })
+            except:
+                pass
+    
+    # Check availability for exact time
+    def check_slot(vehicle_id, start_time, slot_duration):
+        """Check if a time slot fits in a vehicle's schedule"""
+        end_time = start_time + timedelta(minutes=slot_duration + BUFFER_MINUTES)
+        
+        for slot in vehicle_schedules.get(vehicle_id, []):
+            # Check for overlap
+            if not (end_time <= slot['start'] or start_time >= slot['end']):
+                return False
+        return True
+    
+    # Check exact time
+    available_at_exact_time = []
+    for vehicle in eligible_vehicles:
+        if check_slot(vehicle['id'], target_datetime, duration):
+            vtype = vehicle_type_map.get(vehicle.get('vehicle_type_id'), {})
+            available_at_exact_time.append({
+                'id': vehicle['id'],
+                'type_name': vtype.get('name', 'Unknown'),
+                'make': vehicle.get('make', ''),
+                'model': vehicle.get('model', '')
+            })
+    
+    if available_at_exact_time:
+        vtype_name = vehicle_type_map.get(request.vehicle_type_id, {}).get('name', 'vehicle')
+        return {
+            "status": "green",
+            "available_vehicles": available_at_exact_time,
+            "message": f"{len(available_at_exact_time)} {vtype_name}(s) available at this time",
+            "amber_suggestions": []
+        }
+    
+    # Check 30 minutes either side for amber
+    amber_suggestions = []
+    for offset in [-30, -15, 15, 30]:
+        alt_time = target_datetime + timedelta(minutes=offset)
+        alt_available = []
+        
+        for vehicle in eligible_vehicles:
+            if check_slot(vehicle['id'], alt_time, duration):
+                vtype = vehicle_type_map.get(vehicle.get('vehicle_type_id'), {})
+                alt_available.append({
+                    'id': vehicle['id'],
+                    'type_name': vtype.get('name', 'Unknown')
+                })
+        
+        if alt_available:
+            amber_suggestions.append({
+                'time': alt_time.strftime("%H:%M"),
+                'offset_minutes': offset,
+                'vehicle_count': len(alt_available)
+            })
+    
+    if amber_suggestions:
+        return {
+            "status": "amber",
+            "available_vehicles": [],
+            "message": "No availability at exact time, but slots available nearby",
+            "amber_suggestions": amber_suggestions
+        }
+    
+    # No availability at all
+    return {
+        "status": "red",
+        "available_vehicles": [],
+        "message": "No availability for this vehicle type on this date",
+        "amber_suggestions": []
+    }
+
+
 @api_router.post("/scheduling/auto-assign")
 async def auto_assign_vehicles(date: str = None):
     """

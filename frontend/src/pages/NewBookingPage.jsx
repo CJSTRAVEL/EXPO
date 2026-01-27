@@ -256,6 +256,11 @@ const NewBookingPage = () => {
   const [selectedPassengerBookings, setSelectedPassengerBookings] = useState([]);
   const [loadingPassengerHistory, setLoadingPassengerHistory] = useState(false);
 
+  // Availability check state (traffic light system)
+  const [outboundAvailability, setOutboundAvailability] = useState(null);
+  const [returnAvailability, setReturnAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
   // Fetch data
   useEffect(() => {
     const fetchData = async () => {

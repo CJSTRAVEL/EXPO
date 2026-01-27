@@ -46,6 +46,78 @@ const getStatusBadge = (status) => {
   );
 };
 
+// Availability indicator component for traffic light system
+const AvailabilityIndicator = ({ availability, label, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border p-2 bg-gray-50">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+          <span className="text-sm text-gray-500">Checking availability...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!availability) return null;
+  
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'green':
+        return {
+          bg: 'bg-green-50 border-green-200',
+          icon: <CheckCircle2 className="h-4 w-4 text-green-600" />,
+          textColor: 'text-green-700',
+          badge: 'bg-green-100 text-green-800'
+        };
+      case 'amber':
+        return {
+          bg: 'bg-amber-50 border-amber-200',
+          icon: <AlertTriangle className="h-4 w-4 text-amber-600" />,
+          textColor: 'text-amber-700',
+          badge: 'bg-amber-100 text-amber-800'
+        };
+      case 'red':
+        return {
+          bg: 'bg-red-50 border-red-200',
+          icon: <XCircle className="h-4 w-4 text-red-600" />,
+          textColor: 'text-red-700',
+          badge: 'bg-red-100 text-red-800'
+        };
+      default:
+        return {
+          bg: 'bg-gray-50 border-gray-200',
+          icon: null,
+          textColor: 'text-gray-700',
+          badge: 'bg-gray-100 text-gray-800'
+        };
+    }
+  };
+  
+  const config = getStatusConfig(availability.status);
+  
+  return (
+    <div className={`rounded-lg border p-2 ${config.bg}`}>
+      <div className="flex items-start gap-2">
+        {config.icon}
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className={`font-medium text-xs ${config.textColor}`}>
+              {label}
+            </span>
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${config.badge}`}>
+              {availability.status === 'green' ? 'Available' : availability.status === 'amber' ? 'Limited' : 'Unavailable'}
+            </span>
+          </div>
+          <p className={`text-xs mt-0.5 ${config.textColor}`}>
+            {availability.message}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose, isOpen }) => {
   const [formData, setFormData] = useState({
     first_name: "",

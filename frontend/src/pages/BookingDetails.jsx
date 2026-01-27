@@ -237,87 +237,238 @@ const LiveTrackingMap = ({ bookingId, pickupLocation, dropoffLocation, status, d
     }
   }, [status, fetchDriverLocation]);
 
-  // Render Uber-style map with route line
-  if (driverLocation && driverLocation.lat && driverLocation.lng) {
-    const driverLat = driverLocation.lat;
-    const driverLng = driverLocation.lng;
-    
-    // Calculate center point between driver and pickup for better framing
-    // We'll use a zoom level based on ETA - closer = more zoomed in
-    let zoomLevel = 11; // Default zoom
-    if (etaMinutes) {
-      if (etaMinutes <= 5) zoomLevel = 14;
-      else if (etaMinutes <= 10) zoomLevel = 13;
-      else if (etaMinutes <= 20) zoomLevel = 12;
-      else zoomLevel = 11;
-    }
-    
-    // Build static map URL with sleek route line
-    let staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x400&scale=2&maptype=roadmap`;
-    
-    // Add custom map styling for cleaner look (hide POIs, simplify)
-    staticMapUrl += `&style=feature:poi%7Cvisibility:off`;
-    staticMapUrl += `&style=feature:transit%7Cvisibility:off`;
-    
-    // Add the route polyline if available (navy blue line - CJ's brand color)
-    if (routePolyline) {
-      staticMapUrl += `&path=color:0x1a3a5cff%7Cweight:6%7Cenc:${routePolyline}`;
-    }
-    
-    // Add driver marker - navy blue to match CJ's branding
-    staticMapUrl += `&markers=color:0x1a3a5c%7Csize:mid%7Clabel:D%7C${driverLat},${driverLng}`;
-    
-    // Add pickup marker (green for destination)
-    staticMapUrl += `&markers=color:0x22c55e%7Csize:mid%7Clabel:P%7C${encodeURIComponent(pickupLocation)}`;
-    
-    staticMapUrl += `&key=${GOOGLE_MAPS_API_KEY}`;
+  // Load Google Maps
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries
+  });
 
+  const mapRef = useRef(null);
+  const [directions, setDirections] = useState(null);
+  const [pickupCoords, setPickupCoords] = useState(null);
+  const [dropoffCoords, setDropoffCoords] = useState(null);
+
+  // Geocode addresses to get coordinates
+  useEffect(() => {
+    if (!isLoaded || !window.google) return;
+
+    const geocoder = new window.google.maps.Geocoder();
+
+    // Geocode pickup
+    if (pickupLocation) {
+      geocoder.geocode({ address: pickupLocation }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          setPickupCoords({
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng()
+          });
+        }
+      });
+    }
+
+    // Geocode dropoff
+    if (dropoffLocation) {
+      geocoder.geocode({ address: dropoffLocation }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          setDropoffCoords({
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng()
+          });
+        }
+      });
+    }
+  }, [isLoaded, pickupLocation, dropoffLocation]);
+
+  // Get directions between pickup and dropoff
+  useEffect(() => {
+    if (!isLoaded || !window.google || !pickupCoords || !dropoffCoords) return;
+
+    const directionsService = new window.google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: pickupCoords,
+        destination: dropoffCoords,
+        travelMode: window.google.maps.TravelMode.DRIVING
+      },
+      (result, status) => {
+        if (status === 'OK') {
+          setDirections(result);
+        }
+      }
+    );
+  }, [isLoaded, pickupCoords, dropoffCoords]);
+
+  // Fit map to show all markers
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map;
+    
+    // Fit bounds when we have coordinates
+    if (pickupCoords || dropoffCoords || driverLocation) {
+      const bounds = new window.google.maps.LatLngBounds();
+      
+      if (pickupCoords) bounds.extend(pickupCoords);
+      if (dropoffCoords) bounds.extend(dropoffCoords);
+      if (driverLocation?.lat && driverLocation?.lng) {
+        bounds.extend({ lat: driverLocation.lat, lng: driverLocation.lng });
+      }
+      
+      map.fitBounds(bounds, { padding: 50 });
+    }
+  }, [pickupCoords, dropoffCoords, driverLocation]);
+
+  // Update bounds when driver location changes
+  useEffect(() => {
+    if (mapRef.current && (pickupCoords || dropoffCoords || driverLocation)) {
+      const bounds = new window.google.maps.LatLngBounds();
+      
+      if (pickupCoords) bounds.extend(pickupCoords);
+      if (dropoffCoords) bounds.extend(dropoffCoords);
+      if (driverLocation?.lat && driverLocation?.lng) {
+        bounds.extend({ lat: driverLocation.lat, lng: driverLocation.lng });
+      }
+      
+      mapRef.current.fitBounds(bounds, { padding: 50 });
+    }
+  }, [pickupCoords, dropoffCoords, driverLocation]);
+
+  // Loading state
+  if (loadError) {
     return (
-      <div className="relative bg-gray-50">
-        {/* Map Container - Taller for better view */}
-        <div className="relative h-80 md:h-96">
-          <img
-            src={staticMapUrl}
-            alt="Live Driver Location"
-            className="w-full h-full object-cover"
-          />
-          
-          {/* ETA Bubble - Uber style */}
-          {etaMinutes && (
-            <div className="absolute top-4 left-4 bg-black text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
-              <Car className="w-5 h-5" />
-              <span className="text-base font-bold">{etaMinutes} min</span>
-            </div>
-          )}
-          
-          {/* Refresh button */}
-          <button 
-            onClick={fetchDriverLocation}
-            disabled={isRefreshing}
-            className="absolute top-4 right-4 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors border border-gray-200"
-          >
-            <RefreshCw className={`w-5 h-5 text-gray-700 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-          
-          {/* Bottom gradient overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent" />
-        </div>
+      <div className="h-80 md:h-96 bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-500">Error loading map</p>
       </div>
     );
   }
 
-  // Fallback - show pickup location only (zoomed in)
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=640x400&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&center=${encodeURIComponent(pickupLocation)}&zoom=14&markers=color:0x22c55e%7Csize:mid%7Clabel:P%7C${encodeURIComponent(pickupLocation)}&key=${GOOGLE_MAPS_API_KEY}`;
+  if (!isLoaded) {
+    return (
+      <div className="h-80 md:h-96 bg-gray-100 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading map...</div>
+      </div>
+    );
+  }
+
+  // Default center (UK)
+  const defaultCenter = pickupCoords || { lat: 54.5, lng: -1.5 };
 
   return (
     <div className="relative bg-gray-50">
+      {/* Interactive Map Container */}
       <div className="relative h-80 md:h-96">
-        <img
-          src={staticMapUrl}
-          alt="Pickup Location"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent" />
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={defaultCenter}
+          zoom={12}
+          onLoad={onMapLoad}
+          options={mapOptions}
+        >
+          {/* Driver Marker */}
+          {driverLocation?.lat && driverLocation?.lng && (
+            <Marker
+              position={{ lat: driverLocation.lat, lng: driverLocation.lng }}
+              icon={{
+                url: 'data:image/svg+xml,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" fill="#1a3a5c" stroke="white" stroke-width="3"/>
+                    <text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">D</text>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(40, 40),
+                anchor: new window.google.maps.Point(20, 20)
+              }}
+              title="Driver Location"
+            />
+          )}
+
+          {/* Pickup Marker */}
+          {pickupCoords && (
+            <Marker
+              position={pickupCoords}
+              icon={{
+                url: 'data:image/svg+xml,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" fill="#22c55e" stroke="white" stroke-width="3"/>
+                    <text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">P</text>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(40, 40),
+                anchor: new window.google.maps.Point(20, 20)
+              }}
+              title={`Pickup: ${pickupLocation}`}
+            />
+          )}
+
+          {/* Dropoff Marker */}
+          {dropoffCoords && (
+            <Marker
+              position={dropoffCoords}
+              icon={{
+                url: 'data:image/svg+xml,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" fill="#ef4444" stroke="white" stroke-width="3"/>
+                    <text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">D</text>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(40, 40),
+                anchor: new window.google.maps.Point(20, 20)
+              }}
+              title={`Dropoff: ${dropoffLocation}`}
+            />
+          )}
+
+          {/* Route Line */}
+          {directions && (
+            <DirectionsRenderer
+              directions={directions}
+              options={{
+                suppressMarkers: true,
+                polylineOptions: {
+                  strokeColor: '#1a3a5c',
+                  strokeWeight: 5,
+                  strokeOpacity: 0.8
+                }
+              }}
+            />
+          )}
+        </GoogleMap>
+        
+        {/* ETA Bubble - Uber style */}
+        {etaMinutes && (
+          <div className="absolute top-4 left-4 bg-black text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 z-10">
+            <Car className="w-5 h-5" />
+            <span className="text-base font-bold">{etaMinutes} min</span>
+          </div>
+        )}
+        
+        {/* Refresh button */}
+        <button 
+          onClick={fetchDriverLocation}
+          disabled={isRefreshing}
+          className="absolute top-4 right-4 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors border border-gray-200 z-10"
+        >
+          <RefreshCw className={`w-5 h-5 text-gray-700 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </button>
+
+        {/* Legend */}
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-md text-xs z-10">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Pickup</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <span>Dropoff</span>
+            </div>
+            {driverLocation?.lat && (
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-[#1a3a5c]"></div>
+                <span>Driver</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

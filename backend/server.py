@@ -2083,20 +2083,42 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 return_datetime_display = return_datetime
         
         # Try WhatsApp template first
-        if TWILIO_WHATSAPP_ENABLED and TWILIO_TEMPLATE_BOOKING_CONFIRMATION:
-            success, result = send_whatsapp_booking_confirmation(
-                phone=phone,
-                customer_name=customer_name,
-                booking_id=short_booking_id or booking_id,
-                pickup=pickup or "See booking details",
-                datetime_str=datetime_display,
-                booking_link=booking_link
-            )
-            if success:
-                logging.info(f"Booking confirmation WhatsApp sent to {phone}")
-                return True, "Sent via WhatsApp"
-            else:
-                logging.warning(f"WhatsApp template failed ({result}), trying freeform WhatsApp...")
+        if TWILIO_WHATSAPP_ENABLED:
+            # Use return template if has return journey, otherwise use standard template
+            if has_return and return_datetime_display and TWILIO_TEMPLATE_BOOKING_WITH_RETURN:
+                success, result = send_whatsapp_booking_with_return(
+                    phone=phone,
+                    customer_name=customer_name,
+                    booking_id=short_booking_id or booking_id,
+                    outbound_pickup=pickup or "See booking details",
+                    outbound_dropoff=dropoff or "See booking details",
+                    outbound_datetime=datetime_display,
+                    return_pickup=return_pickup or dropoff or "See booking details",
+                    return_dropoff=return_dropoff or pickup or "See booking details",
+                    return_datetime=return_datetime_display,
+                    booking_link=booking_link
+                )
+                if success:
+                    logging.info(f"Booking confirmation with return WhatsApp sent to {phone}")
+                    return True, "Sent via WhatsApp (with return)"
+                else:
+                    logging.warning(f"WhatsApp return template failed ({result}), trying standard template...")
+            
+            # Try standard template (for bookings without return or if return template failed)
+            if TWILIO_TEMPLATE_BOOKING_CONFIRMATION:
+                success, result = send_whatsapp_booking_confirmation(
+                    phone=phone,
+                    customer_name=customer_name,
+                    booking_id=short_booking_id or booking_id,
+                    pickup=pickup or "See booking details",
+                    datetime_str=datetime_display,
+                    booking_link=booking_link
+                )
+                if success:
+                    logging.info(f"Booking confirmation WhatsApp sent to {phone}")
+                    return True, "Sent via WhatsApp"
+                else:
+                    logging.warning(f"WhatsApp template failed ({result}), trying freeform WhatsApp...")
                 
                 # Try freeform WhatsApp message as fallback (requires 24hr window)
                 # Build message with return journey details if present

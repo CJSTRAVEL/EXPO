@@ -8073,6 +8073,37 @@ async def twilio_whatsapp_webhook(request: Request):
             return PlainTextResponse(content="<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", media_type="application/xml")
 
 
+# Production App URL from environment
+APP_URL = os.environ.get('APP_URL', 'https://cjsdispatch.co.uk')
+
+@api_router.get("/whatsapp/webhook-url")
+async def get_whatsapp_webhook_url(request: Request):
+    """
+    Returns the WhatsApp webhook URL to configure in Twilio Console.
+    Uses APP_URL environment variable for production, falls back to request host for preview.
+    """
+    # Use APP_URL if set and not empty, otherwise use request host
+    if APP_URL and APP_URL.strip():
+        base_url = APP_URL.rstrip('/')
+    else:
+        # Fallback to request host (works for preview)
+        base_url = str(request.base_url).rstrip('/')
+    
+    webhook_url = f"{base_url}/api/webhooks/twilio/whatsapp"
+    
+    return {
+        "webhook_url": webhook_url,
+        "base_url": base_url,
+        "instructions": {
+            "step1": "Go to Twilio Console → Phone Numbers → Your WhatsApp Number",
+            "step2": "In 'Messaging Configuration', set 'When a message comes in' to:",
+            "webhook": webhook_url,
+            "method": "POST"
+        },
+        "production_url": f"{APP_URL.rstrip('/')}/api/webhooks/twilio/whatsapp" if APP_URL else None
+    }
+
+
 @api_router.get("/whatsapp/messages")
 async def get_whatsapp_messages(
     limit: int = 50,

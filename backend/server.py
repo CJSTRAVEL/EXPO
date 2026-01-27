@@ -4473,6 +4473,18 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     
     # Send SMS and Email in background with journey details and short booking ID
     full_name = f"{booking.first_name} {booking.last_name}"
+    
+    # Prepare return journey details if applicable
+    has_return = create_return and return_datetime is not None
+    return_pickup_loc = None
+    return_dropoff_loc = None
+    return_dt_str = None
+    
+    if has_return:
+        return_pickup_loc = booking.return_pickup_location or booking.dropoff_location
+        return_dropoff_loc = booking.return_dropoff_location or booking.pickup_location
+        return_dt_str = return_datetime.isoformat() if return_datetime else None
+    
     background_tasks.add_task(
         send_notifications_and_update_booking,
         booking_obj.id,
@@ -4489,7 +4501,11 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
         None,  # driver_name
         booking.customer_phone,  # customer_phone
         booking.vehicle_type,  # vehicle_type
-        booking.additional_stops  # additional_stops
+        booking.additional_stops,  # additional_stops
+        return_pickup_loc,  # return_pickup
+        return_dropoff_loc,  # return_dropoff
+        return_dt_str,  # return_datetime
+        has_return  # has_return
     )
     
     # Return response with customer_name included

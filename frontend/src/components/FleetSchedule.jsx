@@ -638,6 +638,155 @@ const FleetSchedule = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View Booking Dialog */}
+      <Dialog open={!!viewBooking} onOpenChange={() => setViewBooking(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Booking Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {viewBooking && (
+            <div className="space-y-4">
+              {/* Booking ID and Status */}
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className="text-lg px-3 py-1 bg-blue-50 text-blue-700 border-blue-300">
+                  {viewBooking.booking_id}
+                </Badge>
+                <Badge className={viewBooking.vehicle_id ? 'bg-green-500' : 'bg-amber-500'}>
+                  {viewBooking.vehicle_id ? 'Assigned' : 'Unassigned'}
+                </Badge>
+              </div>
+              
+              {/* Customer Details */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Customer Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500">Name:</span>
+                    <p className="font-medium">{viewBooking.first_name} {viewBooking.last_name}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Passengers:</span>
+                    <p className="font-medium">{viewBooking.passengers || 1}</p>
+                  </div>
+                  {viewBooking.phone && (
+                    <div className="flex items-center gap-1">
+                      <Phone className="h-3 w-3 text-gray-400" />
+                      <span>{viewBooking.phone}</span>
+                    </div>
+                  )}
+                  {viewBooking.email && (
+                    <div className="flex items-center gap-1">
+                      <Mail className="h-3 w-3 text-gray-400" />
+                      <span className="truncate">{viewBooking.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Journey Details */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                  <Navigation className="h-4 w-4" />
+                  Journey Details
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-500" />
+                    <span className="font-medium">
+                      {viewBooking.booking_datetime && format(parseISO(viewBooking.booking_datetime), "dd MMM yyyy 'at' HH:mm")}
+                    </span>
+                    {viewBooking.duration_minutes && (
+                      <span className="text-gray-500">({viewBooking.duration_minutes} mins)</span>
+                    )}
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-green-500 mt-0.5" />
+                    <div>
+                      <span className="text-gray-500 text-xs">Pickup</span>
+                      <p className="font-medium">{viewBooking.pickup_location}</p>
+                    </div>
+                  </div>
+                  {viewBooking.additional_stops?.length > 0 && (
+                    <div className="ml-6 pl-2 border-l-2 border-dashed border-gray-300">
+                      {viewBooking.additional_stops.map((stop, i) => (
+                        <div key={i} className="text-gray-600 py-1">
+                          <span className="text-xs text-gray-400">Stop {i + 1}:</span> {stop}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
+                    <div>
+                      <span className="text-gray-500 text-xs">Dropoff</span>
+                      <p className="font-medium">{viewBooking.dropoff_location}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Vehicle & Fare */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <span className="text-xs text-gray-500">Vehicle Type</span>
+                  <p className="font-medium flex items-center gap-1">
+                    <Car className="h-4 w-4 text-gray-400" />
+                    {vehicleTypes.find(vt => vt.id === viewBooking.vehicle_type)?.name || 'Not specified'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <span className="text-xs text-gray-500">Fare</span>
+                  <p className="font-medium text-lg text-green-600">
+                    £{viewBooking.quoted_fare?.toFixed(2) || viewBooking.fare?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Assigned Vehicle */}
+              {viewBooking.vehicle_id && (
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <span className="text-xs text-blue-600">Assigned Vehicle</span>
+                  <p className="font-medium">
+                    {vehicles.find(v => v.id === viewBooking.vehicle_id)?.registration || viewBooking.vehicle_id}
+                  </p>
+                </div>
+              )}
+              
+              {/* Notes */}
+              {viewBooking.notes && (
+                <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                  <span className="text-xs text-yellow-700">Notes</span>
+                  <p className="text-sm mt-1">{viewBooking.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter className="flex gap-2">
+            {viewBooking && !viewBooking.vehicle_id && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setAllocateDialog(viewBooking);
+                  setViewBooking(null);
+                }}
+              >
+                <Link2 className="h-4 w-4 mr-2" />
+                Allocate Vehicle
+              </Button>
+            )}
+            <Button onClick={() => setViewBooking(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

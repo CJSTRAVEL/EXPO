@@ -1,0 +1,82 @@
+{
+  "summary": "Traffic light availability system tested successfully on both New Booking page and Edit Booking dialog. The system correctly shows green/amber/red indicators based on vehicle availability from the backend API.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_12.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (backend confirmed working)", "frontend": "100%"},
+  "seed_data_creation": "Used existing bookings and vehicle types for testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Traffic light availability system fully tested. The AvailabilityIndicator component is implemented in both NewBookingPage.jsx and BookingsPage.jsx (BookingForm component). It calls POST /api/scheduling/check-availability with date, time, duration_minutes, and vehicle_type_id parameters. The indicator shows: GREEN (Available) with checkmark icon, AMBER (Limited) with warning icon, RED (Unavailable) with X icon. The availability check is triggered via useEffect when booking_datetime, vehicle_type, create_return, or return_datetime changes.",
+  "features_tested": {
+    "new_booking_page_availability": {
+      "status": "PASS",
+      "details": "Traffic light indicator appears after selecting vehicle type. Shows 'Outbound Journey' with Available/Limited/Unavailable badge and message like '2 CJ's Taxi(s) available at this time'"
+    },
+    "new_booking_return_availability": {
+      "status": "PASS",
+      "details": "When 'Create Return Journey' is enabled, a separate 'Return Journey' availability indicator appears showing availability for the return date/time"
+    },
+    "edit_booking_dialog_availability": {
+      "status": "PASS",
+      "details": "Edit Booking popup shows 'Schedule Availability' indicator with correct status. Tested with both Available (green) and Unavailable (red) states"
+    },
+    "availability_updates_on_change": {
+      "status": "PASS",
+      "details": "Availability indicator updates when changing vehicle type (e.g., from Taxi to 8 Minibus) or date/time"
+    }
+  },
+  "test_evidence": {
+    "screenshots": [
+      ".screenshots/new_booking_page.png - New Booking page layout",
+      ".screenshots/availability_8minibus.png - Outbound availability showing green status",
+      ".screenshots/availability_with_return.png - Both outbound and return availability indicators",
+      ".screenshots/edit_booking_dialog.png - Edit dialog with availability indicator",
+      ".screenshots/edit_dialog_availability.png - Edit dialog showing green availability status"
+    ],
+    "availability_states_observed": [
+      {
+        "state": "GREEN (Available)",
+        "message": "2 CJ's Taxi(s) available at this time",
+        "location": "New Booking Page - Outbound Journey"
+      },
+      {
+        "state": "GREEN (Available)",
+        "message": "2 CJ's 8 Minibus(s) available at this time",
+        "location": "New Booking Page - Return Journey"
+      },
+      {
+        "state": "RED (Unavailable)",
+        "message": "No vehicles of this type available",
+        "location": "Edit Booking Dialog - First booking (Executive Saloon)"
+      },
+      {
+        "state": "GREEN (Available)",
+        "message": "2 CJ's 8 Minibus(s) available at this time",
+        "location": "Edit Booking Dialog - Third booking"
+      }
+    ]
+  },
+  "vehicle_types_tested": [
+    {"name": "CJ's Taxi", "seats": 4},
+    {"name": "CJ's 8 Minibus", "seats": 8},
+    {"name": "CJ's 16 Minibus", "seats": 16},
+    {"name": "CJ's 16 with Trailer", "seats": 16}
+  ],
+  "test_credentials_used": {
+    "email": "admin@cjstravel.uk",
+    "password": "admin123"
+  }
+}

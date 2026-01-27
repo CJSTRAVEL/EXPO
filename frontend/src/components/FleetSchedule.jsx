@@ -43,6 +43,7 @@ const FleetSchedule = () => {
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [autoScheduling, setAutoScheduling] = useState(false);
   const [autoScheduleResult, setAutoScheduleResult] = useState(null);
+  const [viewBooking, setViewBooking] = useState(null);
 
   useEffect(() => {
     fetchData();

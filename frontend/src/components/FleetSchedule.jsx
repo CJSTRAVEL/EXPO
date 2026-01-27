@@ -178,15 +178,25 @@ const FleetSchedule = ({ fullView = false }) => {
     const bookingTime = parseISO(booking.booking_datetime);
     const hours = bookingTime.getHours();
     const minutes = bookingTime.getMinutes();
-    const startPercent = ((hours * 60 + minutes) / (24 * 60)) * 100;
+    
+    // Calculate position relative to displayed hours
+    const startHour = HOURS[0];
+    const endHour = HOURS[HOURS.length - 1] + 1;
+    const totalMinutes = (endHour - startHour) * 60;
+    
+    const bookingMinutes = (hours - startHour) * 60 + minutes;
+    const startPercent = (bookingMinutes / totalMinutes) * 100;
     
     // Duration in minutes (default 60 if not specified)
     const duration = booking.duration_minutes || 60;
-    const widthPercent = (duration / (24 * 60)) * 100;
+    const widthPercent = (duration / totalMinutes) * 100;
+    
+    // Hide bookings outside visible range
+    if (hours < startHour || hours >= endHour) return null;
     
     return {
-      left: `${startPercent}%`,
-      width: `${Math.max(widthPercent, 2)}%`, // Minimum 2% width for visibility
+      left: `${Math.max(0, startPercent)}%`,
+      width: `${Math.max(widthPercent, 3)}%`, // Minimum 3% width for visibility
     };
   };
 
@@ -194,6 +204,44 @@ const FleetSchedule = ({ fullView = false }) => {
   const formatTime = (datetime) => {
     if (!datetime) return '';
     return format(parseISO(datetime), 'HH:mm');
+  };
+
+  // Get driver assigned to a vehicle
+  const getVehicleDriver = (vehicleId) => {
+    // Find driver assigned to this vehicle (you may need to adjust based on your data model)
+    const driver = drivers.find(d => d.assigned_vehicle_id === vehicleId || d.vehicle_id === vehicleId);
+    return driver;
+  };
+
+  // Handle drag start
+  const handleDragStart = (e, booking) => {
+    setDraggedBooking(booking);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', booking.id);
+  };
+
+  // Handle drag over
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  // Handle drop on vehicle row
+  const handleDrop = async (e, vehicleId) => {
+    e.preventDefault();
+    if (!draggedBooking) return;
+    
+    try {
+      await axios.put(`${API}/api/bookings/${draggedBooking.id}`, {
+        vehicle_id: vehicleId
+      });
+      toast.success(`Booking ${draggedBooking.booking_id} moved to vehicle`);
+      setDraggedBooking(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error moving booking:", error);
+      toast.error("Failed to move booking");
+    }
   };
 
   // Handle allocating a booking to a vehicle
@@ -213,6 +261,10 @@ const FleetSchedule = ({ fullView = false }) => {
       toast.error("Failed to allocate booking");
     }
   };
+
+  // Zoom controls
+  const zoomIn = () => setZoomLevel(prev => Math.min(prev + 0.25, 2));
+  const zoomOut = () => setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
 
   // Navigate days
   const goToPreviousDay = () => setSelectedDate(prev => addDays(prev, -1));

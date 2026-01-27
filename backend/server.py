@@ -5586,7 +5586,8 @@ async def auto_assign_vehicles(date: str = None):
         "failed": len(failed),
         "vehicles_used": vehicles_used,
         "assignments": assignments,
-        "failures": failed
+        "failures": failed,
+        "alternatives_suggested": alternatives_suggested
     }
 
 @api_router.post("/bookings/{booking_id}/assign/{driver_id}", response_model=BookingResponse)

@@ -74,8 +74,41 @@ const FleetSchedule = ({ fullView = false }) => {
   const HOURS = fullView ? FULL_HOURS : WORKING_HOURS;
   const hourWidth = 60 * zoomLevel; // Base width * zoom
 
+  // Fetch data on mount and when date changes
   useEffect(() => {
     fetchData();
+  }, [selectedDate]);
+
+  // Auto-refresh when page becomes visible (user switches back to tab/window)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+    
+    const handleFocus = () => {
+      fetchData();
+    };
+    
+    // Listen for tab visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Listen for window focus (when user clicks back on window)
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [selectedDate]);
+
+  // Auto-refresh every 30 seconds to catch updates from other pages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
   }, [selectedDate]);
 
   const fetchData = async () => {

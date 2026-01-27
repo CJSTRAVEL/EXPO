@@ -112,6 +112,71 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
   const [returnFlightError, setReturnFlightError] = useState(null);
   const [flightModalOpen, setFlightModalOpen] = useState(false);
   const [flightSearchNumber, setFlightSearchNumber] = useState("");
+  
+  // Availability check state (traffic light system)
+  const [outboundAvailability, setOutboundAvailability] = useState(null);
+  const [returnAvailability, setReturnAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  // Check schedule availability (traffic light system)
+  useEffect(() => {
+    // Only check if we have date, time, and vehicle type
+    if (!formData.booking_datetime || !formData.vehicle_type) {
+      setOutboundAvailability(null);
+      setReturnAvailability(null);
+      return;
+    }
+    
+    const checkAvailability = async () => {
+      setCheckingAvailability(true);
+      
+      try {
+        // Get duration from route info if available (default 60 min)
+        const durationMinutes = routeInfo?.duration?.value 
+          ? Math.ceil(routeInfo.duration.value / 60) 
+          : 60;
+        
+        const bookingDate = format(formData.booking_datetime, 'yyyy-MM-dd');
+        const bookingTime = format(formData.booking_datetime, 'HH:mm');
+        
+        // Check outbound availability
+        const outboundRes = await axios.post(`${API}/scheduling/check-availability`, {
+          date: bookingDate,
+          time: bookingTime,
+          duration_minutes: durationMinutes,
+          vehicle_type_id: formData.vehicle_type,
+          exclude_booking_id: booking?.id // Exclude current booking from availability check
+        });
+        setOutboundAvailability(outboundRes.data);
+        
+        // Check return availability if return journey is enabled
+        if (formData.create_return && formData.return_datetime) {
+          const returnDate = format(formData.return_datetime, 'yyyy-MM-dd');
+          const returnTime = format(formData.return_datetime, 'HH:mm');
+          
+          const returnRes = await axios.post(`${API}/scheduling/check-availability`, {
+            date: returnDate,
+            time: returnTime,
+            duration_minutes: durationMinutes,
+            vehicle_type_id: formData.vehicle_type
+          });
+          setReturnAvailability(returnRes.data);
+        } else {
+          setReturnAvailability(null);
+        }
+      } catch (error) {
+        console.error("Error checking availability:", error);
+        setOutboundAvailability(null);
+        setReturnAvailability(null);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+    
+    // Debounce the check
+    const debounce = setTimeout(checkAvailability, 500);
+    return () => clearTimeout(debounce);
+  }, [formData.booking_datetime, formData.vehicle_type, formData.create_return, formData.return_datetime, routeInfo?.duration?.value, booking?.id]);
 
   // Flight lookup handler for edit form
   const handleFlightLookup = async () => {

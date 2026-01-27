@@ -569,15 +569,38 @@ const FleetSchedule = ({ fullView = false }) => {
     const conflictingBooking = hasTimeConflict(selectedVehicle, allocateDialog);
     
     if (conflictingBooking) {
-      // Try to find next available vehicle of the same type
-      const nextAvailable = findNextAvailableVehicle(targetVehicle?.vehicle_type_id, allocateDialog, selectedVehicle);
+      // Try to find next available vehicle of the same type (includes travel time check)
+      const result = await findNextAvailableVehicle(targetVehicle?.vehicle_type_id, allocateDialog, selectedVehicle);
       
-      if (nextAvailable) {
-        finalVehicleId = nextAvailable.id;
-        toast.info(`Time conflict on ${getVehicleDisplayName(selectedVehicle)} - auto-assigned to ${getVehicleDisplayName(nextAvailable.id)}`);
+      if (result) {
+        finalVehicleId = result.vehicle.id;
+        toast.info(`Time conflict on ${getVehicleDisplayName(selectedVehicle)} - auto-assigned to ${getVehicleDisplayName(result.vehicle.id)}`);
+        
+        if (result.travelCheck.warnings?.length > 0) {
+          result.travelCheck.warnings.forEach(w => toast.warning(w.message));
+        }
       } else {
         toast.error(`Time conflict! ${conflictingBooking.booking_id} is scheduled at ${format(parseISO(conflictingBooking.booking_datetime), 'HH:mm')}. No other ${targetVehicleType?.name || 'vehicle'} available.`);
         return;
+      }
+    } else {
+      // No time conflict - but still check travel time feasibility
+      const travelCheck = await checkTravelTimeFeasibility(selectedVehicle, allocateDialog);
+      
+      if (!travelCheck.feasible) {
+        // Travel time conflict - try to find alternative vehicle
+        const result = await findNextAvailableVehicle(targetVehicle?.vehicle_type_id, allocateDialog, selectedVehicle);
+        
+        if (result) {
+          finalVehicleId = result.vehicle.id;
+          toast.info(`Travel time issue on ${getVehicleDisplayName(selectedVehicle)} - auto-assigned to ${getVehicleDisplayName(result.vehicle.id)}`);
+        } else {
+          const conflict = travelCheck.conflicts[0];
+          toast.error(conflict?.message || "Travel time conflict - driver cannot reach pickup in time");
+          return;
+        }
+      } else if (travelCheck.warnings?.length > 0) {
+        travelCheck.warnings.forEach(w => toast.warning(w.message));
       }
     }
     

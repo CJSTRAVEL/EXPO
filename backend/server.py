@@ -5525,20 +5525,66 @@ async def auto_assign_vehicles(date: str = None):
         booking_time = parse_booking_time(booking)
         duration = booking.get('duration_minutes') or DEFAULT_DURATION
         passengers = booking.get('passengers') or 1
-        booking_vehicle_type = booking.get('vehicle_type')
+        booking_vehicle_type = booking.get('vehicle_type')  # This is the vehicle_type_id
         
-        # Determine if this is a PSV job
-        is_psv_job = booking_vehicle_type in psv_type_ids
+        # PRIORITY 1: Match specific vehicle type if specified
+        if booking_vehicle_type:
+            # Filter vehicles that match the specific vehicle type requested
+            matching_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') == booking_vehicle_type]
+            
+            if matching_vehicles:
+                # Sort by utilization (bin packing - prefer fuller vehicles)
+                matching_vehicles_sorted = sorted(
+                    matching_vehicles, 
+                    key=lambda v: get_vehicle_utilization(v['id']),
+                    reverse=True
+                )
+                
+                assigned = False
+                for vehicle in matching_vehicles_sorted:
+                    if can_fit_booking(vehicle['id'], booking_time, duration):
+                        add_to_schedule(vehicle['id'], booking_time, duration)
+                        await db.bookings.update_one(
+                            {"id": booking['id']},
+                            {"$set": {"vehicle_id": vehicle['id']}}
+                        )
+                        assignments.append({
+                            "booking_id": booking.get('booking_id'),
+                            "vehicle_registration": vehicle.get('registration'),
+                            "vehicle_id": vehicle['id'],
+                            "time": booking_time.strftime("%H:%M"),
+                            "is_contract": False,
+                            "matched_vehicle_type": True
+                        })
+                        assigned = True
+                        break
+                
+                if assigned:
+                    continue
+                
+                # If no matching vehicle type is available, log failure
+                vehicle_type_info = vehicle_type_map.get(booking_vehicle_type, {})
+                failed.append({
+                    "booking_id": booking.get('booking_id'),
+                    "reason": f"No available {vehicle_type_info.get('name', 'vehicle')} for this time slot",
+                    "time": booking_time.strftime("%H:%M"),
+                    "passengers": passengers,
+                    "requested_vehicle_type": vehicle_type_info.get('name')
+                })
+                continue
         
-        # Determine eligible vehicles
+        # PRIORITY 2: If no specific vehicle type, check category (PSV vs Taxi)
+        is_psv_job = booking_vehicle_type in psv_type_ids if booking_vehicle_type else False
+        
+        # Determine eligible vehicles based on category and passenger count
         if is_psv_job:
             # PSV jobs can only use PSV vehicles
             eligible_vehicles = psv_vehicles
         elif passengers > 6:
-            # Taxi jobs with >6 passengers can use PSV vehicles
-            eligible_vehicles = taxi_vehicles + psv_vehicles
+            # Jobs with >6 passengers need PSV vehicles
+            eligible_vehicles = psv_vehicles
         else:
-            # Regular taxi jobs prefer taxi vehicles, but can use PSV if needed
+            # Regular jobs: prefer taxi vehicles, but can use PSV if needed
             eligible_vehicles = taxi_vehicles + psv_vehicles
         
         # Sort eligible vehicles by current utilization (prefer fuller vehicles - bin packing)

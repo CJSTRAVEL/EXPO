@@ -157,6 +157,63 @@ const ContractWorkPage = () => {
     }
   };
 
+  // Check for vehicle conflicts
+  const checkVehicleConflict = (vehicleId, bookingDateTime, durationMinutes = 60) => {
+    if (!vehicleId || !bookingDateTime) return null;
+    
+    const bookingDate = new Date(bookingDateTime);
+    const bufferMinutes = 15;
+    const bookingEnd = new Date(bookingDate.getTime() + (durationMinutes + bufferMinutes) * 60000);
+    const bookingStart = new Date(bookingDate.getTime() - bufferMinutes * 60000);
+    
+    // Find conflicting bookings
+    const conflicts = allBookings.filter(b => {
+      if (b.vehicle_id !== vehicleId) return false;
+      if (editingBooking && b.id === editingBooking.id) return false;
+      if (!b.booking_datetime) return false;
+      
+      const existingStart = new Date(b.booking_datetime);
+      const existingDuration = b.duration_minutes || 60;
+      const existingEnd = new Date(existingStart.getTime() + (existingDuration + bufferMinutes) * 60000);
+      
+      // Check overlap
+      return !(bookingEnd <= existingStart || bookingStart >= existingEnd);
+    });
+    
+    if (conflicts.length > 0) {
+      return {
+        vehicle: vehicles.find(v => v.id === vehicleId),
+        conflicts: conflicts,
+        alternatives: vehicles.filter(v => {
+          if (v.id === vehicleId) return false;
+          // Check if this vehicle is available
+          const hasConflict = allBookings.some(b => {
+            if (b.vehicle_id !== v.id) return false;
+            if (!b.booking_datetime) return false;
+            const existingStart = new Date(b.booking_datetime);
+            const existingDuration = b.duration_minutes || 60;
+            const existingEnd = new Date(existingStart.getTime() + (existingDuration + bufferMinutes) * 60000);
+            return !(bookingEnd <= existingStart || bookingStart >= existingEnd);
+          });
+          return !hasConflict;
+        })
+      };
+    }
+    return null;
+  };
+
+  // Handle vehicle selection change
+  const handleVehicleChange = (vehicleId) => {
+    setFormData(prev => ({ ...prev, preferred_vehicle_id: vehicleId }));
+    
+    if (vehicleId && formData.add_to_schedule) {
+      const conflict = checkVehicleConflict(vehicleId, formData.booking_datetime);
+      setVehicleConflict(conflict);
+    } else {
+      setVehicleConflict(null);
+    }
+  };
+
   // Assign driver to booking
   const handleAssignDriver = async () => {
     if (!assignBooking || !selectedDriverForAssign) {

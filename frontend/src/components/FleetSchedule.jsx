@@ -707,7 +707,7 @@ const FleetSchedule = ({ fullView = false }) => {
               <div key={vehicleId} className="bg-white rounded-lg p-3 border">
                 <div className="flex items-center justify-between mb-2">
                   <div className="font-medium text-sm">
-                    {vehicleData.registration} 
+                    {vehicleData.displayName}
                     <span className="text-gray-400 font-normal ml-2">
                       {vehicleData.make} {vehicleData.model}
                     </span>

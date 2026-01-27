@@ -926,6 +926,7 @@ export default function NewQuotePage() {
                         <AvailabilityIndicator 
                           availability={returnAvailability} 
                           label="Return Journey" 
+                          onTimeSelect={handleAvailabilityTimeSelect}
                           isReturn={true}
                         />
                       )

@@ -387,7 +387,16 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]" data-testid="booking-form-modal">
+      <DialogContent 
+        className="sm:max-w-[550px]" 
+        data-testid="booking-form-modal"
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking on address autocomplete dropdown
+          if (e.target.closest('.address-autocomplete-dropdown')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{booking ? "Edit Booking" : "New Booking"}</DialogTitle>
         </DialogHeader>

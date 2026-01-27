@@ -5376,10 +5376,144 @@ async def auto_assign_vehicles(date: str = None):
             total += (end - start).total_seconds() / 60
         return total
     
+    def find_alternative_vehicle(booking, preferred_vehicle_id, eligible_vehicles):
+        """Find an alternative vehicle if preferred is unavailable"""
+        booking_time = parse_booking_time(booking)
+        duration = booking.get('duration_minutes') or DEFAULT_DURATION
+        
+        alternatives = []
+        for vehicle in eligible_vehicles:
+            if vehicle['id'] != preferred_vehicle_id and can_fit_booking(vehicle['id'], booking_time, duration):
+                alternatives.append({
+                    "vehicle_id": vehicle['id'],
+                    "registration": vehicle.get('registration'),
+                    "make": vehicle.get('make'),
+                    "model": vehicle.get('model')
+                })
+        return alternatives
+    
     assignments = []
     failed = []
+    alternatives_suggested = []
+    
+    # PHASE 1: Sort bookings - Contract work with preferred vehicle first (Priority 1)
+    contract_bookings = []
+    regular_bookings = []
     
     for booking in unassigned_bookings:
+        if booking.get('is_contract_work') or booking.get('booking_source') == 'contract':
+            contract_bookings.append(booking)
+        else:
+            regular_bookings.append(booking)
+    
+    # Sort contract bookings by time
+    contract_bookings.sort(key=parse_booking_time)
+    regular_bookings.sort(key=parse_booking_time)
+    
+    # Process contract bookings first (Priority 1)
+    for booking in contract_bookings:
+        booking_time = parse_booking_time(booking)
+        duration = booking.get('duration_minutes') or DEFAULT_DURATION
+        passengers = booking.get('passengers') or 1
+        booking_vehicle_type = booking.get('vehicle_type')
+        preferred_vehicle_id = booking.get('preferred_vehicle_id')
+        
+        # Determine if this is a PSV job
+        is_psv_job = booking_vehicle_type in psv_type_ids
+        
+        # Determine eligible vehicles
+        if is_psv_job:
+            eligible_vehicles = psv_vehicles
+        elif passengers > 6:
+            eligible_vehicles = taxi_vehicles + psv_vehicles
+        else:
+            eligible_vehicles = taxi_vehicles + psv_vehicles
+        
+        assigned = False
+        
+        # Try preferred vehicle first for contract work
+        if preferred_vehicle_id and preferred_vehicle_id in vehicle_map:
+            preferred_vehicle = vehicle_map[preferred_vehicle_id]
+            if can_fit_booking(preferred_vehicle_id, booking_time, duration):
+                add_to_schedule(preferred_vehicle_id, booking_time, duration)
+                await db.bookings.update_one(
+                    {"id": booking['id']},
+                    {"$set": {"vehicle_id": preferred_vehicle_id}}
+                )
+                assignments.append({
+                    "booking_id": booking.get('booking_id'),
+                    "vehicle_registration": preferred_vehicle.get('registration'),
+                    "vehicle_id": preferred_vehicle_id,
+                    "time": booking_time.strftime("%H:%M"),
+                    "is_contract": True,
+                    "used_preferred": True
+                })
+                assigned = True
+            else:
+                # Preferred vehicle not available, suggest alternatives
+                alts = find_alternative_vehicle(booking, preferred_vehicle_id, eligible_vehicles)
+                if alts:
+                    # Use first alternative
+                    alt_vehicle = alts[0]
+                    add_to_schedule(alt_vehicle['vehicle_id'], booking_time, duration)
+                    await db.bookings.update_one(
+                        {"id": booking['id']},
+                        {"$set": {"vehicle_id": alt_vehicle['vehicle_id']}}
+                    )
+                    assignments.append({
+                        "booking_id": booking.get('booking_id'),
+                        "vehicle_registration": alt_vehicle['registration'],
+                        "vehicle_id": alt_vehicle['vehicle_id'],
+                        "time": booking_time.strftime("%H:%M"),
+                        "is_contract": True,
+                        "used_preferred": False,
+                        "original_preferred": preferred_vehicle.get('registration')
+                    })
+                    alternatives_suggested.append({
+                        "booking_id": booking.get('booking_id'),
+                        "preferred_vehicle": preferred_vehicle.get('registration'),
+                        "assigned_vehicle": alt_vehicle['registration'],
+                        "reason": "Preferred vehicle has conflicting booking"
+                    })
+                    assigned = True
+        
+        # If no preferred vehicle or it failed, try any eligible vehicle
+        if not assigned:
+            eligible_vehicles_sorted = sorted(
+                eligible_vehicles, 
+                key=lambda v: get_vehicle_utilization(v['id']),
+                reverse=True
+            )
+            
+            for vehicle in eligible_vehicles_sorted:
+                if can_fit_booking(vehicle['id'], booking_time, duration):
+                    add_to_schedule(vehicle['id'], booking_time, duration)
+                    await db.bookings.update_one(
+                        {"id": booking['id']},
+                        {"$set": {"vehicle_id": vehicle['id']}}
+                    )
+                    assignments.append({
+                        "booking_id": booking.get('booking_id'),
+                        "vehicle_registration": vehicle.get('registration'),
+                        "vehicle_id": vehicle['id'],
+                        "time": booking_time.strftime("%H:%M"),
+                        "is_contract": True,
+                        "used_preferred": False
+                    })
+                    assigned = True
+                    break
+        
+        if not assigned:
+            failed.append({
+                "booking_id": booking.get('booking_id'),
+                "reason": "No available vehicle (contract work)",
+                "time": booking_time.strftime("%H:%M"),
+                "passengers": passengers,
+                "is_contract": True
+            })
+    
+    # PHASE 2: Process regular bookings
+    for booking in regular_bookings:
         booking_time = parse_booking_time(booking)
         duration = booking.get('duration_minutes') or DEFAULT_DURATION
         passengers = booking.get('passengers') or 1
@@ -5416,6 +5550,7 @@ async def auto_assign_vehicles(date: str = None):
                 await db.bookings.update_one(
                     {"id": booking['id']},
                     {"$set": {"vehicle_id": vehicle['id']}}
+                )
                 )
                 
                 assignments.append({

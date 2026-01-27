@@ -98,6 +98,7 @@ twilio_client = None
 if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
     try:
         from twilio.rest import Client as TwilioClient
+        from twilio.twiml.messaging_response import MessagingResponse as TwilioMessagingResponse
         twilio_client = TwilioClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         logging.info(f"Twilio client initialized (WhatsApp: {TWILIO_WHATSAPP_NUMBER})")
     except Exception as e:

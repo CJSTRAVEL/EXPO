@@ -686,13 +686,14 @@ const FleetSchedule = ({ fullView = false }) => {
           <div key={typeName}>
             {/* Type Header */}
             <div className="bg-gray-800 text-white px-4 py-2 text-sm font-semibold">
-              {typeName} ({typeVehicles.length} vehicles)
+              {typeName} ({typeVehicles.length} vehicle{typeVehicles.length !== 1 ? 's' : ''})
             </div>
             
             {/* Vehicles */}
             {typeVehicles.map(vehicle => {
               const vehicleBookings = getVehicleBookings(vehicle.id);
-              const driver = getVehicleDriver(vehicle.id);
+              const assignedDriverId = dailyDriverAssignments[vehicle.id];
+              const assignedDriver = assignedDriverId ? drivers.find(d => d.id === assignedDriverId) : null;
               
               return (
                 <div 
@@ -706,25 +707,56 @@ const FleetSchedule = ({ fullView = false }) => {
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, vehicle.id)}
                 >
-                  {/* Vehicle Info with Driver */}
-                  <div className="w-56 flex-shrink-0 p-2 border-r bg-gray-50">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-medium text-sm">{vehicle.registration}</div>
-                        <div className="text-xs text-gray-500">{vehicle.make} {vehicle.model}</div>
-                        {vehicle.color && (
-                          <div className="text-xs text-gray-400">{vehicle.color}</div>
-                        )}
+                  {/* Vehicle Info with Driver Assignment */}
+                  <div className="w-64 flex-shrink-0 p-2 border-r bg-gray-50">
+                    <div className="space-y-1">
+                      {/* Display Name (e.g., "CJ's Taxi 1") */}
+                      <div className="font-semibold text-sm text-gray-900">
+                        {vehicle.displayName}
                       </div>
-                      <div className="text-right">
-                        {driver ? (
-                          <div className="flex items-center gap-1 text-xs text-gray-600">
-                            <UserCircle className="h-3 w-3" />
-                            <span>{driver.first_name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">No driver</span>
-                        )}
+                      {/* Actual vehicle details in smaller text */}
+                      <div className="text-xs text-gray-500">
+                        {vehicle.registration} • {vehicle.make} {vehicle.model}
+                      </div>
+                      
+                      {/* Driver Assignment Dropdown */}
+                      <div className="pt-1">
+                        <Select
+                          value={assignedDriverId || "unassigned"}
+                          onValueChange={(value) => handleDailyDriverAssignment(vehicle.id, value === "unassigned" ? null : value)}
+                          disabled={savingDriverAssignment === vehicle.id}
+                        >
+                          <SelectTrigger className="h-7 text-xs bg-white">
+                            <SelectValue>
+                              {savingDriverAssignment === vehicle.id ? (
+                                <span className="flex items-center gap-1">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Saving...
+                                </span>
+                              ) : assignedDriver ? (
+                                <span className="flex items-center gap-1">
+                                  <UserCircle className="h-3 w-3 text-green-600" />
+                                  {assignedDriver.first_name} {assignedDriver.last_name?.charAt(0)}.
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">Assign driver...</span>
+                              )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">
+                              <span className="text-gray-500">No driver assigned</span>
+                            </SelectItem>
+                            {drivers.filter(d => d.status !== 'inactive').map(driver => (
+                              <SelectItem key={driver.id} value={driver.id}>
+                                <span className="flex items-center gap-2">
+                                  <UserCircle className="h-3 w-3" />
+                                  {driver.first_name} {driver.last_name}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>

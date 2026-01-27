@@ -1,0 +1,90 @@
+{
+  "summary": "Travel time validation feature tested successfully. Backend API (POST /api/scheduling/check-travel-time) correctly uses Google Maps Directions API to check if driver can reach next pickup in time with 15-minute grace period. Frontend integration in FleetSchedule.jsx properly calls the API during drag-drop and allocation operations.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_travel_time.py",
+    "/app/test_reports/pytest/pytest_travel_time.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": ["/app/backend/tests/test_travel_time.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Used existing test data: CJ-064 on vehicle 1f31625d at 15:00, dropoff Newcastle Airport, duration 33min",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Travel time validation feature fully tested. Test scenarios: 1) 15:45 Peterlee pickup after CJ-064 - correctly returns feasible=false (only 12min available, needs 55min). 2) 17:00 Peterlee pickup - correctly returns feasible=true. 3) 16:30 Peterlee pickup - correctly returns feasible=true with tight_schedule warning.",
+  "features_tested": {
+    "travel_time_api_endpoint": {
+      "status": "PASS",
+      "details": "POST /api/scheduling/check-travel-time correctly validates travel time between jobs using Google Maps Directions API"
+    },
+    "travel_time_conflict_detection": {
+      "status": "PASS",
+      "details": "Returns feasible=false when driver cannot reach next pickup in time (40min travel + 15min grace = 55min required)"
+    },
+    "tight_schedule_warning": {
+      "status": "PASS",
+      "details": "Returns warning when schedule is tight but feasible (within 10min buffer)"
+    },
+    "frontend_integration": {
+      "status": "PASS",
+      "details": "FleetSchedule.jsx has checkTravelTimeFeasibility helper that calls API during drag-drop (handleDrop) and allocation (handleAllocate)"
+    },
+    "auto_allocation_with_travel_time": {
+      "status": "PASS",
+      "details": "findNextAvailableVehicle function checks both time conflicts and travel time feasibility before suggesting alternative vehicle"
+    }
+  },
+  "test_evidence": {
+    "backend_tests": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "test_file": "/app/backend/tests/test_travel_time.py"
+    },
+    "api_test_results": [
+      {
+        "scenario": "15:45 Peterlee pickup (insufficient time)",
+        "expected": "feasible=false",
+        "actual": "feasible=false, conflict: 'Driver needs 40min travel + 15min grace = 55min, but only 12min available after CJ-064'"
+      },
+      {
+        "scenario": "17:00 Peterlee pickup (plenty of time)",
+        "expected": "feasible=true",
+        "actual": "feasible=true, message: 'Schedule is feasible'"
+      },
+      {
+        "scenario": "16:30 Peterlee pickup (tight schedule)",
+        "expected": "feasible=true with warning",
+        "actual": "feasible=true, warning: 'Tight schedule: 57min gap for 55min needed'"
+      }
+    ],
+    "frontend_verification": {
+      "scheduling_page_loads": true,
+      "bookings_visible": ["CJ-064 @ 15:00 on Minibus 1", "CJ-066 @ 15:00 on Minibus 2"],
+      "travel_time_check_integrated": true
+    }
+  },
+  "technical_details": {
+    "grace_time": "15 minutes between jobs",
+    "google_maps_api": "Uses Directions API to calculate travel time",
+    "travel_time_newcastle_to_peterlee": "~40 minutes",
+    "cj064_details": {
+      "booking_id": "CJ-064",
+      "vehicle_id": "1f31625d-cecf-4718-b2c8-033736f404af",
+      "pickup": "Durham Train Station",
+      "dropoff": "Newcastle Airport",
+      "time": "15:00",
+      "duration": "33 minutes",
+      "ends_at": "15:33"
+    }
+  }
+}

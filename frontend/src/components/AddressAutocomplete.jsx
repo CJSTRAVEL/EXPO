@@ -273,7 +273,8 @@ const AddressAutocomplete = ({
         backgroundColor: 'white',
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+        pointerEvents: 'auto'
       });
     }
   }, [showDropdown]);

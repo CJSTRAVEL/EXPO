@@ -616,6 +616,7 @@ class BookingResponse(BaseModel):
     linked_booking_id: Optional[str] = None
     vehicle_type: Optional[str] = None
     passenger_count: Optional[int] = 1
+    passengers: Optional[int] = None  # Legacy field - prefer passenger_count
     luggage_count: Optional[int] = 0
     created_by_id: Optional[str] = None
     created_by_name: Optional[str] = None

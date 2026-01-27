@@ -2017,7 +2017,9 @@ def send_message_with_fallback(phone: str, message_text: str):
 def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str, 
                      pickup: str = None, dropoff: str = None, 
                      distance_miles: float = None, duration_minutes: int = None,
-                     booking_datetime: str = None, short_booking_id: str = None):
+                     booking_datetime: str = None, short_booking_id: str = None,
+                     return_pickup: str = None, return_dropoff: str = None,
+                     return_datetime: str = None, has_return: bool = False):
     """Send booking confirmation via WhatsApp template (primary) or SMS (fallback)"""
     try:
         # Format phone number (ensure it has country code)
@@ -2046,6 +2048,19 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
             except:
                 pass
         
+        # Format return datetime if present
+        return_datetime_display = None
+        if has_return and return_datetime:
+            if isinstance(return_datetime, str) and "T" in return_datetime:
+                try:
+                    from datetime import datetime
+                    rt = datetime.fromisoformat(return_datetime.replace("Z", "+00:00"))
+                    return_datetime_display = rt.strftime("%d %b %Y, %H:%M")
+                except:
+                    return_datetime_display = return_datetime
+            else:
+                return_datetime_display = return_datetime
+        
         # Try WhatsApp template first
         if TWILIO_WHATSAPP_ENABLED and TWILIO_TEMPLATE_BOOKING_CONFIRMATION:
             success, result = send_whatsapp_booking_confirmation(
@@ -2063,14 +2078,34 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 logging.warning(f"WhatsApp template failed ({result}), trying freeform WhatsApp...")
                 
                 # Try freeform WhatsApp message as fallback (requires 24hr window)
+                # Build message with return journey details if present
                 freeform_message = (
                     f"Hello {customer_name},\n\n"
                     f"Your booking is confirmed!\n\n"
+                    f"🚗 OUTBOUND JOURNEY\n"
                     f"📍 Pickup: {pickup or 'See details'}\n"
-                    f"📅 Date: {datetime_display}\n"
-                    f"🔗 View details: {booking_link}\n\n"
+                )
+                if dropoff:
+                    freeform_message += f"📍 Dropoff: {dropoff}\n"
+                freeform_message += f"📅 Date: {datetime_display}\n"
+                
+                # Add return journey details if present
+                if has_return and return_datetime_display:
+                    freeform_message += (
+                        f"\n🔄 RETURN JOURNEY\n"
+                        f"📍 Pickup: {return_pickup or dropoff or 'See details'}\n"
+                    )
+                    if return_dropoff:
+                        freeform_message += f"📍 Dropoff: {return_dropoff}\n"
+                    elif pickup:
+                        freeform_message += f"📍 Dropoff: {pickup}\n"
+                    freeform_message += f"📅 Date: {return_datetime_display}\n"
+                
+                freeform_message += (
+                    f"\n🔗 View details: {booking_link}\n\n"
                     f"Thank you for choosing CJ's Executive Travel!"
                 )
+                
                 freeform_success, freeform_result = send_whatsapp_message(phone, freeform_message)
                 if freeform_success:
                     logging.info(f"Booking confirmation sent via freeform WhatsApp to {phone}")
@@ -2078,14 +2113,34 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 else:
                     logging.warning(f"Freeform WhatsApp also failed ({freeform_result}), falling back to SMS")
         
-        # Fallback to SMS
+        # Fallback to SMS - include return details
         if vonage_client:
             message_text = (
                 f"Hello {customer_name}, Your booking is confirmed.\n\n"
-                f"{booking_link}\n\n"
-                f"Please open the link to check your details.\n\n"
+                f"OUTBOUND:\n"
+                f"Pickup: {pickup or 'See details'}\n"
+            )
+            if dropoff:
+                message_text += f"Dropoff: {dropoff}\n"
+            message_text += f"Date: {datetime_display}\n"
+            
+            # Add return journey details if present
+            if has_return and return_datetime_display:
+                message_text += (
+                    f"\nRETURN:\n"
+                    f"Pickup: {return_pickup or dropoff or 'See details'}\n"
+                )
+                if return_dropoff:
+                    message_text += f"Dropoff: {return_dropoff}\n"
+                elif pickup:
+                    message_text += f"Dropoff: {pickup}\n"
+                message_text += f"Date: {return_datetime_display}\n"
+            
+            message_text += (
+                f"\n{booking_link}\n\n"
                 f"Thank You CJ's Executive Travel Limited."
             )
+            
             success, result = send_sms_only(phone, message_text)
             if success:
                 logging.info(f"Booking confirmation SMS sent to {phone}")

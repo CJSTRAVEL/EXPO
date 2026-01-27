@@ -646,10 +646,15 @@ const BookingDetails = () => {
       const response = await axios.get(`${API}/bookings/${bookingId}`);
       setBooking(response.data);
       
-      // Fetch driver if assigned
+      // Fetch driver if assigned (with separate error handling)
       if (response.data.driver_id) {
-        const driverRes = await axios.get(`${API}/drivers/${response.data.driver_id}`);
-        setDriver(driverRes.data);
+        try {
+          const driverRes = await axios.get(`${API}/drivers/${response.data.driver_id}`);
+          setDriver(driverRes.data);
+        } catch (driverErr) {
+          console.log('Driver not found or error fetching driver');
+          setDriver(null);
+        }
       }
       
       // Fetch linked return booking if exists

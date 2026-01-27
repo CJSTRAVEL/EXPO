@@ -96,6 +96,8 @@ const AddressAutocomplete = ({
   const dropdownRef = useRef(null);
   const onChangeRef = useRef(onChange);
   const sessionTokenRef = useRef(generateSessionToken());
+  // Unique ID for this dropdown instance
+  const dropdownId = useRef(`address-dropdown-${Math.random().toString(36).substr(2, 9)}`);
 
   // Keep onChange ref updated
   useEffect(() => {

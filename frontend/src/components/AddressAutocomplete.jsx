@@ -310,7 +310,7 @@ const AddressAutocomplete = ({
       />
       
       {showDropdown && hasResults && (
-        <DropdownPortal style={dropdownStyle}>
+        <DropdownPortal style={dropdownStyle} id={dropdownId.current}>
           {/* Postcode results */}
           {postcodeData?.addresses?.length > 0 && (
             <>

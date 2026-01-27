@@ -218,12 +218,35 @@ const FleetSchedule = ({ fullView = false }) => {
     setDraggedBooking(booking);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', booking.id);
+    // Add a drag image
+    const dragImage = document.createElement('div');
+    dragImage.innerHTML = booking.booking_id;
+    dragImage.style.cssText = 'position: absolute; top: -1000px; background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedBooking(null);
   };
 
   // Handle drag over
   const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+  };
+
+  // Handle drag enter for visual feedback
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('bg-blue-100', 'ring-2', 'ring-blue-400');
+  };
+
+  // Handle drag leave for visual feedback
+  const handleDragLeave = (e) => {
+    e.currentTarget.classList.remove('bg-blue-100', 'ring-2', 'ring-blue-400');
   };
 
   // Handle drop on vehicle row

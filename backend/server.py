@@ -5551,13 +5551,13 @@ async def auto_assign_vehicles(date: str = None):
                     {"id": booking['id']},
                     {"$set": {"vehicle_id": vehicle['id']}}
                 )
-                )
                 
                 assignments.append({
                     "booking_id": booking.get('booking_id'),
                     "vehicle_registration": vehicle.get('registration'),
                     "vehicle_id": vehicle['id'],
-                    "time": booking_time.strftime("%H:%M")
+                    "time": booking_time.strftime("%H:%M"),
+                    "is_contract": False
                 })
                 assigned = True
                 break
@@ -5574,9 +5574,15 @@ async def auto_assign_vehicles(date: str = None):
     # Calculate vehicles used
     vehicles_used = len([vid for vid in vehicle_schedules if vehicle_schedules[vid]])
     
+    # Count contract vs regular assignments
+    contract_assigned = len([a for a in assignments if a.get('is_contract')])
+    regular_assigned = len([a for a in assignments if not a.get('is_contract')])
+    
     return {
         "message": f"Auto-scheduling complete for {target_date}",
         "assigned": len(assignments),
+        "contract_assigned": contract_assigned,
+        "regular_assigned": regular_assigned,
         "failed": len(failed),
         "vehicles_used": vehicles_used,
         "assignments": assignments,

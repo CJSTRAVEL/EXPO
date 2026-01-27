@@ -608,9 +608,18 @@ const JourneyDetails = ({ booking }) => {
       )}
       
       {/* Contact Information */}
-      {(booking.customer_phone || booking.customer_email) && (
+      {(booking.customer_name || booking.customer_phone || booking.customer_email) && (
         <div className="pt-3 border-t">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Contact</p>
+          
+          {/* Customer Name */}
+          {booking.customer_name && (
+            <p className="text-gray-900 font-medium mb-2 flex items-center gap-1.5">
+              <User className="w-4 h-4 text-gray-500" />
+              {booking.customer_name}
+            </p>
+          )}
+          
           <div className="flex flex-wrap gap-2">
             {booking.customer_phone && (
               <a 

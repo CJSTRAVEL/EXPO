@@ -500,6 +500,91 @@ export default function NewQuotePage() {
     }
   };
 
+  // Availability indicator component
+  const AvailabilityIndicator = ({ availability, label, isReturn = false }) => {
+    if (!availability) return null;
+    
+    const getStatusConfig = (status) => {
+      switch (status) {
+        case 'green':
+          return {
+            bg: 'bg-green-50 border-green-200',
+            icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
+            textColor: 'text-green-700',
+            badge: 'bg-green-100 text-green-800'
+          };
+        case 'amber':
+          return {
+            bg: 'bg-amber-50 border-amber-200',
+            icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
+            textColor: 'text-amber-700',
+            badge: 'bg-amber-100 text-amber-800'
+          };
+        case 'red':
+          return {
+            bg: 'bg-red-50 border-red-200',
+            icon: <XCircle className="h-5 w-5 text-red-600" />,
+            textColor: 'text-red-700',
+            badge: 'bg-red-100 text-red-800'
+          };
+        default:
+          return {
+            bg: 'bg-gray-50 border-gray-200',
+            icon: null,
+            textColor: 'text-gray-700',
+            badge: 'bg-gray-100 text-gray-800'
+          };
+      }
+    };
+    
+    const config = getStatusConfig(availability.status);
+    
+    return (
+      <div className={`rounded-lg border p-3 ${config.bg}`}>
+        <div className="flex items-start gap-3">
+          {config.icon}
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className={`font-medium text-sm ${config.textColor}`}>
+                {label}
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.badge}`}>
+                {availability.status === 'green' ? 'Available' : availability.status === 'amber' ? 'Limited' : 'Unavailable'}
+              </span>
+            </div>
+            <p className={`text-sm mt-1 ${config.textColor}`}>
+              {availability.message}
+            </p>
+            {availability.status === 'amber' && availability.amber_suggestions?.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs text-amber-600 font-medium mb-1">Suggested times:</p>
+                <div className="flex flex-wrap gap-1">
+                  {availability.amber_suggestions.map((suggestion, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        if (isReturn) {
+                          const currentDate = formData.return_datetime?.split('T')[0] || formData.quote_date;
+                          handleChange("return_datetime", `${currentDate}T${suggestion.time}`);
+                        } else {
+                          handleChange("quote_time", suggestion.time);
+                        }
+                      }}
+                      className="text-xs px-2 py-1 rounded bg-amber-200 hover:bg-amber-300 text-amber-800 transition-colors"
+                    >
+                      {suggestion.time} ({suggestion.offset_minutes > 0 ? '+' : ''}{suggestion.offset_minutes} min)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

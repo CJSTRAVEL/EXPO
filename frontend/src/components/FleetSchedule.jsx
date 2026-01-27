@@ -645,11 +645,19 @@ const FleetSchedule = ({ fullView = false }) => {
             <div className="mb-2">
               <p className="text-xs text-gray-500 mb-1">Assignments:</p>
               <div className="flex flex-wrap gap-2">
-                {autoScheduleResult.assignments.map((a, i) => (
-                  <Badge key={i} variant="outline" className="bg-green-100 text-green-800 text-xs">
-                    {a.booking_id} → {a.vehicle_registration} @ {a.time}
-                  </Badge>
-                ))}
+                {autoScheduleResult.assignments.map((a, i) => {
+                  // Get display name for vehicle
+                  const vehicle = vehicles.find(v => v.id === a.vehicle_id);
+                  const vType = vehicle ? vehicleTypes.find(vt => vt.id === vehicle.vehicle_type_id) : null;
+                  const vehicleIndex = vehicle ? vehicles.filter(v => v.vehicle_type_id === vehicle.vehicle_type_id).findIndex(v => v.id === vehicle.id) + 1 : 0;
+                  const displayName = vType ? `${vType.name} ${vehicleIndex}` : a.vehicle_registration;
+                  
+                  return (
+                    <Badge key={i} variant="outline" className="bg-green-100 text-green-800 text-xs">
+                      {a.booking_id} → {displayName} @ {a.time}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           )}

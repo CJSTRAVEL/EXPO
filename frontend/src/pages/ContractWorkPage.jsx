@@ -427,6 +427,11 @@ const ContractWorkPage = () => {
         driver_id: formData.driver_id || null,
         client_id: formData.client_id,
         flight_info: flight_info,
+        // Contract work fields
+        is_contract_work: true,
+        booking_source: 'contract',
+        preferred_vehicle_id: formData.preferred_vehicle_id || null,
+        vehicle_id: formData.add_to_schedule && formData.preferred_vehicle_id ? formData.preferred_vehicle_id : null,
         // Return booking fields (only for new bookings)
         create_return: !editingBooking && formData.create_return,
         return_pickup_location: !editingBooking && formData.create_return 

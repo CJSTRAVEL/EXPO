@@ -899,15 +899,33 @@ export default function NewQuotePage() {
                   </Label>
                 </div>
                 {formData.return_journey && (
-                  <div className="space-y-2 pl-6">
-                    <Label htmlFor="return_datetime">Return Date & Time</Label>
-                    <Input
-                      id="return_datetime"
-                      type="datetime-local"
-                      value={formData.return_datetime}
-                      onChange={(e) => handleChange("return_datetime", e.target.value)}
-                      data-testid="quote-return-datetime"
-                    />
+                  <div className="space-y-4 pl-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="return_datetime">Return Date & Time</Label>
+                      <Input
+                        id="return_datetime"
+                        type="datetime-local"
+                        value={formData.return_datetime}
+                        onChange={(e) => handleChange("return_datetime", e.target.value)}
+                        data-testid="quote-return-datetime"
+                      />
+                    </div>
+                    
+                    {/* Return Availability Indicator */}
+                    {formData.return_datetime && (
+                      checkingAvailability ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Checking return availability...
+                        </div>
+                      ) : (
+                        <AvailabilityIndicator 
+                          availability={returnAvailability} 
+                          label="Return Journey" 
+                          isReturn={true}
+                        />
+                      )
+                    )}
                   </div>
                 )}
               </div>

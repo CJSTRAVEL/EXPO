@@ -349,8 +349,14 @@ const AddressAutocomplete = ({
                   key={`place-${index}`}
                   type="button"
                   className="w-full px-3 py-2.5 text-left hover:bg-gray-50 flex items-start gap-2 border-b border-gray-100 last:border-0 last:rounded-b-lg"
-                  onClick={() => handleSelect(suggestion)}
-                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelect(suggestion);
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                 >
                   <Building2 className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">

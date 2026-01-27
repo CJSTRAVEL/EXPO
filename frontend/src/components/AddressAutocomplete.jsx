@@ -152,11 +152,9 @@ const AddressAutocomplete = ({
   // Click outside handler
   useEffect(() => {
     const handler = (e) => {
-      // Check if click is inside ANY address autocomplete dropdown
-      const allDropdowns = document.querySelectorAll('.address-autocomplete-dropdown');
-      for (const dropdown of allDropdowns) {
-        if (dropdown.contains(e.target)) return;
-      }
+      // Check if click is inside THIS specific dropdown (not other dropdowns)
+      const myDropdown = document.getElementById(dropdownId.current);
+      if (myDropdown?.contains(e.target)) return;
       // Check if click is on our specific input
       if (inputRef.current?.contains(e.target)) return;
       setShowDropdown(false);
@@ -168,15 +166,12 @@ const AddressAutocomplete = ({
   // Close dropdown when input loses focus (with small delay to allow click on dropdown)
   const handleBlur = () => {
     setTimeout(() => {
-      // Check if focus moved to the dropdown
+      // Check if focus moved to THIS dropdown
       const activeEl = document.activeElement;
-      const dropdowns = document.querySelectorAll('.address-autocomplete-dropdown');
-      for (const dropdown of dropdowns) {
-        if (dropdown.contains(activeEl)) return;
-      }
-      if (!inputRef.current?.contains(activeEl)) {
-        setShowDropdown(false);
-      }
+      const myDropdown = document.getElementById(dropdownId.current);
+      if (myDropdown?.contains(activeEl)) return;
+      if (inputRef.current?.contains(activeEl)) return;
+      setShowDropdown(false);
     }, 150);
   };
 

@@ -51,10 +51,12 @@ const getBookingColor = (booking) => {
   return BOOKING_COLORS.default;
 };
 
-const FleetSchedule = () => {
+const FleetSchedule = ({ fullView = false }) => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [vehicles, setVehicles] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [drivers, setDrivers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [unassignedBookings, setUnassignedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +65,12 @@ const FleetSchedule = () => {
   const [autoScheduling, setAutoScheduling] = useState(false);
   const [autoScheduleResult, setAutoScheduleResult] = useState(null);
   const [viewBooking, setViewBooking] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1); // 0.5, 1, 1.5, 2
+  const [draggedBooking, setDraggedBooking] = useState(null);
+
+  // Use full hours or working hours based on view mode
+  const HOURS = fullView ? FULL_HOURS : WORKING_HOURS;
+  const hourWidth = 60 * zoomLevel; // Base width * zoom
 
   useEffect(() => {
     fetchData();
@@ -71,14 +79,16 @@ const FleetSchedule = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [vehiclesRes, vehicleTypesRes, bookingsRes] = await Promise.all([
+      const [vehiclesRes, vehicleTypesRes, bookingsRes, driversRes] = await Promise.all([
         axios.get(`${API}/api/vehicles`),
         axios.get(`${API}/api/vehicle-types`),
         axios.get(`${API}/api/bookings`),
+        axios.get(`${API}/api/drivers`),
       ]);
 
       setVehicles(vehiclesRes.data || []);
       setVehicleTypes(vehicleTypesRes.data || []);
+      setDrivers(driversRes.data || []);
       
       // Filter bookings for selected date
       const allBookings = bookingsRes.data || [];

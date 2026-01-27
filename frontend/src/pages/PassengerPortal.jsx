@@ -899,7 +899,16 @@ const PassengerPortal = () => {
 
       {/* Booking Request Form Modal */}
       <Dialog open={showRequestForm} onOpenChange={(open) => { if (!open) resetRequestForm(); setShowRequestForm(open); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="request-form-modal">
+        <DialogContent 
+          className="max-w-lg max-h-[90vh] overflow-y-auto" 
+          data-testid="request-form-modal"
+          onInteractOutside={(e) => {
+            // Prevent closing when clicking on address autocomplete dropdown
+            if (e.target.closest('.address-autocomplete-dropdown')) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Request a Booking</DialogTitle>
           </DialogHeader>

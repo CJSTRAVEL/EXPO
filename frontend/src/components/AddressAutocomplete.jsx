@@ -325,8 +325,14 @@ const AddressAutocomplete = ({
                   key={`postcode-${index}`}
                   type="button"
                   className="w-full px-3 py-2.5 text-left hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0 last:rounded-b-lg"
-                  onClick={() => handleSelect(address)}
-                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelect(address);
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                 >
                   <Home className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">

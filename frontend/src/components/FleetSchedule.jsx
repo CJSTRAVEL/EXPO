@@ -482,7 +482,8 @@ const FleetSchedule = ({ fullView = false }) => {
       )}
 
       {/* Timeline Summary - Shows when jobs are allocated */}
-      {timelineSummary.totalBookings > 0 && (
+      {/* Timeline Summary - Only show in normal view */}
+      {!fullView && timelineSummary.totalBookings > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
             <Car className="h-4 w-4" />
@@ -535,8 +536,8 @@ const FleetSchedule = ({ fullView = false }) => {
         </div>
       )}
 
-      {/* Unassigned Bookings */}
-      {unassignedBookings.length > 0 && (
+      {/* Unassigned Bookings - Only show in normal view */}
+      {!fullView && unassignedBookings.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
             <Clock className="h-4 w-4" />

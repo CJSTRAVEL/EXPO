@@ -615,6 +615,25 @@ const FleetSchedule = ({ fullView = false }) => {
             <span className="text-xs">Unassigned ({unassignedBookings.length})</span>
           </div>
           
+          {/* Refresh Button & Last Updated */}
+          <div className="flex items-center gap-2 border-l pl-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fetchData(true)}
+              disabled={refreshing}
+              className="h-7"
+            >
+              <RotateCcw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            {lastUpdated && (
+              <span className="text-xs text-gray-500">
+                Updated {format(lastUpdated, 'HH:mm:ss')}
+              </span>
+            )}
+          </div>
+          
           {/* Zoom Controls */}
           <div className="flex items-center gap-1 border-l pl-4">
             <Button variant="outline" size="icon" className="h-7 w-7" onClick={zoomOut} disabled={zoomLevel <= 0.5}>

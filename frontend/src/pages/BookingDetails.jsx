@@ -614,32 +614,27 @@ const JourneyDetails = ({ booking }) => {
           
           {/* Customer Name */}
           {booking.customer_name && (
-            <p className="text-gray-900 font-medium mb-2 flex items-center gap-1.5">
+            <p className="text-gray-900 font-medium mb-1 flex items-center gap-1.5">
               <User className="w-4 h-4 text-gray-500" />
               {booking.customer_name}
             </p>
           )}
           
-          <div className="flex flex-wrap gap-2">
-            {booking.customer_phone && (
-              <a 
-                href={`tel:${booking.customer_phone}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-700 transition-colors"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                {booking.customer_phone}
-              </a>
-            )}
-            {booking.customer_email && (
-              <a 
-                href={`mailto:${booking.customer_email}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-700 transition-colors"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                {booking.customer_email}
-              </a>
-            )}
-          </div>
+          {/* Phone */}
+          {booking.customer_phone && (
+            <p className="text-gray-700 text-sm mb-1 flex items-center gap-1.5">
+              <Phone className="w-3.5 h-3.5 text-gray-500" />
+              {booking.customer_phone}
+            </p>
+          )}
+          
+          {/* Email */}
+          {booking.customer_email && (
+            <p className="text-gray-700 text-sm flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-gray-500" />
+              {booking.customer_email}
+            </p>
+          )}
         </div>
       )}
     </div>

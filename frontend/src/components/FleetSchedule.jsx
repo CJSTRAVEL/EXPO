@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { format, addDays, startOfDay, parseISO, isSameDay } from "date-fns";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -24,13 +25,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock, Car, Link2, Wand2, Loader2, Eye, User, Phone, Mail, FileText, Navigation } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock, Car, Link2, Wand2, Loader2, Eye, User, Phone, Mail, FileText, Navigation, ZoomIn, ZoomOut, Maximize2, GripVertical, Briefcase, Plane, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// Generate hours for timeline
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+// Working hours timeline (6am - 8pm)
+const WORKING_HOURS = Array.from({ length: 15 }, (_, i) => i + 6); // 6-20
+const FULL_HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+// Booking type colors
+const BOOKING_COLORS = {
+  contract: { bg: 'bg-purple-500', hover: 'hover:bg-purple-600', text: 'Contract Work' },
+  airport: { bg: 'bg-green-500', hover: 'hover:bg-green-600', text: 'Airport' },
+  corporate: { bg: 'bg-indigo-500', hover: 'hover:bg-indigo-600', text: 'Corporate' },
+  default: { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', text: 'Standard' }
+};
+
+// Get booking color based on type
+const getBookingColor = (booking) => {
+  if (booking.is_contract_work || booking.booking_source === 'contract') return BOOKING_COLORS.contract;
+  if (booking.pickup_location?.toLowerCase().includes('airport') || 
+      booking.dropoff_location?.toLowerCase().includes('airport')) return BOOKING_COLORS.airport;
+  if (booking.client_id) return BOOKING_COLORS.corporate;
+  return BOOKING_COLORS.default;
+};
 
 const FleetSchedule = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());

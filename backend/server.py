@@ -5423,19 +5423,22 @@ async def auto_assign_vehicles(date: str = None):
         booking_time = parse_booking_time(booking)
         duration = booking.get('duration_minutes') or DEFAULT_DURATION
         passengers = booking.get('passengers') or 1
-        booking_vehicle_type = booking.get('vehicle_type')
+        booking_vehicle_type = booking.get('vehicle_type')  # This is the vehicle_type_id
         preferred_vehicle_id = booking.get('preferred_vehicle_id')
         
-        # Determine if this is a PSV job
-        is_psv_job = booking_vehicle_type in psv_type_ids
-        
-        # Determine eligible vehicles
-        if is_psv_job:
-            eligible_vehicles = psv_vehicles
-        elif passengers > 6:
-            eligible_vehicles = taxi_vehicles + psv_vehicles
+        # PRIORITY 1: Use specific vehicle type if specified
+        if booking_vehicle_type:
+            matching_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') == booking_vehicle_type]
+            eligible_vehicles = matching_vehicles if matching_vehicles else all_vehicles
         else:
-            eligible_vehicles = taxi_vehicles + psv_vehicles
+            # PRIORITY 2: Fall back to category-based selection
+            is_psv_job = booking_vehicle_type in psv_type_ids if booking_vehicle_type else False
+            if is_psv_job:
+                eligible_vehicles = psv_vehicles
+            elif passengers > 6:
+                eligible_vehicles = psv_vehicles
+            else:
+                eligible_vehicles = taxi_vehicles + psv_vehicles
         
         assigned = False
         

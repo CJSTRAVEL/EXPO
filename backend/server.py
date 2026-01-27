@@ -8139,6 +8139,171 @@ async def reply_to_whatsapp(
         raise HTTPException(status_code=500, detail=result)
 
 
+@api_router.post("/whatsapp/keep-alive")
+async def send_whatsapp_keep_alive():
+    """
+    Send a keep-alive message to the admin phone to keep the 24-hour WhatsApp window open.
+    This should be called daily (e.g., via cron at 8am).
+    """
+    if not twilio_client or not ADMIN_FORWARD_PHONE:
+        raise HTTPException(status_code=500, detail="WhatsApp not configured or admin phone not set")
+    
+    try:
+        # Format admin phone for WhatsApp
+        admin_phone_clean = ADMIN_FORWARD_PHONE.strip().replace(' ', '').replace('-', '')
+        if admin_phone_clean.startswith('+'):
+            admin_phone_clean = admin_phone_clean[1:]
+        if admin_phone_clean.startswith('0'):
+            admin_phone_clean = '44' + admin_phone_clean[1:]
+        if not admin_phone_clean.startswith('44'):
+            admin_phone_clean = '44' + admin_phone_clean
+        
+        to_whatsapp = f"whatsapp:+{admin_phone_clean}"
+        from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+        
+        # Get today's date for the message
+        today = datetime.now(timezone.utc).strftime("%A, %d %B %Y")
+        
+        # Get count of unread messages
+        unread_count = await db.whatsapp_messages.count_documents({"read": False, "direction": {"$ne": "outbound"}})
+        
+        # Get today's bookings count
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+        todays_bookings = await db.bookings.count_documents({
+            "booking_datetime": {
+                "$gte": today_start.isoformat(),
+                "$lt": today_end.isoformat()
+            }
+        })
+        
+        keep_alive_message = f"🚗 CJ's Executive Travel\n📅 {today}\n\n"
+        keep_alive_message += f"📊 Today's bookings: {todays_bookings}\n"
+        if unread_count > 0:
+            keep_alive_message += f"📬 Unread messages: {unread_count}\n"
+        keep_alive_message += "\n✅ WhatsApp forwarding active"
+        
+        message = twilio_client.messages.create(
+            body=keep_alive_message,
+            from_=from_whatsapp,
+            to=to_whatsapp
+        )
+        
+        logger.info(f"WhatsApp keep-alive sent to admin: {message.sid}")
+        
+        # Log the keep-alive message
+        await db.whatsapp_messages.insert_one({
+            "id": str(uuid.uuid4()),
+            "from_number": TWILIO_WHATSAPP_NUMBER,
+            "to_number": ADMIN_FORWARD_PHONE,
+            "body": keep_alive_message,
+            "message_sid": message.sid,
+            "status": "sent",
+            "direction": "outbound",
+            "type": "keep_alive",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "success": True,
+            "message": "Keep-alive message sent",
+            "sid": message.sid,
+            "to": ADMIN_FORWARD_PHONE
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to send keep-alive: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Background task to send daily keep-alive
+async def daily_keep_alive_task():
+    """Background task that sends keep-alive message daily at 8am UK time"""
+    import asyncio
+    
+    while True:
+        try:
+            # Calculate time until next 8am UK time
+            now = datetime.now(timezone.utc)
+            uk_offset = timedelta(hours=0)  # UTC in winter, +1 in summer (simplified to UTC)
+            
+            # Target 8am
+            target_hour = 8
+            next_run = now.replace(hour=target_hour, minute=0, second=0, microsecond=0)
+            
+            # If it's already past 8am today, schedule for tomorrow
+            if now.hour >= target_hour:
+                next_run = next_run + timedelta(days=1)
+            
+            wait_seconds = (next_run - now).total_seconds()
+            logger.info(f"Next WhatsApp keep-alive scheduled in {wait_seconds/3600:.1f} hours at {next_run.isoformat()}")
+            
+            await asyncio.sleep(wait_seconds)
+            
+            # Send the keep-alive
+            if twilio_client and ADMIN_FORWARD_PHONE:
+                try:
+                    admin_phone_clean = ADMIN_FORWARD_PHONE.strip().replace(' ', '').replace('-', '')
+                    if admin_phone_clean.startswith('+'):
+                        admin_phone_clean = admin_phone_clean[1:]
+                    if admin_phone_clean.startswith('0'):
+                        admin_phone_clean = '44' + admin_phone_clean[1:]
+                    if not admin_phone_clean.startswith('44'):
+                        admin_phone_clean = '44' + admin_phone_clean
+                    
+                    to_whatsapp = f"whatsapp:+{admin_phone_clean}"
+                    from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                    
+                    today = datetime.now(timezone.utc).strftime("%A, %d %B %Y")
+                    
+                    # Get counts
+                    unread_count = await db.whatsapp_messages.count_documents({"read": False, "direction": {"$ne": "outbound"}})
+                    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+                    today_end = today_start + timedelta(days=1)
+                    todays_bookings = await db.bookings.count_documents({
+                        "booking_datetime": {
+                            "$gte": today_start.isoformat(),
+                            "$lt": today_end.isoformat()
+                        }
+                    })
+                    
+                    keep_alive_message = f"🚗 CJ's Executive Travel\n📅 {today}\n\n"
+                    keep_alive_message += f"📊 Today's bookings: {todays_bookings}\n"
+                    if unread_count > 0:
+                        keep_alive_message += f"📬 Unread messages: {unread_count}\n"
+                    keep_alive_message += "\n✅ WhatsApp forwarding active"
+                    
+                    message = twilio_client.messages.create(
+                        body=keep_alive_message,
+                        from_=from_whatsapp,
+                        to=to_whatsapp
+                    )
+                    
+                    logger.info(f"Daily WhatsApp keep-alive sent: {message.sid}")
+                    
+                    await db.whatsapp_messages.insert_one({
+                        "id": str(uuid.uuid4()),
+                        "from_number": TWILIO_WHATSAPP_NUMBER,
+                        "to_number": ADMIN_FORWARD_PHONE,
+                        "body": keep_alive_message,
+                        "message_sid": message.sid,
+                        "status": "sent",
+                        "direction": "outbound",
+                        "type": "keep_alive",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"Daily keep-alive failed: {e}")
+            
+            # Wait a bit before next loop iteration to avoid double-sending
+            await asyncio.sleep(60)
+            
+        except Exception as e:
+            logger.error(f"Error in daily keep-alive task: {e}")
+            await asyncio.sleep(3600)  # Wait an hour on error
+
+
 # ========== FARE SETTINGS ENDPOINTS ==========
 
 class FareZone(BaseModel):

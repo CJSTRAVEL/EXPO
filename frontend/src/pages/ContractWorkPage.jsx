@@ -101,21 +101,28 @@ const ContractWorkPage = () => {
 
   const fetchData = async () => {
     try {
-      const [clientsRes, bookingsRes, driversRes] = await Promise.all([
+      const [clientsRes, bookingsRes, driversRes, vehiclesRes, vehicleTypesRes] = await Promise.all([
         axios.get(`${API}/clients`),
         axios.get(`${API}/bookings`),
         axios.get(`${API}/drivers`),
+        axios.get(`${API}/vehicles`),
+        axios.get(`${API}/vehicle-types`),
       ]);
       
       // Only show active clients
       const activeClients = clientsRes.data.filter(c => c.status === "active");
       setClients(activeClients);
       
+      // Store all bookings for conflict checking
+      setAllBookings(bookingsRes.data);
+      
       // Only show bookings linked to clients (contract work)
       const contractBookings = bookingsRes.data.filter(b => b.client_id);
       setBookings(contractBookings);
       
       setDrivers(driversRes.data);
+      setVehicles(vehiclesRes.data.filter(v => v.is_active !== false));
+      setVehicleTypes(vehicleTypesRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");

@@ -116,6 +116,13 @@ Build a private hire booking application named "CJ's Executive Travel" with:
   - Works on both drag-drop and manual allocation
   - Shows informative toast: "Time conflict on [Vehicle] - auto-assigned to [Next Available]"
   - Falls back to error if no alternative vehicle available
+- ✅ Travel Time Validation - VERIFIED WORKING (Jan 27)
+  - Uses Google Maps Directions API to calculate actual travel time between jobs
+  - Validates driver can reach next pickup location in time
+  - Includes 15-minute grace period between jobs
+  - Shows warnings for tight schedules (within 10 min of required time)
+  - Auto-allocates to alternative vehicle if travel time conflict exists
+  - API: POST /api/scheduling/check-travel-time
 
 ### P1 (High Priority)
 - ✅ SMS Templates: Vehicle details added - VERIFIED WORKING

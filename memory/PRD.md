@@ -108,10 +108,14 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 ### P0 (Critical)
 - ✅ Invoice Template Fix - VERIFIED WORKING
 - ✅ Repeat Booking Feature - VERIFIED WORKING
+- ✅ Fleet Scheduling Drag & Drop - VERIFIED WORKING (Jan 27)
+- ✅ Driver Assignment Dropdown - VERIFIED WORKING (Jan 27)
+- ✅ Contract Work Vehicle Preference - VERIFIED WORKING (Jan 27)
 
 ### P1 (High Priority)
 - ✅ SMS Templates: Vehicle details added - VERIFIED WORKING
 - Driver App APK: User testing for new build (ab3bb23f...) - PENDING USER ACTION
+- iOS Driver App Build - NOT STARTED (requires credential setup)
 
 ### P2 (Medium Priority)
 - Export bookings to CSV

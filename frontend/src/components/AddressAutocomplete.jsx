@@ -304,6 +304,7 @@ const AddressAutocomplete = ({
         value={inputValue}
         onChange={handleInputChange}
         onFocus={() => hasResults && setShowDropdown(true)}
+        onBlur={handleBlur}
         placeholder={placeholder}
         className={`pl-10 ${className}`}
         id={id}

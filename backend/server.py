@@ -7879,6 +7879,224 @@ async def vonage_status_webhook(request: Request):
         logging.error(f"Error handling Vonage status webhook: {e}")
         return {"status": "error", "message": str(e)}
 
+
+# ========== TWILIO WHATSAPP WEBHOOK ==========
+
+# Admin phone number for SMS forwarding of WhatsApp replies
+ADMIN_FORWARD_PHONE = os.environ.get('ADMIN_FORWARD_PHONE', '+447806794824')
+
+class WhatsAppMessage(BaseModel):
+    id: Optional[str] = None
+    from_number: str
+    to_number: str
+    body: str
+    message_sid: Optional[str] = None
+    status: str = "received"
+    booking_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    created_at: Optional[str] = None
+    forwarded_via_sms: bool = False
+
+
+@api_router.post("/webhooks/twilio/whatsapp")
+async def twilio_whatsapp_webhook(request: Request):
+    """
+    Handle incoming WhatsApp messages from Twilio.
+    
+    Twilio sends POST form data with:
+    - From: whatsapp:+447806794824
+    - To: whatsapp:+15558372651
+    - Body: Message text
+    - MessageSid: SM...
+    - NumMedia: 0
+    - etc.
+    """
+    try:
+        # Parse form data from Twilio
+        form_data = await request.form()
+        
+        from_number = form_data.get('From', '')
+        to_number = form_data.get('To', '')
+        body = form_data.get('Body', '')
+        message_sid = form_data.get('MessageSid', '')
+        num_media = int(form_data.get('NumMedia', 0))
+        
+        # Clean phone numbers (remove whatsapp: prefix)
+        clean_from = from_number.replace('whatsapp:', '')
+        clean_to = to_number.replace('whatsapp:', '')
+        
+        logger.info(f"WhatsApp received from {clean_from}: {body[:100]}...")
+        
+        # Try to match this number to a customer or booking
+        customer_name = None
+        related_booking = None
+        
+        # Search for recent bookings with this phone number
+        search_phone = clean_from.replace('+', '').replace(' ', '')
+        if search_phone.startswith('44'):
+            search_phone_alt = '0' + search_phone[2:]
+        else:
+            search_phone_alt = search_phone
+        
+        recent_booking = await db.bookings.find_one(
+            {
+                "$or": [
+                    {"customer_phone": {"$regex": search_phone[-10:]}},
+                    {"customer_phone": {"$regex": search_phone_alt[-10:]}}
+                ]
+            },
+            {"_id": 0},
+            sort=[("created_at", -1)]
+        )
+        
+        if recent_booking:
+            customer_name = recent_booking.get('customer_name', 'Unknown')
+            related_booking = recent_booking.get('booking_id')
+        
+        # Store message in database
+        whatsapp_message = {
+            "id": str(uuid.uuid4()),
+            "from_number": clean_from,
+            "to_number": clean_to,
+            "body": body,
+            "message_sid": message_sid,
+            "num_media": num_media,
+            "status": "received",
+            "booking_id": related_booking,
+            "customer_name": customer_name,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "forwarded_via_sms": False,
+            "read": False
+        }
+        
+        await db.whatsapp_messages.insert_one(whatsapp_message)
+        logger.info(f"Stored WhatsApp message {message_sid} from {clean_from}")
+        
+        # Forward to admin phone via SMS
+        forward_success = False
+        if ADMIN_FORWARD_PHONE and vonage_client:
+            try:
+                from vonage_sms import SmsMessage
+                
+                # Build forward message
+                forward_text = f"📱 WhatsApp Reply\n"
+                if customer_name:
+                    forward_text += f"From: {customer_name}\n"
+                forward_text += f"Phone: {clean_from}\n"
+                if related_booking:
+                    forward_text += f"Booking: {related_booking}\n"
+                forward_text += f"\n{body}"
+                
+                # Truncate if too long (SMS limit ~160 chars per segment)
+                if len(forward_text) > 450:
+                    forward_text = forward_text[:447] + "..."
+                
+                sms_message = SmsMessage(
+                    to=ADMIN_FORWARD_PHONE,
+                    from_=VONAGE_FROM_NUMBER,
+                    text=forward_text
+                )
+                response = vonage_client.sms.send(sms_message)
+                
+                if response.messages[0].status == "0":
+                    forward_success = True
+                    logger.info(f"Forwarded WhatsApp to {ADMIN_FORWARD_PHONE} via SMS")
+                    
+                    # Update message record
+                    await db.whatsapp_messages.update_one(
+                        {"id": whatsapp_message["id"]},
+                        {"$set": {"forwarded_via_sms": True}}
+                    )
+                else:
+                    logger.warning(f"SMS forward failed: {response.messages[0].error_text}")
+                    
+            except Exception as sms_error:
+                logger.error(f"Error forwarding WhatsApp via SMS: {sms_error}")
+        
+        # Return TwiML response (optional auto-reply)
+        # For now, just acknowledge receipt
+        from twilio.twiml.messaging_response import MessagingResponse
+        resp = MessagingResponse()
+        
+        # Optional: Send auto-reply during business hours
+        # resp.message("Thank you for your message. Our team will respond shortly.")
+        
+        return PlainTextResponse(content=str(resp), media_type="application/xml")
+        
+    except Exception as e:
+        logger.error(f"Error handling Twilio WhatsApp webhook: {e}")
+        # Still return 200 to prevent Twilio from retrying
+        from twilio.twiml.messaging_response import MessagingResponse
+        resp = MessagingResponse()
+        return PlainTextResponse(content=str(resp), media_type="application/xml")
+
+
+@api_router.get("/whatsapp/messages")
+async def get_whatsapp_messages(
+    limit: int = 50,
+    offset: int = 0,
+    unread_only: bool = False
+):
+    """Get received WhatsApp messages for admin view"""
+    query = {}
+    if unread_only:
+        query["read"] = False
+    
+    messages = await db.whatsapp_messages.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+    
+    total = await db.whatsapp_messages.count_documents(query)
+    unread_count = await db.whatsapp_messages.count_documents({"read": False})
+    
+    return {
+        "messages": messages,
+        "total": total,
+        "unread_count": unread_count
+    }
+
+
+@api_router.put("/whatsapp/messages/{message_id}/read")
+async def mark_whatsapp_read(message_id: str):
+    """Mark a WhatsApp message as read"""
+    result = await db.whatsapp_messages.update_one(
+        {"id": message_id},
+        {"$set": {"read": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    return {"success": True}
+
+
+@api_router.post("/whatsapp/reply")
+async def reply_to_whatsapp(
+    to_number: str,
+    message: str
+):
+    """Send a reply to a WhatsApp message"""
+    success, result = send_whatsapp_message(to_number, message)
+    
+    if success:
+        # Log the outgoing message
+        outgoing = {
+            "id": str(uuid.uuid4()),
+            "from_number": TWILIO_WHATSAPP_NUMBER,
+            "to_number": to_number,
+            "body": message,
+            "status": "sent",
+            "direction": "outbound",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.whatsapp_messages.insert_one(outgoing)
+        
+        return {"success": True, "message": result}
+    else:
+        raise HTTPException(status_code=500, detail=result)
+
+
 # ========== FARE SETTINGS ENDPOINTS ==========
 
 class FareZone(BaseModel):

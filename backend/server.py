@@ -6362,12 +6362,6 @@ async def resend_booking_sms(booking_id: str):
     else:
         raise HTTPException(status_code=500, detail=f"Failed to send SMS: {message}")
 
-@api_router.post("/bookings/{booking_id}/resend-email")
-async def resend_booking_email(booking_id: str):
-    """Resend email confirmation for a booking"""
-    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
-
-
 @api_router.post("/test/whatsapp-confirmation")
 async def test_whatsapp_confirmation(phone: str, name: str = "Test Customer"):
     """Test endpoint to send WhatsApp confirmation to a specific phone"""
@@ -6397,7 +6391,10 @@ async def test_whatsapp_confirmation(phone: str, name: str = "Test Customer"):
     return {"success": success, "method": "template_whatsapp" if success else "failed", "message": result}
 
 
-@api_router.post("/bookings/{booking_id}/resend-email-actual")
+@api_router.post("/bookings/{booking_id}/resend-email")
+async def resend_booking_email(booking_id: str):
+    """Resend email confirmation for a booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     

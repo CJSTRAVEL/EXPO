@@ -70,6 +70,9 @@ const ContractWorkPage = () => {
     fare: "",
     driver_id: "",
     client_id: "",
+    // Vehicle assignment
+    preferred_vehicle_id: "",
+    add_to_schedule: false,
     // Flight info
     flight_number: "",
     airline: "",

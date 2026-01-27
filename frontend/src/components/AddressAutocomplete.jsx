@@ -72,7 +72,13 @@ const fetchPostcodeAddresses = async (postcode) => {
 // Dropdown component rendered via portal
 const DropdownPortal = ({ children, style, id }) => {
   return createPortal(
-    <div id={id} style={style} className="address-autocomplete-dropdown">
+    <div 
+      id={id} 
+      style={{...style, pointerEvents: 'auto', isolation: 'isolate'}} 
+      className="address-autocomplete-dropdown"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       {children}
     </div>,
     document.body

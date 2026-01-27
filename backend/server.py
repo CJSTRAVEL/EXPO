@@ -5213,7 +5213,7 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
     if 'booking_datetime' in update_data and isinstance(update_data['booking_datetime'], datetime):
         update_data['booking_datetime'] = update_data['booking_datetime'].isoformat()
     
-    # TIME CONFLICT CHECK - prevent double-booking same vehicle at same time
+    # TIME CONFLICT CHECK with AUTO-ALLOCATION to next available vehicle
     BUFFER_MINUTES = 15
     new_vehicle_id = update_data.get('vehicle_id') or existing.get('vehicle_id')
     booking_datetime_str = update_data.get('booking_datetime') or existing.get('booking_datetime')
@@ -5228,6 +5228,10 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
             booking_duration = update_data.get('duration_minutes') or existing.get('duration_minutes') or 60
             booking_date = booking_time.date()
             
+            # Get the target vehicle to determine its type
+            target_vehicle = await db.vehicles.find_one({"id": new_vehicle_id}, {"_id": 0})
+            target_vehicle_type_id = target_vehicle.get('vehicle_type_id') if target_vehicle else None
+            
             # Get all bookings on same vehicle, same day (excluding this one)
             day_start = datetime.combine(booking_date, datetime.min.time())
             day_end = day_start + timedelta(days=1)
@@ -5241,6 +5245,7 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
                 }
             }, {"_id": 0, "booking_id": 1, "booking_datetime": 1, "duration_minutes": 1}).to_list(100)
             
+            has_conflict = False
             for other in conflicting_bookings:
                 other_time_str = other.get('booking_datetime')
                 if other_time_str:
@@ -5255,10 +5260,62 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
                     
                     # Check for overlap
                     if not (new_end <= other_start or new_start >= other_end):
-                        raise HTTPException(
-                            status_code=400, 
-                            detail=f"Time conflict! {other.get('booking_id')} is already scheduled at {other_time.strftime('%H:%M')} on this vehicle."
-                        )
+                        has_conflict = True
+                        break
+            
+            # If there's a conflict, try to find next available vehicle of the same type
+            if has_conflict and target_vehicle_type_id:
+                # Get all vehicles of the same type
+                same_type_vehicles = await db.vehicles.find({
+                    "vehicle_type_id": target_vehicle_type_id,
+                    "id": {"$ne": new_vehicle_id},
+                    "is_active": {"$ne": False}
+                }, {"_id": 0}).to_list(100)
+                
+                next_available_vehicle = None
+                for alt_vehicle in same_type_vehicles:
+                    alt_vehicle_id = alt_vehicle.get('id')
+                    
+                    # Check if this vehicle has any conflicts
+                    alt_conflicts = await db.bookings.find({
+                        "vehicle_id": alt_vehicle_id,
+                        "id": {"$ne": booking_id},
+                        "booking_datetime": {
+                            "$gte": day_start.isoformat(),
+                            "$lt": day_end.isoformat()
+                        }
+                    }, {"_id": 0, "booking_datetime": 1, "duration_minutes": 1}).to_list(100)
+                    
+                    alt_has_conflict = False
+                    for alt_other in alt_conflicts:
+                        alt_other_time_str = alt_other.get('booking_datetime')
+                        if alt_other_time_str:
+                            alt_other_time = datetime.fromisoformat(alt_other_time_str.replace('Z', '+00:00')).replace(tzinfo=None)
+                            alt_other_duration = alt_other.get('duration_minutes') or 60
+                            
+                            alt_new_start = booking_time
+                            alt_new_end = alt_new_start + timedelta(minutes=booking_duration + BUFFER_MINUTES)
+                            alt_other_start = alt_other_time
+                            alt_other_end = alt_other_start + timedelta(minutes=alt_other_duration + BUFFER_MINUTES)
+                            
+                            if not (alt_new_end <= alt_other_start or alt_new_start >= alt_other_end):
+                                alt_has_conflict = True
+                                break
+                    
+                    if not alt_has_conflict:
+                        next_available_vehicle = alt_vehicle
+                        break
+                
+                if next_available_vehicle:
+                    # Auto-assign to the next available vehicle
+                    update_data['vehicle_id'] = next_available_vehicle.get('id')
+                    logger.info(f"Auto-allocated booking {booking_id} to vehicle {next_available_vehicle.get('id')} due to time conflict")
+                else:
+                    # No alternative vehicle available
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Time conflict and no other vehicle of the same type is available."
+                    )
         except HTTPException:
             raise
         except Exception as e:

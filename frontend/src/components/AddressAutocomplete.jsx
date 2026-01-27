@@ -150,14 +150,33 @@ const AddressAutocomplete = ({
   // Click outside handler
   useEffect(() => {
     const handler = (e) => {
-      const dropdownEl = document.querySelector('.address-autocomplete-dropdown');
-      if (dropdownEl?.contains(e.target)) return;
+      // Check if click is inside ANY address autocomplete dropdown
+      const allDropdowns = document.querySelectorAll('.address-autocomplete-dropdown');
+      for (const dropdown of allDropdowns) {
+        if (dropdown.contains(e.target)) return;
+      }
+      // Check if click is on our specific input
       if (inputRef.current?.contains(e.target)) return;
       setShowDropdown(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+  
+  // Close dropdown when input loses focus (with small delay to allow click on dropdown)
+  const handleBlur = () => {
+    setTimeout(() => {
+      // Check if focus moved to the dropdown
+      const activeEl = document.activeElement;
+      const dropdowns = document.querySelectorAll('.address-autocomplete-dropdown');
+      for (const dropdown of dropdowns) {
+        if (dropdown.contains(activeEl)) return;
+      }
+      if (!inputRef.current?.contains(activeEl)) {
+        setShowDropdown(false);
+      }
+    }, 150);
+  };
 
   const handleSelect = (item) => {
     const address = item.description || item.mainText;

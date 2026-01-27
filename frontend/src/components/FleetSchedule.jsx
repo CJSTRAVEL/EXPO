@@ -686,10 +686,12 @@ const FleetSchedule = ({ fullView = false }) => {
                 <div 
                   key={vehicle.id} 
                   className={cn(
-                    "flex border-b transition-colors",
-                    draggedBooking ? "hover:bg-blue-50" : "hover:bg-gray-50"
+                    "flex border-b transition-all duration-200",
+                    draggedBooking ? "hover:bg-blue-50 cursor-copy" : "hover:bg-gray-50"
                   )}
                   onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, vehicle.id)}
                 >
                   {/* Vehicle Info with Driver */}

@@ -322,6 +322,61 @@ const FleetSchedule = ({ fullView = false }) => {
     e.currentTarget.classList.remove('bg-blue-100', 'ring-2', 'ring-blue-400');
   };
 
+  // Helper function to check if a vehicle has a time conflict with a booking
+  const hasTimeConflict = (vehicleId, booking, excludeBookingId = null) => {
+    const BUFFER_MINUTES = 15;
+    const bookingTime = booking.booking_datetime ? parseISO(booking.booking_datetime) : null;
+    const bookingDuration = booking.duration_minutes || 60;
+    
+    if (!bookingTime) return false;
+    
+    const vehicleBookings = bookings.filter(b => 
+      b.vehicle_id === vehicleId && 
+      b.id !== (excludeBookingId || booking.id) && 
+      b.booking_datetime
+    );
+    
+    for (const existingBooking of vehicleBookings) {
+      const existingTime = parseISO(existingBooking.booking_datetime);
+      const existingDuration = existingBooking.duration_minutes || 60;
+      
+      const newStart = bookingTime;
+      const newEnd = new Date(bookingTime.getTime() + (bookingDuration + BUFFER_MINUTES) * 60000);
+      const existingStart = existingTime;
+      const existingEnd = new Date(existingTime.getTime() + (existingDuration + BUFFER_MINUTES) * 60000);
+      
+      if (!(newEnd <= existingStart || newStart >= existingEnd)) {
+        return existingBooking;
+      }
+    }
+    return null;
+  };
+
+  // Helper function to find the next available vehicle of the same type
+  const findNextAvailableVehicle = (targetVehicleTypeId, booking, excludeVehicleId = null) => {
+    const sameTypeVehicles = vehicles.filter(v => 
+      v.vehicle_type_id === targetVehicleTypeId && 
+      v.id !== excludeVehicleId &&
+      v.is_active !== false
+    );
+    
+    for (const vehicle of sameTypeVehicles) {
+      const conflict = hasTimeConflict(vehicle.id, booking);
+      if (!conflict) {
+        return vehicle;
+      }
+    }
+    return null;
+  };
+
+  // Helper function to get vehicle display name
+  const getVehicleDisplayName = (vehicleId) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    const vType = vehicleTypes.find(vt => vt.id === vehicle?.vehicle_type_id);
+    const vehicleIndex = vehicles.filter(v => v.vehicle_type_id === vehicle?.vehicle_type_id).findIndex(v => v.id === vehicleId) + 1;
+    return vType ? `${vType.name} ${vehicleIndex}` : vehicle?.registration;
+  };
+
   // Handle drop on vehicle row
   const handleDrop = async (e, vehicleId) => {
     e.preventDefault();
@@ -352,39 +407,6 @@ const FleetSchedule = ({ fullView = false }) => {
     
     const largeVehicleTypes = [MINIBUS_16_TYPE_ID, MINIBUS_TRAILER_TYPE_ID];
     
-    // TIME CONFLICT CHECK - prevent double-booking same vehicle at same time
-    const BUFFER_MINUTES = 15;
-    const bookingTime = draggedBooking.booking_datetime ? parseISO(draggedBooking.booking_datetime) : null;
-    const bookingDuration = draggedBooking.duration_minutes || 60;
-    
-    if (bookingTime) {
-      // Get all bookings assigned to the target vehicle
-      const vehicleBookings = bookings.filter(b => 
-        b.vehicle_id === vehicleId && 
-        b.id !== draggedBooking.id && 
-        b.booking_datetime
-      );
-      
-      // Check for time conflicts
-      for (const existingBooking of vehicleBookings) {
-        const existingTime = parseISO(existingBooking.booking_datetime);
-        const existingDuration = existingBooking.duration_minutes || 60;
-        
-        // Calculate time ranges with buffer
-        const draggedStart = bookingTime;
-        const draggedEnd = new Date(bookingTime.getTime() + (bookingDuration + BUFFER_MINUTES) * 60000);
-        const existingStart = existingTime;
-        const existingEnd = new Date(existingTime.getTime() + (existingDuration + BUFFER_MINUTES) * 60000);
-        
-        // Check for overlap
-        if (!(draggedEnd <= existingStart || draggedStart >= existingEnd)) {
-          toast.error(`Time conflict! ${existingBooking.booking_id} is already scheduled at ${format(existingTime, 'HH:mm')} on this vehicle.`);
-          setDraggedBooking(null);
-          return;
-        }
-      }
-    }
-    
     // Taxi validation: max 3 passengers, no large vehicle bookings
     if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID) {
       if (bookingPassengers >= 4) {
@@ -413,15 +435,29 @@ const FleetSchedule = ({ fullView = false }) => {
       }
     }
     
+    // Check for time conflict on target vehicle
+    let finalVehicleId = vehicleId;
+    const conflictingBooking = hasTimeConflict(vehicleId, draggedBooking);
+    
+    if (conflictingBooking) {
+      // Try to find next available vehicle of the same type
+      const nextAvailable = findNextAvailableVehicle(targetVehicle?.vehicle_type_id, draggedBooking, vehicleId);
+      
+      if (nextAvailable) {
+        finalVehicleId = nextAvailable.id;
+        toast.info(`Time conflict on ${getVehicleDisplayName(vehicleId)} - auto-assigned to ${getVehicleDisplayName(nextAvailable.id)}`);
+      } else {
+        toast.error(`Time conflict! ${conflictingBooking.booking_id} is scheduled at ${format(parseISO(conflictingBooking.booking_datetime), 'HH:mm')}. No other ${targetVehicleType?.name || 'vehicle'} available.`);
+        setDraggedBooking(null);
+        return;
+      }
+    }
+    
     try {
       await axios.put(`${API}/api/bookings/${draggedBooking.id}`, {
-        vehicle_id: vehicleId
+        vehicle_id: finalVehicleId
       });
-      // Get vehicle display name
-      const vehicle = vehicles.find(v => v.id === vehicleId);
-      const vType = vehicleTypes.find(vt => vt.id === vehicle?.vehicle_type_id);
-      const vehicleIndex = vehicles.filter(v => v.vehicle_type_id === vehicle?.vehicle_type_id).findIndex(v => v.id === vehicleId) + 1;
-      const displayName = vType ? `${vType.name} ${vehicleIndex}` : vehicle?.registration;
+      const displayName = getVehicleDisplayName(finalVehicleId);
       toast.success(`Booking ${draggedBooking.booking_id} moved to ${displayName}`);
       setDraggedBooking(null);
       fetchData();

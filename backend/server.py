@@ -5527,6 +5527,204 @@ async def check_schedule_availability(request: AvailabilityCheckRequest):
     }
 
 
+class TravelTimeCheckRequest(BaseModel):
+    vehicle_id: str
+    booking_id: str
+    booking_datetime: str  # ISO format
+    pickup_location: str
+    duration_minutes: Optional[int] = 60
+
+
+async def get_travel_time_minutes(origin: str, destination: str) -> Optional[int]:
+    """Get travel time between two locations using Google Maps API"""
+    if not origin or not destination:
+        return None
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(
+                "https://maps.googleapis.com/maps/api/directions/json",
+                params={
+                    "origin": origin,
+                    "destination": destination,
+                    "key": GOOGLE_MAPS_API_KEY,
+                    "units": "imperial",
+                    "region": "uk"
+                },
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "OK":
+                    route = data.get("routes", [{}])[0]
+                    leg = route.get("legs", [{}])[0]
+                    duration_seconds = leg.get("duration", {}).get("value", 0)
+                    return round(duration_seconds / 60)
+    except Exception as e:
+        logger.warning(f"Travel time API error: {e}")
+    
+    return None
+
+
+@api_router.post("/scheduling/check-travel-time")
+async def check_travel_time_feasibility(request: TravelTimeCheckRequest):
+    """
+    Check if a booking can be assigned to a vehicle considering travel time between jobs.
+    
+    Returns:
+    - feasible: bool - Whether the assignment is feasible
+    - conflicts: list - Details of any travel time conflicts
+    - warnings: list - Non-blocking warnings (tight but possible schedules)
+    """
+    GRACE_MINUTES = 15  # Always allow 15 minutes grace time between jobs
+    
+    # Parse the booking datetime
+    try:
+        if isinstance(request.booking_datetime, str):
+            new_booking_time = datetime.fromisoformat(request.booking_datetime.replace('Z', '+00:00')).replace(tzinfo=None)
+        else:
+            new_booking_time = request.booking_datetime.replace(tzinfo=None)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid booking_datetime: {e}")
+    
+    booking_date = new_booking_time.date()
+    new_booking_duration = request.duration_minutes or 60
+    new_booking_end = new_booking_time + timedelta(minutes=new_booking_duration)
+    
+    # Get all bookings on the same vehicle for the same day
+    day_start = datetime.combine(booking_date, datetime.min.time())
+    day_end = day_start + timedelta(days=1)
+    
+    vehicle_bookings = await db.bookings.find({
+        "vehicle_id": request.vehicle_id,
+        "id": {"$ne": request.booking_id},
+        "booking_datetime": {
+            "$gte": day_start.isoformat(),
+            "$lt": day_end.isoformat()
+        }
+    }, {"_id": 0, "booking_id": 1, "booking_datetime": 1, "duration_minutes": 1, 
+        "pickup_location": 1, "dropoff_location": 1}).to_list(100)
+    
+    if not vehicle_bookings:
+        return {
+            "feasible": True,
+            "conflicts": [],
+            "warnings": [],
+            "message": "No other bookings on this vehicle - travel time check not needed"
+        }
+    
+    conflicts = []
+    warnings = []
+    
+    # Parse and sort existing bookings by time
+    parsed_bookings = []
+    for b in vehicle_bookings:
+        try:
+            b_time_str = b.get('booking_datetime')
+            if b_time_str:
+                b_time = datetime.fromisoformat(b_time_str.replace('Z', '+00:00')).replace(tzinfo=None)
+                b_duration = b.get('duration_minutes') or 60
+                b_end = b_time + timedelta(minutes=b_duration)
+                parsed_bookings.append({
+                    **b,
+                    'parsed_start': b_time,
+                    'parsed_end': b_end
+                })
+        except Exception:
+            continue
+    
+    parsed_bookings.sort(key=lambda x: x['parsed_start'])
+    
+    # Check travel time FROM previous job's dropoff TO this new booking's pickup
+    for existing in parsed_bookings:
+        existing_end = existing['parsed_end']
+        existing_dropoff = existing.get('dropoff_location', '')
+        
+        # If existing job ends before new booking starts, check travel time
+        if existing_end <= new_booking_time:
+            # Calculate travel time from existing dropoff to new pickup
+            travel_time = await get_travel_time_minutes(existing_dropoff, request.pickup_location)
+            
+            if travel_time is not None:
+                # Time available = new booking start - existing end
+                available_time = (new_booking_time - existing_end).total_seconds() / 60
+                required_time = travel_time + GRACE_MINUTES
+                
+                if available_time < required_time:
+                    shortfall = required_time - available_time
+                    conflicts.append({
+                        "type": "insufficient_travel_time",
+                        "previous_booking": existing.get('booking_id'),
+                        "previous_ends": existing_end.strftime('%H:%M'),
+                        "previous_dropoff": existing_dropoff,
+                        "new_pickup": request.pickup_location,
+                        "new_starts": new_booking_time.strftime('%H:%M'),
+                        "travel_time_minutes": travel_time,
+                        "grace_minutes": GRACE_MINUTES,
+                        "required_minutes": required_time,
+                        "available_minutes": round(available_time),
+                        "shortfall_minutes": round(shortfall),
+                        "message": f"Driver needs {travel_time}min travel + {GRACE_MINUTES}min grace = {required_time}min, but only {round(available_time)}min available after {existing.get('booking_id')}"
+                    })
+                elif available_time < required_time + 10:
+                    # Tight but possible - add warning
+                    warnings.append({
+                        "type": "tight_schedule",
+                        "previous_booking": existing.get('booking_id'),
+                        "message": f"Tight schedule: {round(available_time)}min gap for {required_time}min needed"
+                    })
+    
+    # Check travel time FROM this new booking's dropoff TO next job's pickup
+    # First, we need the dropoff location for the new booking
+    new_booking_record = await db.bookings.find_one({"id": request.booking_id}, {"_id": 0, "dropoff_location": 1})
+    new_dropoff = new_booking_record.get('dropoff_location', '') if new_booking_record else ''
+    
+    for existing in parsed_bookings:
+        existing_start = existing['parsed_start']
+        existing_pickup = existing.get('pickup_location', '')
+        
+        # If new booking ends before existing starts, check travel time
+        if new_booking_end <= existing_start and new_dropoff and existing_pickup:
+            travel_time = await get_travel_time_minutes(new_dropoff, existing_pickup)
+            
+            if travel_time is not None:
+                available_time = (existing_start - new_booking_end).total_seconds() / 60
+                required_time = travel_time + GRACE_MINUTES
+                
+                if available_time < required_time:
+                    shortfall = required_time - available_time
+                    conflicts.append({
+                        "type": "insufficient_travel_time",
+                        "next_booking": existing.get('booking_id'),
+                        "new_ends": new_booking_end.strftime('%H:%M'),
+                        "new_dropoff": new_dropoff,
+                        "next_pickup": existing_pickup,
+                        "next_starts": existing_start.strftime('%H:%M'),
+                        "travel_time_minutes": travel_time,
+                        "grace_minutes": GRACE_MINUTES,
+                        "required_minutes": required_time,
+                        "available_minutes": round(available_time),
+                        "shortfall_minutes": round(shortfall),
+                        "message": f"Driver needs {travel_time}min travel + {GRACE_MINUTES}min grace = {required_time}min to reach {existing.get('booking_id')}, but only {round(available_time)}min available"
+                    })
+                elif available_time < required_time + 10:
+                    warnings.append({
+                        "type": "tight_schedule",
+                        "next_booking": existing.get('booking_id'),
+                        "message": f"Tight schedule: {round(available_time)}min gap for {required_time}min needed"
+                    })
+    
+    feasible = len(conflicts) == 0
+    
+    return {
+        "feasible": feasible,
+        "conflicts": conflicts,
+        "warnings": warnings,
+        "message": "Schedule is feasible" if feasible else f"Travel time conflict: {conflicts[0]['message']}" if conflicts else ""
+    }
+
+
 @api_router.post("/scheduling/auto-assign")
 async def auto_assign_vehicles(date: str = None):
     """

@@ -621,6 +621,10 @@ class BookingResponse(BaseModel):
     repeat_index: Optional[int] = None
     repeat_total: Optional[int] = None
     vehicle_id: Optional[str] = None
+    # Contract work fields
+    is_contract_work: Optional[bool] = False
+    preferred_vehicle_id: Optional[str] = None
+    booking_source: Optional[str] = None  # 'contract', 'portal', 'admin', 'quote'
 
 class Booking(BookingBase):
     model_config = ConfigDict(extra="ignore")

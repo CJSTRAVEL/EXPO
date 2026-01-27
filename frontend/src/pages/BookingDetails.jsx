@@ -527,15 +527,20 @@ const DriverCard = ({ driver }) => {
 };
 
 // Journey Details Section
-const JourneyDetails = ({ booking }) => {
+const JourneyDetails = ({ booking, returnBooking }) => {
   return (
     <div className="bg-white p-4 space-y-4">
       <h3 className="font-semibold text-gray-900">Journey Details</h3>
       
+      {/* Outbound Journey Label (only show if there's a return) */}
+      {returnBooking && (
+        <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Outbound Journey</p>
+      )}
+      
       <div className="space-y-3">
         {/* Pickup */}
         <div className="flex items-start gap-3">
-          <div className="w-3 h-3 rounded-full bg-black mt-1.5 flex-shrink-0" />
+          <div className="w-3 h-3 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide">Pickup</p>
             <p className="text-gray-900">{booking.pickup_location}</p>
@@ -544,7 +549,7 @@ const JourneyDetails = ({ booking }) => {
         
         {/* Dropoff */}
         <div className="flex items-start gap-3">
-          <div className="w-3 h-3 rounded-sm bg-black mt-1.5 flex-shrink-0" />
+          <div className="w-3 h-3 rounded-sm bg-red-500 mt-1.5 flex-shrink-0" />
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide">Drop-off</p>
             <p className="text-gray-900">{booking.dropoff_location}</p>
@@ -582,6 +587,44 @@ const JourneyDetails = ({ booking }) => {
           {format(new Date(booking.booking_datetime), "EEEE, MMMM d 'at' h:mm a")}
         </p>
       </div>
+      
+      {/* Return Journey Section */}
+      {returnBooking && (
+        <div className="pt-4 border-t">
+          <div className="flex items-center gap-2 mb-3">
+            <ArrowRight className="w-4 h-4 text-amber-600" />
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Return Journey</p>
+          </div>
+          
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-200 space-y-3">
+            {/* Return Pickup */}
+            <div className="flex items-start gap-3">
+              <div className="w-3 h-3 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-amber-700 uppercase tracking-wide">Pickup</p>
+                <p className="text-amber-900">{returnBooking.pickup_location}</p>
+              </div>
+            </div>
+            
+            {/* Return Dropoff */}
+            <div className="flex items-start gap-3">
+              <div className="w-3 h-3 rounded-sm bg-red-500 mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-amber-700 uppercase tracking-wide">Drop-off</p>
+                <p className="text-amber-900">{returnBooking.dropoff_location}</p>
+              </div>
+            </div>
+            
+            {/* Return Date/Time */}
+            <div className="pt-2 border-t border-amber-200">
+              <p className="text-xs text-amber-700 uppercase tracking-wide">Scheduled</p>
+              <p className="text-amber-900 font-medium">
+                {format(new Date(returnBooking.booking_datetime), "EEEE, MMMM d 'at' h:mm a")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Fare */}
       {booking.fare && (

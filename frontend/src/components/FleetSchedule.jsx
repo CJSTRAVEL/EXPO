@@ -373,7 +373,8 @@ const FleetSchedule = () => {
               return (
                 <div 
                   key={booking.id}
-                  className="bg-white border border-amber-300 rounded-lg p-3 shadow-sm"
+                  className="bg-white border border-amber-300 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setViewBooking(booking)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
@@ -403,15 +404,32 @@ const FleetSchedule = () => {
                       </div>
                     )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full mt-2 text-xs"
-                    onClick={() => setAllocateDialog(booking)}
-                  >
-                    <Link2 className="h-3 w-3 mr-1" />
-                    Allocate to Vehicle
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewBooking(booking);
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAllocateDialog(booking);
+                      }}
+                    >
+                      <Link2 className="h-3 w-3 mr-1" />
+                      Allocate
+                    </Button>
+                  </div>
                 </div>
               );
             })}

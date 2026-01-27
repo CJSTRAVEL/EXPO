@@ -36,6 +36,15 @@ Build a private hire booking application named "CJ's Executive Travel" with:
     - 15-minute buffer enforced between jobs
     - Bin packing optimization to minimize vehicles used
     - Shows results summary with assignments and failures
+  - **Timeline Summary Panel** (VERIFIED): Overview of scheduled jobs
+    - Shows total bookings, vehicles used, unassigned count
+    - Vehicle breakdown with clickable booking references
+  - **View Booking Popup** (VERIFIED): Detailed booking information modal
+    - Customer details (name, passengers, phone, email)
+    - Journey details (date/time, pickup, stops, dropoff)
+    - Vehicle type and fare
+    - Assigned vehicle status
+    - Quick "Allocate Vehicle" action for unassigned bookings
 - **WhatsApp Notifications via Twilio** (VERIFIED): Template-based messaging with SMS fallback
   - Integration with Twilio API for WhatsApp delivery
   - Backend proxy for Google Places autocomplete (secure API key handling)

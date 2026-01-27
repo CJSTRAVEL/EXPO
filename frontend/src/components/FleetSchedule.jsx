@@ -717,11 +717,8 @@ const FleetSchedule = ({ fullView = false }) => {
       <div className="bg-white rounded-lg border overflow-hidden">
         {/* Timeline Header */}
         <div className="flex border-b bg-gray-50">
-          <div className="w-56 flex-shrink-0 p-2 font-semibold text-sm border-r bg-gray-100">
-            <div className="flex justify-between">
-              <span>Vehicle</span>
-              <span className="text-gray-500 font-normal">Driver</span>
-            </div>
+          <div className="w-64 flex-shrink-0 p-2 font-semibold text-sm border-r bg-gray-100">
+            <div>Vehicle / Driver</div>
           </div>
           <div className="flex-1 flex overflow-x-auto" style={{ minWidth: HOURS.length * hourWidth }}>
             {HOURS.map(hour => (

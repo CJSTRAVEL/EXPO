@@ -616,15 +616,18 @@ const FleetSchedule = ({ fullView = false }) => {
       <div className="bg-white rounded-lg border overflow-hidden">
         {/* Timeline Header */}
         <div className="flex border-b bg-gray-50">
-          <div className="w-48 flex-shrink-0 p-2 font-semibold text-sm border-r bg-gray-100">
-            Vehicle
+          <div className="w-56 flex-shrink-0 p-2 font-semibold text-sm border-r bg-gray-100">
+            <div className="flex justify-between">
+              <span>Vehicle</span>
+              <span className="text-gray-500 font-normal">Driver</span>
+            </div>
           </div>
-          <div className="flex-1 flex">
+          <div className="flex-1 flex overflow-x-auto" style={{ minWidth: HOURS.length * hourWidth }}>
             {HOURS.map(hour => (
               <div
                 key={hour}
-                className="flex-1 text-center text-xs py-2 border-r last:border-r-0 text-gray-500"
-                style={{ minWidth: '40px' }}
+                className="text-center text-xs py-2 border-r last:border-r-0 text-gray-500"
+                style={{ width: `${hourWidth}px`, minWidth: `${hourWidth}px` }}
               >
                 {String(hour).padStart(2, '0')}:00
               </div>
@@ -643,27 +646,53 @@ const FleetSchedule = ({ fullView = false }) => {
             {/* Vehicles */}
             {typeVehicles.map(vehicle => {
               const vehicleBookings = getVehicleBookings(vehicle.id);
+              const driver = getVehicleDriver(vehicle.id);
               
               return (
-                <div key={vehicle.id} className="flex border-b hover:bg-gray-50">
-                  {/* Vehicle Info */}
-                  <div className="w-48 flex-shrink-0 p-2 border-r bg-gray-50">
-                    <div className="font-medium text-sm">{vehicle.registration}</div>
-                    <div className="text-xs text-gray-500">{vehicle.make} {vehicle.model}</div>
-                    {vehicle.color && (
-                      <div className="text-xs text-gray-400">{vehicle.color}</div>
-                    )}
+                <div 
+                  key={vehicle.id} 
+                  className={cn(
+                    "flex border-b transition-colors",
+                    draggedBooking ? "hover:bg-blue-50" : "hover:bg-gray-50"
+                  )}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, vehicle.id)}
+                >
+                  {/* Vehicle Info with Driver */}
+                  <div className="w-56 flex-shrink-0 p-2 border-r bg-gray-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium text-sm">{vehicle.registration}</div>
+                        <div className="text-xs text-gray-500">{vehicle.make} {vehicle.model}</div>
+                        {vehicle.color && (
+                          <div className="text-xs text-gray-400">{vehicle.color}</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {driver ? (
+                          <div className="flex items-center gap-1 text-xs text-gray-600">
+                            <UserCircle className="h-3 w-3" />
+                            <span>{driver.first_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">No driver</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Timeline */}
-                  <div className="flex-1 relative h-16">
+                  <div 
+                    className="flex-1 relative h-16 overflow-x-auto"
+                    style={{ minWidth: HOURS.length * hourWidth }}
+                  >
                     {/* Hour Grid Lines */}
                     <div className="absolute inset-0 flex">
                       {HOURS.map(hour => (
                         <div
                           key={hour}
-                          className="flex-1 border-r last:border-r-0 border-gray-100"
-                          style={{ minWidth: '40px' }}
+                          className="border-r last:border-r-0 border-gray-100"
+                          style={{ width: `${hourWidth}px`, minWidth: `${hourWidth}px` }}
                         />
                       ))}
                     </div>
@@ -673,11 +702,67 @@ const FleetSchedule = ({ fullView = false }) => {
                       const style = getBookingStyle(booking);
                       if (!style) return null;
                       
+                      const bookingColor = getBookingColor(booking);
                       const endTime = booking.duration_minutes 
                         ? format(new Date(parseISO(booking.booking_datetime).getTime() + booking.duration_minutes * 60000), 'HH:mm')
                         : '';
                       
                       return (
+                        <div
+                          key={booking.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, booking)}
+                          className={cn(
+                            "absolute top-1 bottom-1 rounded cursor-grab active:cursor-grabbing transition-colors overflow-hidden group",
+                            bookingColor.bg,
+                            bookingColor.hover
+                          )}
+                          style={style}
+                          title={`Drag to move ${booking.booking_id}`}
+                          onClick={() => setViewBooking(booking)}
+                        >
+                          <div className="p-1 text-white text-xs h-full flex flex-col justify-center">
+                            <div className="font-semibold truncate flex items-center gap-1">
+                              <GripVertical className="h-3 w-3 opacity-50" />
+                              {booking.booking_id}
+                              {booking.is_contract_work && <Briefcase className="h-3 w-3" />}
+                              {(booking.pickup_location?.toLowerCase().includes('airport') || 
+                                booking.dropoff_location?.toLowerCase().includes('airport')) && 
+                                <Plane className="h-3 w-3" />}
+                            </div>
+                            <div className="truncate opacity-80">
+                              {formatTime(booking.booking_datetime)}{endTime && ` - ${endTime}`}
+                            </div>
+                          </div>
+                          
+                          {/* Tooltip on hover */}
+                          <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs rounded p-2 z-50 w-52 hidden group-hover:block shadow-lg pointer-events-none">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold">{booking.booking_id}</span>
+                              <Badge className={cn("text-[10px] px-1", bookingColor.bg)}>
+                                {bookingColor.text}
+                              </Badge>
+                            </div>
+                            <div className="flex items-start gap-1 mb-1">
+                              <MapPin className="h-3 w-3 mt-0.5 text-green-400" />
+                              <span>{booking.pickup_location}</span>
+                            </div>
+                            <div className="flex items-start gap-1">
+                              <MapPin className="h-3 w-3 mt-0.5 text-red-400" />
+                              <span>{booking.dropoff_location}</span>
+                            </div>
+                            {booking.duration_minutes && (
+                              <div className="mt-1 text-gray-300">
+                                Duration: {booking.duration_minutes} mins
+                              </div>
+                            )}
+                            <div className="mt-1 text-blue-300 text-[10px]">
+                              Drag to reassign • Click to view
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                         <div
                           key={booking.id}
                           className="absolute top-1 bottom-1 bg-blue-500 rounded cursor-pointer hover:bg-blue-600 transition-colors overflow-hidden group"

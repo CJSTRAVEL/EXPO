@@ -95,14 +95,15 @@ TWILIO_TEMPLATE_JOURNEY_COMPLETED = os.environ.get('TWILIO_TEMPLATE_JOURNEY_COMP
 
 # Initialize Twilio client for WhatsApp
 twilio_client = None
-if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
-    try:
-        from twilio.rest import Client as TwilioClient
-        from twilio.twiml.messaging_response import MessagingResponse as TwilioMessagingResponse
+TwilioMessagingResponse = None
+try:
+    from twilio.rest import Client as TwilioClient
+    from twilio.twiml.messaging_response import MessagingResponse as TwilioMessagingResponse
+    if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
         twilio_client = TwilioClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         logging.info(f"Twilio client initialized (WhatsApp: {TWILIO_WHATSAPP_NUMBER})")
-    except Exception as e:
-        logging.error(f"Failed to initialize Twilio client: {e}")
+except Exception as e:
+    logging.error(f"Failed to initialize Twilio client: {e}")
 
 # SMTP Email Configuration
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp-mail.outlook.com')

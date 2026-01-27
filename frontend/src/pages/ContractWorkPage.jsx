@@ -33,6 +33,9 @@ const ContractWorkPage = () => {
   const [clients, setClients] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [allBookings, setAllBookings] = useState([]); // For conflict checking
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
@@ -43,6 +46,7 @@ const ContractWorkPage = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [assignBooking, setAssignBooking] = useState(null);
   const [selectedDriverForAssign, setSelectedDriverForAssign] = useState("");
+  const [vehicleConflict, setVehicleConflict] = useState(null);
   
   // Search and filter states
   const [searchText, setSearchText] = useState("");

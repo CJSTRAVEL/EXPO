@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, Save, MapPin, User, Phone, Mail, Car, Calendar, Clock, RotateCcw, Loader2, Building2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Save, MapPin, User, Phone, Mail, Car, Calendar, Clock, RotateCcw, Loader2, Building2, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 const API = process.env.REACT_APP_BACKEND_URL;

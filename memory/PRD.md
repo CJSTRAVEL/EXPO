@@ -129,6 +129,15 @@ Build a private hire booking application named "CJ's Executive Travel" with:
   - Shows green/amber/red indicators based on vehicle availability
   - Displays outbound and return journey availability separately
   - Updates in real-time when date/time/vehicle type changes
+- ✅ Interactive Google Map on Booking Preview - VERIFIED WORKING (Jan 27)
+  - Replaced static map with draggable, zoomable Google Map
+  - Shows pickup marker (green P), dropoff marker (red D), driver marker (navy D)
+  - Displays route line between pickup and dropoff
+  - Legend shows marker meanings
+  - ETA bubble and refresh button still functional
+- ✅ WhatsApp Booking Confirmation Enhancement - IN PROGRESS
+  - Added freeform WhatsApp fallback if template fails
+  - Template-based WhatsApp → Freeform WhatsApp → SMS fallback chain
 
 ### P1 (High Priority)
 - ✅ SMS Templates: Vehicle details added - VERIFIED WORKING

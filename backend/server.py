@@ -5527,7 +5527,7 @@ async def auto_assign_vehicles(date: str = None):
     for booking in regular_bookings:
         booking_time = parse_booking_time(booking)
         duration = booking.get('duration_minutes') or DEFAULT_DURATION
-        passengers = booking.get('passengers') or 1
+        passengers = booking.get('passenger_count') or booking.get('passengers') or 1
         booking_vehicle_type = booking.get('vehicle_type')  # This is the vehicle_type_id
         
         # PRIORITY 1: Match specific vehicle type if specified

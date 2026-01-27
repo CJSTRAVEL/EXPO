@@ -1,0 +1,53 @@
+{
+  "summary": "Successfully tested auto-allocation feature for time conflicts. Both backend API and frontend drag-drop correctly detect time conflicts and auto-allocate bookings to the next available vehicle of the same type.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auto_allocation.py",
+    "/app/test_reports/pytest/pytest_auto_allocation.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": ["/app/backend/tests/test_auto_allocation.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Created test bookings with TEST_ prefix for auto-allocation testing (auto-cleaned after tests)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auto-allocation feature fully tested and working. Test data: CJ-064 on vehicle 1f31625d (CJ's 16 Minibus 1) at 15:00, CJ-066 on vehicle 6fbc491e (CJ's 16 Minibus 2) at 15:00. When dragging CJ-066 to Minibus 1, system correctly detects conflict and auto-assigns back to Minibus 2 with toast message.",
+  "features_tested": {
+    "backend_auto_allocation_on_conflict": {
+      "status": "PASS",
+      "details": "PUT /api/bookings/{id} correctly detects time conflicts and auto-allocates to next available vehicle of same type"
+    },
+    "backend_error_when_no_alternative": {
+      "status": "PASS", 
+      "details": "Returns 400 error with message 'Time conflict and no other vehicle of the same type is available' when all vehicles of same type are busy"
+    },
+    "frontend_drag_drop_auto_allocation": {
+      "status": "PASS",
+      "details": "Drag-drop on FleetSchedule page correctly triggers auto-allocation with informative toast: 'Time conflict on CJ's 16 Minibus 1 - auto-assigned to CJ's 16 Minibus 2'"
+    },
+    "vehicle_type_validation": {
+      "status": "PASS",
+      "details": "Booking vehicle_type is correctly preserved and validated"
+    }
+  },
+  "test_evidence": {
+    "toast_messages_observed": [
+      "Booking CJ-066 moved to CJ's 16 Minibus 2",
+      "Time conflict on CJ's 16 Minibus 1 - auto-assigned to CJ's 16 Minibus 2"
+    ],
+    "backend_test_output": "7 passed in 1.50s - All auto-allocation tests passed",
+    "screenshots": [
+      ".screenshots/scheduling_ready.png",
+      ".screenshots/after_drag_cj066.png"
+    ]
+  }
+}

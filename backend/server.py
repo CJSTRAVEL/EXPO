@@ -4753,7 +4753,9 @@ async def send_notifications_and_update_booking(booking_id: str, phone: str, ema
                                        booking_datetime: str = None, short_booking_id: str = None,
                                        status: str = None, driver_name: str = None,
                                        customer_phone: str = None, vehicle_type: str = None,
-                                       additional_stops: list = None):
+                                       additional_stops: list = None,
+                                       return_pickup: str = None, return_dropoff: str = None,
+                                       return_datetime: str = None, has_return: bool = False):
     """Background task to send SMS and email, then update booking record"""
     # Send SMS
     sms_success, sms_message = send_booking_sms(
@@ -4761,7 +4763,11 @@ async def send_notifications_and_update_booking(booking_id: str, phone: str, ema
         pickup, dropoff, 
         distance_miles, duration_minutes, 
         booking_datetime,
-        short_booking_id
+        short_booking_id,
+        return_pickup=return_pickup,
+        return_dropoff=return_dropoff,
+        return_datetime=return_datetime,
+        has_return=has_return
     )
     
     # Send Email

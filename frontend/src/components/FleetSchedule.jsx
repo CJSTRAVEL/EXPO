@@ -112,7 +112,7 @@ const FleetSchedule = ({ fullView = false }) => {
     }
   };
 
-  // Group vehicles by type
+  // Group vehicles by type with display names (e.g., "CJ's Taxi 1", "CJ's Taxi 2")
   const vehiclesByType = useMemo(() => {
     const grouped = {};
     vehicles.forEach(v => {
@@ -125,6 +125,16 @@ const FleetSchedule = ({ fullView = false }) => {
       }
       grouped[typeName].push(v);
     });
+    
+    // Add display name with number to each vehicle
+    Object.keys(grouped).forEach(typeName => {
+      grouped[typeName] = grouped[typeName].map((v, index) => ({
+        ...v,
+        displayName: `${typeName} ${index + 1}`,
+        typeIndex: index + 1
+      }));
+    });
+    
     return grouped;
   }, [vehicles, vehicleTypes]);
 

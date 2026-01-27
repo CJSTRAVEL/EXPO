@@ -1895,6 +1895,26 @@ def send_whatsapp_booking_confirmation(phone: str, customer_name: str, booking_i
     }
     return send_whatsapp_template(phone, TWILIO_TEMPLATE_BOOKING_CONFIRMATION, variables)
 
+
+def send_whatsapp_booking_with_return(phone: str, customer_name: str, booking_id: str,
+                                       outbound_pickup: str, outbound_dropoff: str, outbound_datetime: str,
+                                       return_pickup: str, return_dropoff: str, return_datetime: str,
+                                       booking_link: str):
+    """Send booking confirmation WhatsApp with return journey details"""
+    variables = {
+        "1": customer_name,
+        "2": booking_id,
+        "3": outbound_pickup,
+        "4": outbound_dropoff,
+        "5": outbound_datetime,
+        "6": return_pickup,
+        "7": return_dropoff,
+        "8": return_datetime,
+        "9": booking_link
+    }
+    return send_whatsapp_template(phone, TWILIO_TEMPLATE_BOOKING_WITH_RETURN, variables)
+
+
 def send_whatsapp_driver_on_route(phone: str, customer_name: str, vehicle: str, registration: str, eta_minutes: str, tracking_link: str):
     """Send driver on route WhatsApp"""
     variables = {

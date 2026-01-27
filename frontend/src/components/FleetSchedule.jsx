@@ -69,6 +69,8 @@ const FleetSchedule = ({ fullView = false }) => {
   const [draggedBooking, setDraggedBooking] = useState(null);
   const [dailyDriverAssignments, setDailyDriverAssignments] = useState({}); // {vehicleId: driverId}
   const [savingDriverAssignment, setSavingDriverAssignment] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Use full hours or working hours based on view mode
   const HOURS = fullView ? FULL_HOURS : WORKING_HOURS;

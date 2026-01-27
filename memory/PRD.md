@@ -25,17 +25,25 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 
 ### January 2026 (Latest)
 - **Fleet Scheduling Page** (VERIFIED): Dedicated scheduling page at `/scheduling` for vehicle allocation
+  - **Working Hours View (6am-8pm)**: Focused timeline showing business hours
+  - **Full 24h Timeline Page** (`/scheduling/full`): Complete daily view for overnight/early jobs
+  - **Zoom Controls**: Adjustable timeline scale (50%-200%)
+  - **Color Coded Bookings**: Purple=Contract, Green=Airport, Indigo=Corporate, Blue=Standard
+  - **Driver Column**: Shows assigned driver next to each vehicle
+  - **Drag & Drop**: Drag bookings between vehicles to reassign
   - Timeline view with all vehicles grouped by type
   - Unassigned bookings section for the selected date
   - Vehicle allocation dialog with dropdown selection
   - Date navigation (previous/next day, calendar picker, today button)
   - Click-to-allocate on empty vehicle timeline slots
   - **Auto-Schedule Feature** (VERIFIED): One-click intelligent booking assignment
+    - **CONTRACT WORK PRIORITY 1**: Contract jobs assigned first with preferred vehicle
+    - Suggests alternative vehicles if preferred is unavailable
     - PSV jobs only assigned to PSV vehicles
     - Taxi jobs with >6 passengers can use PSV vehicles
     - 15-minute buffer enforced between jobs
     - Bin packing optimization to minimize vehicles used
-    - Shows results summary with assignments and failures
+    - Shows results summary with contract vs regular assignments
   - **Timeline Summary Panel** (VERIFIED): Overview of scheduled jobs
     - Shows total bookings, vehicles used, unassigned count
     - Vehicle breakdown with clickable booking references

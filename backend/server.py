@@ -7974,46 +7974,84 @@ async def twilio_whatsapp_webhook(request: Request):
         await db.whatsapp_messages.insert_one(whatsapp_message)
         logger.info(f"Stored WhatsApp message {message_sid} from {clean_from}")
         
-        # Forward to admin phone via SMS
+        # Forward to admin phone - try WhatsApp first, fall back to SMS
         forward_success = False
-        if ADMIN_FORWARD_PHONE and vonage_client:
-            try:
-                from vonage_sms import SmsMessage
-                
-                # Build forward message
-                forward_text = f"📱 WhatsApp Reply\n"
-                if customer_name:
-                    forward_text += f"From: {customer_name}\n"
-                forward_text += f"Phone: {clean_from}\n"
-                if related_booking:
-                    forward_text += f"Booking: {related_booking}\n"
-                forward_text += f"\n{body}"
-                
-                # Truncate if too long (SMS limit ~160 chars per segment)
-                if len(forward_text) > 450:
-                    forward_text = forward_text[:447] + "..."
-                
-                sms_message = SmsMessage(
-                    to=ADMIN_FORWARD_PHONE,
-                    from_=VONAGE_FROM_NUMBER,
-                    text=forward_text
-                )
-                response = vonage_client.sms.send(sms_message)
-                
-                if response.messages[0].status == "0":
-                    forward_success = True
-                    logger.info(f"Forwarded WhatsApp to {ADMIN_FORWARD_PHONE} via SMS")
+        forward_method = None
+        
+        if ADMIN_FORWARD_PHONE:
+            # Build forward message
+            forward_text = f"📱 WhatsApp Reply\n"
+            if customer_name:
+                forward_text += f"From: {customer_name}\n"
+            forward_text += f"Phone: {clean_from}\n"
+            if related_booking:
+                forward_text += f"Booking: {related_booking}\n"
+            forward_text += f"\n{body}"
+            
+            # Try WhatsApp first
+            if twilio_client:
+                try:
+                    # Format admin phone for WhatsApp
+                    admin_phone_clean = ADMIN_FORWARD_PHONE.strip().replace(' ', '').replace('-', '')
+                    if admin_phone_clean.startswith('+'):
+                        admin_phone_clean = admin_phone_clean[1:]
+                    if admin_phone_clean.startswith('0'):
+                        admin_phone_clean = '44' + admin_phone_clean[1:]
+                    if not admin_phone_clean.startswith('44'):
+                        admin_phone_clean = '44' + admin_phone_clean
                     
-                    # Update message record
-                    await db.whatsapp_messages.update_one(
-                        {"id": whatsapp_message["id"]},
-                        {"$set": {"forwarded_via_sms": True}}
+                    to_whatsapp = f"whatsapp:+{admin_phone_clean}"
+                    from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                    
+                    message = twilio_client.messages.create(
+                        body=forward_text,
+                        from_=from_whatsapp,
+                        to=to_whatsapp
                     )
-                else:
-                    logger.warning(f"SMS forward failed: {response.messages[0].error_text}")
                     
-            except Exception as sms_error:
-                logger.error(f"Error forwarding WhatsApp via SMS: {sms_error}")
+                    forward_success = True
+                    forward_method = "whatsapp"
+                    logger.info(f"Forwarded to admin via WhatsApp: {message.sid}")
+                    
+                except Exception as wa_error:
+                    logger.warning(f"WhatsApp forward failed (will try SMS): {wa_error}")
+            
+            # Fall back to SMS if WhatsApp failed
+            if not forward_success and vonage_client:
+                try:
+                    from vonage_sms import SmsMessage
+                    
+                    # Truncate if too long for SMS
+                    sms_text = forward_text
+                    if len(sms_text) > 450:
+                        sms_text = sms_text[:447] + "..."
+                    
+                    sms_message = SmsMessage(
+                        to=ADMIN_FORWARD_PHONE,
+                        from_=VONAGE_FROM_NUMBER,
+                        text=sms_text
+                    )
+                    response = vonage_client.sms.send(sms_message)
+                    
+                    if response.messages[0].status == "0":
+                        forward_success = True
+                        forward_method = "sms"
+                        logger.info(f"Forwarded to admin via SMS (WhatsApp fallback)")
+                    else:
+                        logger.warning(f"SMS forward also failed: {response.messages[0].error_text}")
+                        
+                except Exception as sms_error:
+                    logger.error(f"SMS forward error: {sms_error}")
+            
+            # Update message record with forward status
+            if forward_success:
+                await db.whatsapp_messages.update_one(
+                    {"id": whatsapp_message["id"]},
+                    {"$set": {
+                        "forwarded": True,
+                        "forward_method": forward_method
+                    }}
+                )
         
         # Return TwiML response (optional auto-reply)
         # For now, just acknowledge receipt

@@ -894,6 +894,9 @@ const FleetSchedule = ({ fullView = false }) => {
                                 Duration: {booking.duration_minutes} mins
                               </div>
                             )}
+                            <div className="mt-1 text-gray-300">
+                              Passengers: {booking.passenger_count || booking.passengers || 1}
+                            </div>
                             <div className="mt-1 text-blue-300 text-[10px]">
                               Drag to reassign • Click to view
                             </div>

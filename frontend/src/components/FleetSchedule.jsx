@@ -167,8 +167,15 @@ const FleetSchedule = ({ fullView = false }) => {
       const vehicle = vehicles.find(v => v.id === b.vehicle_id);
       if (vehicle) {
         if (!vehicleSummary[vehicle.id]) {
+          // Get vehicle type and index for display name
+          const vType = vehicleTypes.find(vt => vt.id === vehicle.vehicle_type_id);
+          const sameTypeVehicles = vehicles.filter(v => v.vehicle_type_id === vehicle.vehicle_type_id);
+          const vehicleIndex = sameTypeVehicles.findIndex(v => v.id === vehicle.id) + 1;
+          const displayName = vType ? `${vType.name} ${vehicleIndex}` : vehicle.registration;
+          
           vehicleSummary[vehicle.id] = {
             registration: vehicle.registration,
+            displayName: displayName,
             make: vehicle.make,
             model: vehicle.model,
             bookings: []
@@ -192,7 +199,7 @@ const FleetSchedule = ({ fullView = false }) => {
       vehiclesUsed: vehiclesWithBookings.size,
       vehicleSummary
     };
-  }, [bookings, vehicles]);
+  }, [bookings, vehicles, vehicleTypes]);
 
   // Calculate booking position and width on timeline
   const getBookingStyle = (booking) => {

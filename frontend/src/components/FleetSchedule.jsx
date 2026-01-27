@@ -360,6 +360,60 @@ const FleetSchedule = () => {
         </div>
       )}
 
+      {/* Timeline Summary - Shows when jobs are allocated */}
+      {timelineSummary.totalBookings > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+            <Car className="h-4 w-4" />
+            Scheduled Jobs Summary - {format(selectedDate, "dd MMM yyyy")}
+          </h3>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="bg-white rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-blue-600">{timelineSummary.totalBookings}</div>
+              <div className="text-xs text-gray-500">Total Bookings</div>
+            </div>
+            <div className="bg-white rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-green-600">{timelineSummary.vehiclesUsed}</div>
+              <div className="text-xs text-gray-500">Vehicles Used</div>
+            </div>
+            <div className="bg-white rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-amber-600">{unassignedBookings.length}</div>
+              <div className="text-xs text-gray-500">Unassigned</div>
+            </div>
+          </div>
+          
+          {/* Vehicle breakdown */}
+          <div className="space-y-2">
+            {Object.entries(timelineSummary.vehicleSummary).map(([vehicleId, vehicleData]) => (
+              <div key={vehicleId} className="bg-white rounded-lg p-3 border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-medium text-sm">
+                    {vehicleData.registration} 
+                    <span className="text-gray-400 font-normal ml-2">
+                      {vehicleData.make} {vehicleData.model}
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                    {vehicleData.bookings.length} job{vehicleData.bookings.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {vehicleData.bookings.map(booking => (
+                    <button
+                      key={booking.id}
+                      onClick={() => setViewBooking(booking)}
+                      className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded transition-colors"
+                    >
+                      {booking.booking_id} @ {formatTime(booking.booking_datetime)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Unassigned Bookings */}
       {unassignedBookings.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">

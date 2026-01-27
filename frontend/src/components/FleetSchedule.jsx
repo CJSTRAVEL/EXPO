@@ -307,6 +307,50 @@ const FleetSchedule = ({ fullView = false }) => {
     }
   };
 
+  // Handle daily driver assignment to a vehicle
+  const handleDailyDriverAssignment = async (vehicleId, driverId) => {
+    setSavingDriverAssignment(vehicleId);
+    
+    // Update local state immediately for responsive UI
+    setDailyDriverAssignments(prev => ({
+      ...prev,
+      [vehicleId]: driverId
+    }));
+    
+    try {
+      // Save the daily assignment to backend
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      await axios.post(`${API}/api/scheduling/daily-assignment`, {
+        vehicle_id: vehicleId,
+        driver_id: driverId,
+        date: dateStr
+      });
+      
+      const vehicle = vehicles.find(v => v.id === vehicleId);
+      const driver = driverId ? drivers.find(d => d.id === driverId) : null;
+      
+      if (driver) {
+        toast.success(`${driver.first_name} assigned to ${vehicle?.displayName || vehicle?.registration}`);
+      } else {
+        toast.info(`Driver removed from ${vehicle?.displayName || vehicle?.registration}`);
+      }
+      
+      // Refresh data to update all bookings with driver assignment
+      fetchData();
+    } catch (error) {
+      console.error("Error assigning driver:", error);
+      // Revert local state on error
+      setDailyDriverAssignments(prev => {
+        const newState = { ...prev };
+        delete newState[vehicleId];
+        return newState;
+      });
+      toast.error("Failed to assign driver");
+    } finally {
+      setSavingDriverAssignment(null);
+    }
+  };
+
   // Zoom controls
   const zoomIn = () => setZoomLevel(prev => Math.min(prev + 0.25, 2));
   const zoomOut = () => setZoomLevel(prev => Math.max(prev - 0.25, 0.5));

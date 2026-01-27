@@ -123,6 +123,12 @@ Build a private hire booking application named "CJ's Executive Travel" with:
   - Shows warnings for tight schedules (within 10 min of required time)
   - Auto-allocates to alternative vehicle if travel time conflict exists
   - API: POST /api/scheduling/check-travel-time
+- ✅ Traffic Light Availability in Booking Forms - VERIFIED WORKING (Jan 27)
+  - Added to New Booking page (/bookings/new)
+  - Added to Edit Booking dialog popup
+  - Shows green/amber/red indicators based on vehicle availability
+  - Displays outbound and return journey availability separately
+  - Updates in real-time when date/time/vehicle type changes
 
 ### P1 (High Priority)
 - ✅ SMS Templates: Vehicle details added - VERIFIED WORKING

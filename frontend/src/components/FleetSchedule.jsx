@@ -1033,7 +1033,7 @@ const FleetSchedule = ({ fullView = false }) => {
                   </div>
                   <div>
                     <span className="text-gray-500">Passengers:</span>
-                    <p className="font-medium">{viewBooking.passengers || 1}</p>
+                    <p className="font-medium">{viewBooking.passenger_count || viewBooking.passengers || 1}</p>
                   </div>
                   {viewBooking.phone && (
                     <div className="flex items-center gap-1">

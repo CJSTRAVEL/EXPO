@@ -1971,6 +1971,15 @@ const NewBookingPage = () => {
                   </div>
                 </div>
 
+                {/* Return Availability Indicator */}
+                {formData.vehicle_type && formData.return_datetime && (
+                  <AvailabilityIndicator 
+                    availability={returnAvailability} 
+                    label="Return Journey"
+                    isLoading={checkingAvailability}
+                  />
+                )}
+
                 {/* Return Flight Info */}
                 <div className="pt-2 border-t border-[#D4A853]/30 space-y-2">
                   <Label className="text-sm font-medium text-[#D4A853]">Return Flight Information</Label>

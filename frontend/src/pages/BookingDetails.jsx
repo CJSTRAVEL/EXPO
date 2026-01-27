@@ -1,13 +1,36 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { MapPin, Clock, User, Phone, Car, FileText, CheckCircle, Navigation, Circle, AlertCircle, RefreshCw, Info, Shield, Calendar, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, differenceInDays, differenceInHours } from "date-fns";
+import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from "@react-google-maps/api";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+
+// Google Maps libraries to load
+const libraries = ["places", "geometry"];
+
+// Map container style
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%'
+};
+
+// Default map options for a clean, modern look
+const mapOptions = {
+  disableDefaultUI: false,
+  zoomControl: true,
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: true,
+  styles: [
+    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] }
+  ]
+};
 
 // Calculate days until journey
 const getDaysUntilJourney = (bookingDatetime) => {

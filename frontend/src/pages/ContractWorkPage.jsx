@@ -1284,7 +1284,16 @@ const ContractWorkPage = () => {
 
       {/* New/Edit Booking Modal */}
       <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" data-testid="contract-booking-form">
+        <DialogContent 
+          className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" 
+          data-testid="contract-booking-form"
+          onInteractOutside={(e) => {
+            // Prevent closing when clicking on address autocomplete dropdown
+            if (e.target.closest('.address-autocomplete-dropdown')) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {editingBooking ? "Edit Contract Booking" : "New Contract Booking"}

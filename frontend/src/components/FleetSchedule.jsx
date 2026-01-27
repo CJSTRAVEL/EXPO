@@ -748,14 +748,16 @@ const FleetSchedule = ({ fullView = false }) => {
                           key={booking.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, booking)}
+                          onDragEnd={handleDragEnd}
                           className={cn(
-                            "absolute top-1 bottom-1 rounded cursor-grab active:cursor-grabbing transition-colors overflow-hidden group",
+                            "absolute top-1 bottom-1 rounded cursor-grab active:cursor-grabbing transition-all overflow-hidden group",
                             bookingColor.bg,
-                            bookingColor.hover
+                            bookingColor.hover,
+                            draggedBooking?.id === booking.id && "opacity-50 ring-2 ring-white"
                           )}
                           style={style}
                           title={`Drag to move ${booking.booking_id}`}
-                          onClick={() => setViewBooking(booking)}
+                          onClick={() => !draggedBooking && setViewBooking(booking)}
                         >
                           <div className="p-1 text-white text-xs h-full flex flex-col justify-center">
                             <div className="font-semibold truncate flex items-center gap-1">

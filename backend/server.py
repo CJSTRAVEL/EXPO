@@ -6415,7 +6415,22 @@ async def resend_booking_sms(booking_id: str):
     # Get customer name (support both old and new format)
     customer_name = booking.get('customer_name') or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip()
     
-    # Send SMS with short booking ID
+    # Check if this booking has a linked return journey
+    has_return = False
+    return_pickup = None
+    return_dropoff = None
+    return_datetime = None
+    
+    linked_booking_id = booking.get('linked_booking_id')
+    if linked_booking_id:
+        linked_booking = await db.bookings.find_one({"id": linked_booking_id}, {"_id": 0})
+        if linked_booking and linked_booking.get('is_return'):
+            has_return = True
+            return_pickup = linked_booking.get('pickup_location')
+            return_dropoff = linked_booking.get('dropoff_location')
+            return_datetime = linked_booking.get('booking_datetime')
+    
+    # Send SMS with short booking ID and return details
     success, message = send_booking_sms(
         customer_phone=booking['customer_phone'],
         customer_name=customer_name,
@@ -6425,7 +6440,11 @@ async def resend_booking_sms(booking_id: str):
         distance_miles=booking.get('distance_miles'),
         duration_minutes=booking.get('duration_minutes'),
         booking_datetime=booking.get('booking_datetime'),
-        short_booking_id=booking.get('booking_id')  # Use short URL (CJ-001)
+        short_booking_id=booking.get('booking_id'),  # Use short URL (CJ-001)
+        return_pickup=return_pickup,
+        return_dropoff=return_dropoff,
+        return_datetime=return_datetime,
+        has_return=has_return
     )
     
     # Update sms_sent status

@@ -111,6 +111,11 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 - ✅ Fleet Scheduling Drag & Drop - VERIFIED WORKING (Jan 27)
 - ✅ Driver Assignment Dropdown - VERIFIED WORKING (Jan 27)
 - ✅ Contract Work Vehicle Preference - VERIFIED WORKING (Jan 27)
+- ✅ Auto-Allocation on Time Conflict - VERIFIED WORKING (Jan 27)
+  - When scheduling creates a time conflict, system automatically finds next available vehicle of same type
+  - Works on both drag-drop and manual allocation
+  - Shows informative toast: "Time conflict on [Vehicle] - auto-assigned to [Next Available]"
+  - Falls back to error if no alternative vehicle available
 
 ### P1 (High Priority)
 - ✅ SMS Templates: Vehicle details added - VERIFIED WORKING

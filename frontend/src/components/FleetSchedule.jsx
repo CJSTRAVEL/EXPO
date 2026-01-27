@@ -300,39 +300,46 @@ const FleetSchedule = ({ fullView = false }) => {
     const MINIBUS_16_TYPE_ID = '4bacbb8f-cf05-46a4-b225-3a0e4b76563e';
     const MINIBUS_TRAILER_TYPE_ID = 'a4fb3bd4-58b8-46d1-86ec-67dcb985485b';
     
-    const restrictedTargetTypes = [TAXI_TYPE_ID, MINIBUS_8_TYPE_ID];
     const largeVehicleTypes = [MINIBUS_16_TYPE_ID, MINIBUS_TRAILER_TYPE_ID];
     
-    // Check if target is a restricted vehicle type (Taxi or 8 Minibus)
-    if (restrictedTargetTypes.includes(targetVehicle?.vehicle_type_id)) {
-      // Block if 9+ passengers
-      if (bookingPassengers >= 9) {
-        toast.error(`Cannot assign ${bookingPassengers} passengers to ${targetVehicleType?.name || 'this vehicle'}. Maximum 8 passengers allowed.`);
+    // Taxi validation: max 3 passengers, no large vehicle bookings
+    if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID) {
+      if (bookingPassengers >= 4) {
+        toast.error(`Cannot assign ${bookingPassengers} passengers to a Taxi. Maximum 3 passengers allowed.`);
         setDraggedBooking(null);
         return;
       }
-      
-      // Block if booking requires 16 Minibus or Trailer
       if (largeVehicleTypes.includes(bookingVehicleType)) {
-        toast.error(`${bookingVehicleTypeName || 'This booking'} cannot be assigned to ${targetVehicleType?.name || 'this vehicle'}. Vehicle type mismatch.`);
+        toast.error(`${bookingVehicleTypeName || 'This booking'} cannot be assigned to a Taxi. Vehicle type mismatch.`);
         setDraggedBooking(null);
         return;
       }
     }
     
-    // Additional check: Taxi can only take up to 6-8 passengers
-    if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID && bookingPassengers > 6) {
-      toast.error(`Cannot assign ${bookingPassengers} passengers to a Taxi. Maximum 6 passengers allowed for taxis.`);
-      setDraggedBooking(null);
-      return;
+    // 8-Minibus validation: max 8 passengers, no large vehicle bookings
+    if (targetVehicle?.vehicle_type_id === MINIBUS_8_TYPE_ID) {
+      if (bookingPassengers >= 9) {
+        toast.error(`Cannot assign ${bookingPassengers} passengers to CJ's 8 Minibus. Maximum 8 passengers allowed.`);
+        setDraggedBooking(null);
+        return;
+      }
+      if (largeVehicleTypes.includes(bookingVehicleType)) {
+        toast.error(`${bookingVehicleTypeName || 'This booking'} cannot be assigned to CJ's 8 Minibus. Vehicle type mismatch.`);
+        setDraggedBooking(null);
+        return;
+      }
     }
     
     try {
       await axios.put(`${API}/api/bookings/${draggedBooking.id}`, {
         vehicle_id: vehicleId
       });
+      // Get vehicle display name
       const vehicle = vehicles.find(v => v.id === vehicleId);
-      toast.success(`Booking ${draggedBooking.booking_id} moved to ${vehicle?.registration || 'vehicle'}`);
+      const vType = vehicleTypes.find(vt => vt.id === vehicle?.vehicle_type_id);
+      const vehicleIndex = vehicles.filter(v => v.vehicle_type_id === vehicle?.vehicle_type_id).findIndex(v => v.id === vehicleId) + 1;
+      const displayName = vType ? `${vType.name} ${vehicleIndex}` : vehicle?.registration;
+      toast.success(`Booking ${draggedBooking.booking_id} moved to ${displayName}`);
       setDraggedBooking(null);
       fetchData();
     } catch (error) {

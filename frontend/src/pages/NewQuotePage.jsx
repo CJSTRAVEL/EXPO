@@ -34,6 +34,11 @@ export default function NewQuotePage() {
   const [routeInfo, setRouteInfo] = useState(null);
   const [calculatingFare, setCalculatingFare] = useState(false);
   
+  // Availability check state
+  const [outboundAvailability, setOutboundAvailability] = useState(null);
+  const [returnAvailability, setReturnAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  
   // Passenger/Client lookup
   const [passengers, setPassengers] = useState([]);
   const [clients, setClients] = useState([]);

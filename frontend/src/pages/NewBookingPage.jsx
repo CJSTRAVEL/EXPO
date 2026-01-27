@@ -1787,6 +1787,15 @@ const NewBookingPage = () => {
               </div>
             </div>
 
+            {/* Outbound Availability Indicator */}
+            {formData.vehicle_type && (
+              <AvailabilityIndicator 
+                availability={outboundAvailability} 
+                label="Outbound Journey"
+                isLoading={checkingAvailability}
+              />
+            )}
+
             {/* Return Journey Toggle */}
             <div className="pt-2 border-t border-[#3d3d3d]">
               <label className="flex items-center gap-2 cursor-pointer">

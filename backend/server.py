@@ -5256,10 +5256,11 @@ async def auto_assign_vehicles(date: str = None):
     Auto-assign vehicles to bookings for a given date.
     
     Rules:
-    1. PSV jobs (category='psv') can only be done in PSV vehicles
-    2. Taxi jobs with more than 6 passengers can be done in PSV vehicles
-    3. No overlapping times - always allow 15 minutes buffer between jobs
-    4. Use the least amount of vehicles possible (bin packing optimization)
+    1. CONTRACT WORK PRIORITY: Contract jobs are assigned first with their preferred vehicle
+    2. PSV jobs (category='psv') can only be done in PSV vehicles
+    3. Taxi jobs with more than 6 passengers can be done in PSV vehicles
+    4. No overlapping times - always allow 15 minutes buffer between jobs
+    5. Use the least amount of vehicles possible (bin packing optimization)
     """
     from datetime import timedelta
     
@@ -5282,6 +5283,7 @@ async def auto_assign_vehicles(date: str = None):
     
     # Get all active vehicles
     all_vehicles = await db.vehicles.find({"is_active": True}, {"_id": 0}).to_list(100)
+    vehicle_map = {v['id']: v for v in all_vehicles}
     
     # Separate vehicles by type
     psv_vehicles = [v for v in all_vehicles if v.get('vehicle_type_id') in psv_type_ids]

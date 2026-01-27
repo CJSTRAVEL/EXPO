@@ -6554,9 +6554,24 @@ async def resend_all_notifications(booking_id: str):
             driver_name = driver.get('name')
             vehicle_type = driver.get('vehicle_type')
     
+    # Check for linked return booking
+    has_return = False
+    return_pickup = None
+    return_dropoff = None
+    return_datetime = None
+    
+    linked_booking_id = booking.get('linked_booking_id')
+    if linked_booking_id:
+        linked_booking = await db.bookings.find_one({"id": linked_booking_id}, {"_id": 0})
+        if linked_booking and linked_booking.get('is_return'):
+            has_return = True
+            return_pickup = linked_booking.get('pickup_location')
+            return_dropoff = linked_booking.get('dropoff_location')
+            return_datetime = linked_booking.get('booking_datetime')
+    
     results = {"sms": None, "email": None}
     
-    # Send SMS
+    # Send SMS with return details
     sms_success, sms_message = send_booking_sms(
         customer_phone=booking['customer_phone'],
         customer_name=customer_name,
@@ -6566,7 +6581,11 @@ async def resend_all_notifications(booking_id: str):
         distance_miles=booking.get('distance_miles'),
         duration_minutes=booking.get('duration_minutes'),
         booking_datetime=booking.get('booking_datetime'),
-        short_booking_id=booking.get('booking_id')
+        short_booking_id=booking.get('booking_id'),
+        return_pickup=return_pickup,
+        return_dropoff=return_dropoff,
+        return_datetime=return_datetime,
+        has_return=has_return
     )
     results['sms'] = {"success": sms_success, "message": sms_message}
     

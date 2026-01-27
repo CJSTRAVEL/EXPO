@@ -902,8 +902,13 @@ const PassengerPortal = () => {
         <DialogContent 
           className="max-w-lg max-h-[90vh] overflow-y-auto" 
           data-testid="request-form-modal"
+          onPointerDownOutside={(e) => {
+            if (e.target.closest('.address-autocomplete-dropdown')) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
           onInteractOutside={(e) => {
-            // Prevent closing when clicking on address autocomplete dropdown
             if (e.target.closest('.address-autocomplete-dropdown')) {
               e.preventDefault();
             }

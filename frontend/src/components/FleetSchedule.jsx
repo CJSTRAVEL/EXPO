@@ -352,8 +352,26 @@ const FleetSchedule = ({ fullView = false }) => {
     return null;
   };
 
-  // Helper function to find the next available vehicle of the same type
-  const findNextAvailableVehicle = (targetVehicleTypeId, booking, excludeVehicleId = null) => {
+  // Helper function to check travel time feasibility via API
+  const checkTravelTimeFeasibility = async (vehicleId, booking) => {
+    try {
+      const response = await axios.post(`${API}/api/scheduling/check-travel-time`, {
+        vehicle_id: vehicleId,
+        booking_id: booking.id,
+        booking_datetime: booking.booking_datetime,
+        pickup_location: booking.pickup_location,
+        duration_minutes: booking.duration_minutes || 60
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Travel time check error:", error);
+      // Return feasible if API fails - don't block scheduling
+      return { feasible: true, conflicts: [], warnings: [] };
+    }
+  };
+
+  // Helper function to find the next available vehicle of the same type (with travel time check)
+  const findNextAvailableVehicle = async (targetVehicleTypeId, booking, excludeVehicleId = null) => {
     const sameTypeVehicles = vehicles.filter(v => 
       v.vehicle_type_id === targetVehicleTypeId && 
       v.id !== excludeVehicleId &&
@@ -361,9 +379,14 @@ const FleetSchedule = ({ fullView = false }) => {
     );
     
     for (const vehicle of sameTypeVehicles) {
-      const conflict = hasTimeConflict(vehicle.id, booking);
-      if (!conflict) {
-        return vehicle;
+      // Check time conflict first (quick local check)
+      const timeConflict = hasTimeConflict(vehicle.id, booking);
+      if (timeConflict) continue;
+      
+      // Check travel time feasibility (API call)
+      const travelCheck = await checkTravelTimeFeasibility(vehicle.id, booking);
+      if (travelCheck.feasible) {
+        return { vehicle, travelCheck };
       }
     }
     return null;
@@ -440,16 +463,44 @@ const FleetSchedule = ({ fullView = false }) => {
     const conflictingBooking = hasTimeConflict(vehicleId, draggedBooking);
     
     if (conflictingBooking) {
-      // Try to find next available vehicle of the same type
-      const nextAvailable = findNextAvailableVehicle(targetVehicle?.vehicle_type_id, draggedBooking, vehicleId);
+      // Try to find next available vehicle of the same type (includes travel time check)
+      const result = await findNextAvailableVehicle(targetVehicle?.vehicle_type_id, draggedBooking, vehicleId);
       
-      if (nextAvailable) {
-        finalVehicleId = nextAvailable.id;
-        toast.info(`Time conflict on ${getVehicleDisplayName(vehicleId)} - auto-assigned to ${getVehicleDisplayName(nextAvailable.id)}`);
+      if (result) {
+        finalVehicleId = result.vehicle.id;
+        toast.info(`Time conflict on ${getVehicleDisplayName(vehicleId)} - auto-assigned to ${getVehicleDisplayName(result.vehicle.id)}`);
+        
+        // Show travel time warnings if any
+        if (result.travelCheck.warnings?.length > 0) {
+          result.travelCheck.warnings.forEach(w => toast.warning(w.message));
+        }
       } else {
         toast.error(`Time conflict! ${conflictingBooking.booking_id} is scheduled at ${format(parseISO(conflictingBooking.booking_datetime), 'HH:mm')}. No other ${targetVehicleType?.name || 'vehicle'} available.`);
         setDraggedBooking(null);
         return;
+      }
+    } else {
+      // No time conflict - but still check travel time feasibility
+      const travelCheck = await checkTravelTimeFeasibility(vehicleId, draggedBooking);
+      
+      if (!travelCheck.feasible) {
+        // Travel time conflict - try to find alternative vehicle
+        const result = await findNextAvailableVehicle(targetVehicle?.vehicle_type_id, draggedBooking, vehicleId);
+        
+        if (result) {
+          finalVehicleId = result.vehicle.id;
+          const conflict = travelCheck.conflicts[0];
+          toast.info(`Travel time issue on ${getVehicleDisplayName(vehicleId)} - auto-assigned to ${getVehicleDisplayName(result.vehicle.id)}`);
+        } else {
+          // No alternative - show the travel time conflict
+          const conflict = travelCheck.conflicts[0];
+          toast.error(conflict?.message || "Travel time conflict - driver cannot reach pickup in time");
+          setDraggedBooking(null);
+          return;
+        }
+      } else if (travelCheck.warnings?.length > 0) {
+        // Show warnings for tight schedules
+        travelCheck.warnings.forEach(w => toast.warning(w.message));
       }
     }
     

@@ -340,6 +340,63 @@ export default function NewQuotePage() {
     return () => clearTimeout(debounce);
   }, [formData.vehicle_type_id, formData.dropoff_location, formData.return_journey, routeInfo, fareZones, mileRates]);
 
+  // Check schedule availability when journey details change
+  useEffect(() => {
+    const checkAvailability = async () => {
+      // Only check if we have date, time, and vehicle type
+      if (!formData.quote_date || !formData.quote_time || !formData.vehicle_type_id) {
+        setOutboundAvailability(null);
+        return;
+      }
+      
+      setCheckingAvailability(true);
+      
+      try {
+        // Get duration from route info if available
+        const durationMinutes = routeInfo?.duration?.value 
+          ? Math.ceil(routeInfo.duration.value / 60) 
+          : 60;
+        
+        // Check outbound availability
+        const outboundRes = await axios.post(`${API}/api/scheduling/check-availability`, {
+          date: formData.quote_date,
+          time: formData.quote_time,
+          duration_minutes: durationMinutes,
+          vehicle_type_id: formData.vehicle_type_id
+        });
+        setOutboundAvailability(outboundRes.data);
+        
+        // Check return availability if return journey is enabled
+        if (formData.return_journey && formData.return_datetime) {
+          const returnDate = formData.return_datetime.split('T')[0];
+          const returnTime = formData.return_datetime.split('T')[1];
+          
+          if (returnDate && returnTime) {
+            const returnRes = await axios.post(`${API}/api/scheduling/check-availability`, {
+              date: returnDate,
+              time: returnTime,
+              duration_minutes: durationMinutes,
+              vehicle_type_id: formData.vehicle_type_id
+            });
+            setReturnAvailability(returnRes.data);
+          }
+        } else {
+          setReturnAvailability(null);
+        }
+      } catch (error) {
+        console.error("Error checking availability:", error);
+        setOutboundAvailability(null);
+        setReturnAvailability(null);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+    
+    // Debounce the check
+    const debounce = setTimeout(checkAvailability, 500);
+    return () => clearTimeout(debounce);
+  }, [formData.quote_date, formData.quote_time, formData.vehicle_type_id, formData.return_journey, formData.return_datetime, routeInfo?.duration?.value]);
+
   const fetchQuote = async () => {
     setLoading(true);
     try {

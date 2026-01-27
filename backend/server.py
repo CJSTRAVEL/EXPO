@@ -2060,7 +2060,23 @@ def send_booking_sms(customer_phone: str, customer_name: str, booking_id: str,
                 logging.info(f"Booking confirmation WhatsApp sent to {phone}")
                 return True, "Sent via WhatsApp"
             else:
-                logging.info(f"WhatsApp failed ({result}), falling back to SMS")
+                logging.warning(f"WhatsApp template failed ({result}), trying freeform WhatsApp...")
+                
+                # Try freeform WhatsApp message as fallback (requires 24hr window)
+                freeform_message = (
+                    f"Hello {customer_name},\n\n"
+                    f"Your booking is confirmed!\n\n"
+                    f"📍 Pickup: {pickup or 'See details'}\n"
+                    f"📅 Date: {datetime_display}\n"
+                    f"🔗 View details: {booking_link}\n\n"
+                    f"Thank you for choosing CJ's Executive Travel!"
+                )
+                freeform_success, freeform_result = send_whatsapp_message(phone, freeform_message)
+                if freeform_success:
+                    logging.info(f"Booking confirmation sent via freeform WhatsApp to {phone}")
+                    return True, "Sent via WhatsApp (freeform)"
+                else:
+                    logging.warning(f"Freeform WhatsApp also failed ({freeform_result}), falling back to SMS")
         
         # Fallback to SMS
         if vonage_client:

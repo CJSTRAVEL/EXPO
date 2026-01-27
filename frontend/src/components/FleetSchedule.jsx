@@ -673,6 +673,10 @@ const FleetSchedule = ({ fullView = false }) => {
                         <span>{vehicleType.name}</span>
                       </div>
                     )}
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3 text-gray-500" />
+                      <span>{booking.passenger_count || booking.passengers || 1} PAX</span>
+                    </div>
                     {booking.duration_minutes && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3 text-gray-500" />

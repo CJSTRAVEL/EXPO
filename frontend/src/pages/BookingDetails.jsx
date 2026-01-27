@@ -803,7 +803,7 @@ const BookingDetails = () => {
 
         {/* Journey Details */}
         <div className="border-t">
-          <JourneyDetails booking={booking} />
+          <JourneyDetails booking={booking} returnBooking={returnBooking} />
         </div>
 
         {/* Footer */}

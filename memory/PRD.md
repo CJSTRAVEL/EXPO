@@ -24,13 +24,14 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 ## What's Been Implemented
 
 ### January 2026 (Latest)
-- **Fleet Scheduling Page** (VERIFIED): Dedicated scheduling page at `/scheduling` for vehicle allocation
+- **Fleet Scheduling Page** (VERIFIED - Jan 27): Dedicated scheduling page at `/scheduling` for vehicle allocation
   - **Working Hours View (6am-8pm)**: Focused timeline showing business hours
   - **Full 24h Timeline Page** (`/scheduling/full`): Complete daily view for overnight/early jobs
   - **Zoom Controls**: Adjustable timeline scale (50%-200%)
   - **Color Coded Bookings**: Purple=Contract, Green=Airport, Indigo=Corporate, Blue=Standard
-  - **Driver Column**: Shows assigned driver next to each vehicle
-  - **Drag & Drop**: Drag bookings between vehicles to reassign
+  - **Driver Assignment Per Vehicle**: Dropdown to assign driver to vehicle for the day
+  - **Vehicle Display Names**: Shows friendly names like "CJ's Taxi 1", "CJ's Taxi 2" instead of registration
+  - **Drag & Drop** (VERIFIED - Jan 27): Drag bookings between vehicles to reassign - persists to database
   - Timeline view with all vehicles grouped by type
   - Unassigned bookings section for the selected date
   - Vehicle allocation dialog with dropdown selection
@@ -53,6 +54,11 @@ Build a private hire booking application named "CJ's Executive Travel" with:
     - Vehicle type and fare
     - Assigned vehicle status
     - Quick "Allocate Vehicle" action for unassigned bookings
+- **Contract Work Enhancements** (VERIFIED - Jan 27):
+  - Preferred Vehicle selection in contract booking form
+  - Vehicle conflict checking with 15-minute buffer
+  - Alternative vehicle suggestions when conflict detected
+  - "Add to schedule immediately" option
 - **WhatsApp Notifications via Twilio** (VERIFIED): Template-based messaging with SMS fallback
   - Integration with Twilio API for WhatsApp delivery
   - Backend proxy for Google Places autocomplete (secure API key handling)

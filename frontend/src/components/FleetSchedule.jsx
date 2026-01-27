@@ -788,7 +788,7 @@ const FleetSchedule = ({ fullView = false }) => {
                               ) : assignedDriver ? (
                                 <span className="flex items-center gap-1">
                                   <UserCircle className="h-3 w-3 text-green-600" />
-                                  {assignedDriver.first_name} {assignedDriver.last_name?.charAt(0)}.
+                                  {assignedDriver.name || `${assignedDriver.first_name} ${assignedDriver.last_name}`}
                                 </span>
                               ) : (
                                 <span className="text-gray-400">Assign driver...</span>
@@ -803,7 +803,7 @@ const FleetSchedule = ({ fullView = false }) => {
                               <SelectItem key={driver.id} value={driver.id}>
                                 <span className="flex items-center gap-2">
                                   <UserCircle className="h-3 w-3" />
-                                  {driver.first_name} {driver.last_name}
+                                  {driver.name || `${driver.first_name} ${driver.last_name}`}
                                 </span>
                               </SelectItem>
                             ))}

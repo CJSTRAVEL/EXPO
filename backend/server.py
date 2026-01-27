@@ -578,6 +578,10 @@ class BookingUpdate(BaseModel):
     vehicle_type: Optional[str] = None
     passenger_count: Optional[int] = None
     luggage_count: Optional[int] = None
+    # Vehicle assignment fields
+    vehicle_id: Optional[str] = None
+    preferred_vehicle_id: Optional[str] = None
+    is_contract_work: Optional[bool] = None
 
 # Response model that supports both old (customer_name) and new (first_name/last_name) formats
 class BookingResponse(BaseModel):

@@ -352,6 +352,39 @@ const FleetSchedule = ({ fullView = false }) => {
     
     const largeVehicleTypes = [MINIBUS_16_TYPE_ID, MINIBUS_TRAILER_TYPE_ID];
     
+    // TIME CONFLICT CHECK - prevent double-booking same vehicle at same time
+    const BUFFER_MINUTES = 15;
+    const bookingTime = draggedBooking.booking_datetime ? parseISO(draggedBooking.booking_datetime) : null;
+    const bookingDuration = draggedBooking.duration_minutes || 60;
+    
+    if (bookingTime) {
+      // Get all bookings assigned to the target vehicle
+      const vehicleBookings = bookings.filter(b => 
+        b.vehicle_id === vehicleId && 
+        b.id !== draggedBooking.id && 
+        b.booking_datetime
+      );
+      
+      // Check for time conflicts
+      for (const existingBooking of vehicleBookings) {
+        const existingTime = parseISO(existingBooking.booking_datetime);
+        const existingDuration = existingBooking.duration_minutes || 60;
+        
+        // Calculate time ranges with buffer
+        const draggedStart = bookingTime;
+        const draggedEnd = new Date(bookingTime.getTime() + (bookingDuration + BUFFER_MINUTES) * 60000);
+        const existingStart = existingTime;
+        const existingEnd = new Date(existingTime.getTime() + (existingDuration + BUFFER_MINUTES) * 60000);
+        
+        // Check for overlap
+        if (!(draggedEnd <= existingStart || draggedStart >= existingEnd)) {
+          toast.error(`Time conflict! ${existingBooking.booking_id} is already scheduled at ${format(existingTime, 'HH:mm')} on this vehicle.`);
+          setDraggedBooking(null);
+          return;
+        }
+      }
+    }
+    
     // Taxi validation: max 3 passengers, no large vehicle bookings
     if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID) {
       if (bookingPassengers >= 4) {

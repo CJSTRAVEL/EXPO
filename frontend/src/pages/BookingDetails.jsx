@@ -606,6 +606,33 @@ const JourneyDetails = ({ booking }) => {
           <span className="text-xl font-bold text-gray-900">£{booking.fare.toFixed(2)}</span>
         </div>
       )}
+      
+      {/* Contact Information */}
+      {(booking.customer_phone || booking.customer_email) && (
+        <div className="pt-3 border-t">
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Contact</p>
+          <div className="flex flex-wrap gap-2">
+            {booking.customer_phone && (
+              <a 
+                href={`tel:${booking.customer_phone}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-700 transition-colors"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                {booking.customer_phone}
+              </a>
+            )}
+            {booking.customer_email && (
+              <a 
+                href={`mailto:${booking.customer_email}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-700 transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                {booking.customer_email}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

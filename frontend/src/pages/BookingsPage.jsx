@@ -1306,6 +1306,15 @@ const BookingForm = ({ booking, drivers, clients, vehicleTypes, onSave, onClose,
                       </Popover>
                     </div>
 
+                    {/* Return Availability Indicator */}
+                    {formData.vehicle_type && formData.return_datetime && (
+                      <AvailabilityIndicator 
+                        availability={returnAvailability} 
+                        label="Return Schedule"
+                        isLoading={checkingAvailability}
+                      />
+                    )}
+
                     {/* Return Airport Transfer */}
                     <div className="space-y-3 border border-amber-300 rounded-lg p-3 bg-white/50">
                       <Label className="flex items-center gap-2 cursor-pointer">

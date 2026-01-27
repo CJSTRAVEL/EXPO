@@ -6,7 +6,7 @@ import {
   Plus, Minus, Save, RotateCcw, Check, Clock, Navigation,
   Phone, Mail, Users, Briefcase, Plane, ArrowLeftRight,
   MessageSquare, Bell, Loader2, ChevronRight, X, Search, Building2,
-  Repeat, CalendarDays
+  Repeat, CalendarDays, CheckCircle2, AlertTriangle, XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

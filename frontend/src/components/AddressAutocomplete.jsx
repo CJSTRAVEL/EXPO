@@ -76,8 +76,10 @@ const DropdownPortal = ({ children, style, id }) => {
       id={id} 
       style={{...style, pointerEvents: 'auto', isolation: 'isolate'}} 
       className="address-autocomplete-dropdown"
+      data-radix-focus-guard=""
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {children}
     </div>,

@@ -6366,6 +6366,38 @@ async def resend_booking_sms(booking_id: str):
 async def resend_booking_email(booking_id: str):
     """Resend email confirmation for a booking"""
     booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+
+
+@api_router.post("/test/whatsapp-confirmation")
+async def test_whatsapp_confirmation(phone: str, name: str = "Test Customer"):
+    """Test endpoint to send WhatsApp confirmation to a specific phone"""
+    success, result = send_whatsapp_booking_confirmation(
+        phone=phone,
+        customer_name=name,
+        booking_id="CJ-TEST",
+        pickup="Durham, UK",
+        datetime_str="28 Jan 2026 at 14:00",
+        booking_link="https://cjsdispatch.co.uk/booking/test"
+    )
+    
+    if not success:
+        # Try freeform as fallback
+        freeform_message = (
+            f"Hello {name},\n\n"
+            f"Your booking is confirmed!\n\n"
+            f"📍 Pickup: Durham, UK\n"
+            f"📅 Date: 28 Jan 2026 at 14:00\n"
+            f"🔗 View details: https://cjsdispatch.co.uk/booking/test\n\n"
+            f"Thank you for choosing CJ's Executive Travel!"
+        )
+        freeform_success, freeform_result = send_whatsapp_message(phone, freeform_message)
+        if freeform_success:
+            return {"success": True, "method": "freeform_whatsapp", "message": freeform_result}
+    
+    return {"success": success, "method": "template_whatsapp" if success else "failed", "message": result}
+
+
+@api_router.post("/bookings/{booking_id}/resend-email-actual")
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     

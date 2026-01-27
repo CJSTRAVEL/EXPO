@@ -5598,6 +5598,81 @@ async def auto_assign_vehicles(date: str = None):
         "alternatives_suggested": alternatives_suggested
     }
 
+class DailyAssignment(BaseModel):
+    vehicle_id: str
+    driver_id: Optional[str] = None
+    date: str
+
+@api_router.post("/scheduling/daily-assignment")
+async def create_daily_assignment(assignment: DailyAssignment):
+    """
+    Assign a driver to a vehicle for a specific date.
+    This creates a daily shift assignment - the vehicle will be assigned when driver logs in.
+    Also updates all bookings on that vehicle for that date to have the driver assigned.
+    """
+    # Parse the date
+    try:
+        target_date = datetime.strptime(assignment.date, "%Y-%m-%d").date()
+    except:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    # Verify vehicle exists
+    vehicle = await db.vehicles.find_one({"id": assignment.vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verify driver exists if provided
+    driver = None
+    if assignment.driver_id:
+        driver = await db.drivers.find_one({"id": assignment.driver_id}, {"_id": 0})
+        if not driver:
+            raise HTTPException(status_code=404, detail="Driver not found")
+    
+    # Create or update the daily assignment record
+    daily_assignment_record = {
+        "vehicle_id": assignment.vehicle_id,
+        "driver_id": assignment.driver_id,
+        "date": assignment.date,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Upsert the daily assignment
+    await db.daily_assignments.update_one(
+        {"vehicle_id": assignment.vehicle_id, "date": assignment.date},
+        {"$set": daily_assignment_record},
+        upsert=True
+    )
+    
+    # Update all bookings on this vehicle for this date with the driver
+    date_str = assignment.date
+    bookings_updated = await db.bookings.update_many(
+        {
+            "vehicle_id": assignment.vehicle_id,
+            "booking_datetime": {"$regex": f"^{date_str}"}
+        },
+        {"$set": {"driver_id": assignment.driver_id}}
+    )
+    
+    return {
+        "message": "Daily assignment saved",
+        "vehicle_id": assignment.vehicle_id,
+        "vehicle_registration": vehicle.get("registration"),
+        "driver_id": assignment.driver_id,
+        "driver_name": f"{driver.get('first_name', '')} {driver.get('last_name', '')}" if driver else None,
+        "date": assignment.date,
+        "bookings_updated": bookings_updated.modified_count
+    }
+
+@api_router.get("/scheduling/daily-assignments/{date}")
+async def get_daily_assignments(date: str):
+    """Get all daily driver-vehicle assignments for a specific date"""
+    assignments = await db.daily_assignments.find(
+        {"date": date},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return assignments
+
 @api_router.post("/bookings/{booking_id}/assign/{driver_id}", response_model=BookingResponse)
 async def assign_driver_to_booking(booking_id: str, driver_id: str):
     booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})

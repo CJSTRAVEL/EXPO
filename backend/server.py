@@ -8017,18 +8017,22 @@ async def twilio_whatsapp_webhook(request: Request):
         
         # Return TwiML response (optional auto-reply)
         # For now, just acknowledge receipt
-        resp = TwilioMessagingResponse()
-        
-        # Optional: Send auto-reply during business hours
-        # resp.message("Thank you for your message. Our team will respond shortly.")
-        
-        return PlainTextResponse(content=str(resp), media_type="application/xml")
+        if TwilioMessagingResponse:
+            resp = TwilioMessagingResponse()
+            # Optional: Send auto-reply during business hours
+            # resp.message("Thank you for your message. Our team will respond shortly.")
+            return PlainTextResponse(content=str(resp), media_type="application/xml")
+        else:
+            return PlainTextResponse(content="<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", media_type="application/xml")
         
     except Exception as e:
         logger.error(f"Error handling Twilio WhatsApp webhook: {e}")
         # Still return 200 to prevent Twilio from retrying
-        resp = TwilioMessagingResponse()
-        return PlainTextResponse(content=str(resp), media_type="application/xml")
+        if TwilioMessagingResponse:
+            resp = TwilioMessagingResponse()
+            return PlainTextResponse(content=str(resp), media_type="application/xml")
+        else:
+            return PlainTextResponse(content="<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", media_type="application/xml")
 
 
 @api_router.get("/whatsapp/messages")

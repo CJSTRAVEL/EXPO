@@ -875,9 +875,9 @@ const FleetSchedule = ({ fullView = false }) => {
                       <div className="font-semibold text-sm text-gray-900">
                         {vehicle.displayName}
                       </div>
-                      {/* Actual vehicle details in smaller text */}
+                      {/* Vehicle make/model only (no registration) */}
                       <div className="text-xs text-gray-500">
-                        {vehicle.registration} • {vehicle.make} {vehicle.model}
+                        {vehicle.make} {vehicle.model}
                       </div>
                       
                       {/* Driver Assignment Dropdown */}

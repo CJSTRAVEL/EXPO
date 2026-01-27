@@ -103,6 +103,24 @@ const AddressAutocomplete = ({
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+  
+  // Close this dropdown when another one opens (only one dropdown at a time)
+  useEffect(() => {
+    const handleOtherDropdownOpen = (e) => {
+      if (e.detail !== dropdownId.current && showDropdown) {
+        setShowDropdown(false);
+      }
+    };
+    window.addEventListener('address-dropdown-open', handleOtherDropdownOpen);
+    return () => window.removeEventListener('address-dropdown-open', handleOtherDropdownOpen);
+  }, [showDropdown]);
+  
+  // Emit event when this dropdown opens
+  useEffect(() => {
+    if (showDropdown) {
+      window.dispatchEvent(new CustomEvent('address-dropdown-open', { detail: dropdownId.current }));
+    }
+  }, [showDropdown]);
 
   const isValidPostcode = useCallback((text) => UK_POSTCODE_REGEX.test(text.trim()), []);
   

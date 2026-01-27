@@ -368,28 +368,30 @@ const FleetSchedule = ({ fullView = false }) => {
     const MINIBUS_16_TYPE_ID = '4bacbb8f-cf05-46a4-b225-3a0e4b76563e';
     const MINIBUS_TRAILER_TYPE_ID = 'a4fb3bd4-58b8-46d1-86ec-67dcb985485b';
     
-    const restrictedTargetTypes = [TAXI_TYPE_ID, MINIBUS_8_TYPE_ID];
     const largeVehicleTypes = [MINIBUS_16_TYPE_ID, MINIBUS_TRAILER_TYPE_ID];
     
-    // Check if target is a restricted vehicle type (Taxi or 8 Minibus)
-    if (restrictedTargetTypes.includes(targetVehicle?.vehicle_type_id)) {
-      // Block if 9+ passengers
-      if (bookingPassengers >= 9) {
-        toast.error(`Cannot assign ${bookingPassengers} passengers to ${targetVehicleType?.name || 'this vehicle'}. Maximum 8 passengers allowed.`);
+    // Taxi validation: max 3 passengers, no large vehicle bookings
+    if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID) {
+      if (bookingPassengers >= 4) {
+        toast.error(`Cannot assign ${bookingPassengers} passengers to a Taxi. Maximum 3 passengers allowed.`);
         return;
       }
-      
-      // Block if booking requires 16 Minibus or Trailer
       if (largeVehicleTypes.includes(bookingVehicleType)) {
-        toast.error(`${bookingVehicleTypeName || 'This booking'} cannot be assigned to ${targetVehicleType?.name || 'this vehicle'}. Vehicle type mismatch.`);
+        toast.error(`${bookingVehicleTypeName || 'This booking'} cannot be assigned to a Taxi. Vehicle type mismatch.`);
         return;
       }
     }
     
-    // Additional check: Taxi can only take up to 6 passengers
-    if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID && bookingPassengers > 6) {
-      toast.error(`Cannot assign ${bookingPassengers} passengers to a Taxi. Maximum 6 passengers allowed for taxis.`);
-      return;
+    // 8-Minibus validation: max 8 passengers, no large vehicle bookings
+    if (targetVehicle?.vehicle_type_id === MINIBUS_8_TYPE_ID) {
+      if (bookingPassengers >= 9) {
+        toast.error(`Cannot assign ${bookingPassengers} passengers to CJ's 8 Minibus. Maximum 8 passengers allowed.`);
+        return;
+      }
+      if (largeVehicleTypes.includes(bookingVehicleType)) {
+        toast.error(`${bookingVehicleTypeName || 'This booking'} cannot be assigned to CJ's 8 Minibus. Vehicle type mismatch.`);
+        return;
+      }
     }
     
     try {

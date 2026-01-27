@@ -8641,6 +8641,16 @@ async def migrate_booking_ids():
             logger.info(f"Assigned {new_booking_id} to booking {booking['id']}")
 
 @app.on_event("startup")
+async def start_whatsapp_keep_alive():
+    """Start the daily WhatsApp keep-alive background task"""
+    import asyncio
+    if twilio_client and ADMIN_FORWARD_PHONE:
+        asyncio.create_task(daily_keep_alive_task())
+        logger.info(f"WhatsApp daily keep-alive task started for {ADMIN_FORWARD_PHONE}")
+    else:
+        logger.warning("WhatsApp keep-alive not started - Twilio or admin phone not configured")
+
+@app.on_event("startup")
 async def create_default_admin():
     """Create default admin user if none exists"""
     admin_count = await db.admin_users.count_documents({})

@@ -5213,6 +5213,58 @@ async def update_booking(booking_id: str, booking_update: BookingUpdate):
     if 'booking_datetime' in update_data and isinstance(update_data['booking_datetime'], datetime):
         update_data['booking_datetime'] = update_data['booking_datetime'].isoformat()
     
+    # TIME CONFLICT CHECK - prevent double-booking same vehicle at same time
+    BUFFER_MINUTES = 15
+    new_vehicle_id = update_data.get('vehicle_id') or existing.get('vehicle_id')
+    booking_datetime_str = update_data.get('booking_datetime') or existing.get('booking_datetime')
+    
+    if new_vehicle_id and booking_datetime_str:
+        try:
+            if isinstance(booking_datetime_str, str):
+                booking_time = datetime.fromisoformat(booking_datetime_str.replace('Z', '+00:00')).replace(tzinfo=None)
+            else:
+                booking_time = booking_datetime_str.replace(tzinfo=None) if booking_datetime_str.tzinfo else booking_datetime_str
+            
+            booking_duration = update_data.get('duration_minutes') or existing.get('duration_minutes') or 60
+            booking_date = booking_time.date()
+            
+            # Get all bookings on same vehicle, same day (excluding this one)
+            day_start = datetime.combine(booking_date, datetime.min.time())
+            day_end = day_start + timedelta(days=1)
+            
+            conflicting_bookings = await db.bookings.find({
+                "vehicle_id": new_vehicle_id,
+                "id": {"$ne": booking_id},
+                "booking_datetime": {
+                    "$gte": day_start.isoformat(),
+                    "$lt": day_end.isoformat()
+                }
+            }, {"_id": 0, "booking_id": 1, "booking_datetime": 1, "duration_minutes": 1}).to_list(100)
+            
+            for other in conflicting_bookings:
+                other_time_str = other.get('booking_datetime')
+                if other_time_str:
+                    other_time = datetime.fromisoformat(other_time_str.replace('Z', '+00:00')).replace(tzinfo=None)
+                    other_duration = other.get('duration_minutes') or 60
+                    
+                    # Calculate time ranges with buffer
+                    new_start = booking_time
+                    new_end = new_start + timedelta(minutes=booking_duration + BUFFER_MINUTES)
+                    other_start = other_time
+                    other_end = other_start + timedelta(minutes=other_duration + BUFFER_MINUTES)
+                    
+                    # Check for overlap
+                    if not (new_end <= other_start or new_start >= other_end):
+                        raise HTTPException(
+                            status_code=400, 
+                            detail=f"Time conflict! {other.get('booking_id')} is already scheduled at {other_time.strftime('%H:%M')} on this vehicle."
+                        )
+        except HTTPException:
+            raise
+        except Exception as e:
+            # Log but don't block if date parsing fails
+            print(f"Warning: Could not check time conflicts: {e}")
+    
     # Update customer_name if first_name or last_name changed
     if 'first_name' in update_data or 'last_name' in update_data:
         first = update_data.get('first_name') or existing.get('first_name') or ''

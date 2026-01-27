@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Building2, Plus, Calendar, MapPin, User, Clock, Loader2, Search, X, FileText, CreditCard, MoreHorizontal, Edit, Trash2, CheckCircle, UserCheck, MessageSquare, MessageSquareX, Plane, ArrowLeftRight, Mail, UserX, Repeat, CalendarDays, Minus } from "lucide-react";
+import { Building2, Plus, Calendar, MapPin, User, Clock, Loader2, Search, X, FileText, CreditCard, MoreHorizontal, Edit, Trash2, CheckCircle, UserCheck, MessageSquare, MessageSquareX, Plane, ArrowLeftRight, Mail, UserX, Repeat, CalendarDays, Minus, Car, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { format, addDays, addWeeks } from "date-fns";
+import { format, addDays, addWeeks, parseISO, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 

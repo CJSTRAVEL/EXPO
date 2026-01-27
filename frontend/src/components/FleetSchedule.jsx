@@ -399,8 +399,8 @@ const FleetSchedule = ({ fullView = false }) => {
             </Button>
           )}
           
-          {/* Auto Schedule Button */}
-          {unassignedBookings.length > 0 && (
+          {/* Auto Schedule Button - Only in normal view */}
+          {!fullView && unassignedBookings.length > 0 && (
             <Button
               onClick={handleAutoSchedule}
               disabled={autoScheduling}

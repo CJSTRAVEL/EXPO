@@ -105,9 +105,18 @@ const AddressAutocomplete = ({
   }, [onChange]);
 
   const isValidPostcode = useCallback((text) => UK_POSTCODE_REGEX.test(text.trim()), []);
+  
+  // Flag to prevent search after selection
+  const justSelectedRef = useRef(false);
 
   // Lookup addresses when input changes
   useEffect(() => {
+    // Skip search if we just selected an address
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+    
     const lookup = async () => {
       const trimmed = inputValue.trim();
       

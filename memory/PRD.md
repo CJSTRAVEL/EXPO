@@ -126,6 +126,11 @@ Build a private hire booking application named "CJ's Executive Travel" with:
 
 ### P1 (High Priority)
 - ✅ SMS Templates: Vehicle details added - VERIFIED WORKING
+- ✅ WhatsApp Reply Webhook - VERIFIED WORKING (Jan 27)
+  - Receives incoming WhatsApp messages via Twilio webhook
+  - Stores messages in database with customer/booking matching
+  - Forwards to admin phone via SMS
+  - API: POST /api/webhooks/twilio/whatsapp
 - Driver App APK: User testing for new build (ab3bb23f...) - PENDING USER ACTION
 - iOS Driver App Build - NOT STARTED (requires credential setup)
 

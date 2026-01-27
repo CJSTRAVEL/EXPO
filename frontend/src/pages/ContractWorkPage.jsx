@@ -1992,6 +1992,110 @@ const ContractWorkPage = () => {
               </Select>
             </div>
 
+            {/* Vehicle Assignment & Schedule */}
+            <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2">
+                <Car className="h-4 w-4 text-blue-600" />
+                <Label className="text-blue-800 font-semibold">Vehicle & Schedule</Label>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm">Preferred Vehicle</Label>
+                <Select
+                  value={formData.preferred_vehicle_id || "none"}
+                  onValueChange={(value) => handleVehicleChange(value === "none" ? "" : value)}
+                >
+                  <SelectTrigger data-testid="contract-vehicle-select">
+                    <SelectValue placeholder="Select vehicle..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No preference</SelectItem>
+                    {Object.entries(
+                      vehicles.reduce((acc, v) => {
+                        const typeName = vehicleTypes.find(vt => vt.id === v.vehicle_type_id)?.name || 'Other';
+                        if (!acc[typeName]) acc[typeName] = [];
+                        acc[typeName].push(v);
+                        return acc;
+                      }, {})
+                    ).map(([typeName, typeVehicles]) => (
+                      <div key={typeName}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100">
+                          {typeName}
+                        </div>
+                        {typeVehicles.map((vehicle) => (
+                          <SelectItem key={vehicle.id} value={vehicle.id}>
+                            {vehicle.registration} - {vehicle.make} {vehicle.model}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  This vehicle will be used for all repeat bookings in this contract
+                </p>
+              </div>
+              
+              {formData.preferred_vehicle_id && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Checkbox
+                    id="add_to_schedule"
+                    checked={formData.add_to_schedule}
+                    onCheckedChange={(checked) => {
+                      setFormData(prev => ({ ...prev, add_to_schedule: checked }));
+                      if (checked && formData.preferred_vehicle_id) {
+                        const conflict = checkVehicleConflict(formData.preferred_vehicle_id, formData.booking_datetime);
+                        setVehicleConflict(conflict);
+                      } else {
+                        setVehicleConflict(null);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="add_to_schedule" className="text-sm cursor-pointer">
+                    Add to schedule immediately
+                  </Label>
+                </div>
+              )}
+              
+              {/* Vehicle Conflict Warning */}
+              {vehicleConflict && (
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mt-2">
+                  <div className="flex items-center gap-2 text-amber-800 mb-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="font-semibold text-sm">Schedule Conflict</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mb-2">
+                    {vehicleConflict.vehicle?.registration} has {vehicleConflict.conflicts.length} conflicting booking(s):
+                  </p>
+                  <ul className="text-xs text-amber-600 mb-2 space-y-1">
+                    {vehicleConflict.conflicts.slice(0, 3).map(c => (
+                      <li key={c.id}>
+                        • {c.booking_id} at {c.booking_datetime ? format(new Date(c.booking_datetime), "HH:mm") : "N/A"}
+                      </li>
+                    ))}
+                  </ul>
+                  {vehicleConflict.alternatives.length > 0 && (
+                    <div>
+                      <p className="text-xs text-amber-700 font-medium mb-1">Suggested alternatives:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {vehicleConflict.alternatives.slice(0, 3).map(v => (
+                          <Button
+                            key={v.id}
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7 bg-white"
+                            onClick={() => handleVehicleChange(v.id)}
+                          >
+                            {v.registration}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Notes */}
             <div className="space-y-2">
               <Label>Notes</Label>

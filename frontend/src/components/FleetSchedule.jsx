@@ -1086,11 +1086,14 @@ const FleetSchedule = ({ fullView = false }) => {
                         <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100">
                           {typeName}
                         </div>
-                        {typeVehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>
-                            {v.registration} - {v.make} {v.model}
-                          </SelectItem>
-                        ))}
+                        {typeVehicles.map((v, idx) => {
+                          const displayName = `${typeName} ${idx + 1}`;
+                          return (
+                            <SelectItem key={v.id} value={v.id}>
+                              {displayName} - {v.make} {v.model}
+                            </SelectItem>
+                          );
+                        })}
                       </div>
                     ))}
                   </SelectContent>

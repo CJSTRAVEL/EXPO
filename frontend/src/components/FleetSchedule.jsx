@@ -1225,14 +1225,24 @@ const FleetSchedule = ({ fullView = false }) => {
               </div>
               
               {/* Assigned Vehicle */}
-              {viewBooking.vehicle_id && (
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                  <span className="text-xs text-blue-600">Assigned Vehicle</span>
-                  <p className="font-medium">
-                    {vehicles.find(v => v.id === viewBooking.vehicle_id)?.registration || viewBooking.vehicle_id}
-                  </p>
-                </div>
-              )}
+              {viewBooking.vehicle_id && (() => {
+                const vehicle = vehicles.find(v => v.id === viewBooking.vehicle_id);
+                const vType = vehicle ? vehicleTypes.find(vt => vt.id === vehicle.vehicle_type_id) : null;
+                const vehicleIndex = vehicle ? vehicles.filter(v => v.vehicle_type_id === vehicle.vehicle_type_id).findIndex(v => v.id === vehicle.id) + 1 : 0;
+                const displayName = vType ? `${vType.name} ${vehicleIndex}` : (vehicle?.registration || viewBooking.vehicle_id);
+                
+                return (
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <span className="text-xs text-blue-600">Assigned Vehicle</span>
+                    <p className="font-medium">
+                      {displayName}
+                      <span className="text-gray-500 text-sm ml-2">
+                        {vehicle ? `${vehicle.make} ${vehicle.model}` : ''}
+                      </span>
+                    </p>
+                  </div>
+                );
+              })()}
               
               {/* Notes */}
               {viewBooking.notes && (

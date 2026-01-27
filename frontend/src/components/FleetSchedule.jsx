@@ -507,7 +507,8 @@ const FleetSchedule = () => {
                           key={booking.id}
                           className="absolute top-1 bottom-1 bg-blue-500 rounded cursor-pointer hover:bg-blue-600 transition-colors overflow-hidden group"
                           style={style}
-                          title={`${booking.booking_id}: ${booking.pickup_location} → ${booking.dropoff_location}`}
+                          title={`Click to view ${booking.booking_id}`}
+                          onClick={() => setViewBooking(booking)}
                         >
                           <div className="p-1 text-white text-xs h-full flex flex-col justify-center">
                             <div className="font-semibold truncate">{booking.booking_id}</div>
@@ -517,7 +518,7 @@ const FleetSchedule = () => {
                           </div>
                           
                           {/* Tooltip on hover */}
-                          <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs rounded p-2 z-50 w-48 hidden group-hover:block shadow-lg">
+                          <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs rounded p-2 z-50 w-48 hidden group-hover:block shadow-lg pointer-events-none">
                             <div className="font-semibold mb-1">{booking.booking_id}</div>
                             <div className="flex items-start gap-1 mb-1">
                               <MapPin className="h-3 w-3 mt-0.5 text-green-400" />
@@ -532,6 +533,7 @@ const FleetSchedule = () => {
                                 Duration: {booking.duration_minutes} mins
                               </div>
                             )}
+                            <div className="mt-1 text-blue-300 text-[10px]">Click to view details</div>
                           </div>
                         </div>
                       );

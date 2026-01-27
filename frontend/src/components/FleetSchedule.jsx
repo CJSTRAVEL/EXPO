@@ -81,16 +81,27 @@ const FleetSchedule = ({ fullView = false }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [vehiclesRes, vehicleTypesRes, bookingsRes, driversRes] = await Promise.all([
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const [vehiclesRes, vehicleTypesRes, bookingsRes, driversRes, assignmentsRes] = await Promise.all([
         axios.get(`${API}/api/vehicles`),
         axios.get(`${API}/api/vehicle-types`),
         axios.get(`${API}/api/bookings`),
         axios.get(`${API}/api/drivers`),
+        axios.get(`${API}/api/scheduling/daily-assignments/${dateStr}`).catch(() => ({ data: [] })),
       ]);
 
       setVehicles(vehiclesRes.data || []);
       setVehicleTypes(vehicleTypesRes.data || []);
       setDrivers(driversRes.data || []);
+      
+      // Set daily assignments from fetched data
+      const assignmentsMap = {};
+      (assignmentsRes.data || []).forEach(a => {
+        if (a.driver_id) {
+          assignmentsMap[a.vehicle_id] = a.driver_id;
+        }
+      });
+      setDailyDriverAssignments(assignmentsMap);
       
       // Filter bookings for selected date
       const allBookings = bookingsRes.data || [];

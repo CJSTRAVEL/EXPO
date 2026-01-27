@@ -489,38 +489,6 @@ const FleetSchedule = ({ fullView = false }) => {
     
     const largeVehicleTypes = [MINIBUS_16_TYPE_ID, MINIBUS_TRAILER_TYPE_ID];
     
-    // TIME CONFLICT CHECK - prevent double-booking same vehicle at same time
-    const BUFFER_MINUTES = 15;
-    const bookingTime = allocateDialog.booking_datetime ? parseISO(allocateDialog.booking_datetime) : null;
-    const bookingDuration = allocateDialog.duration_minutes || 60;
-    
-    if (bookingTime) {
-      // Get all bookings assigned to the target vehicle
-      const vehicleBookings = bookings.filter(b => 
-        b.vehicle_id === selectedVehicle && 
-        b.id !== allocateDialog.id && 
-        b.booking_datetime
-      );
-      
-      // Check for time conflicts
-      for (const existingBooking of vehicleBookings) {
-        const existingTime = parseISO(existingBooking.booking_datetime);
-        const existingDuration = existingBooking.duration_minutes || 60;
-        
-        // Calculate time ranges with buffer
-        const newStart = bookingTime;
-        const newEnd = new Date(bookingTime.getTime() + (bookingDuration + BUFFER_MINUTES) * 60000);
-        const existingStart = existingTime;
-        const existingEnd = new Date(existingTime.getTime() + (existingDuration + BUFFER_MINUTES) * 60000);
-        
-        // Check for overlap
-        if (!(newEnd <= existingStart || newStart >= existingEnd)) {
-          toast.error(`Time conflict! ${existingBooking.booking_id} is already scheduled at ${format(existingTime, 'HH:mm')} on this vehicle.`);
-          return;
-        }
-      }
-    }
-    
     // Taxi validation: max 3 passengers, no large vehicle bookings
     if (targetVehicle?.vehicle_type_id === TAXI_TYPE_ID) {
       if (bookingPassengers >= 4) {
@@ -545,11 +513,29 @@ const FleetSchedule = ({ fullView = false }) => {
       }
     }
     
+    // Check for time conflict on selected vehicle
+    let finalVehicleId = selectedVehicle;
+    const conflictingBooking = hasTimeConflict(selectedVehicle, allocateDialog);
+    
+    if (conflictingBooking) {
+      // Try to find next available vehicle of the same type
+      const nextAvailable = findNextAvailableVehicle(targetVehicle?.vehicle_type_id, allocateDialog, selectedVehicle);
+      
+      if (nextAvailable) {
+        finalVehicleId = nextAvailable.id;
+        toast.info(`Time conflict on ${getVehicleDisplayName(selectedVehicle)} - auto-assigned to ${getVehicleDisplayName(nextAvailable.id)}`);
+      } else {
+        toast.error(`Time conflict! ${conflictingBooking.booking_id} is scheduled at ${format(parseISO(conflictingBooking.booking_datetime), 'HH:mm')}. No other ${targetVehicleType?.name || 'vehicle'} available.`);
+        return;
+      }
+    }
+    
     try {
       await axios.put(`${API}/api/bookings/${allocateDialog.id}`, {
-        vehicle_id: selectedVehicle
+        vehicle_id: finalVehicleId
       });
-      toast.success(`Booking ${allocateDialog.booking_id} allocated successfully`);
+      const displayName = getVehicleDisplayName(finalVehicleId);
+      toast.success(`Booking ${allocateDialog.booking_id} allocated to ${displayName}`);
       setAllocateDialog(null);
       setSelectedVehicle("");
       fetchData();

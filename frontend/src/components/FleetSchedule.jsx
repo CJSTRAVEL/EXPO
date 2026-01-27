@@ -113,8 +113,12 @@ const FleetSchedule = ({ fullView = false }) => {
     return () => clearInterval(interval);
   }, [selectedDate]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (showRefreshIndicator = false) => {
+    if (showRefreshIndicator) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       const [vehiclesRes, vehicleTypesRes, bookingsRes, driversRes, assignmentsRes] = await Promise.all([
@@ -152,11 +156,15 @@ const FleetSchedule = ({ fullView = false }) => {
       const unassigned = dayBookings.filter(b => !b.vehicle_id && b.status !== 'completed' && b.status !== 'cancelled');
       setUnassignedBookings(unassigned);
       
+      // Update last refresh timestamp
+      setLastUpdated(new Date());
+      
     } catch (error) {
       console.error("Error fetching schedule data:", error);
       toast.error("Failed to load schedule");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 

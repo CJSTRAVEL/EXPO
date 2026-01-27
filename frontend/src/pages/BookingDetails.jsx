@@ -170,22 +170,6 @@ const TrackingHeader = ({ status, bookingDatetime, driverInfo, etaMinutes, drive
             <span>ETA: {etaMinutes} minutes</span>
           </div>
         )}
-        
-        {/* Return Booking Info */}
-        {returnBooking && (
-          <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-            <div className="flex items-center gap-2 text-amber-800 font-medium mb-2">
-              <ArrowRight className="w-4 h-4" />
-              <span>Return Journey</span>
-            </div>
-            <p className="text-sm text-amber-700">
-              {format(new Date(returnBooking.booking_datetime), 'EEE, d MMM yyyy')} at {format(new Date(returnBooking.booking_datetime), 'h:mm a')}
-            </p>
-            <p className="text-xs text-amber-600 mt-1">
-              {returnBooking.pickup_location} → {returnBooking.dropoff_location}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

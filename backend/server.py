@@ -2545,11 +2545,11 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                 
                 <!-- Footer -->
                 <tr>
-                    <td style="padding: 30px 40px; background-color: #1a1a1a; border-top: 1px solid #e0e0e0;">
-                        <p style="margin: 0; color: #999; font-size: 11px; text-align: center; line-height: 1.6;">
+                    <td style="padding: 30px 40px; background-color: #ffffff; border-top: 2px solid #D4A853;">
+                        <p style="margin: 0; color: #666; font-size: 11px; text-align: center; line-height: 1.6;">
                             This is an automated email confirmation from CJ's Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 191 722 1223.
                         </p>
-                        <p style="margin: 15px 0 0 0; color: #999; font-size: 11px; text-align: center;">
+                        <p style="margin: 15px 0 0 0; color: #666; font-size: 11px; text-align: center;">
                             CJ's Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | <a href="https://cjstravel.uk" style="color: #D4A853;">cjstravel.uk</a>
                         </p>
                     </td>

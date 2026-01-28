@@ -264,4 +264,9 @@ export const markChatAsRead = async (bookingId) => {
   return response.data;
 };
 
+export const deleteChat = async (bookingId) => {
+  const response = await api.delete(`/driver/chat/${bookingId}`);
+  return response.data;
+};
+
 export default api;

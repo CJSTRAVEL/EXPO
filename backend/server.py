@@ -9119,6 +9119,16 @@ async def start_whatsapp_keep_alive():
         logger.warning("WhatsApp keep-alive not started - Twilio or admin phone not configured")
 
 @app.on_event("startup")
+async def start_evening_reminder_task():
+    """Start the daily evening booking reminder background task"""
+    import asyncio
+    if twilio_client:
+        asyncio.create_task(daily_evening_reminder_task())
+        logger.info(f"Evening booking reminder task started for {REMINDER_PHONE_NUMBERS}")
+    else:
+        logger.warning("Evening reminder not started - Twilio not configured")
+
+@app.on_event("startup")
 async def create_default_admin():
     """Create default admin user if none exists"""
     admin_count = await db.admin_users.count_documents({})

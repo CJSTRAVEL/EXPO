@@ -8627,32 +8627,30 @@ async def send_evening_booking_reminder():
         message = "CJ's Executive Travel - Evening Schedule\n\n"
         message += f"{len(evening_bookings)} booking(s) this evening:\n\n"
         for booking in evening_bookings:
-                booking_time = ""
-                if booking.get("booking_datetime"):
-                    try:
-                        dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
-                        booking_time = dt.strftime("%H:%M")
-                    except:
-                        booking_time = "TBC"
-                
-                customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip() or "Customer"
-                booking_id = booking.get("booking_id", booking.get("id", "")[:8])
-                driver_id = booking.get("driver_id")
-                
-                # Get driver name if assigned
-                driver_info = ""
-                if driver_id:
-                    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0, "name": 1})
-                    if driver:
-                        driver_info = f"({driver.get('name', 'Driver')})"
-                    else:
-                        driver_info = "(Assigned)"
+            booking_time = ""
+            if booking.get("booking_datetime"):
+                try:
+                    dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
+                    booking_time = dt.strftime("%H:%M")
+                except:
+                    booking_time = "TBC"
+            
+            customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip() or "Customer"
+            booking_id = booking.get("booking_id", booking.get("id", "")[:8])
+            driver_id = booking.get("driver_id")
+            
+            # Get driver name if assigned
+            driver_info = ""
+            if driver_id:
+                driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0, "name": 1})
+                if driver:
+                    driver_info = f"({driver.get('name', 'Driver')})"
                 else:
-                    driver_info = "UNALLOCATED"
-                
-                message += f"{booking_time} {booking_id} - {customer_name} {driver_info}\n"
-        else:
-            message += "No bookings scheduled for this evening."
+                    driver_info = "(Assigned)"
+            else:
+                driver_info = "UNALLOCATED"
+            
+            message += f"{booking_time} {booking_id} - {customer_name} {driver_info}\n"
         
         # Send SMS to all reminder phone numbers
         for phone in REMINDER_PHONE_NUMBERS:

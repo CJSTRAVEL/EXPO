@@ -2220,8 +2220,8 @@ async def get_sms_template(template_type: str):
 
 async def send_templated_sms(phone: str, template_type: str, variables: dict):
     """Send templated message via WhatsApp (primary) or SMS (fallback)"""
-    if not vonage_client:
-        logging.warning("Vonage client not initialized, skipping notification")
+    if not vonage_client and not twilio_client:
+        logging.warning("No messaging client initialized, skipping notification")
         return False, "Notification service not configured"
     
     try:

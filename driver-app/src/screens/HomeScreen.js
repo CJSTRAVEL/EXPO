@@ -114,15 +114,16 @@ export default function HomeScreen({ navigation }) {
   );
 
   useEffect(() => {
-    // Don't auto-start shift on login - always start with shift stopped
-    setIsShiftActive(false);
-    // Show/hide notification based on online status
+    // Sync shift state with user's online status from backend
+    // This ensures the shift state persists correctly across app restarts
     if (user?.is_online) {
+      setIsShiftActive(true);
       showOnlineNotification();
     } else {
+      setIsShiftActive(false);
       hideOnlineNotification();
     }
-  }, [user]);
+  }, [user?.is_online]);
 
   // Shift timer effect
   useEffect(() => {

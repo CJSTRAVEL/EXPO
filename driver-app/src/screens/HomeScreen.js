@@ -58,15 +58,27 @@ const hideOnlineNotification = async () => {
 
 // Custom vehicle marker component - Simple car icon
 // Top-down vehicle image marker
-const VehicleMarker = ({ heading = 0 }) => (
-  <View style={[styles.vehicleMarkerContainer, { transform: [{ rotate: `${heading}deg` }] }]}>
-    <Image 
-      source={require('../../assets/car-top-view.png')} 
-      style={styles.vehicleMarkerImage}
-      resizeMode="contain"
-    />
-  </View>
-);
+const VehicleMarker = ({ heading = 0 }) => {
+  const [imageError, setImageError] = React.useState(false);
+  
+  return (
+    <View style={[styles.vehicleMarkerContainer, { transform: [{ rotate: `${heading}deg` }] }]}>
+      {!imageError ? (
+        <Image 
+          source={require('../../assets/car-top-view.png')} 
+          style={styles.vehicleMarkerImage}
+          resizeMode="contain"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        // Fallback to a simple colored circle with car icon
+        <View style={styles.vehicleMarkerFallback}>
+          <Ionicons name="car" size={30} color="#D4A853" />
+        </View>
+      )}
+    </View>
+  );
+};
 
 export default function HomeScreen({ navigation }) {
   const { user, refreshProfile } = useAuth();

@@ -823,16 +823,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  // Vehicle Marker Styles - Top-down car image
+  // Vehicle Marker Styles - Top-down car image (larger for better visibility)
   vehicleMarkerContainer: {
-    width: 50,
-    height: 50,
+    width: 80,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
   },
   vehicleMarkerImage: {
-    width: 45,
-    height: 45,
+    width: 70,
+    height: 70,
   },
   // Journey Progress Bar styles
   journeyProgressBar: {

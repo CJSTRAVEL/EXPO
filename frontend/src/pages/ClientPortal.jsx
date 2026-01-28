@@ -537,48 +537,48 @@ const ClientPortal = () => {
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
       <header className="bg-[#1a1a1a] shadow-lg sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <img
                 src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png"
                 alt="CJ's Executive Travel"
-                className="w-12 h-12 object-contain"
+                className="w-8 h-8 sm:w-12 sm:h-12 object-contain flex-shrink-0"
               />
-              <div>
-                <h1 className="text-xl font-bold text-white">Client Portal</h1>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Building2 className="w-3.5 h-3.5" />
-                  {client?.company_name || client?.name}
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-xl font-bold text-white">Client Portal</h1>
+                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400">
+                  <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                  <span className="truncate">{client?.company_name || client?.name}</span>
                   {client?.account_no && (
-                    <span className="text-[#D4A853] ml-1">({client.account_no})</span>
+                    <span className="text-[#D4A853] hidden sm:inline">({client.account_no})</span>
                   )}
                 </div>
                 {client?.email && (
-                  <div className="flex items-center gap-1 text-sm text-gray-400 mt-0.5">
+                  <div className="hidden sm:flex items-center gap-1 text-sm text-gray-400 mt-0.5">
                     <Mail className="w-3.5 h-3.5" />
                     {client.email}
                   </div>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <Button
                 onClick={() => setShowNewBooking(true)}
-                className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold"
+                className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold text-xs sm:text-sm px-2 sm:px-4"
                 data-testid="new-booking-btn"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                New Booking
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Booking</span>
               </Button>
               <Button
                 variant="ghost"
                 onClick={handleLogout}
-                className="text-white hover:bg-white/10"
+                className="text-white hover:bg-white/10 text-xs sm:text-sm px-2 sm:px-3"
                 data-testid="logout-btn"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>

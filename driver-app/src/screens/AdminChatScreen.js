@@ -335,6 +335,37 @@ const styles = StyleSheet.create({
   newChatButton: {
     padding: 4,
   },
+  newChatHeaderButton: {
+    marginLeft: 8,
+  },
+  newChatHeaderButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  newChatHeaderButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  floatingNewChatButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   backButton: {
     marginRight: 12,
     padding: 4,

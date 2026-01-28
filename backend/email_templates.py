@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Base template wrapper
+# Base template wrapper with white theme
 def get_base_template(content: str) -> str:
     return f"""
     <!DOCTYPE html>
@@ -53,34 +53,34 @@ def get_base_template(content: str) -> str:
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <!-- Header -->
                         <tr>
-                            <td style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px; text-align: center;">
+                            <td style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #D4A853;">
                                 <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" width="80" height="80" style="width: 80px; height: 80px; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto;">
                                 <h1 style="color: #D4A853; margin: 0; font-size: 24px; font-weight: bold; font-family: Arial, Helvetica, sans-serif;">CJ's Executive Travel</h1>
-                                <p style="color: #888888; margin: 5px 0 0 0; font-size: 14px; font-family: Arial, Helvetica, sans-serif;">Executive Chauffeur Services</p>
+                                <p style="color: #666666; margin: 5px 0 0 0; font-size: 14px; font-family: Arial, Helvetica, sans-serif;">Executive Chauffeur Services</p>
                             </td>
                         </tr>
                         
                         <!-- Content -->
                         <tr>
-                            <td style="padding: 30px; font-family: Arial, Helvetica, sans-serif;">
+                            <td style="padding: 30px; font-family: Arial, Helvetica, sans-serif; background-color: #ffffff;">
                                 {content}
                             </td>
                         </tr>
                         
                         <!-- Footer -->
                         <tr>
-                            <td style="background-color: #1a1a1a; padding: 25px; text-align: center;">
+                            <td style="background-color: #ffffff; padding: 25px; text-align: center; border-top: 2px solid #D4A853;">
                                 <p style="color: #D4A853; margin: 0 0 10px 0; font-size: 14px; font-weight: bold; font-family: Arial, Helvetica, sans-serif;">CJ's Executive Travel Limited</p>
-                                <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">Premium Chauffeur & Executive Travel Services</p>
-                                <p style="color: #888888; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">County Durham, United Kingdom</p>
-                                <p style="color: #888888; margin: 0 0 15px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">
+                                <p style="color: #666666; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">Premium Chauffeur & Executive Travel Services</p>
+                                <p style="color: #666666; margin: 0 0 5px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">County Durham, United Kingdom</p>
+                                <p style="color: #666666; margin: 0 0 15px 0; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">
                                     <a href="mailto:bookings@cjsdispatch.co.uk" style="color: #D4A853; text-decoration: none;">bookings@cjsdispatch.co.uk</a>
                                 </p>
-                                <p style="color: #666666; margin: 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
+                                <p style="color: #999999; margin: 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
                                     This email was sent from our automated booking system.<br>
                                     If you did not expect this email, please contact us.
                                 </p>
-                                <p style="color: #555555; margin: 15px 0 0 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
+                                <p style="color: #999999; margin: 15px 0 0 0; font-size: 11px; font-family: Arial, Helvetica, sans-serif;">
                                     &copy; 2026 CJ's Executive Travel Limited. All rights reserved.
                                 </p>
                             </td>

@@ -18,7 +18,7 @@ import { COLORS, API_URL } from '../config';
 const { width, height } = Dimensions.get('window');
 
 export default function NavigationScreen({ route, navigation }) {
-  const { booking, destination, destinationType } = route.params;
+  const { booking, destination, destinationType } = route.params || {};
   const mapRef = useRef(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
@@ -26,10 +26,43 @@ export default function NavigationScreen({ route, navigation }) {
   const [duration, setDuration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [heading, setHeading] = useState(0);
+  const [error, setError] = useState(null);
+
+  // Validate required params
+  if (!booking || !destinationType) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle" size={48} color={COLORS.danger} />
+        <Text style={styles.loadingText}>Missing navigation data</Text>
+        <TouchableOpacity 
+          style={[styles.externalMapsButton, { marginTop: 20, paddingHorizontal: 24 }]} 
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.externalMapsText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const destinationAddress = destinationType === 'pickup' 
     ? booking.pickup_location 
     : booking.dropoff_location;
+
+  // Early return if no destination address
+  if (!destinationAddress) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle" size={48} color={COLORS.danger} />
+        <Text style={styles.loadingText}>No {destinationType} address found</Text>
+        <TouchableOpacity 
+          style={[styles.externalMapsButton, { marginTop: 20, paddingHorizontal: 24 }]} 
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.externalMapsText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   useEffect(() => {
     let locationSubscription;

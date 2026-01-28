@@ -204,6 +204,12 @@ async def driver_login(login_data: DriverLogin):
     if driver.get("password_hash") != password_hash:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    # Reset driver to offline on login - they must explicitly start their shift
+    await db.drivers.update_one(
+        {"id": driver["id"]},
+        {"$set": {"is_online": False, "status": "offline", "selected_vehicle_id": None, "current_vehicle_id": None}}
+    )
+    
     token = jwt.encode({
         "sub": driver["id"],
         "email": driver["email"],
@@ -213,6 +219,9 @@ async def driver_login(login_data: DriverLogin):
     
     driver.pop("_id", None)
     driver.pop("password_hash", None)
+    # Return updated offline state
+    driver["is_online"] = False
+    driver["status"] = "offline"
     
     return {"token": token, "driver": driver}
 

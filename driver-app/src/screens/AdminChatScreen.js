@@ -405,6 +405,10 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',

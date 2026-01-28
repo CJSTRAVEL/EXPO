@@ -2219,22 +2219,12 @@ async def get_sms_template(template_type: str):
     return defaults.get(template_type, "")
 
 async def send_templated_sms(phone: str, template_type: str, variables: dict):
-    """Send templated message via WhatsApp (primary) or SMS (fallback)"""
+    """Send templated message via WhatsApp template (primary) or SMS (fallback)"""
     if not vonage_client and not twilio_client:
         logging.warning("No messaging client initialized, skipping notification")
         return False, "Notification service not configured"
     
     try:
-        # Get template
-        template = await get_sms_template(template_type)
-        if not template:
-            return False, f"Template '{template_type}' not found"
-        
-        # Substitute variables
-        message_text = template
-        for key, value in variables.items():
-            message_text = message_text.replace("{" + key + "}", str(value) if value else "")
-        
         # Format phone number
         formatted_phone = phone.strip()
         if not formatted_phone.startswith('+'):
@@ -2243,15 +2233,82 @@ async def send_templated_sms(phone: str, template_type: str, variables: dict):
             else:
                 formatted_phone = '+44' + formatted_phone
         
-        # Use WhatsApp with SMS fallback
-        success, result, channel = send_message_with_fallback(formatted_phone, message_text)
+        # Map template types to WhatsApp template SIDs
+        template_sid_map = {
+            "driver_on_route": TWILIO_TEMPLATE_DRIVER_ON_ROUTE,
+            "driver_arrived": TWILIO_TEMPLATE_DRIVER_ARRIVED,
+            "journey_completed": TWILIO_TEMPLATE_JOURNEY_COMPLETED,
+        }
         
-        if success:
-            logging.info(f"Templated notification ({template_type}) sent via {channel} to {formatted_phone}")
-            return True, f"Sent via {channel}"
-        else:
-            logging.error(f"Failed to send templated notification: {result}")
-            return False, result
+        # Try WhatsApp template first if available
+        template_sid = template_sid_map.get(template_type)
+        whatsapp_sent = False
+        
+        if twilio_client and template_sid:
+            try:
+                to_whatsapp = f"whatsapp:{formatted_phone}"
+                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                
+                # Build content variables based on template type
+                content_vars = {}
+                if template_type == "driver_on_route":
+                    # Template: "Your driver is on the way! Vehicle: {{1}} {{2}} {{3}}, Reg: {{4}}. Track: {{5}}"
+                    content_vars = {
+                        "1": variables.get("vehicle_colour", ""),
+                        "2": variables.get("vehicle_make", ""),
+                        "3": variables.get("vehicle_model", ""),
+                        "4": variables.get("vehicle_registration", ""),
+                        "5": variables.get("booking_link", "")
+                    }
+                elif template_type == "driver_arrived":
+                    # Template: "Your vehicle has arrived! {{1}} {{2}} {{3}}, Reg: {{4}}. {{5}}"
+                    content_vars = {
+                        "1": variables.get("vehicle_colour", ""),
+                        "2": variables.get("vehicle_make", ""),
+                        "3": variables.get("vehicle_model", ""),
+                        "4": variables.get("vehicle_registration", ""),
+                        "5": variables.get("booking_link", "")
+                    }
+                elif template_type == "journey_completed":
+                    # Template: "Thank you for travelling with CJ's! Booking: {{1}}. We hope you enjoyed your journey."
+                    content_vars = {
+                        "1": variables.get("booking_id", ""),
+                    }
+                
+                msg = twilio_client.messages.create(
+                    from_=from_whatsapp,
+                    to=to_whatsapp,
+                    content_sid=template_sid,
+                    content_variables=json.dumps(content_vars)
+                )
+                logging.info(f"WhatsApp template ({template_type}) sent to {formatted_phone}: {msg.sid}")
+                whatsapp_sent = True
+                return True, f"Sent via WhatsApp template"
+                
+            except Exception as wa_error:
+                logging.error(f"WhatsApp template failed for {template_type}: {wa_error}")
+                # Fall through to SMS
+        
+        # Fallback to SMS
+        if not whatsapp_sent:
+            # Get SMS template text
+            template = await get_sms_template(template_type)
+            if not template:
+                return False, f"Template '{template_type}' not found"
+            
+            # Substitute variables
+            message_text = template
+            for key, value in variables.items():
+                message_text = message_text.replace("{" + key + "}", str(value) if value else "")
+            
+            # Send via SMS
+            try:
+                send_sms_only(formatted_phone, message_text)
+                logging.info(f"SMS notification ({template_type}) sent to {formatted_phone}")
+                return True, "Sent via SMS"
+            except Exception as sms_error:
+                logging.error(f"SMS failed: {sms_error}")
+                return False, str(sms_error)
             
     except Exception as e:
         logging.error(f"Notification error: {str(e)}")

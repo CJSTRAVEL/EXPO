@@ -231,7 +231,7 @@ export default function DashboardScreen({ navigation }) {
 
         <View style={styles.statsRow}>
           <StatCard 
-            label="Earnings"
+            label="Company Takings"
             value={`£${(currentEarnings.amount || 0).toFixed(2)}`}
             subValue={`${currentEarnings.jobs || 0} paid jobs`}
             icon="cash-outline"
@@ -269,7 +269,7 @@ export default function DashboardScreen({ navigation }) {
               <Text style={[styles.allTimeValue, { color: theme.success }]}>
                 £{(earnings?.all_time?.amount || 0).toFixed(2)}
               </Text>
-              <Text style={[styles.allTimeLabel, { color: theme.textSecondary }]}>Earnings</Text>
+              <Text style={[styles.allTimeLabel, { color: theme.textSecondary }]}>Takings</Text>
             </View>
           </View>
         </View>

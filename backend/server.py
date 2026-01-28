@@ -8463,6 +8463,51 @@ async def send_whatsapp_keep_alive():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/reminders/evening-bookings")
+async def trigger_evening_reminder(admin: dict = Depends(get_current_admin_user)):
+    """Manually trigger the evening booking reminder"""
+    try:
+        await send_evening_booking_reminder()
+        return {"success": True, "message": "Evening booking reminder sent", "recipients": REMINDER_PHONE_NUMBERS}
+    except Exception as e:
+        logger.error(f"Failed to send evening reminder: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/reminders/unallocated-tomorrow")
+async def trigger_unallocated_reminder(admin: dict = Depends(get_current_admin_user)):
+    """Manually trigger the unallocated bookings reminder"""
+    try:
+        await send_unallocated_tomorrow_reminder()
+        return {"success": True, "message": "Unallocated booking reminder sent", "recipients": REMINDER_PHONE_NUMBERS}
+    except Exception as e:
+        logger.error(f"Failed to send unallocated reminder: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/reminders/status")
+async def get_reminder_status(admin: dict = Depends(get_current_admin_user)):
+    """Get status of scheduled reminders"""
+    now = datetime.now(timezone.utc)
+    target_hour = 18
+    next_run = now.replace(hour=target_hour, minute=0, second=0, microsecond=0)
+    if now.hour >= target_hour:
+        next_run = next_run + timedelta(days=1)
+    
+    hours_until = (next_run - now).total_seconds() / 3600
+    
+    return {
+        "reminder_phones": REMINDER_PHONE_NUMBERS,
+        "scheduled_time": "18:00 UTC daily",
+        "next_run": next_run.isoformat(),
+        "hours_until_next": round(hours_until, 1),
+        "reminders": [
+            {"name": "Evening Bookings", "description": "Bookings from 18:00-08:00"},
+            {"name": "Unallocated Tomorrow", "description": "Tomorrow's unallocated bookings"}
+        ]
+    }
+
+
 # Background task to send daily keep-alive
 async def daily_keep_alive_task():
     """Background task that sends keep-alive message daily at 8am UK time"""

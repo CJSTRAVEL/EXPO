@@ -8464,7 +8464,7 @@ async def send_whatsapp_keep_alive():
 
 
 @api_router.post("/reminders/evening-bookings")
-async def trigger_evening_reminder(admin: dict = Depends(get_current_admin_user)):
+async def trigger_evening_reminder(admin: dict = Depends(get_current_admin)):
     """Manually trigger the evening booking reminder"""
     try:
         await send_evening_booking_reminder()
@@ -8475,7 +8475,7 @@ async def trigger_evening_reminder(admin: dict = Depends(get_current_admin_user)
 
 
 @api_router.post("/reminders/unallocated-tomorrow")
-async def trigger_unallocated_reminder(admin: dict = Depends(get_current_admin_user)):
+async def trigger_unallocated_reminder(admin: dict = Depends(get_current_admin)):
     """Manually trigger the unallocated bookings reminder"""
     try:
         await send_unallocated_tomorrow_reminder()
@@ -8486,7 +8486,7 @@ async def trigger_unallocated_reminder(admin: dict = Depends(get_current_admin_u
 
 
 @api_router.get("/reminders/status")
-async def get_reminder_status(admin: dict = Depends(get_current_admin_user)):
+async def get_reminder_status(admin: dict = Depends(get_current_admin)):
     """Get status of scheduled reminders"""
     now = datetime.now(timezone.utc)
     target_hour = 18

@@ -2537,7 +2537,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                         <a href="{booking_link}" style="display: inline-block; background-color: #D4A853; color: #000000; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold; margin: 5px;">
                             🚗 Live Journey Tracking
                         </a>
-                        <a href="https://cjsdispatch.co.uk/customer-login" style="display: inline-block; background-color: #1a1a1a; color: #D4A853; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold; margin: 5px; border: 1px solid #D4A853;">
+                        <a href="https://cjsdispatch.co.uk/customer-login" style="display: inline-block; background-color: #ffffff; color: #D4A853; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold; margin: 5px; border: 2px solid #D4A853;">
                             👤 My Passenger Portal
                         </a>
                     </td>

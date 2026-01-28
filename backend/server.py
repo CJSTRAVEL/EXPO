@@ -2207,7 +2207,7 @@ async def get_sms_template(template_type: str):
     defaults = {
         "driver_on_route": "Hello {customer_name}, Your driver is on their way!\n\nVehicle: {vehicle_colour} {vehicle_make} {vehicle_model}\nReg: {vehicle_registration}\n\nFollow the link for details:\n{booking_link}",
         "driver_arrived": "Your vehicle has arrived!\n\nVehicle: {vehicle_colour} {vehicle_make} {vehicle_model}\nReg: {vehicle_registration}\n\nCheck where the vehicle is:\n{booking_link}",
-        "journey_completed": "Thank you for travelling with CJ's Executive Travel!\n\nBooking: {booking_id}\nFrom: {pickup_location}\nTo: {dropoff_location}\n\nWe hope you had a pleasant journey. See you again soon!",
+        "journey_completed": "Thank you for travelling with CJ's Executive Travel!\n\nBooking: {booking_id}\nFrom: {pickup_location}\nTo: {dropoff_location}\n\nView your journey details:\n{booking_link}\n\nWe hope you had a pleasant journey!",
         "booking_review": "Hi {customer_name}, we hope you had a great journey with CJ's Executive Travel!\n\nWe'd love to hear your feedback:\n{review_link}\n\nThank you for choosing us!",
         "booking_confirmation": "Hello {customer_name}, Your booking is confirmed.\n\n{booking_link}\n\nPlease open the link to check your details.\n\nThank You CJ's Executive Travel Limited.",
         "passenger_portal_welcome": "Welcome to CJ's Executive Travel! Your account has been created.\n\nLogin to your portal: {portal_link}\n\nThank you for choosing us!",

@@ -7549,6 +7549,18 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
                 variables=vehicle_variables
             )
         elif status == "completed":
+            # Send immediate journey completed notification
+            await send_templated_sms(
+                phone=customer_phone,
+                template_type="journey_completed",
+                variables={
+                    "customer_name": customer_name,
+                    "booking_id": booking.get("booking_id", booking_id[:8]),
+                    "pickup_location": booking.get("pickup_location", ""),
+                    "dropoff_location": booking.get("dropoff_location", ""),
+                    "booking_link": booking_link
+                }
+            )
             # Schedule review SMS 15 minutes after completion
             review_link = f"{app_url}/review/{short_booking_id}"
             # Store review SMS to be sent (in production, use a proper task queue)

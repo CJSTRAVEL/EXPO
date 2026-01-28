@@ -7708,10 +7708,10 @@ async def notify_passenger_arrival(booking_id: str, driver: dict = Depends(get_c
     vehicle_colour = vehicle.get("colour", vehicle.get("color", "")) if vehicle else ""
     vehicle_registration = vehicle.get("registration", driver.get("vehicle_number", "")) if vehicle else driver.get("vehicle_number", "")
     
-    # Generate booking link
+    # Generate booking link using the booking reference (CJ-XXXX format)
     app_url = 'https://cjsdispatch.co.uk'
-    short_booking_id = booking.get("short_booking_id", booking_id[:8])
-    booking_link = f"{app_url}/api/preview/{short_booking_id}"
+    booking_ref = booking.get("booking_id", booking_id[:8])  # This is the CJ-XXXX format
+    booking_link = f"{app_url}/api/preview/{booking_ref}"
     
     # Send SMS notification using template
     customer_phone = booking.get("customer_phone")

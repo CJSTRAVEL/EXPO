@@ -187,12 +187,15 @@ export default function AdminChatScreen({ navigation }) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.primary }]}>
-          <Text style={[styles.headerTitle, { color: '#fff' }]}>Dispatch Chat</Text>
+          <Text style={[styles.headerTitle, { color: '#fff', flex: 1 }]}>Dispatch Chat</Text>
           <TouchableOpacity 
-            style={styles.newChatButton}
+            style={styles.newChatHeaderButton}
             onPress={() => navigation.navigate('Bookings')}
           >
-            <Ionicons name="add-circle-outline" size={24} color="#fff" />
+            <View style={styles.newChatHeaderButtonInner}>
+              <Ionicons name="add" size={18} color={theme.primary} />
+              <Text style={[styles.newChatHeaderButtonText, { color: theme.primary }]}>New</Text>
+            </View>
           </TouchableOpacity>
         </View>
         
@@ -212,12 +215,21 @@ export default function AdminChatScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         ) : (
-          <FlatList
-            data={chats}
-            keyExtractor={(item) => item.booking_id}
-            renderItem={renderChatItem}
-            contentContainerStyle={styles.chatList}
-          />
+          <>
+            <FlatList
+              data={chats}
+              keyExtractor={(item) => item.booking_id}
+              renderItem={renderChatItem}
+              contentContainerStyle={styles.chatList}
+            />
+            {/* Floating New Chat Button */}
+            <TouchableOpacity 
+              style={[styles.floatingNewChatButton, { backgroundColor: theme.primary }]}
+              onPress={() => navigation.navigate('Bookings')}
+            >
+              <Ionicons name="add" size={28} color="#fff" />
+            </TouchableOpacity>
+          </>
         )}
       </SafeAreaView>
     );

@@ -3566,6 +3566,17 @@ const BookingsPage = () => {
                   {chatBooking.booking_id}
                 </Badge>
               )}
+              {chatMessages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={deleteChat}
+                  className="ml-auto text-destructive hover:text-destructive hover:bg-destructive/10"
+                  title="Delete chat"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </DialogTitle>
             {chatBooking?.driver_id && (
               <p className="text-sm text-muted-foreground">

@@ -66,13 +66,16 @@ export default function NavigationScreen({ route, navigation }) {
 
   useEffect(() => {
     let locationSubscription;
+    let isMounted = true;
 
     const startNavigation = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'Location permission is required for navigation');
-          navigation.goBack();
+          if (isMounted) {
+            setError('Location permission is required for navigation');
+            setLoading(false);
+          }
           return;
         }
 
@@ -81,24 +84,33 @@ export default function NavigationScreen({ route, navigation }) {
           accuracy: Location.Accuracy.High,
         });
         
+        if (!isMounted) return;
+        
         setCurrentLocation({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
 
         // Geocode destination
-        const geocoded = await Location.geocodeAsync(destinationAddress);
-        if (geocoded.length > 0) {
-          const dest = {
-            latitude: geocoded[0].latitude,
-            longitude: geocoded[0].longitude,
-          };
+        try {
+          const geocoded = await Location.geocodeAsync(destinationAddress);
+          if (geocoded && geocoded.length > 0) {
+            const dest = {
+              latitude: geocoded[0].latitude,
+              longitude: geocoded[0].longitude,
+            };
 
-          // Get route from Google Directions API
-          await fetchRoute(
-            { latitude: location.coords.latitude, longitude: location.coords.longitude },
-            dest
-          );
+            // Get route from Google Directions API
+            await fetchRoute(
+              { latitude: location.coords.latitude, longitude: location.coords.longitude },
+              dest
+            );
+          } else {
+            console.log('Could not geocode destination, opening external maps');
+          }
+        } catch (geocodeError) {
+          console.log('Geocoding error:', geocodeError);
+          // Continue without route - user can still use external maps
         }
 
         // Start watching location
@@ -109,30 +121,35 @@ export default function NavigationScreen({ route, navigation }) {
             distanceInterval: 5,
           },
           (newLocation) => {
-            setCurrentLocation({
-              latitude: newLocation.coords.latitude,
-              longitude: newLocation.coords.longitude,
-            });
-            setHeading(newLocation.coords.heading || 0);
+            if (isMounted) {
+              setCurrentLocation({
+                latitude: newLocation.coords.latitude,
+                longitude: newLocation.coords.longitude,
+              });
+              setHeading(newLocation.coords.heading || 0);
+            }
           }
         );
 
-        setLoading(false);
+        if (isMounted) setLoading(false);
       } catch (error) {
         console.error('Navigation error:', error);
-        setLoading(false);
-        Alert.alert('Error', 'Failed to start navigation');
+        if (isMounted) {
+          setError('Failed to start navigation: ' + (error.message || 'Unknown error'));
+          setLoading(false);
+        }
       }
     };
 
     startNavigation();
 
     return () => {
+      isMounted = false;
       if (locationSubscription) {
         locationSubscription.remove();
       }
     };
-  }, []);
+  }, [destinationAddress]);
 
   const fetchRoute = async (origin, destination) => {
     try {

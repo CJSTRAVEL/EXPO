@@ -628,7 +628,7 @@ const PassengerPortal = () => {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Welcome Section */}
         <div className="bg-[#1a1a1a] rounded-xl p-6 text-white mb-6 shadow-lg">
           <div className="flex items-center justify-between">

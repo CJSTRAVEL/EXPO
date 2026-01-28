@@ -113,17 +113,23 @@ export default function HomeScreen({ navigation }) {
     }, [])
   );
 
+  // Sync shift state with user's online status from backend only on initial load
+  // Don't reset during active session to prevent state sync issues
+  const initialSyncDone = useRef(false);
+  
   useEffect(() => {
-    // Sync shift state with user's online status from backend
-    // This ensures the shift state persists correctly across app restarts
-    if (user?.is_online) {
-      setIsShiftActive(true);
-      showOnlineNotification();
-    } else {
-      setIsShiftActive(false);
-      hideOnlineNotification();
+    // Only sync on first load, not on every profile refresh
+    if (!initialSyncDone.current && user !== null) {
+      initialSyncDone.current = true;
+      if (user?.is_online) {
+        setIsShiftActive(true);
+        showOnlineNotification();
+      } else {
+        setIsShiftActive(false);
+        hideOnlineNotification();
+      }
     }
-  }, [user?.is_online]);
+  }, [user]);
 
   // Shift timer effect
   useEffect(() => {

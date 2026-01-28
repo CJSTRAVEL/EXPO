@@ -188,6 +188,12 @@ export default function AdminChatScreen({ navigation }) {
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.primary }]}>
           <Text style={[styles.headerTitle, { color: '#fff' }]}>Dispatch Chat</Text>
+          <TouchableOpacity 
+            style={styles.newChatButton}
+            onPress={() => navigation.navigate('Bookings')}
+          >
+            <Ionicons name="add-circle-outline" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
         
         {chats.length === 0 ? (
@@ -197,6 +203,13 @@ export default function AdminChatScreen({ navigation }) {
             <Text style={[styles.emptySubtitle, { color: theme.textSecondary }]}>
               Chat with dispatch will appear here when you have active bookings
             </Text>
+            <TouchableOpacity 
+              style={[styles.newChatActionButton, { backgroundColor: theme.primary }]}
+              onPress={() => navigation.navigate('Bookings')}
+            >
+              <Ionicons name="car-outline" size={20} color="#fff" />
+              <Text style={styles.newChatActionText}>View My Bookings</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <FlatList

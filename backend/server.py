@@ -7676,7 +7676,7 @@ async def update_booking_status_driver(booking_id: str, status: str, driver: dic
                 }
             )
             # Schedule review SMS 15 minutes after completion
-            review_link = f"{app_url}/review/{short_booking_id}"
+            review_link = f"{app_url}/review/{booking_ref}"
             # Store review SMS to be sent (in production, use a proper task queue)
             await db.scheduled_sms.insert_one({
                 "id": str(uuid.uuid4()),

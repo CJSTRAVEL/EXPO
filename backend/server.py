@@ -2505,27 +2505,27 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                 
                 <!-- Booking Details Section -->
                 <tr>
-                    <td style="padding: 0 40px 25px 40px;">
-                        <div style="background-color: #252525; border-radius: 10px; padding: 20px; border-left: 4px solid #D4A853;">
+                    <td style="padding: 0 40px 25px 40px; background-color: #ffffff;">
+                        <div style="background-color: #f8f8f8; border-radius: 10px; padding: 20px; border-left: 4px solid #D4A853;">
                             <h2 style="margin: 0 0 15px 0; color: #D4A853; font-size: 16px; font-weight: bold;">Booking Details</h2>
                             <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
                                 <tr>
-                                    <td style="padding: 6px 0; color: #888; width: 140px;">Booking Ref:</td>
+                                    <td style="padding: 6px 0; color: #666; width: 140px;">Booking Ref:</td>
                                     <td style="padding: 6px 0; color: #D4A853; font-weight: bold; font-size: 16px;">{short_booking_id or booking_id[:8]}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 6px 0; color: #888;">Passenger:</td>
-                                    <td style="padding: 6px 0; color: #ffffff;">{customer_name}</td>
+                                    <td style="padding: 6px 0; color: #666;">Passenger:</td>
+                                    <td style="padding: 6px 0; color: #1a1a1a;">{customer_name}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 6px 0; color: #888;">Passenger Mobile:</td>
-                                    <td style="padding: 6px 0; color: #ffffff;">{customer_phone or 'N/A'}</td>
+                                    <td style="padding: 6px 0; color: #666;">Passenger Mobile:</td>
+                                    <td style="padding: 6px 0; color: #1a1a1a;">{customer_phone or 'N/A'}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 6px 0; color: #888;">Vehicle Type:</td>
-                                    <td style="padding: 6px 0; color: #ffffff;">{vehicle_type or "Executive Saloon"}</td>
+                                    <td style="padding: 6px 0; color: #666;">Vehicle Type:</td>
+                                    <td style="padding: 6px 0; color: #1a1a1a;">{vehicle_type or "Executive Saloon"}</td>
                                 </tr>
-                                {f'<tr><td style="padding: 6px 0; color: #888;">Driver:</td><td style="padding: 6px 0; color: #ffffff; font-weight: bold;">{driver_name}</td></tr>' if driver_name else ''}
+                                {f'<tr><td style="padding: 6px 0; color: #666;">Driver:</td><td style="padding: 6px 0; color: #1a1a1a; font-weight: bold;">{driver_name}</td></tr>' if driver_name else ''}
                             </table>
                         </div>
                     </td>
@@ -2533,11 +2533,11 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                 
                 <!-- CTA Buttons -->
                 <tr>
-                    <td style="padding: 0 40px 30px 40px; text-align: center;">
+                    <td style="padding: 0 40px 30px 40px; text-align: center; background-color: #ffffff;">
                         <a href="{booking_link}" style="display: inline-block; background-color: #D4A853; color: #000000; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold; margin: 5px;">
                             🚗 Live Journey Tracking
                         </a>
-                        <a href="https://cjsdispatch.co.uk/customer-login" style="display: inline-block; background-color: #333; color: #D4A853; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold; margin: 5px; border: 1px solid #D4A853;">
+                        <a href="https://cjsdispatch.co.uk/customer-login" style="display: inline-block; background-color: #1a1a1a; color: #D4A853; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-size: 14px; font-weight: bold; margin: 5px; border: 1px solid #D4A853;">
                             👤 My Passenger Portal
                         </a>
                     </td>
@@ -2545,11 +2545,11 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
                 
                 <!-- Footer -->
                 <tr>
-                    <td style="padding: 30px 40px; background-color: #000000; border-top: 1px solid #333;">
-                        <p style="margin: 0; color: #666; font-size: 11px; text-align: center; line-height: 1.6;">
+                    <td style="padding: 30px 40px; background-color: #1a1a1a; border-top: 1px solid #e0e0e0;">
+                        <p style="margin: 0; color: #999; font-size: 11px; text-align: center; line-height: 1.6;">
                             This is an automated email confirmation from CJ's Executive Travel Limited. This email is sent from an unattended mailbox so please do not reply. If any of the above information is incorrect, please contact us immediately on +44 191 722 1223.
                         </p>
-                        <p style="margin: 15px 0 0 0; color: #666; font-size: 11px; text-align: center;">
+                        <p style="margin: 15px 0 0 0; color: #999; font-size: 11px; text-align: center;">
                             CJ's Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY | <a href="https://cjstravel.uk" style="color: #D4A853;">cjstravel.uk</a>
                         </p>
                     </td>

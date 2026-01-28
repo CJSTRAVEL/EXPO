@@ -1061,54 +1061,65 @@ const PassengerPortal = () => {
               <p className="text-xs text-muted-foreground">Optional - receive booking confirmation via email</p>
             </div>
 
-            {/* Date & Time */}
-            <div className="space-y-2">
-              <Label>Pickup Date & Time *</Label>
-              <Popover open={dateOpen} onOpenChange={setDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !requestForm.pickup_datetime && "text-muted-foreground"
-                    )}
-                    data-testid="request-datetime-btn"
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {requestForm.pickup_datetime 
-                      ? format(requestForm.pickup_datetime, "dd/MM/yy 'at' HH:mm") 
-                      : "Select date & time"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={requestForm.pickup_datetime}
-                    onSelect={(date) => {
-                      if (date) {
-                        const current = requestForm.pickup_datetime;
-                        date.setHours(current.getHours(), current.getMinutes());
-                        setRequestForm({ ...requestForm, pickup_datetime: date });
-                      }
-                    }}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                  <div className="p-3 border-t">
-                    <Input
-                      type="time"
-                      value={format(requestForm.pickup_datetime, "HH:mm")}
-                      onChange={(e) => {
-                        const [hours, minutes] = e.target.value.split(':');
-                        const newDate = new Date(requestForm.pickup_datetime);
-                        newDate.setHours(parseInt(hours), parseInt(minutes));
-                        setRequestForm({ ...requestForm, pickup_datetime: newDate });
+            {/* Date & Time - Separate boxes */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Pickup Date */}
+              <div className="space-y-2">
+                <Label>Pickup Date *</Label>
+                <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !requestForm.pickup_datetime && "text-muted-foreground"
+                      )}
+                      data-testid="request-date-btn"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {requestForm.pickup_datetime 
+                        ? format(requestForm.pickup_datetime, "dd/MM/yy") 
+                        : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={requestForm.pickup_datetime}
+                      onSelect={(date) => {
+                        if (date) {
+                          const current = requestForm.pickup_datetime;
+                          date.setHours(current.getHours(), current.getMinutes());
+                          setRequestForm({ ...requestForm, pickup_datetime: date });
+                          setDateOpen(false);
+                        }
                       }}
-                      data-testid="request-time-input"
+                      disabled={(date) => date < new Date()}
+                      initialFocus
                     />
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              {/* Pickup Time */}
+              <div className="space-y-2">
+                <Label>Pickup Time *</Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="time"
+                    value={format(requestForm.pickup_datetime, "HH:mm")}
+                    onChange={(e) => {
+                      const [hours, minutes] = e.target.value.split(':');
+                      const newDate = new Date(requestForm.pickup_datetime);
+                      newDate.setHours(parseInt(hours), parseInt(minutes));
+                      setRequestForm({ ...requestForm, pickup_datetime: newDate });
+                    }}
+                    className="pl-10"
+                    data-testid="request-time-input"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Flight Information Toggle */}

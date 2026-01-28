@@ -32,7 +32,8 @@ const formatMessageTime = (dateString) => {
          date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 };
 
-export default function AdminChatScreen({ navigation }) {
+export default function AdminChatScreen() {
+  const navigation = require('@react-navigation/native').useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
   const [chats, setChats] = useState([]);

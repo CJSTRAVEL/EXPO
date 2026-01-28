@@ -13,7 +13,10 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "development"
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://cjsdispatch.co.uk/api"
+      }
     },
     "preview": {
       "distribution": "internal",

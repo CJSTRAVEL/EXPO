@@ -283,6 +283,9 @@ export default function AdminChatScreen({ navigation }) {
               {selectedChat.customer_name}
             </Text>
           </View>
+          <TouchableOpacity onPress={handleDeleteChat} style={styles.deleteButton}>
+            <Ionicons name="trash-outline" size={22} color="#fff" />
+          </TouchableOpacity>
         </View>
 
         {/* Messages */}

@@ -175,7 +175,7 @@ export default function DashboardScreen({ navigation }) {
           <QuickActionButton 
             icon="list-outline" 
             label="My Jobs" 
-            onPress={() => navigation.navigate('Jobs')}
+            onPress={() => navigation.navigate('Bookings')}
             color={theme.primary}
           />
           <QuickActionButton 

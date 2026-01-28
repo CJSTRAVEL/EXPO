@@ -8720,7 +8720,7 @@ async def send_unallocated_tomorrow_reminder():
             logger.info("No unallocated bookings for tomorrow - skipping reminder")
             return
         
-        # Build message
+        # Build SMS fallback message
         tomorrow_str = tomorrow_start.strftime("%a %d %b")
         message = f"CJ's Executive Travel - UNALLOCATED ALERT\n\n"
         message += f"{len(unallocated_bookings)} booking(s) for {tomorrow_str} need drivers:\n\n"
@@ -8741,13 +8741,36 @@ async def send_unallocated_tomorrow_reminder():
         
         message += "\nPlease allocate drivers ASAP."
         
-        # Send SMS to all reminder phone numbers
+        # Send WhatsApp template to all reminder phone numbers (with SMS fallback)
+        booking_count = str(len(unallocated_bookings))
+        
         for phone in REMINDER_PHONE_NUMBERS:
             try:
-                send_sms_only(phone, message)
-                logger.info(f"Unallocated reminder SMS sent to {phone}")
+                phone_clean = phone.strip().replace(' ', '').replace('-', '')
+                if not phone_clean.startswith('+'):
+                    if phone_clean.startswith('0'):
+                        phone_clean = '+44' + phone_clean[1:]
+                    else:
+                        phone_clean = '+44' + phone_clean
+                
+                to_whatsapp = f"whatsapp:{phone_clean}"
+                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                
+                # Send WhatsApp template message
+                msg = twilio_client.messages.create(
+                    from_=from_whatsapp,
+                    to=to_whatsapp,
+                    content_sid=TWILIO_TEMPLATE_UNALLOCATED_TOMORROW,
+                    content_variables=json.dumps({"1": booking_count})
+                )
+                logger.info(f"Unallocated reminder WhatsApp sent to {phone}: {msg.sid}")
             except Exception as e:
-                logger.error(f"Failed to send unallocated reminder SMS to {phone}: {e}")
+                logger.error(f"WhatsApp failed for {phone}: {e}, trying SMS fallback")
+                try:
+                    send_sms_only(phone, message)
+                    logger.info(f"Unallocated reminder SMS sent to {phone}")
+                except Exception as sms_e:
+                    logger.error(f"SMS fallback also failed for {phone}: {sms_e}")
         
         logger.info(f"Unallocated booking reminder completed - {len(unallocated_bookings)} bookings")
         

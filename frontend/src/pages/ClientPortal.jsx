@@ -875,7 +875,61 @@ const ClientPortal = () => {
                       key={invoice.id}
                       className="bg-white rounded-xl border border-slate-200 p-4 hover:border-[#D4A853]/50 transition-colors shadow-sm"
                     >
-                      <div className="flex items-center justify-between">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-800 font-semibold text-base">{invoice.invoice_ref}</span>
+                            {getStatusBadge(invoice.status || 'unpaid')}
+                          </div>
+                          <p className="text-lg font-bold text-slate-800">
+                            £{(invoice.total || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 mb-3">
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="w-3.5 h-3.5" />
+                            {safeFormatDate(invoice.created_at, "dd MMM yyyy", 'N/A')}
+                          </span>
+                          {invoice.due_date && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              Due: {safeFormatDate(invoice.due_date, "dd MMM yyyy")}
+                            </span>
+                          )}
+                          <span>{invoice.journey_count || 0} journeys</span>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowInvoiceDetails(invoice)}
+                            className="text-slate-600"
+                            data-testid={`view-invoice-mobile-${invoice.id}`}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(invoice)}
+                            disabled={downloadingInvoice === invoice.id}
+                            className="text-[#D4A853] border-[#D4A853] hover:bg-[#D4A853]/10"
+                            data-testid={`download-invoice-mobile-${invoice.id}`}
+                          >
+                            {downloadingInvoice === invoice.id ? (
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <Download className="w-4 h-4 mr-1" />
+                            )}
+                            PDF
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Desktop Layout */}
+                      <div className="hidden md:flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="p-3 rounded-lg bg-[#D4A853]/10">
                             <FileText className="w-6 h-6 text-[#D4A853]" />

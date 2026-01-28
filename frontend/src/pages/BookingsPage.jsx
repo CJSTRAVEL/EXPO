@@ -2595,6 +2595,25 @@ const BookingsPage = () => {
     }
   };
 
+  const deleteChat = async () => {
+    if (!chatBooking) return;
+    
+    if (!confirm(`Are you sure you want to delete all messages for booking ${chatBooking.booking_id}?`)) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/dispatch/chat/${chatBooking.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      setChatMessages([]);
+      toast.success("Chat deleted successfully");
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      toast.error("Failed to delete chat");
+    }
+  };
+
   const sendChatMessage = async () => {
     if (!chatMessage.trim() || !chatBooking) return;
     

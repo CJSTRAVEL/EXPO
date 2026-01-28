@@ -10,11 +10,12 @@ import {
   Platform,
   SafeAreaView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { getAllDriverChats, getAdminMessages, sendAdminMessage, markChatAsRead } from '../services/api';
+import { getAllDriverChats, getAdminMessages, sendAdminMessage, markChatAsRead, deleteChat } from '../services/api';
 
 const formatMessageTime = (dateString) => {
   if (!dateString) return '';

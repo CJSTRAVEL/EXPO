@@ -8601,8 +8601,12 @@ async def daily_keep_alive_task():
 # Admin phone numbers to receive reminders
 REMINDER_PHONE_NUMBERS = ["+447383185260", "+447806794824"]
 
+# WhatsApp template SIDs for reminders
+TWILIO_TEMPLATE_EVENING_SCHEDULE = "HXcefbe9528451a776e67d8fccb55b6dcd"
+TWILIO_TEMPLATE_UNALLOCATED_TOMORROW = "HX79a2b0c250d22cf9199abed16c76dc58"
+
 async def send_evening_booking_reminder():
-    """Send evening booking reminder for tonight's bookings (18:00 - 08:00) via SMS"""
+    """Send evening booking reminder for tonight's bookings (18:00 - 08:00) via WhatsApp template"""
     try:
         now = datetime.now(timezone.utc)
         

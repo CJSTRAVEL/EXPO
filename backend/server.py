@@ -8656,13 +8656,36 @@ async def send_evening_booking_reminder():
             
             message += f"{booking_time} {booking_id} - {customer_name} {driver_info}\n"
         
-        # Send SMS to all reminder phone numbers
+        # Send WhatsApp template to all reminder phone numbers (with SMS fallback)
+        booking_count = str(len(evening_bookings))
+        
         for phone in REMINDER_PHONE_NUMBERS:
             try:
-                send_sms_only(phone, message)
-                logger.info(f"Evening booking reminder SMS sent to {phone}")
+                phone_clean = phone.strip().replace(' ', '').replace('-', '')
+                if not phone_clean.startswith('+'):
+                    if phone_clean.startswith('0'):
+                        phone_clean = '+44' + phone_clean[1:]
+                    else:
+                        phone_clean = '+44' + phone_clean
+                
+                to_whatsapp = f"whatsapp:{phone_clean}"
+                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                
+                # Send WhatsApp template message
+                msg = twilio_client.messages.create(
+                    from_=from_whatsapp,
+                    to=to_whatsapp,
+                    content_sid=TWILIO_TEMPLATE_EVENING_SCHEDULE,
+                    content_variables=json.dumps({"1": booking_count})
+                )
+                logger.info(f"Evening booking reminder WhatsApp sent to {phone}: {msg.sid}")
             except Exception as e:
-                logger.error(f"Failed to send evening reminder SMS to {phone}: {e}")
+                logger.error(f"WhatsApp failed for {phone}: {e}, trying SMS fallback")
+                try:
+                    send_sms_only(phone, message)
+                    logger.info(f"Evening booking reminder SMS sent to {phone}")
+                except Exception as sms_e:
+                    logger.error(f"SMS fallback also failed for {phone}: {sms_e}")
         
         logger.info(f"Evening booking reminder completed - {len(evening_bookings)} bookings")
         

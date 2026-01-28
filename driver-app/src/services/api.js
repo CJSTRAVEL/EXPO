@@ -159,7 +159,8 @@ export const getHistory = async (limit = 50, skip = 0) => {
   const response = await api.get('/driver/history', {
     params: { limit, skip }
   });
-  return response.data;
+  // API returns {bookings: [...], total, limit, skip} - extract bookings array
+  return response.data?.bookings || response.data || [];
 };
 
 // Chat API

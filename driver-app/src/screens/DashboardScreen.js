@@ -41,7 +41,9 @@ export default function DashboardScreen({ navigation }) {
       ]);
       setStats(statsData);
       setEarnings(earningsData);
-      setRecentJobs(historyData?.slice(0, 5) || []);
+      // historyData could be {bookings: [...]} or array directly
+      const jobs = Array.isArray(historyData) ? historyData : (historyData?.bookings || []);
+      setRecentJobs(jobs.slice(0, 5));
     } catch (error) {
       console.log('Error loading dashboard data:', error);
     }

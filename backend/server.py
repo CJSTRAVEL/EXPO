@@ -8625,10 +8625,8 @@ async def send_evening_booking_reminder():
         
         # Build message
         message = "CJ's Executive Travel - Evening Schedule\n\n"
-        
-        if evening_bookings:
-            message += f"{len(evening_bookings)} booking(s) this evening:\n\n"
-            for booking in evening_bookings:
+        message += f"{len(evening_bookings)} booking(s) this evening:\n\n"
+        for booking in evening_bookings:
                 booking_time = ""
                 if booking.get("booking_datetime"):
                     try:

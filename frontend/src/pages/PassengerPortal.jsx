@@ -1350,53 +1350,64 @@ const PassengerPortal = () => {
                     />
                   </div>
 
-                  {/* Return Date & Time */}
-                  <div className="space-y-2">
-                    <Label className="text-amber-800">Return Date & Time</Label>
-                    <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal bg-white border-amber-300",
-                            !requestForm.return_datetime && "text-muted-foreground"
-                          )}
-                          data-testid="request-return-datetime-btn"
-                        >
-                          <Clock className="mr-2 h-4 w-4 text-amber-600" />
-                          {requestForm.return_datetime 
-                            ? format(requestForm.return_datetime, "dd/MM/yy 'at' HH:mm") 
-                            : "Pick return date & time"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={requestForm.return_datetime}
-                          onSelect={(date) => {
-                            if (date) {
-                              const current = requestForm.return_datetime || new Date();
-                              date.setHours(current.getHours(), current.getMinutes());
-                              setRequestForm({ ...requestForm, return_datetime: date });
-                            }
-                          }}
-                          disabled={(date) => date < new Date()}
-                        />
-                        <div className="p-3 border-t">
-                          <Input
-                            type="time"
-                            value={requestForm.return_datetime ? format(requestForm.return_datetime, "HH:mm") : "12:00"}
-                            onChange={(e) => {
-                              const [hours, minutes] = e.target.value.split(':');
-                              const newDate = new Date(requestForm.return_datetime || new Date());
-                              newDate.setHours(parseInt(hours), parseInt(minutes));
-                              setRequestForm({ ...requestForm, return_datetime: newDate });
+                  {/* Return Date & Time - Separate boxes */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Return Date */}
+                    <div className="space-y-2">
+                      <Label className="text-amber-800">Return Date</Label>
+                      <Popover open={returnDateOpen} onOpenChange={setReturnDateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal bg-white border-amber-300",
+                              !requestForm.return_datetime && "text-muted-foreground"
+                            )}
+                            data-testid="request-return-date-btn"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-amber-600" />
+                            {requestForm.return_datetime 
+                              ? format(requestForm.return_datetime, "dd/MM/yy") 
+                              : "Select date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={requestForm.return_datetime}
+                            onSelect={(date) => {
+                              if (date) {
+                                const current = requestForm.return_datetime || new Date();
+                                date.setHours(current.getHours(), current.getMinutes());
+                                setRequestForm({ ...requestForm, return_datetime: date });
+                                setReturnDateOpen(false);
+                              }
                             }}
-                            data-testid="request-return-time-input"
+                            disabled={(date) => date < new Date()}
                           />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    {/* Return Time */}
+                    <div className="space-y-2">
+                      <Label className="text-amber-800">Return Time</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-600" />
+                        <Input
+                          type="time"
+                          value={requestForm.return_datetime ? format(requestForm.return_datetime, "HH:mm") : "12:00"}
+                          onChange={(e) => {
+                            const [hours, minutes] = e.target.value.split(':');
+                            const newDate = new Date(requestForm.return_datetime || new Date());
+                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            setRequestForm({ ...requestForm, return_datetime: newDate });
+                          }}
+                          className="pl-10 bg-white border-amber-300"
+                          data-testid="request-return-time-input"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Return Flight Info Toggle */}

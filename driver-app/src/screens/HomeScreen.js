@@ -863,6 +863,16 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
   },
+  vehicleMarkerFallback: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#1a1a1a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#D4A853',
+  },
   // Journey Progress Bar styles
   journeyProgressBar: {
     position: 'absolute',

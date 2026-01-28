@@ -81,6 +81,22 @@ export default function AdminChatScreen({ navigation }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle hardware back button on Android
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (selectedChat) {
+          setSelectedChat(null);
+          return true; // Prevent default back behavior
+        }
+        return false; // Allow default back behavior (go to previous screen)
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, [selectedChat])
+  );
+
   useEffect(() => {
     if (selectedChat) {
       loadMessages(selectedChat.booking_id);

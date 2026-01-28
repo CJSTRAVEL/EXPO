@@ -9,7 +9,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://executive-travel-3.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dispatch-system-13.preview.emergentagent.com')
 
 # Vehicle Type IDs
 TAXI_TYPE_ID = 'a2a9c167-7653-43be-887a-1e18f224fd85'

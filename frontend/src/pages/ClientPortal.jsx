@@ -807,47 +807,47 @@ const ClientPortal = () => {
         {activeTab === "invoices" && (
           <div className="space-y-6">
             {/* Invoice Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#D4A853]/20">
-                    <Receipt className="w-5 h-5 text-[#D4A853]" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-4 shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-[#D4A853]/20 shrink-0">
+                    <Receipt className="w-4 h-4 md:w-5 md:h-5 text-[#D4A853]" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-800">{invoiceStats.total}</p>
-                    <p className="text-xs text-slate-500">Total Invoices</p>
+                  <div className="min-w-0">
+                    <p className="text-xl md:text-2xl font-bold text-slate-800">{invoiceStats.total}</p>
+                    <p className="text-xs text-slate-500 truncate">Total Invoices</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-green-500/20">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+              <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-4 shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-green-500/20 shrink-0">
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-800">{invoiceStats.paid}</p>
+                  <div className="min-w-0">
+                    <p className="text-xl md:text-2xl font-bold text-slate-800">{invoiceStats.paid}</p>
                     <p className="text-xs text-slate-500">Paid</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-red-500/20">
-                    <Clock3 className="w-5 h-5 text-red-500" />
+              <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-4 shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-red-500/20 shrink-0">
+                    <Clock3 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-800">{invoiceStats.unpaid}</p>
+                  <div className="min-w-0">
+                    <p className="text-xl md:text-2xl font-bold text-slate-800">{invoiceStats.unpaid}</p>
                     <p className="text-xs text-slate-500">Unpaid</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-amber-500/20">
-                    <Banknote className="w-5 h-5 text-amber-500" />
+              <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-4 shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-amber-500/20 shrink-0">
+                    <Banknote className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-800">£{invoiceStats.outstandingAmount.toFixed(2)}</p>
+                  <div className="min-w-0">
+                    <p className="text-xl md:text-2xl font-bold text-slate-800 truncate">£{invoiceStats.outstandingAmount.toFixed(2)}</p>
                     <p className="text-xs text-slate-500">Outstanding</p>
                   </div>
                 </div>

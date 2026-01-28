@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { MessageCircle, X, Send, Loader2, ChevronDown, User, Car } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, ChevronDown, User, Car, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 

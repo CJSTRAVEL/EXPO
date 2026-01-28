@@ -468,14 +468,21 @@ async def get_driver_earnings(driver: dict = Depends(get_current_driver)):
 
 
 @router.get("/driver/history")
-async def get_driver_history(driver: dict = Depends(get_current_driver)):
+async def get_driver_history(driver: dict = Depends(get_current_driver), limit: int = 50, skip: int = 0):
     """Get driver's completed booking history"""
     bookings = await db.bookings.find(
         {"driver_id": driver["id"], "status": "completed"},
         {"_id": 0}
-    ).sort("completed_at", -1).to_list(100)
+    ).sort("completed_at", -1).skip(skip).limit(limit).to_list(limit)
     
-    return bookings
+    total = await db.bookings.count_documents({"driver_id": driver["id"], "status": "completed"})
+    
+    return {
+        "bookings": bookings,
+        "total": total,
+        "limit": limit,
+        "skip": skip
+    }
 
 
 @router.get("/driver/document-notifications")

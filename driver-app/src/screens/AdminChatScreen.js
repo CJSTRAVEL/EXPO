@@ -87,6 +87,34 @@ export default function AdminChatScreen({ navigation }) {
     }
   }, [selectedChat]);
 
+  const handleDeleteChat = async () => {
+    if (!selectedChat) return;
+    
+    Alert.alert(
+      'Delete Chat',
+      `Are you sure you want to delete all messages for booking ${selectedChat.booking_id_short}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteChat(selectedChat.booking_id);
+              setSelectedChat(null);
+              setMessages([]);
+              loadChats(); // Refresh chat list
+              Alert.alert('Success', 'Chat deleted successfully');
+            } catch (error) {
+              console.log('Error deleting chat:', error);
+              Alert.alert('Error', 'Failed to delete chat');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleSend = async () => {
     if (!newMessage.trim() || !selectedChat) return;
 

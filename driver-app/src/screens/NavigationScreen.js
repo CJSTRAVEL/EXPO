@@ -103,9 +103,9 @@ export default function NavigationScreen({ route, navigation }) {
 
   const fetchRoute = async (origin, destination) => {
     try {
-      // Using Google Directions API (you'd need to proxy this through your backend)
+      // Using Google Directions API proxied through backend
       const response = await fetch(
-        `https://executive-travel-3.preview.emergentagent.com/api/directions?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}`
+        `${API_URL}/directions?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}`
       );
       const data = await response.json();
 

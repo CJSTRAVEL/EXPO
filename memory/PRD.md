@@ -79,6 +79,7 @@ Build a private hire booking application named "CJ's Executive Travel" including
 - Email notifications with white theme
 - Document expiry tracking
 - Scheduled admin reminders
+- Mobile-responsive Client Portal (invoices, bookings)
 
 ## Pending Items
 

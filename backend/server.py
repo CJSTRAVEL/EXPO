@@ -3649,24 +3649,50 @@ async def request_password_reset(data: PasswordResetRequest):
             
             subject = "CJ's Executive Travel - Password Reset Code"
             html_content = f"""
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: #1a1a1a; padding: 20px; text-align: center;">
-                    <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" style="width: 80px; height: 80px;">
-                    <h1 style="color: #D4A853; margin: 10px 0;">CJ's Executive Travel</h1>
-                </div>
-                <div style="padding: 30px; background: #f5f5f5;">
-                    <h2 style="color: #333;">Password Reset Code</h2>
-                    <p style="color: #666;">You requested to reset your password. Use the code below:</p>
-                    <div style="background: #1a1a1a; color: #D4A853; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0;">
-                        {reset_code}
-                    </div>
-                    <p style="color: #666;">This code expires in <strong>15 minutes</strong>.</p>
-                    <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
-                </div>
-                <div style="background: #1a1a1a; padding: 15px; text-align: center;">
-                    <p style="color: #666; font-size: 12px; margin: 0;">© 2026 CJ's Executive Travel Limited</p>
-                </div>
-            </div>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto;">
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #D4A853;">
+                                        <img src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" alt="CJ's Executive Travel" style="width: 80px; height: 80px;">
+                                        <h1 style="color: #D4A853; margin: 10px 0; font-size: 22px;">CJ's Executive Travel</h1>
+                                    </td>
+                                </tr>
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 30px; background-color: #ffffff;">
+                                        <h2 style="color: #1a1a1a; margin: 0 0 15px 0; font-size: 20px;">Password Reset Code</h2>
+                                        <p style="color: #555555; font-size: 15px; line-height: 1.6;">You requested to reset your password. Use the code below:</p>
+                                        <div style="background: linear-gradient(135deg, #D4A853 0%, #c49843 100%); color: #1a1a1a; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 25px 0;">
+                                            {reset_code}
+                                        </div>
+                                        <p style="color: #555555; font-size: 14px; line-height: 1.6;">This code expires in <strong>15 minutes</strong>.</p>
+                                        <p style="color: #999999; font-size: 12px; margin-top: 20px;">If you didn't request this, please ignore this email.</p>
+                                    </td>
+                                </tr>
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="background-color: #ffffff; padding: 25px; text-align: center; border-top: 2px solid #D4A853;">
+                                        <p style="color: #D4A853; margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">CJ's Executive Travel Limited</p>
+                                        <p style="color: #666666; margin: 0 0 5px 0; font-size: 12px;">Premium Chauffeur & Executive Travel Services</p>
+                                        <p style="color: #999999; margin: 15px 0 0 0; font-size: 11px;">© 2026 CJ's Executive Travel Limited. All rights reserved.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
             """
             
             smtp_server = os.environ.get('SMTP_SERVER')

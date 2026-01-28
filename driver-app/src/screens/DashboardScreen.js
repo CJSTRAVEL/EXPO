@@ -11,13 +11,15 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getDriverStats, getDriverEarnings, getDriverHistory } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
-export default function DashboardScreen({ navigation }) {
+export default function DashboardScreen() {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
   const [stats, setStats] = useState(null);

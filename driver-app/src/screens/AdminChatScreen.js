@@ -33,7 +33,7 @@ const formatMessageTime = (dateString) => {
 };
 
 export default function AdminChatScreen() {
-  const navigation = require('@react-navigation/native').useNavigation();
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
   const [chats, setChats] = useState([]);

@@ -7804,6 +7804,23 @@ async def get_dispatch_chat(booking_id: str):
     
     return messages
 
+@api_router.delete("/dispatch/chat/{booking_id}")
+async def delete_dispatch_chat(booking_id: str, admin: dict = Depends(get_current_admin)):
+    """Delete all chat messages for a booking (dispatch/admin only)"""
+    result = await db.chat_messages.delete_many({"booking_id": booking_id})
+    return {"message": f"Deleted {result.deleted_count} messages", "booking_id": booking_id}
+
+@api_router.delete("/driver/chat/{booking_id}")
+async def delete_driver_chat(booking_id: str, driver: dict = Depends(get_current_driver)):
+    """Delete all chat messages for a booking (driver)"""
+    # Verify the booking belongs to this driver
+    booking = await db.bookings.find_one({"id": booking_id, "driver_id": driver["id"]}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found or not assigned to you")
+    
+    result = await db.chat_messages.delete_many({"booking_id": booking_id})
+    return {"message": f"Deleted {result.deleted_count} messages", "booking_id": booking_id}
+
 # ========== STRIPE PAYMENT ENDPOINTS ==========
 
 class PaymentRequest(BaseModel):

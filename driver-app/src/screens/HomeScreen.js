@@ -170,8 +170,15 @@ export default function HomeScreen({ navigation }) {
   const loadShiftState = async () => {
     try {
       const savedStartTime = await SecureStore.getItemAsync('shift_start_time');
-      if (savedStartTime && user?.is_online) {
-        setShiftStartTime(parseInt(savedStartTime));
+      const savedShiftActive = await SecureStore.getItemAsync('shift_active');
+      
+      // If we have saved shift active state, use it
+      if (savedShiftActive === 'true') {
+        setIsShiftActive(true);
+        if (savedStartTime) {
+          setShiftStartTime(parseInt(savedStartTime));
+        }
+        showOnlineNotification();
       }
     } catch (error) {
       console.log('Error loading shift state:', error);

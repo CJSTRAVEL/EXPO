@@ -445,6 +445,9 @@ export default function HomeScreen({ navigation }) {
       
       setIsShiftActive(false);
       
+      // Clear shift active state from storage
+      await SecureStore.deleteItemAsync('shift_active');
+      
       // Hide persistent online notification
       await hideOnlineNotification();
       
@@ -459,7 +462,6 @@ export default function HomeScreen({ navigation }) {
       
       Alert.alert('Shift Ended', `You are now offline.\nShift duration: ${formatDuration(finalDuration)}\n\nVehicle has been reset. Please select a vehicle when starting your next shift.`);
       
-      await refreshProfile();
       console.log('Shift ended successfully');
     } catch (error) {
       console.error('Error stopping shift:', error);
@@ -467,6 +469,7 @@ export default function HomeScreen({ navigation }) {
       Alert.alert('Error', `Could not end your shift: ${error.response?.data?.detail || error.message}`);
       // Still try to reset local state
       setIsShiftActive(false);
+      await SecureStore.deleteItemAsync('shift_active');
     } finally {
       setStartingShift(false);
     }

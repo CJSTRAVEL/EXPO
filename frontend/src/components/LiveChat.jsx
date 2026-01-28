@@ -259,6 +259,15 @@ const LiveChat = () => {
                       <p className="text-sm font-medium truncate">{selectedChat.driver_name}</p>
                       <p className="text-xs text-gray-500">{selectedChat.booking_id_short}</p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={deleteChat}
+                      className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      title="Delete chat"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
 
                   {/* Messages */}

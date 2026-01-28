@@ -418,8 +418,16 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginRight: 12,
     padding: 4,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 4,
   },
   headerInfo: {
     flex: 1,

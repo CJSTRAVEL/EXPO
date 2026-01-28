@@ -608,21 +608,22 @@ const PassengerPortal = () => {
     <div className="min-h-screen bg-[#f5f5f5]" data-testid="passenger-portal">
       {/* Header */}
       <header className="bg-[#1a1a1a] shadow-lg sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
             <img 
               src="https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png" 
               alt="CJ's Executive Travel" 
-              className="w-10 h-10 object-contain"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             />
             <div>
-              <h1 className="font-bold text-white">CJ&apos;s Executive Travel</h1>
-              <p className="text-xs text-[#D4A853]">Passenger Portal</p>
+              <h1 className="text-sm sm:text-base font-bold text-white">CJ&apos;s Executive Travel</h1>
+              <p className="text-[10px] sm:text-xs text-[#D4A853]">Passenger Portal</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:bg-white/10" data-testid="logout-btn">
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:bg-white/10 text-xs sm:text-sm px-2 sm:px-3" data-testid="logout-btn">
+            <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Logout</span>
+            <span className="xs:hidden">Exit</span>
           </Button>
         </div>
       </header>

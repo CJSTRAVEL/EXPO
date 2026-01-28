@@ -1365,7 +1365,7 @@ const PassengerPortal = () => {
                             )}
                             data-testid="request-return-date-btn"
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-amber-600" />
+                            <Calendar className="mr-2 h-4 w-4 text-amber-600" />
                             {requestForm.return_datetime 
                               ? format(requestForm.return_datetime, "dd/MM/yy") 
                               : "Select date"}

@@ -8666,19 +8666,15 @@ async def send_evening_booking_reminder():
 
 
 async def send_unallocated_tomorrow_reminder():
-    """Send reminder for unallocated bookings tomorrow"""
+    """Send reminder for unallocated bookings tomorrow via SMS"""
     try:
-        if not twilio_client:
-            logger.warning("Cannot send unallocated reminder - Twilio not configured")
-            return
-        
         now = datetime.now(timezone.utc)
         
         # Get tomorrow's date range
         tomorrow_start = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow_end = tomorrow_start + timedelta(days=1)
         
-        # Find unallocated bookings for tomorrow (status pending or no driver assigned)
+        # Find unallocated bookings for tomorrow (no driver assigned)
         unallocated_bookings = await db.bookings.find({
             "booking_datetime": {
                 "$gte": tomorrow_start.isoformat(),
@@ -8688,7 +8684,7 @@ async def send_unallocated_tomorrow_reminder():
             "$or": [
                 {"driver_id": None},
                 {"driver_id": {"$exists": False}},
-                {"status": "pending"}
+                {"driver_id": ""}
             ]
         }, {"_id": 0}).sort("booking_datetime", 1).to_list(50)
         
@@ -8697,9 +8693,9 @@ async def send_unallocated_tomorrow_reminder():
             return
         
         # Build message
-        tomorrow_str = tomorrow_start.strftime("%A, %d %B")
-        message = f"⚠️ CJ's Executive Travel\n\n"
-        message += f"You have {len(unallocated_bookings)} booking(s) tomorrow ({tomorrow_str}) that are UNALLOCATED!\n\n"
+        tomorrow_str = tomorrow_start.strftime("%a %d %b")
+        message = f"CJ's Executive Travel - UNALLOCATED ALERT\n\n"
+        message += f"{len(unallocated_bookings)} booking(s) for {tomorrow_str} need drivers:\n\n"
         
         for booking in unallocated_bookings:
             booking_time = ""
@@ -8712,41 +8708,18 @@ async def send_unallocated_tomorrow_reminder():
             
             customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip() or "Customer"
             booking_id = booking.get("booking_id", booking.get("id", "")[:8])
-            pickup = booking.get("pickup_location", "TBC")[:40]
             
-            message += f"• {booking_time} - {booking_id}\n"
-            message += f"  {customer_name}\n"
-            message += f"  {pickup}\n\n"
+            message += f"{booking_time} {booking_id} - {customer_name}\n"
         
-        message += "Please allocate drivers as soon as possible."
+        message += "\nPlease allocate drivers ASAP."
         
-        # Send to all reminder phone numbers
+        # Send SMS to all reminder phone numbers
         for phone in REMINDER_PHONE_NUMBERS:
             try:
-                phone_clean = phone.strip().replace(' ', '').replace('-', '')
-                if not phone_clean.startswith('+'):
-                    if phone_clean.startswith('0'):
-                        phone_clean = '+44' + phone_clean[1:]
-                    else:
-                        phone_clean = '+44' + phone_clean
-                
-                to_whatsapp = f"whatsapp:{phone_clean}"
-                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
-                
-                msg = twilio_client.messages.create(
-                    body=message,
-                    from_=from_whatsapp,
-                    to=to_whatsapp
-                )
-                logger.info(f"Unallocated reminder sent to {phone}: {msg.sid}")
+                send_sms_only(phone, message)
+                logger.info(f"Unallocated reminder SMS sent to {phone}")
             except Exception as e:
-                logger.error(f"Failed to send unallocated reminder to {phone}: {e}")
-                # Try SMS fallback
-                try:
-                    send_sms_only(phone, message)
-                    logger.info(f"Unallocated reminder sent via SMS to {phone}")
-                except Exception as sms_e:
-                    logger.error(f"SMS fallback also failed for {phone}: {sms_e}")
+                logger.error(f"Failed to send unallocated reminder SMS to {phone}: {e}")
         
         logger.info(f"Unallocated booking reminder completed - {len(unallocated_bookings)} bookings")
         

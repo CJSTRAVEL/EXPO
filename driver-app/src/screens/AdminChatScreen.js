@@ -294,6 +294,7 @@ export default function AdminChatScreen({ navigation }) {
         <View style={[styles.header, { backgroundColor: theme.primary }]}>
           <TouchableOpacity onPress={() => setSelectedChat(null)} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Text style={styles.backButtonText}>Chats</Text>
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={[styles.headerTitle, { color: '#fff' }]}>{selectedChat.booking_id_short}</Text>

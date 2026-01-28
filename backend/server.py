@@ -8618,6 +8618,11 @@ async def send_evening_booking_reminder():
             "status": {"$nin": ["cancelled", "completed"]}
         }, {"_id": 0}).sort("booking_datetime", 1).to_list(50)
         
+        # Only send if there are bookings
+        if not evening_bookings:
+            logger.info("No evening bookings (18:00-08:00) - skipping reminder")
+            return
+        
         # Build message
         message = "CJ's Executive Travel - Evening Schedule\n\n"
         

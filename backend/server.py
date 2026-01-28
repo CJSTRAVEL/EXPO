@@ -2252,27 +2252,31 @@ async def send_templated_sms(phone: str, template_type: str, variables: dict):
                 # Build content variables based on template type
                 content_vars = {}
                 if template_type == "driver_on_route":
-                    # Template: "Your driver is on the way! Vehicle: {{1}} {{2}} {{3}}, Reg: {{4}}. Track: {{5}}"
+                    # Template: Hello {{1}}, Your driver is on the way! Vehicle: {{2}}, Reg: {{3}}, ETA: {{4}} minutes. Track: {{5}}
+                    vehicle_desc = f"{variables.get('vehicle_colour', '')} {variables.get('vehicle_make', '')} {variables.get('vehicle_model', '')}".strip()
                     content_vars = {
-                        "1": variables.get("vehicle_colour", ""),
-                        "2": variables.get("vehicle_make", ""),
-                        "3": variables.get("vehicle_model", ""),
-                        "4": variables.get("vehicle_registration", ""),
+                        "1": variables.get("customer_name", "Customer"),
+                        "2": vehicle_desc or "Your vehicle",
+                        "3": variables.get("vehicle_registration", ""),
+                        "4": variables.get("eta_minutes", "10"),
                         "5": variables.get("booking_link", "")
                     }
                 elif template_type == "driver_arrived":
-                    # Template: "Your vehicle has arrived! {{1}} {{2}} {{3}}, Reg: {{4}}. {{5}}"
+                    # Template: Hello {{1}}, Your driver has arrived! Vehicle: {{2}}, Reg: {{3}}
+                    vehicle_desc = f"{variables.get('vehicle_colour', '')} {variables.get('vehicle_make', '')} {variables.get('vehicle_model', '')}".strip()
                     content_vars = {
-                        "1": variables.get("vehicle_colour", ""),
-                        "2": variables.get("vehicle_make", ""),
-                        "3": variables.get("vehicle_model", ""),
-                        "4": variables.get("vehicle_registration", ""),
-                        "5": variables.get("booking_link", "")
+                        "1": variables.get("customer_name", "Customer"),
+                        "2": vehicle_desc or "Your vehicle",
+                        "3": variables.get("vehicle_registration", "")
                     }
                 elif template_type == "journey_completed":
-                    # Template: "Thank you for travelling with CJ's! Booking: {{1}}. We hope you enjoyed your journey."
+                    # Template: Hello {{1}}, Your journey is complete! Ref: {{2}}, From: {{3}}, To: {{4}}, Review: {{5}}
                     content_vars = {
-                        "1": variables.get("booking_id", ""),
+                        "1": variables.get("customer_name", "Customer"),
+                        "2": variables.get("booking_id", ""),
+                        "3": variables.get("pickup_location", ""),
+                        "4": variables.get("dropoff_location", ""),
+                        "5": variables.get("booking_link", "https://g.page/r/CWTNnmIB_EejEBM/review")
                     }
                 
                 msg = twilio_client.messages.create(

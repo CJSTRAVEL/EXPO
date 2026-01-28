@@ -2660,54 +2660,79 @@ async def send_expiry_reminder_email(
         return True, "No expiring items"
     
     try:
-        # Build HTML content
+        logo_url = "https://customer-assets.emergentagent.com/job_c2bf04a6-1cc1-4dad-86ae-c96a52a9ec62/artifacts/t13g8907_Logo%20With%20Border.png"
+        
+        # Build HTML content with white theme
         html_content = f"""
+        <!DOCTYPE html>
         <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background-color: #1a3a5c; padding: 20px; text-align: center;">
-                <h1 style="color: #D4A853; margin: 0;">CJ's Executive Travel</h1>
-                <p style="color: white; margin: 5px 0 0 0;">Document Expiry Alert</p>
-            </div>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+            <!-- Header -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-bottom: 2px solid #D4A853;">
+                <tr>
+                    <td style="padding: 25px; text-align: center;">
+                        <img src="{logo_url}" alt="CJ's Executive Travel" style="height: 60px; width: auto;" />
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0 15px 20px 15px; text-align: center; color: #D4A853; font-size: 16px; font-weight: bold;">
+                        Document Expiry Alert
+                    </td>
+                </tr>
+            </table>
             
-            <div style="padding: 20px; background-color: #f5f5f5;">
-                <h2 style="color: #1a3a5c; margin-top: 0;">{item_type} Documents Expiring Soon</h2>
-                <p style="color: #666;">The following documents require attention:</p>
-                
-                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                    <tr style="background-color: #1a3a5c; color: white;">
-                        <th style="padding: 10px; text-align: left;">{item_type}</th>
-                        <th style="padding: 10px; text-align: left;">Document</th>
-                        <th style="padding: 10px; text-align: left;">Expiry Date</th>
-                        <th style="padding: 10px; text-align: left;">Days Left</th>
-                    </tr>
+            <!-- Main Content -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 700px; margin: 0 auto; background-color: #ffffff;">
+                <tr>
+                    <td style="padding: 30px 40px;">
+                        <h2 style="color: #1a1a1a; margin: 0 0 10px 0; font-size: 20px;">{item_type} Documents Expiring Soon</h2>
+                        <p style="color: #666; margin: 0 0 20px 0;">The following documents require attention:</p>
+                        
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                            <tr style="background-color: #D4A853;">
+                                <th style="padding: 12px; text-align: left; color: #000; font-size: 13px;">{item_type}</th>
+                                <th style="padding: 12px; text-align: left; color: #000; font-size: 13px;">Document</th>
+                                <th style="padding: 12px; text-align: left; color: #000; font-size: 13px;">Expiry Date</th>
+                                <th style="padding: 12px; text-align: left; color: #000; font-size: 13px;">Days Left</th>
+                            </tr>
         """
         
-        for item in items:
+        for idx, item in enumerate(items):
             days_left = item['days_left']
             color = "#dc2626" if days_left <= 30 else "#f59e0b"
+            bg_color = "#ffffff" if idx % 2 == 0 else "#f9f9f9"
             html_content += f"""
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px;">{item['name']}</td>
-                        <td style="padding: 10px;">{item['document']}</td>
-                        <td style="padding: 10px;">{item['expiry_date']}</td>
-                        <td style="padding: 10px; color: {color}; font-weight: bold;">{days_left} days</td>
-                    </tr>
+                            <tr style="background-color: {bg_color};">
+                                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #1a1a1a;">{item['name']}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #1a1a1a;">{item['document']}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: #1a1a1a;">{item['expiry_date']}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; color: {color}; font-weight: bold;">{days_left} days</td>
+                            </tr>
             """
         
         html_content += """
-                </table>
+                        </table>
+                        
+                        <div style="margin-top: 25px; padding: 15px; background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #D4A853;">
+                            <p style="margin: 0; color: #92400e;">
+                                <strong>⚠️ Action Required:</strong> Please ensure these documents are renewed before expiry.
+                            </p>
+                        </div>
+                    </td>
+                </tr>
                 
-                <div style="margin-top: 20px; padding: 15px; background-color: #fef3c7; border-radius: 8px;">
-                    <p style="margin: 0; color: #92400e;">
-                        <strong>Action Required:</strong> Please ensure these documents are renewed before expiry.
-                    </p>
-                </div>
-            </div>
-            
-            <div style="padding: 15px; text-align: center; color: #666; font-size: 12px;">
-                <p>CJs Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY</p>
-                <p>This is an automated reminder from your dispatch system.</p>
-            </div>
+                <!-- Footer -->
+                <tr>
+                    <td style="padding: 25px 40px; background-color: #ffffff; border-top: 2px solid #D4A853; text-align: center;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">CJ's Executive Travel Limited | Unit 5, Peterlee, County Durham, SR8 2HY</p>
+                        <p style="margin: 8px 0 0 0; color: #999; font-size: 11px;">This is an automated reminder from your dispatch system.</p>
+                    </td>
+                </tr>
+            </table>
         </body>
         </html>
         """

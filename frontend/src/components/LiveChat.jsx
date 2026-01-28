@@ -84,6 +84,28 @@ const LiveChat = () => {
     }
   };
 
+  // Delete chat
+  const deleteChat = async () => {
+    if (!selectedChat) return;
+    
+    if (!window.confirm(`Delete all messages for ${selectedChat.booking_id_short}?`)) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/api/dispatch/chat/${selectedChat.booking_id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      toast.success("Chat deleted");
+      setSelectedChat(null);
+      setMessages([]);
+      fetchActiveChats();
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      toast.error("Failed to delete chat");
+    }
+  };
+
   // Play notification sound
   const playNotificationSound = () => {
     if (audioRef.current) {

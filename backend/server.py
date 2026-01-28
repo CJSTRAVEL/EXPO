@@ -8551,6 +8551,227 @@ async def daily_keep_alive_task():
             await asyncio.sleep(3600)  # Wait an hour on error
 
 
+# ========== EVENING BOOKING REMINDERS ==========
+
+# Admin phone numbers to receive reminders
+REMINDER_PHONE_NUMBERS = ["+447383185260", "+447806794824"]
+
+async def send_evening_booking_reminder():
+    """Send evening booking reminder for tonight's bookings (18:00 - 08:00)"""
+    try:
+        if not twilio_client:
+            logger.warning("Cannot send evening reminder - Twilio not configured")
+            return
+        
+        now = datetime.now(timezone.utc)
+        
+        # Get bookings from 18:00 today to 08:00 tomorrow
+        today_6pm = now.replace(hour=18, minute=0, second=0, microsecond=0)
+        tomorrow_8am = (now + timedelta(days=1)).replace(hour=8, minute=0, second=0, microsecond=0)
+        
+        evening_bookings = await db.bookings.find({
+            "booking_datetime": {
+                "$gte": today_6pm.isoformat(),
+                "$lt": tomorrow_8am.isoformat()
+            },
+            "status": {"$nin": ["cancelled", "completed"]}
+        }, {"_id": 0}).sort("booking_datetime", 1).to_list(50)
+        
+        # Build message
+        message = "Good Evening CJ's Executive Travel\n\n"
+        
+        if evening_bookings:
+            message += f"Reminder you have {len(evening_bookings)} booking(s) this evening!\n\n"
+            for booking in evening_bookings:
+                booking_time = ""
+                if booking.get("booking_datetime"):
+                    try:
+                        dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
+                        booking_time = dt.strftime("%H:%M")
+                    except:
+                        booking_time = "TBC"
+                
+                customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip() or "Customer"
+                booking_id = booking.get("booking_id", booking.get("id", "")[:8])
+                pickup = booking.get("pickup_location", "TBC")[:40]
+                status = booking.get("status", "pending")
+                driver_id = booking.get("driver_id")
+                
+                # Get driver name if assigned
+                driver_info = ""
+                if driver_id:
+                    driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0, "name": 1})
+                    if driver:
+                        driver_info = f" ({driver.get('name', 'Driver')})"
+                    else:
+                        driver_info = " (Assigned)"
+                else:
+                    driver_info = " ⚠️ UNALLOCATED"
+                
+                message += f"• {booking_time} - {booking_id}\n"
+                message += f"  {customer_name}{driver_info}\n"
+                message += f"  {pickup}\n\n"
+        else:
+            message += "No bookings scheduled for this evening (18:00 - 08:00).\n"
+        
+        # Send to all reminder phone numbers
+        for phone in REMINDER_PHONE_NUMBERS:
+            try:
+                phone_clean = phone.strip().replace(' ', '').replace('-', '')
+                if not phone_clean.startswith('+'):
+                    if phone_clean.startswith('0'):
+                        phone_clean = '+44' + phone_clean[1:]
+                    else:
+                        phone_clean = '+44' + phone_clean
+                
+                to_whatsapp = f"whatsapp:{phone_clean}"
+                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                
+                msg = twilio_client.messages.create(
+                    body=message,
+                    from_=from_whatsapp,
+                    to=to_whatsapp
+                )
+                logger.info(f"Evening booking reminder sent to {phone}: {msg.sid}")
+            except Exception as e:
+                logger.error(f"Failed to send evening reminder to {phone}: {e}")
+                # Try SMS fallback
+                try:
+                    send_sms_only(phone, message)
+                    logger.info(f"Evening reminder sent via SMS to {phone}")
+                except Exception as sms_e:
+                    logger.error(f"SMS fallback also failed for {phone}: {sms_e}")
+        
+        logger.info(f"Evening booking reminder completed - {len(evening_bookings)} bookings")
+        
+    except Exception as e:
+        logger.error(f"Error sending evening booking reminder: {e}")
+
+
+async def send_unallocated_tomorrow_reminder():
+    """Send reminder for unallocated bookings tomorrow"""
+    try:
+        if not twilio_client:
+            logger.warning("Cannot send unallocated reminder - Twilio not configured")
+            return
+        
+        now = datetime.now(timezone.utc)
+        
+        # Get tomorrow's date range
+        tomorrow_start = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow_end = tomorrow_start + timedelta(days=1)
+        
+        # Find unallocated bookings for tomorrow (status pending or no driver assigned)
+        unallocated_bookings = await db.bookings.find({
+            "booking_datetime": {
+                "$gte": tomorrow_start.isoformat(),
+                "$lt": tomorrow_end.isoformat()
+            },
+            "status": {"$nin": ["cancelled", "completed"]},
+            "$or": [
+                {"driver_id": None},
+                {"driver_id": {"$exists": False}},
+                {"status": "pending"}
+            ]
+        }, {"_id": 0}).sort("booking_datetime", 1).to_list(50)
+        
+        if not unallocated_bookings:
+            logger.info("No unallocated bookings for tomorrow - skipping reminder")
+            return
+        
+        # Build message
+        tomorrow_str = tomorrow_start.strftime("%A, %d %B")
+        message = f"⚠️ CJ's Executive Travel\n\n"
+        message += f"You have {len(unallocated_bookings)} booking(s) tomorrow ({tomorrow_str}) that are UNALLOCATED!\n\n"
+        
+        for booking in unallocated_bookings:
+            booking_time = ""
+            if booking.get("booking_datetime"):
+                try:
+                    dt = datetime.fromisoformat(booking["booking_datetime"].replace("Z", "+00:00"))
+                    booking_time = dt.strftime("%H:%M")
+                except:
+                    booking_time = "TBC"
+            
+            customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip() or "Customer"
+            booking_id = booking.get("booking_id", booking.get("id", "")[:8])
+            pickup = booking.get("pickup_location", "TBC")[:40]
+            
+            message += f"• {booking_time} - {booking_id}\n"
+            message += f"  {customer_name}\n"
+            message += f"  {pickup}\n\n"
+        
+        message += "Please allocate drivers as soon as possible."
+        
+        # Send to all reminder phone numbers
+        for phone in REMINDER_PHONE_NUMBERS:
+            try:
+                phone_clean = phone.strip().replace(' ', '').replace('-', '')
+                if not phone_clean.startswith('+'):
+                    if phone_clean.startswith('0'):
+                        phone_clean = '+44' + phone_clean[1:]
+                    else:
+                        phone_clean = '+44' + phone_clean
+                
+                to_whatsapp = f"whatsapp:{phone_clean}"
+                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
+                
+                msg = twilio_client.messages.create(
+                    body=message,
+                    from_=from_whatsapp,
+                    to=to_whatsapp
+                )
+                logger.info(f"Unallocated reminder sent to {phone}: {msg.sid}")
+            except Exception as e:
+                logger.error(f"Failed to send unallocated reminder to {phone}: {e}")
+                # Try SMS fallback
+                try:
+                    send_sms_only(phone, message)
+                    logger.info(f"Unallocated reminder sent via SMS to {phone}")
+                except Exception as sms_e:
+                    logger.error(f"SMS fallback also failed for {phone}: {sms_e}")
+        
+        logger.info(f"Unallocated booking reminder completed - {len(unallocated_bookings)} bookings")
+        
+    except Exception as e:
+        logger.error(f"Error sending unallocated reminder: {e}")
+
+
+async def daily_evening_reminder_task():
+    """Background task that sends evening reminders daily at 18:00 UK time"""
+    import asyncio
+    
+    while True:
+        try:
+            # Calculate time until next 18:00 UK time
+            now = datetime.now(timezone.utc)
+            
+            # Target 18:00 (6pm)
+            target_hour = 18
+            next_run = now.replace(hour=target_hour, minute=0, second=0, microsecond=0)
+            
+            # If it's already past 18:00 today, schedule for tomorrow
+            if now.hour >= target_hour:
+                next_run = next_run + timedelta(days=1)
+            
+            wait_seconds = (next_run - now).total_seconds()
+            logger.info(f"Next evening reminder scheduled in {wait_seconds/3600:.1f} hours at {next_run.isoformat()}")
+            
+            await asyncio.sleep(wait_seconds)
+            
+            # Send both reminders
+            await send_evening_booking_reminder()
+            await asyncio.sleep(5)  # Small delay between messages
+            await send_unallocated_tomorrow_reminder()
+            
+            # Wait a bit before next loop iteration to avoid double-sending
+            await asyncio.sleep(60)
+            
+        except Exception as e:
+            logger.error(f"Error in daily evening reminder task: {e}")
+            await asyncio.sleep(3600)  # Wait an hour on error
+
+
 # ========== FARE SETTINGS ENDPOINTS ==========
 
 class FareZone(BaseModel):

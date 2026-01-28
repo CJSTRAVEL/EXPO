@@ -315,9 +315,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     paddingTop: Platform.OS === 'android' ? 12 : 0,
+  },
+  newChatButton: {
+    padding: 4,
   },
   backButton: {
     marginRight: 12,

@@ -241,6 +241,31 @@ export default function NavigationScreen({ route, navigation }) {
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle" size={48} color={COLORS.danger} />
+        <Text style={[styles.loadingText, { color: COLORS.danger, textAlign: 'center', paddingHorizontal: 20 }]}>{error}</Text>
+        <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+          <TouchableOpacity 
+            style={[styles.externalMapsButton, { paddingHorizontal: 24 }]} 
+            onPress={openExternalMaps}
+          >
+            <Ionicons name="navigate" size={20} color="#fff" />
+            <Text style={styles.externalMapsText}>Open Maps</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.closeButton, { width: 'auto', paddingHorizontal: 20 }]} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="close" size={20} color={COLORS.danger} />
+            <Text style={{ color: COLORS.danger, marginLeft: 4 }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Map */}

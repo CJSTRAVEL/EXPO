@@ -6936,10 +6936,10 @@ async def driver_login(request: Request, login: DriverLogin):
     }
     token = jwt.encode(token_data, JWT_SECRET, algorithm=JWT_ALGORITHM)
     
-    # Update driver as online
+    # Update last login but keep driver OFFLINE until they start shift
     await db.drivers.update_one(
         {"id": driver["id"]},
-        {"$set": {"is_online": True, "last_login": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"is_online": False, "last_login": datetime.now(timezone.utc).isoformat()}}
     )
     
     return {

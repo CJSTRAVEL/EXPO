@@ -8602,12 +8602,8 @@ async def daily_keep_alive_task():
 REMINDER_PHONE_NUMBERS = ["+447383185260", "+447806794824"]
 
 async def send_evening_booking_reminder():
-    """Send evening booking reminder for tonight's bookings (18:00 - 08:00)"""
+    """Send evening booking reminder for tonight's bookings (18:00 - 08:00) via SMS"""
     try:
-        if not twilio_client:
-            logger.warning("Cannot send evening reminder - Twilio not configured")
-            return
-        
         now = datetime.now(timezone.utc)
         
         # Get bookings from 18:00 today to 08:00 tomorrow
@@ -8623,10 +8619,10 @@ async def send_evening_booking_reminder():
         }, {"_id": 0}).sort("booking_datetime", 1).to_list(50)
         
         # Build message
-        message = "Good Evening CJ's Executive Travel\n\n"
+        message = "CJ's Executive Travel - Evening Schedule\n\n"
         
         if evening_bookings:
-            message += f"Reminder you have {len(evening_bookings)} booking(s) this evening!\n\n"
+            message += f"{len(evening_bookings)} booking(s) this evening:\n\n"
             for booking in evening_bookings:
                 booking_time = ""
                 if booking.get("booking_datetime"):
@@ -8638,8 +8634,6 @@ async def send_evening_booking_reminder():
                 
                 customer_name = booking.get("customer_name") or f"{booking.get('first_name', '')} {booking.get('last_name', '')}".strip() or "Customer"
                 booking_id = booking.get("booking_id", booking.get("id", "")[:8])
-                pickup = booking.get("pickup_location", "TBC")[:40]
-                status = booking.get("status", "pending")
                 driver_id = booking.get("driver_id")
                 
                 # Get driver name if assigned
@@ -8647,45 +8641,23 @@ async def send_evening_booking_reminder():
                 if driver_id:
                     driver = await db.drivers.find_one({"id": driver_id}, {"_id": 0, "name": 1})
                     if driver:
-                        driver_info = f" ({driver.get('name', 'Driver')})"
+                        driver_info = f"({driver.get('name', 'Driver')})"
                     else:
-                        driver_info = " (Assigned)"
+                        driver_info = "(Assigned)"
                 else:
-                    driver_info = " ⚠️ UNALLOCATED"
+                    driver_info = "UNALLOCATED"
                 
-                message += f"• {booking_time} - {booking_id}\n"
-                message += f"  {customer_name}{driver_info}\n"
-                message += f"  {pickup}\n\n"
+                message += f"{booking_time} {booking_id} - {customer_name} {driver_info}\n"
         else:
-            message += "No bookings scheduled for this evening (18:00 - 08:00).\n"
+            message += "No bookings scheduled for this evening."
         
-        # Send to all reminder phone numbers
+        # Send SMS to all reminder phone numbers
         for phone in REMINDER_PHONE_NUMBERS:
             try:
-                phone_clean = phone.strip().replace(' ', '').replace('-', '')
-                if not phone_clean.startswith('+'):
-                    if phone_clean.startswith('0'):
-                        phone_clean = '+44' + phone_clean[1:]
-                    else:
-                        phone_clean = '+44' + phone_clean
-                
-                to_whatsapp = f"whatsapp:{phone_clean}"
-                from_whatsapp = f"whatsapp:{TWILIO_WHATSAPP_NUMBER}"
-                
-                msg = twilio_client.messages.create(
-                    body=message,
-                    from_=from_whatsapp,
-                    to=to_whatsapp
-                )
-                logger.info(f"Evening booking reminder sent to {phone}: {msg.sid}")
+                send_sms_only(phone, message)
+                logger.info(f"Evening booking reminder SMS sent to {phone}")
             except Exception as e:
-                logger.error(f"Failed to send evening reminder to {phone}: {e}")
-                # Try SMS fallback
-                try:
-                    send_sms_only(phone, message)
-                    logger.info(f"Evening reminder sent via SMS to {phone}")
-                except Exception as sms_e:
-                    logger.error(f"SMS fallback also failed for {phone}: {sms_e}")
+                logger.error(f"Failed to send evening reminder SMS to {phone}: {e}")
         
         logger.info(f"Evening booking reminder completed - {len(evening_bookings)} bookings")
         

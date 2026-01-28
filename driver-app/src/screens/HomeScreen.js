@@ -410,6 +410,9 @@ export default function HomeScreen({ navigation }) {
       await updateStatus({ is_online: true });
       setIsShiftActive(true);
       
+      // Save shift state locally to persist across app restarts
+      await SecureStore.setItemAsync('shift_active', 'true');
+      
       // Show persistent online notification
       await showOnlineNotification();
       
@@ -419,10 +422,14 @@ export default function HomeScreen({ navigation }) {
       await SecureStore.setItemAsync('shift_start_time', startTime.toString());
       Alert.alert('Shift Started', `You are now online and available for bookings.\n\nVehicle: ${selectedVehicle?.registration || 'Selected'}`);
       
-      await refreshProfile();
+      // Don't refresh profile immediately to avoid state sync race condition
+      // The user state will be updated on next profile fetch
     } catch (error) {
       console.error('Error starting shift:', error);
       Alert.alert('Error', 'Could not start your shift. Please try again.');
+      // Reset local state on error
+      setIsShiftActive(false);
+      await SecureStore.deleteItemAsync('shift_active');
     } finally {
       setStartingShift(false);
     }

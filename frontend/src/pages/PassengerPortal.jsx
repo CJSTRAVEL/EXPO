@@ -630,26 +630,26 @@ const PassengerPortal = () => {
 
       <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Welcome Section */}
-        <div className="bg-[#1a1a1a] rounded-xl p-6 text-white mb-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#D4A853]/20 flex items-center justify-center border border-[#D4A853]/30">
-                <User className="w-7 h-7 text-[#D4A853]" />
+        <div className="bg-[#1a1a1a] rounded-xl p-4 sm:p-6 text-white mb-4 sm:mb-6 shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#D4A853]/20 flex items-center justify-center border border-[#D4A853]/30 flex-shrink-0">
+                <User className="w-5 h-5 sm:w-7 sm:h-7 text-[#D4A853]" />
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">Welcome back,</p>
-                <h2 className="text-xl font-bold text-white">{user?.name}</h2>
+              <div className="min-w-0">
+                <p className="text-gray-400 text-xs sm:text-sm">Welcome back,</p>
+                <h2 className="text-base sm:text-xl font-bold text-white truncate">{user?.name}</h2>
                 <div className="flex flex-col gap-0.5 mt-1">
-                  <p className="text-gray-400 text-sm flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    {user?.phone}
+                  <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+                    <Phone className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{user?.phone}</span>
                   </p>
                   {user?.email && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+                      <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      {user?.email}
+                      <span className="truncate">{user?.email}</span>
                     </p>
                   )}
                 </div>
@@ -657,7 +657,7 @@ const PassengerPortal = () => {
             </div>
             <Button 
               onClick={() => setShowRequestForm(true)}
-              className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold"
+              className="bg-[#D4A853] text-[#1a1a1a] hover:bg-[#c49843] font-semibold w-full sm:w-auto"
               data-testid="request-booking-btn"
             >
               <Plus className="w-4 h-4 mr-2" />

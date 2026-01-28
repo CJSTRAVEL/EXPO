@@ -2418,7 +2418,7 @@ def send_booking_email(customer_email: str, customer_name: str, booking_id: str,
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
             <!-- Header Banner with Logo -->
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-bottom: 2px solid #D4A853;">
                 <tr>
                     <td style="padding: 25px; text-align: center;">
                         <img src="{logo_url}" alt="CJ's Executive Travel" style="height: 70px; width: auto;" />

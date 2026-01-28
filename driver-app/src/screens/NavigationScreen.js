@@ -206,11 +206,29 @@ export default function NavigationScreen({ route, navigation }) {
     return points;
   };
 
-  const openExternalMaps = () => {
+  const openExternalMaps = async () => {
     const url = Platform.select({
       ios: `maps://app?daddr=${encodeURIComponent(destinationAddress)}`,
       android: `google.navigation:q=${encodeURIComponent(destinationAddress)}`,
     });
+    
+    // Show a persistent notification so the driver can easily return to the app
+    try {
+      await Notifications.scheduleNotificationAsync({
+        identifier: 'navigation-return',
+        content: {
+          title: "🚗 CJ's Driver App",
+          body: "Tap here to return to the driver app",
+          data: { type: 'navigation_return' },
+          sticky: true,
+          autoDismiss: false,
+          priority: 'high',
+        },
+        trigger: null, // Show immediately
+      });
+    } catch (error) {
+      console.log('Error showing return notification:', error);
+    }
     
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {
@@ -222,6 +240,14 @@ export default function NavigationScreen({ route, navigation }) {
       }
     });
   };
+  
+  // Dismiss the return notification when this screen is focused
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      Notifications.dismissNotificationAsync('navigation-return').catch(() => {});
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const centerOnUser = () => {
     if (currentLocation && mapRef.current) {

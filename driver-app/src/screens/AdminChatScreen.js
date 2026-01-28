@@ -412,6 +412,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
+  newChatActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginTop: 20,
+    gap: 8,
+  },
+  newChatActionText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   emptyMessages: {
     flex: 1,
     justifyContent: 'center',
